@@ -1,0 +1,27 @@
+name: Debricked Automations
+
+on: [push, pull_request]
+
+jobs:
+  vulnerabilities-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.17'
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/Library/Caches/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - run: |
+          printf "$(go mod graph)\n\n$(go list -mod=readonly -e -m all)" > .debricked-go-dependencies.txt
+      - uses: debricked/actions/scan@v1
+        env:
+          DEBRICKED_TOKEN: ${{ secrets.DEBRICKED_TOKEN }}
+          EXCLUDED_DIRECTORIES: "pkg/cmd/scan/testdata"

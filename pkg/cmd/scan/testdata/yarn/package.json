@@ -1,0 +1,11 @@
+{
+  "name": "templates",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:debricked/templates.git",
+  "author": "viktigpetterr <viktor.pettersson@debricked.com>",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.3"
+  }
+}
