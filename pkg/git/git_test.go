@@ -67,7 +67,7 @@ func TestNewMetaObjectWithRepository(t *testing.T) {
 	if len(newMetaObj.CommitName) == 0 {
 		t.Error("failed to find correct commit", newMetaObj.CommitName)
 	}
-	if newMetaObj.BranchName != "main" || newMetaObj.DefaultBranchName != "main" {
+	if len(newMetaObj.BranchName) == 0 || len(newMetaObj.DefaultBranchName) == 0 {
 		t.Error("failed to find correct branch", newMetaObj.BranchName)
 	}
 	if len(newMetaObj.Author) == 0 {
@@ -82,7 +82,7 @@ func TestFindBranchName(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if branch != "main" {
+	if len(branch) == 0 {
 		t.Error("failed to find correct branch", branch)
 	}
 }

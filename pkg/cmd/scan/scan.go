@@ -118,7 +118,7 @@ func scan(directoryPath string, gitMetaObject *git.MetaObject, ignoredDirectorie
 
 // getSupportedFormats returns all supported dependency file formats
 func getSupportedFormats() ([]*file.CompiledFormat, error) {
-	res, err := debClient.Get("/api/1.0/open/files/supported-formats")
+	res, err := debClient.Get("/api/1.0/open/files/supported-formats", "application/json")
 	if err != nil {
 		return nil, err
 	}

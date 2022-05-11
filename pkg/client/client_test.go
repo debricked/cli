@@ -80,7 +80,7 @@ func TestNewDebClientWithWithURI(t *testing.T) {
 
 func TestClientUnauthorized(t *testing.T) {
 	setUp(false)
-	_, err := client.Get("/api/1.0/open/user-profile/is-admin")
+	_, err := client.Get("/api/1.0/open/user-profile/is-admin", "application/json")
 	if err == nil {
 		t.Error("failed to assert client error")
 	}
@@ -91,7 +91,7 @@ func TestClientUnauthorized(t *testing.T) {
 
 func TestGet(t *testing.T) {
 	setUp(true)
-	res, err := client.Get("/api/1.0/open/user-profile/is-admin")
+	res, err := client.Get("/api/1.0/open/user-profile/is-admin", "application/json")
 	if err != nil {
 		t.Fatal("failed to assert that no client error occurred. Error: ", err.Error())
 	}

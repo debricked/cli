@@ -10,21 +10,21 @@ import (
 	"net/http"
 )
 
-func get(uri string, debClient *DebClient, retry bool) (*http.Response, error) {
-	request, err := newRequest("GET", *debClient.host+uri, debClient.jwtToken, nil)
+func get(uri string, debClient *DebClient, retry bool, format string) (*http.Response, error) {
+	request, err := newRequest("GET", *debClient.host+uri, debClient.jwtToken, format, nil)
 	if err != nil {
 		return nil, err
 	}
 	res, _ := debClient.httpClient.Do(request)
 	req := func() (*http.Response, error) {
-		return get(uri, debClient, false)
+		return get(uri, debClient, false, format)
 	}
 
 	return interpret(res, req, debClient, retry)
 }
 
 func post(uri string, debClient *DebClient, contentType string, body *bytes.Buffer, retry bool) (*http.Response, error) {
-	request, err := newRequest("POST", *debClient.host+uri, debClient.jwtToken, body)
+	request, err := newRequest("POST", *debClient.host+uri, debClient.jwtToken, "application/json", body)
 	if err != nil {
 		return nil, err
 	}
@@ -40,12 +40,12 @@ func post(uri string, debClient *DebClient, contentType string, body *bytes.Buff
 }
 
 // newRequest creates a new HTTP request with necessary headers added
-func newRequest(method string, url string, jwtToken string, body io.Reader) (*http.Request, error) {
+func newRequest(method string, url string, jwtToken string, format string, body io.Reader) (*http.Request, error) {
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Accept", `application/json`)
+	req.Header.Add("Accept", format)
 	req.Header.Add("Authorization", "Bearer "+jwtToken)
 
 	return req, nil

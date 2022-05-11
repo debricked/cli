@@ -39,6 +39,6 @@ func (debClient *DebClient) Post(uri string, contentType string, body *bytes.Buf
 }
 
 // Get makes a GET request to one of Debricked's API endpoints
-func (debClient *DebClient) Get(uri string) (*http.Response, error) {
-	return get(uri, debClient, true)
+func (debClient *DebClient) Get(uri string, format string) (*http.Response, error) {
+	return get(uri, debClient, true, format)
 }

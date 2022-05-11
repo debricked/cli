@@ -161,7 +161,7 @@ func (uploadBatch *uploadBatch) wait() (*scanStatus, error) {
 	var resultStatus *scanStatus
 	uri := fmt.Sprintf("/api/1.0/open/ci/upload/status?ciUploadId=%s", strconv.Itoa(uploadBatch.ciUploadId))
 	for !bar.IsFinished() {
-		res, err := debClient.Get(uri)
+		res, err := debClient.Get(uri, "application/json")
 		if err != nil {
 			return nil, err
 		}
