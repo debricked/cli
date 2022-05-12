@@ -34,7 +34,7 @@ func TestNewScanCmd(t *testing.T) {
 func TestValidateArgs(t *testing.T) {
 	err := validateArgs(nil, []string{"/"})
 	if err != nil {
-		t.Error("failed to assert that no error occurred. Error: ", err.Error())
+		t.Error("failed to assert that no error occurred. Error:", err)
 	}
 }
 
@@ -64,7 +64,7 @@ func TestRun(t *testing.T) {
 	commitName = "testdata/yarn-commit"
 	err := run(nil, []string{"testdata/yarn"})
 	if err != nil {
-		t.Fatal("failed to assert that no error occurred. Error: ", err.Error())
+		t.Fatal("failed to assert that no error occurred. Error:", err)
 	}
 }
 
@@ -84,7 +84,7 @@ func TestGetSupportedFormats(t *testing.T) {
 	debClient = client.NewDebClient(nil)
 	formats, err := getSupportedFormats()
 	if err != nil {
-		t.Fatal("failed to assert that no error occurred. Error: ", err.Error())
+		t.Fatal("failed to assert that no error occurred. Error:", err)
 	}
 	if len(formats) == 0 {
 		t.Error("failed to assert that there is formats")
@@ -102,7 +102,7 @@ func TestFindFileGroups(t *testing.T) {
 	directoryPath := "../../.."
 	fileGroups, err := findFileGroups(directoryPath)
 	if err != nil {
-		t.Fatal("failed to assert that no error occurred. Error: ", err.Error())
+		t.Fatal("failed to assert that no error occurred. Error:", err)
 	}
 	if len(fileGroups) == 0 {
 		t.Error("failed to assert that there is formats")
@@ -140,6 +140,6 @@ func TestScan(t *testing.T) {
 	metaObject, err := git.NewMetaObject(directoryPath, repositoryName, commitName, "", "", "")
 	err = scan(directoryPath, metaObject, []string{})
 	if err != nil {
-		t.Error("failed to assert that scan ran without errors. Error: ", err.Error())
+		t.Error("failed to assert that scan ran without errors. Error:", err)
 	}
 }

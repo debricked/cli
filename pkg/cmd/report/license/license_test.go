@@ -74,7 +74,7 @@ func TestGetCommitId(t *testing.T) {
 	debClient = client.NewDebClient(nil)
 	id, err := getCommitId(validCommit)
 	if err != nil {
-		t.Fatal("failed to assert that no error occurred. Error: ", err)
+		t.Fatal("failed to assert that no error occurred. Error:", err)
 	}
 	if id < 1 {
 		t.Error("failed to assert that the commit ID was a positive integer")

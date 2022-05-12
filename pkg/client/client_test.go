@@ -93,7 +93,7 @@ func TestGet(t *testing.T) {
 	setUp(true)
 	res, err := client.Get("/api/1.0/open/user-profile/is-admin", "application/json")
 	if err != nil {
-		t.Fatal("failed to assert that no client error occurred. Error: ", err.Error())
+		t.Fatal("failed to assert that no client error occurred. Error:", err)
 	}
 	if res.StatusCode != http.StatusOK {
 		t.Error("failed to assert that status code was 200")
@@ -119,7 +119,7 @@ func TestPost(t *testing.T) {
 		bytes.NewBuffer(jsonData),
 	)
 	if err != nil {
-		t.Fatal("failed to assert that no client error occurred. Error: ", err.Error())
+		t.Fatal("failed to assert that no client error occurred. Error:", err)
 	}
 	if res.StatusCode != http.StatusForbidden {
 		t.Error("failed to assert that status code was 403")
