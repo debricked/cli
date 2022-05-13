@@ -75,18 +75,6 @@ func TestNewMetaObjectWithRepository(t *testing.T) {
 	}
 }
 
-func TestFindBranchName(t *testing.T) {
-	setUp(t)
-	head, _ := repository.Head()
-	branch, err := FindBranchName(repository, head.Hash().String())
-	if err != nil {
-		t.Error(err)
-	}
-	if len(branch) == 0 {
-		t.Error("failed to find correct branch", branch)
-	}
-}
-
 func TestFindRepositoryName(t *testing.T) {
 	setUp(t)
 	name, err := FindRepositoryName(repository, "")
@@ -178,27 +166,6 @@ func TestFindRepositoryUrlWithFailure(t *testing.T) {
 		t.Error("failed to assert that url was ")
 	}
 	if !strings.Contains(err.Error(), "failed to find repository remote URL") {
-		t.Error("failed to assert error message")
-	}
-}
-
-func TestFindBranchNameWithFailure(t *testing.T) {
-	// Filesystem abstraction based on memory
-	fs := memfs.New()
-	// Git objects storer based on memory
-	store := memory.NewStorage()
-	r, err := git.Init(store, fs)
-	if err != nil {
-		t.Fatal("failed to get repository. Error: ", err.Error())
-	}
-	branch, err := FindBranchName(r, "commit-hash")
-	if err == nil {
-		t.Error("failed to assert that an error occurred")
-	}
-	if branch != "" {
-		t.Error("failed to find correct branch")
-	}
-	if !strings.Contains(err.Error(), "failed to find branch") {
 		t.Error("failed to assert error message")
 	}
 }

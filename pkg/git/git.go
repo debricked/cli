@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
 	"log"
 	"path/filepath"
 	"regexp"
@@ -42,10 +41,7 @@ func NewMetaObject(directoryPath string, repositoryName string, commit string, b
 		}
 
 		if !isSet(branchName) {
-			branchName, err = FindBranchName(repository, commit)
-			if err != nil {
-				log.Println(err.Error())
-			}
+			branchName = head.Name().Short()
 		}
 
 		if !isSet(url) {
@@ -110,28 +106,6 @@ func FindRepositoryUrl(repository *git.Repository) (string, error) {
 	}
 
 	return "", errors.New("failed to find repository URL")
-}
-
-// FindBranchName returns first branch name found connected to the commit hash
-func FindBranchName(repository *git.Repository, commit string) (string, error) {
-	branches, _ := repository.Branches()
-	branchName := ""
-	_ = branches.ForEach(func(branch *plumbing.Reference) error {
-		hash := branch.Hash().String()
-		if hash == commit {
-			branchName = branch.Name().Short()
-			branches.Close()
-		}
-
-		return nil
-	})
-
-	var err error
-	if branchName == "" {
-		err = errors.New("failed to find branch")
-	}
-
-	return branchName, err
 }
 
 // FindRemoteUrl returns first remote URL found in the repository
