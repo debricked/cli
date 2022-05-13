@@ -2,29 +2,22 @@ package report
 
 import (
 	"debricked/pkg/client"
-	"fmt"
+	"debricked/pkg/cmd/report/license"
 	"github.com/spf13/cobra"
-	"log"
 )
 
 var debClient *client.DebClient
 
-func Report() error {
-	fmt.Println("Reporting!")
-	return nil
-}
-
 func NewReportCmd(debrickedClient *client.DebClient) *cobra.Command {
 	debClient = debrickedClient
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "report",
-		Short: "Generate license report for upload ID",
-		Long:  "Generate license report for upload ID",
-		Run: func(cmd *cobra.Command, args []string) {
-			err := Report()
-			if err != nil {
-				log.Fatal(err)
-			}
-		},
+		Short: "Generate reports",
+		Long: `Generate reports for a commit.
+This is a premium feature. Please visit https://debricked.com/pricing/ for more info.`,
 	}
+
+	cmd.AddCommand(license.NewLicenseCmd(debClient))
+
+	return cmd
 }

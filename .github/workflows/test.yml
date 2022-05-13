@@ -31,6 +31,7 @@ jobs:
 
       - name: Test coverage
         run: bash scripts/check_coverage.sh
+        if: always()
         env:
           TEST_COVERAGE_THRESHOLD: 90
 
