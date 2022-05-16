@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -19,7 +19,7 @@ if [ ! -f "./coverage.out" ]; then
 fi
 
 # Find test coverage
-totalTestCoverage=`go tool cover -func=coverage.out | grep total | grep -Eo $regex`
+totalTestCoverage=$(go tool cover -func=coverage.out | grep total | grep -Eo "$regex")
 # Store coverage report
 go tool cover -html=coverage.out -o=coverage.html
 

@@ -18,6 +18,9 @@ jobs:
         with:
           go-version: 1.17
 
+      - name: Lint shell scripts
+        run: shellcheck **/*.sh
+
       - name: Build
         run: go build -v ./...
 
