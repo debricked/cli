@@ -156,7 +156,7 @@ func TestFindRepositoryUrlWithFailure(t *testing.T) {
 	store := memory.NewStorage()
 	r, err := git.Init(store, fs)
 	if err != nil {
-		t.Fatal("failed to get repository. Error: ", err.Error())
+		t.Fatal("failed to get repository. Error:", err)
 	}
 	url, err := FindRepositoryUrl(r)
 	if err == nil {
@@ -177,7 +177,7 @@ func TestFindRepositoryNameWithoutMetaData(t *testing.T) {
 	store := memory.NewStorage()
 	r, err := git.Init(store, fs)
 	if err != nil {
-		t.Fatal("failed to get repository. Error: ", err.Error())
+		t.Fatal("failed to get repository. Error:", err)
 	}
 	name, err := FindRepositoryName(r, "test/repository")
 	if err == nil {

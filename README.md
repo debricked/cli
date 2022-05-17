@@ -16,3 +16,6 @@ Complete documentation can be found over at [Debricked](https://debricked.com/do
 ### Windows
 
 ### MacOs
+
+## Docker
+`debricked` can be used through several docker images. [Read more](build/docker/README.md)
