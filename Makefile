@@ -4,7 +4,7 @@ install:
 test:
 	test-cli && test-docker-scripts && test-docker
 test-cli:
-	bash scripts/test.sh
+	bash scripts/test_cli.sh
 test-docker-scripts:
 	bash scripts/test_docker_scripts.sh
 test-docker:
