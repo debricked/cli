@@ -3,6 +3,7 @@ package root
 import (
 	"debricked/pkg/client"
 	"debricked/pkg/cmd/check"
+	"debricked/pkg/cmd/files"
 	"debricked/pkg/cmd/login"
 	"debricked/pkg/cmd/report"
 	"debricked/pkg/cmd/scan"
@@ -34,6 +35,7 @@ Read more: https://debricked.com/docs/administration/access-tokens.html`,
 	rootCmd.AddCommand(scan.NewScanCmd(debClient))
 	rootCmd.AddCommand(check.NewCheckCmd(debClient))
 	rootCmd.AddCommand(login.NewLoginCmd(debClient))
+	rootCmd.AddCommand(files.NewFilesCmd(debClient))
 
 	return rootCmd
 }
