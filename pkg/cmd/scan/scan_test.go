@@ -4,7 +4,6 @@ import (
 	"debricked/pkg/client"
 	"debricked/pkg/git"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 )
@@ -77,59 +76,6 @@ func TestRunMissingRepositoryProperties(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "failed to find repository name. Please use --repository flag") {
 		t.Error("failed to assert error message")
-	}
-}
-
-func TestGetSupportedFormats(t *testing.T) {
-	debClient = client.NewDebClient(nil)
-	formats, err := getSupportedFormats()
-	if err != nil {
-		t.Fatal("failed to assert that no error occurred. Error:", err)
-	}
-	if len(formats) == 0 {
-		t.Error("failed to assert that there is formats")
-	}
-	for _, format := range formats {
-		hasContent := format.Regex != nil || len(format.LockFileRegexes) > 0
-		if !hasContent {
-			t.Error("failed to assert that format had content")
-		}
-	}
-}
-
-func TestFindFileGroups(t *testing.T) {
-	debClient = client.NewDebClient(nil)
-	directoryPath := "../../.."
-	fileGroups, err := findFileGroups(directoryPath)
-	if err != nil {
-		t.Fatal("failed to assert that no error occurred. Error:", err)
-	}
-	if len(fileGroups) == 0 {
-		t.Error("failed to assert that there is formats")
-	}
-	for _, fileGroup := range fileGroups {
-		hasContent := fileGroup.Format != nil && (strings.Contains(fileGroup.FilePath, directoryPath) || len(fileGroup.RelatedFiles) > 0)
-		if !hasContent {
-			t.Error("failed to assert that format had content")
-		}
-	}
-}
-
-func TestIgnoredDir(t *testing.T) {
-	dir := "testdata"
-	ignoredDirs = []string{dir}
-	files, _ := os.ReadDir("../..")
-	for _, file := range files {
-		fileInfo, _ := file.Info()
-		if file.Name() == dir {
-			if !ignoredDir(fileInfo) {
-				t.Error("failed to assert that directory was not ignored")
-			}
-		} else if file.IsDir() {
-			if ignoredDir(fileInfo) {
-				t.Error("failed to assert that directory was not ignored")
-			}
-		}
 	}
 }
 

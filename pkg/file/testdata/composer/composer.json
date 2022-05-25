@@ -1,0 +1,12 @@
+{
+    "name": "viktigpetterr/composer",
+    "authors": [
+        {
+            "name": "viktigpetterr",
+            "email": "viktor.grasljunga@gmail.com"
+        }
+    ],
+    "require-dev": {
+        "phpunit/phpunit": "^9.5"
+    }
+}

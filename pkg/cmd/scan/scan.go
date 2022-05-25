@@ -4,21 +4,18 @@ import (
 	"debricked/pkg/client"
 	"debricked/pkg/file"
 	"debricked/pkg/git"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
-	"path/filepath"
 )
 
 var ignoredDirs []string
 
 var debClient *client.DebClient
+var finder *file.Finder
 
 var repositoryName string
 var commitName string
@@ -29,6 +26,7 @@ var integrationName string
 
 func NewScanCmd(debrickedClient *client.DebClient) *cobra.Command {
 	debClient = debrickedClient
+	finder, _ = file.NewFinder(debClient)
 	cmd := &cobra.Command{
 		Use:   "scan [path]",
 		Short: "Start a Debricked dependency scan",
@@ -84,7 +82,7 @@ func isValidFilepath(path string) bool {
 func scan(directoryPath string, gitMetaObject *git.MetaObject, ignoredDirectories []string) error {
 	ignoredDirs = append(ignoredDirectories, ".git", "vendor", "node_modules")
 
-	fileGroups, err := findFileGroups(directoryPath)
+	fileGroups, err := finder.GetGroups(directoryPath, ignoredDirs)
 	if err != nil {
 		return err
 	}
@@ -114,73 +112,4 @@ func scan(directoryPath string, gitMetaObject *git.MetaObject, ignoredDirectorie
 	}
 
 	return nil
-}
-
-// getSupportedFormats returns all supported dependency file formats
-func getSupportedFormats() ([]*file.CompiledFormat, error) {
-	res, err := debClient.Get("/api/1.0/open/files/supported-formats", "application/json")
-	if err != nil {
-		return nil, err
-	}
-	if res.StatusCode != http.StatusOK {
-		return nil, errors.New("failed to fetch supported formats")
-	}
-	defer res.Body.Close()
-	body, _ := io.ReadAll(res.Body)
-	var formats []*file.Format
-	err = json.Unmarshal(body, &formats)
-	if err != nil {
-		return nil, err
-	}
-
-	var compiledDependencyFileFormats []*file.CompiledFormat
-	for _, format := range formats {
-		compiledDependencyFileFormat, err := file.NewCompiledFormat(format)
-		if err == nil {
-			compiledDependencyFileFormats = append(compiledDependencyFileFormats, compiledDependencyFileFormat)
-		}
-	}
-
-	return compiledDependencyFileFormats, nil
-}
-
-func findFileGroups(directoryPath string) ([]file.Group, error) {
-	formats, err := getSupportedFormats()
-	if err != nil {
-		return nil, err
-	}
-	// Traverse files to find dependency file groups
-	var fileGroups []file.Group
-	err = filepath.Walk(
-		directoryPath,
-		func(path string, fileInfo os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			if ignoredDir(fileInfo) {
-				return filepath.SkipDir
-			}
-
-			if !fileInfo.IsDir() {
-				for _, format := range formats {
-					if format.Match(fileInfo.Name()) {
-						fileGroups = append(fileGroups, *file.NewGroup(path, &file.Format{}, []string{}))
-					}
-				}
-			}
-			return nil
-		},
-	)
-
-	return fileGroups, err
-}
-
-func ignoredDir(fileInfo os.FileInfo) bool {
-	for _, ignoredDir := range ignoredDirs {
-		if fileInfo.IsDir() && fileInfo.Name() == ignoredDir {
-			return true
-		}
-	}
-
-	return false
 }
