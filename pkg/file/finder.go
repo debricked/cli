@@ -44,7 +44,7 @@ func (finder *Finder) GetGroups(path string, ignoredDirs []string) ([]Group, err
 			if !fileInfo.IsDir() {
 				for _, format := range formats {
 					if format.Match(fileInfo.Name()) {
-						fileGroups = append(fileGroups, *NewGroup(path, &Format{}, []string{}))
+						fileGroups = append(fileGroups, *NewGroup(path, format, []string{}))
 					}
 				}
 			}

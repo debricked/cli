@@ -5,9 +5,9 @@ import (
 )
 
 type Group struct {
-	FilePath     string
-	Format       *Format
-	RelatedFiles []string
+	FilePath       string
+	CompiledFormat *CompiledFormat
+	RelatedFiles   []string
 }
 
 func (fileGroup *Group) Print() {
@@ -18,6 +18,6 @@ func (fileGroup *Group) Print() {
 	}
 }
 
-func NewGroup(filePath string, format *Format, relatedFiles []string) *Group {
-	return &Group{FilePath: filePath, Format: format, RelatedFiles: relatedFiles}
+func NewGroup(filePath string, format *CompiledFormat, relatedFiles []string) *Group {
+	return &Group{FilePath: filePath, CompiledFormat: format, RelatedFiles: relatedFiles}
 }
