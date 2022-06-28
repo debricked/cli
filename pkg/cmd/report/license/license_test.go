@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-const validCommit = "84cac1be9931f8bcc8ef59c5544aaac8c5c97c8b"
+const validCommit = "b3b1ff886344d876d13ab916bcfdba41c4e7a8bb"
 
 func TestNewLicenseCmd(t *testing.T) {
 	cmd := NewLicenseCmd(client.NewDebClient(nil))

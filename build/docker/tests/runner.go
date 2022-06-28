@@ -9,6 +9,8 @@ import (
 	"testing"
 )
 
+const validCommit = "b3b1ff886344d876d13ab916bcfdba41c4e7a8bb"
+
 var debrickedVariables = []string{
 	"DEBRICKED_SCAN_PATH",
 	"DEBRICKED_SCAN_REPOSITORY",
