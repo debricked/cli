@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"debricked/pkg/client"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -125,19 +127,84 @@ func TestGetGroups(t *testing.T) {
 	}
 }
 
-func TestIgnoredDir(t *testing.T) {
-	dir := "composer"
-	ignoredDirs := []string{dir}
-	files, _ := os.ReadDir("testdata")
-	for _, file := range files {
-		if file.Name() == dir {
-			if !ignoredDir(ignoredDirs, file.Name()) {
-				t.Error("failed to assert that directory was not ignored")
+func TestExclude(t *testing.T) {
+	var files []string
+	_ = filepath.Walk(".",
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
 			}
-		} else if file.IsDir() {
-			if ignoredDir(ignoredDirs, file.Name()) {
-				t.Error("failed to assert that directory was not ignored")
+			files = append(files, path)
+			return nil
+		})
+
+	cases := []struct {
+		name               string
+		exclusions         []string
+		expectedExclusions []string
+	}{
+		{
+			name:               "NoExclusions",
+			exclusions:         []string{},
+			expectedExclusions: []string{},
+		},
+		{
+			name:               "InvalidFileExclusion",
+			exclusions:         []string{"composer.json"},
+			expectedExclusions: []string{},
+		},
+		{
+			name:               "FileExclusionWithDoublestar",
+			exclusions:         []string{"**/composer.json"},
+			expectedExclusions: []string{"composer.json"},
+		},
+		{
+			name:               "DirectoryExclusion",
+			exclusions:         []string{"*/composer/*"},
+			expectedExclusions: []string{"composer.json", "composer.lock"},
+		},
+		{
+			name:               "DirectoryExclusionWithRelPath",
+			exclusions:         []string{"testdata/go/*"},
+			expectedExclusions: []string{"go.mod"},
+		},
+		{
+			name:               "ExtensionExclusionWithWildcardAndDoublestar",
+			exclusions:         []string{"**/*.mod"},
+			expectedExclusions: []string{"go.mod"},
+		},
+		{
+			name:               "DirectoryExclusionWithDoublestar",
+			exclusions:         []string{"**/yarn/**"},
+			expectedExclusions: []string{"yarn", "yarn.lock"},
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			var excludedFiles []string
+			for _, file := range files {
+				if excluded(c.exclusions, file) {
+					excludedFiles = append(excludedFiles, file)
+				}
 			}
-		}
+			if len(excludedFiles) != len(c.expectedExclusions) {
+				t.Error("failed to assert that the same number of files were ignored")
+			}
+
+			for _, file := range excludedFiles {
+				baseName := filepath.Base(file)
+				asserted := false
+				for _, expectedExcludedFile := range c.expectedExclusions {
+					if baseName == expectedExcludedFile {
+						asserted = true
+						break
+					}
+				}
+				if !asserted {
+					t.Error(fmt.Sprintf("%s ignored when it should pass", file))
+				}
+			}
+		})
 	}
 }
