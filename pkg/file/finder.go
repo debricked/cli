@@ -12,10 +12,10 @@ import (
 )
 
 type Finder struct {
-	debClient *client.DebClient
+	debClient client.Client
 }
 
-func NewFinder(debClient *client.DebClient) (*Finder, error) {
+func NewFinder(debClient client.Client) (*Finder, error) {
 	if debClient == nil {
 		return nil, errors.New("DebClient is nil")
 	}
@@ -23,7 +23,7 @@ func NewFinder(debClient *client.DebClient) (*Finder, error) {
 	return &Finder{debClient}, nil
 }
 
-//GetGroups return all file groups in specified path.
+//GetGroups return all file groups in specified path recursively.
 func (finder *Finder) GetGroups(path string, ignoredDirs []string) ([]Group, error) {
 	formats, err := finder.GetSupportedFormats()
 	if err != nil {
