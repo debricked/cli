@@ -81,7 +81,7 @@ func TestGetGroups(t *testing.T) {
 		t.Error("failed to assert that there is at least one format")
 	}
 	for _, fileGroup := range fileGroups {
-		hasContent := fileGroup.Format != nil && (strings.Contains(fileGroup.FilePath, directoryPath) || len(fileGroup.RelatedFiles) > 0)
+		hasContent := fileGroup.CompiledFormat != nil && (strings.Contains(fileGroup.FilePath, directoryPath) || len(fileGroup.RelatedFiles) > 0)
 		if !hasContent {
 			t.Error("failed to assert that format had content")
 		}
