@@ -6,6 +6,13 @@ import (
 	"os"
 )
 
+type Client interface {
+	// Post makes a POST request to one of Debricked's API endpoints
+	Post(uri string, contentType string, body *bytes.Buffer) (*http.Response, error)
+	// Get makes a GET request to one of Debricked's API endpoints
+	Get(uri string, format string) (*http.Response, error)
+}
+
 type DebClient struct {
 	host        *string
 	httpClient  *http.Client
@@ -33,12 +40,10 @@ func NewDebClient(accessToken *string) *DebClient {
 	}
 }
 
-// Post makes a POST request to one of Debricked's API endpoints
 func (debClient *DebClient) Post(uri string, contentType string, body *bytes.Buffer) (*http.Response, error) {
 	return post(uri, debClient, contentType, body, true)
 }
 
-// Get makes a GET request to one of Debricked's API endpoints
 func (debClient *DebClient) Get(uri string, format string) (*http.Response, error) {
 	return get(uri, debClient, true, format)
 }
