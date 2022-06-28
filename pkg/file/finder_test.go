@@ -1,23 +1,60 @@
 package file
 
 import (
+	"bytes"
 	"debricked/pkg/client"
+	"encoding/json"
+	"io"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"strings"
 	"testing"
 )
 
-var finder *Finder
+type debClientMock struct{}
 
-func setUp(authorized bool) {
-	var token string
+func (mock *debClientMock) Post(_ string, _ string, _ *bytes.Buffer) (*http.Response, error) {
+	return nil, nil
+}
+
+var authorized bool
+
+func (mock *debClientMock) Get(_ string, _ string) (*http.Response, error) {
+	var statusCode int
+	var body io.ReadCloser = nil
 	if authorized {
-		token = os.Getenv("DEBRICKED_TOKEN")
+		statusCode = http.StatusOK
+		formatsBytes, _ := json.Marshal(formatsMock)
+		body = ioutil.NopCloser(strings.NewReader(string(formatsBytes)))
 	} else {
-		token = "invalid"
+		statusCode = http.StatusForbidden
+	}
+	res := http.Response{
+		Status:           "",
+		StatusCode:       statusCode,
+		Proto:            "",
+		ProtoMajor:       0,
+		ProtoMinor:       0,
+		Header:           nil,
+		Body:             body,
+		ContentLength:    0,
+		TransferEncoding: nil,
+		Close:            false,
+		Uncompressed:     false,
+		Trailer:          nil,
+		Request:          nil,
+		TLS:              nil,
 	}
 
-	finder, _ = NewFinder(client.NewDebClient(&token))
+	return &res, nil
+}
+
+var finder *Finder
+
+func setUp(auth bool) {
+	finder, _ = NewFinder(&debClientMock{})
+	authorized = auth
 }
 
 func TestNewFinder(t *testing.T) {
@@ -62,10 +99,10 @@ func TestGetSupportedFormats(t *testing.T) {
 func TestGetSupportedFormatsFailed(t *testing.T) {
 	setUp(false)
 	formats, err := finder.GetSupportedFormats()
-	if len(formats) != 0 {
+	if len(formats) > 0 {
 		t.Error("failed to assert that no formats were found")
 	}
-	if !strings.Contains(err.Error(), "Unauthorized. Specify access token.") {
+	if !strings.Contains(err.Error(), "failed to fetch supported formats") {
 		t.Error("failed to assert error message")
 	}
 }
