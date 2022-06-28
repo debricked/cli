@@ -4,11 +4,11 @@ import (
 	"debricked/pkg/client"
 	"encoding/json"
 	"errors"
+	"github.com/bmatcuk/doublestar/v4"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 type Finder struct {
@@ -24,7 +24,7 @@ func NewFinder(debClient client.Client) (*Finder, error) {
 }
 
 //GetGroups return all file groups in specified path recursively.
-func (finder *Finder) GetGroups(path string, ignoredDirs []string) ([]Group, error) {
+func (finder *Finder) GetGroups(rootPath string, exclusions []string) ([]Group, error) {
 	formats, err := finder.GetSupportedFormats()
 	if err != nil {
 		return nil, err
@@ -32,19 +32,16 @@ func (finder *Finder) GetGroups(path string, ignoredDirs []string) ([]Group, err
 	// Traverse files to find dependency file groups
 	var fileGroups []Group
 	err = filepath.Walk(
-		path,
+		rootPath,
 		func(path string, fileInfo os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
-			if ignoredDir(ignoredDirs, path) {
-				return filepath.SkipDir
-			}
-
-			if !fileInfo.IsDir() {
+			if !excluded(exclusions, path) && !fileInfo.IsDir() {
 				for _, format := range formats {
 					if format.Match(fileInfo.Name()) {
 						fileGroups = append(fileGroups, *NewGroup(path, format, []string{}))
+						break
 					}
 				}
 			}
@@ -83,9 +80,11 @@ func (finder *Finder) GetSupportedFormats() ([]*CompiledFormat, error) {
 	return compiledDependencyFileFormats, nil
 }
 
-func ignoredDir(ignoredDirs []string, path string) bool {
-	for _, exclusion := range ignoredDirs {
-		if strings.Contains(path, exclusion) {
+func excluded(exclusions []string, path string) bool {
+	for _, exclusion := range exclusions {
+		ex := filepath.Clean(exclusion)
+		matched, _ := doublestar.PathMatch(ex, path)
+		if matched {
 			return true
 		}
 	}

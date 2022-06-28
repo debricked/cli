@@ -47,7 +47,7 @@ jobs:
           retention-days: 2
 
       - name: Test - E2E
-        run: go run cmd/debricked/main.go scan . -t ${{ secrets.DEBRICKED_TOKEN }}
+        run: go run cmd/debricked/main.go scan . -t ${{ secrets.DEBRICKED_TOKEN }} -e "**/testdata/**"
 
   docker:
     name: Docker

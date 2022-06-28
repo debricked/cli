@@ -12,8 +12,6 @@ import (
 	"os"
 )
 
-var ignoredDirs []string
-
 var debClient *client.DebClient
 var finder *file.Finder
 
@@ -23,6 +21,7 @@ var branchName string
 var commitAuthor string
 var repositoryUrl string
 var integrationName string
+var exclusions []string
 
 func NewScanCmd(debrickedClient *client.DebClient) *cobra.Command {
 	debClient = debrickedClient
@@ -42,6 +41,19 @@ If the given path contains a git repository all flags but "integration" will be 
 	cmd.Flags().StringVarP(&commitAuthor, "author", "a", "", "commit author")
 	cmd.Flags().StringVarP(&repositoryUrl, "repository-url", "u", "", "repository URL")
 	cmd.Flags().StringVarP(&integrationName, "integration", "i", "CLI", `name of integration used to trigger scan. For example "GitHub Actions"`)
+	cmd.Flags().StringArrayVarP(&exclusions, "exclude", "e", exclusions, `The following terms are supported to exclude paths:
+Special Terms | Meaning
+------------- | -------
+"*"           | matches any sequence of non-Separator characters 
+"/**/"        | matches zero or multiple directories
+"?"           | matches any single non-Separator character
+"[class]"     | matches any single non-Separator character against a class of characters ([see "character classes"])
+"{alt1,...}"  | matches a sequence of characters if one of the comma-separated alternatives matches
+
+Examples: 
+$ debricked scan . -e "*/**.lock" -e "**/node_modules/**" 
+$ debricked scan . -e "*\**.exe" -e "**\node_modules\**" 
+`)
 
 	return cmd
 }
@@ -62,7 +74,7 @@ func run(_ *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.New(fmt.Sprintf("%s %s\n", color.RedString("⨯"), err.Error()))
 	}
-	err = scan(directoryPath, gitMetaObject, []string{})
+	err = scan(directoryPath, gitMetaObject, exclusions)
 	if err != nil {
 		return errors.New(fmt.Sprintf("%s %s\n", color.RedString("⨯"), err.Error()))
 	}
@@ -79,10 +91,8 @@ func isValidFilepath(path string) bool {
 	return true
 }
 
-func scan(directoryPath string, gitMetaObject *git.MetaObject, ignoredDirectories []string) error {
-	ignoredDirs = append(ignoredDirectories, ".git", "vendor", "node_modules")
-
-	fileGroups, err := finder.GetGroups(directoryPath, ignoredDirs)
+func scan(directoryPath string, gitMetaObject *git.MetaObject, exclusions []string) error {
+	fileGroups, err := finder.GetGroups(directoryPath, exclusions)
 	if err != nil {
 		return err
 	}

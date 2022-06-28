@@ -12,6 +12,8 @@ import (
 var debClient *client.DebClient
 var finder *file.Finder
 
+var exclusions []string
+
 func NewFindCmd(debrickedClient *client.DebClient) *cobra.Command {
 	debClient = debrickedClient
 	finder, _ = file.NewFinder(debClient)
@@ -23,6 +25,19 @@ For example ` + "`package.json`" + ` with ` + "`package-lock.json`.",
 		Args: validateArgs,
 		RunE: run,
 	}
+	cmd.Flags().StringArrayVarP(&exclusions, "exclude", "e", exclusions, `The following terms are supported to exclude paths:
+Special Terms | Meaning
+------------- | -------
+"*"           | matches any sequence of non-Separator characters 
+"/**/"        | matches zero or multiple directories
+"?"           | matches any single non-Separator character
+"[class]"     | matches any single non-Separator character against a class of characters ([see "character classes"])
+"{alt1,...}"  | matches a sequence of characters if one of the comma-separated alternatives matches
+
+Examples: 
+$ debricked files find . -e "*/**.lock" -e "**/node_modules/**" 
+$ debricked files find . -e "*\**.exe" -e "**\node_modules\**" 
+`)
 
 	return cmd
 }
@@ -30,7 +45,7 @@ For example ` + "`package.json`" + ` with ` + "`package-lock.json`.",
 func run(_ *cobra.Command, args []string) error {
 	directoryPath := args[0]
 
-	return find(directoryPath, []string{})
+	return find(directoryPath, exclusions)
 }
 
 func find(path string, exclusions []string) error {
