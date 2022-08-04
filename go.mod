@@ -1,11 +1,12 @@
 module debricked
 
-go 1.17
+go 1.18
 
 require (
+	github.com/bmatcuk/doublestar/v4 v4.2.0
 	github.com/fatih/color v1.13.0
+	github.com/go-git/go-billy/v5 v5.3.1
 	github.com/go-git/go-git/v5 v5.4.2
-	github.com/google/go-cmp v0.5.6
 	github.com/jedib0t/go-pretty/v6 v6.3.0
 	github.com/schollz/progressbar/v3 v3.8.6
 	github.com/spf13/cobra v1.3.0
@@ -15,10 +16,8 @@ require (
 	github.com/Microsoft/go-winio v0.4.16 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
-	github.com/bmatcuk/doublestar/v4 v4.2.0 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
-	github.com/go-git/go-billy/v5 v5.3.1 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
