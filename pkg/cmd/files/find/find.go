@@ -3,20 +3,22 @@ package find
 import (
 	"debricked/pkg/client"
 	"debricked/pkg/file"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 )
 
-var debClient *client.DebClient
+var debClient *client.Client
 var finder *file.Finder
 
 var exclusions []string
+var jsonPrint bool
 
-func NewFindCmd(debrickedClient *client.DebClient) *cobra.Command {
+func NewFindCmd(debrickedClient *client.Client) *cobra.Command {
 	debClient = debrickedClient
-	finder, _ = file.NewFinder(debClient)
+	finder, _ = file.NewFinder(*debClient)
 	cmd := &cobra.Command{
 		Use:   "find [path]",
 		Short: "Find all dependency files in inputted path",

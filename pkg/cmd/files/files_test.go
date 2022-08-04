@@ -7,7 +7,8 @@ import (
 )
 
 func TestNewFilesCmd(t *testing.T) {
-	cmd := NewFilesCmd(client.NewDebClient(nil))
+	var debClient client.Client = client.NewDebClient(nil)
+	cmd := NewFilesCmd(&debClient)
 	commands := cmd.Commands()
 	nbrOfCommands := 1
 	if len(commands) != nbrOfCommands {

@@ -10,7 +10,8 @@ import (
 const validCommit = "b3b1ff886344d876d13ab916bcfdba41c4e7a8bb"
 
 func TestNewLicenseCmd(t *testing.T) {
-	cmd := NewLicenseCmd(client.NewDebClient(nil))
+	var c client.Client = client.NewDebClient(nil)
+	cmd := NewLicenseCmd(&c)
 	commands := cmd.Commands()
 	nbrOfCommands := 0
 	if len(commands) != nbrOfCommands {

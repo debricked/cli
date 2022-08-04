@@ -11,13 +11,13 @@ import (
 	"net/http"
 )
 
-var debClient *client.DebClient
+var debClient client.Client
 
 var email string
 var commitHash string
 
-func NewLicenseCmd(debrickedClient *client.DebClient) *cobra.Command {
-	debClient = debrickedClient
+func NewLicenseCmd(debrickedClient *client.Client) *cobra.Command {
+	debClient = *debrickedClient
 	cmd := &cobra.Command{
 		Use:   "license",
 		Short: "Generate license report",

@@ -11,10 +11,10 @@ import (
 	"net/http"
 )
 
-var debClient *client.DebClient
+var debClient client.Client
 
-func NewCheckCmd(debrickedClient *client.DebClient) *cobra.Command {
-	debClient = debrickedClient
+func NewCheckCmd(debrickedClient *client.Client) *cobra.Command {
+	debClient = *debrickedClient
 	cmd := &cobra.Command{
 		Use:   "check [commit hash]",
 		Short: "Check scan results on a specific commit",
