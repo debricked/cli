@@ -12,7 +12,7 @@ import (
 	"os"
 )
 
-var debClient *client.DebClient
+var debClient client.Client
 var finder *file.Finder
 
 var repositoryName string
@@ -23,8 +23,8 @@ var repositoryUrl string
 var integrationName string
 var exclusions []string
 
-func NewScanCmd(debrickedClient *client.DebClient) *cobra.Command {
-	debClient = debrickedClient
+func NewScanCmd(debrickedClient *client.Client) *cobra.Command {
+	debClient = *debrickedClient
 	finder, _ = file.NewFinder(debClient)
 	cmd := &cobra.Command{
 		Use:   "scan [path]",

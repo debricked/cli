@@ -9,7 +9,8 @@ import (
 )
 
 func TestNewScanCmd(t *testing.T) {
-	cmd := NewScanCmd(client.NewDebClient(nil))
+	var c client.Client = client.NewDebClient(nil)
+	cmd := NewScanCmd(&c)
 	flags := cmd.Flags()
 	flagAssertions := map[string]string{
 		"repository":     "r",

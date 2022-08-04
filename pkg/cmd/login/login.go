@@ -7,9 +7,9 @@ import (
 	"log"
 )
 
-var debClient *client.DebClient
+var debClient *client.Client
 
-func NewLoginCmd(debrickedClient *client.DebClient) *cobra.Command {
+func NewLoginCmd(debrickedClient *client.Client) *cobra.Command {
 	debClient = debrickedClient
 	return &cobra.Command{
 		Use:   "login",

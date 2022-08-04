@@ -29,13 +29,13 @@ Complete documentation is available at https://debricked.com/docs/integrations/c
 Read more: https://debricked.com/docs/administration/access-tokens.html`,
 	)
 
-	debClient := client.NewDebClient(&accessToken)
+	var debClient client.Client = client.NewDebClient(&accessToken)
 
-	rootCmd.AddCommand(report.NewReportCmd(debClient))
-	rootCmd.AddCommand(scan.NewScanCmd(debClient))
-	rootCmd.AddCommand(check.NewCheckCmd(debClient))
-	rootCmd.AddCommand(login.NewLoginCmd(debClient))
-	rootCmd.AddCommand(files.NewFilesCmd(debClient))
+	rootCmd.AddCommand(report.NewReportCmd(&debClient))
+	rootCmd.AddCommand(scan.NewScanCmd(&debClient))
+	rootCmd.AddCommand(check.NewCheckCmd(&debClient))
+	rootCmd.AddCommand(login.NewLoginCmd(&debClient))
+	rootCmd.AddCommand(files.NewFilesCmd(&debClient))
 
 	return rootCmd
 }

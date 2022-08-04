@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewReportCmd(debClient *client.DebClient) *cobra.Command {
+func NewReportCmd(debClient *client.Client) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "report",
 		Short: "Generate reports",

@@ -7,7 +7,8 @@ import (
 )
 
 func TestNewReportCmd(t *testing.T) {
-	cmd := NewReportCmd(client.NewDebClient(nil))
+	var c client.Client = client.NewDebClient(nil)
+	cmd := NewReportCmd(&c)
 	commands := cmd.Commands()
 	nbrOfCommands := 2
 	if len(commands) != nbrOfCommands {
