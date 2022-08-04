@@ -13,7 +13,7 @@ import (
 )
 
 func TestConcludeWithoutAnyFiles(t *testing.T) {
-	batch := newUploadBatch([]file.Group{}, nil)
+	batch := newUploadBatch(file.Groups{}, nil)
 	err := batch.conclude()
 	if err == nil {
 		t.Error("failed to assert that error occurred")
@@ -25,9 +25,8 @@ func TestConcludeWithoutAnyFiles(t *testing.T) {
 
 func TestUploadWithBadFiles(t *testing.T) {
 	group := file.NewGroup("package.json", nil, []string{"yarn.lock"})
-	fileGroups := []file.Group{
-		*group,
-	}
+	var groups file.Groups
+	groups.Add(*group)
 	metaObj, err := git.NewMetaObject("", "repository-name", "commit-name", "", "", "")
 	if err != nil {
 		t.Fatal("failed to create new MetaObject")
@@ -35,7 +34,7 @@ func TestUploadWithBadFiles(t *testing.T) {
 
 	invalidToken := "invalid"
 	debClient = client.NewDebClient(&invalidToken)
-	batch := newUploadBatch(fileGroups, metaObj)
+	batch := newUploadBatch(groups, metaObj)
 	output := captureOutput(batch.upload)
 	outputAssertions := []string{
 		"Failed to upload: package.json",

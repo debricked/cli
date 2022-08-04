@@ -46,11 +46,15 @@ type CompiledFormat struct {
 	LockFileRegexes  []*regexp.Regexp
 }
 
-func (format *CompiledFormat) Match(filename string) bool {
+func (format *CompiledFormat) MatchFile(filename string) bool {
 	if format.Regex.MatchString(filename) {
 		return true
 	}
 
+	return false
+}
+
+func (format *CompiledFormat) MatchLockFile(filename string) bool {
 	for _, lockFileFormat := range format.LockFileRegexes {
 		if lockFileFormat.MatchString(filename) {
 			return true

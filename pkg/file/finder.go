@@ -24,23 +24,24 @@ func NewFinder(debClient client.Client) (*Finder, error) {
 }
 
 //GetGroups return all file groups in specified path recursively.
-func (finder *Finder) GetGroups(rootPath string, exclusions []string) ([]Group, error) {
+func (finder *Finder) GetGroups(rootPath string, exclusions []string) (Groups, error) {
+	var groups Groups
+
 	formats, err := finder.GetSupportedFormats()
 	if err != nil {
-		return nil, err
+		return groups, err
 	}
+
 	// Traverse files to find dependency file groups
-	var fileGroups []Group
 	err = filepath.Walk(
 		rootPath,
 		func(path string, fileInfo os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
-			if !excluded(exclusions, path) && !fileInfo.IsDir() {
+			if !fileInfo.IsDir() && !excluded(exclusions, path) {
 				for _, format := range formats {
-					if format.Match(fileInfo.Name()) {
-						fileGroups = append(fileGroups, *NewGroup(path, format, []string{}))
+					if groups.Match(format, path) {
 						break
 					}
 				}
@@ -49,7 +50,7 @@ func (finder *Finder) GetGroups(rootPath string, exclusions []string) ([]Group, 
 		},
 	)
 
-	return fileGroups, err
+	return groups, err
 }
 
 // GetSupportedFormats returns all supported dependency file formats

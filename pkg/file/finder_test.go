@@ -115,16 +115,16 @@ func TestGetGroups(t *testing.T) {
 
 	exclusions := []string{"testdata/go/*.mod", "testdata/misc/**"}
 	excludedFiles := []string{"testdata/go/go.mod", "testdata/misc/requirements.txt"}
-	const nbrOfGroups = 3
+	const nbrOfGroups = 2
 
 	fileGroups, err := finder.GetGroups(directoryPath, exclusions)
 	if err != nil {
 		t.Fatal("failed to assert that no error occurred. Error:", err)
 	}
-	if len(fileGroups) != nbrOfGroups {
-		t.Error(fmt.Sprintf("failed to assert that %d groups were created. %d was found", nbrOfGroups, len(fileGroups)))
+	if fileGroups.Size() != nbrOfGroups {
+		t.Error(fmt.Sprintf("failed to assert that %d groups were created. %d was found", nbrOfGroups, fileGroups.Size()))
 	}
-	for _, fileGroup := range fileGroups {
+	for _, fileGroup := range fileGroups.ToSlice() {
 		hasContent := fileGroup.CompiledFormat != nil && (strings.Contains(fileGroup.FilePath, directoryPath) || len(fileGroup.RelatedFiles) > 0)
 		if !hasContent {
 			t.Error("failed to assert that format had content")

@@ -2,6 +2,7 @@ package scan
 
 import (
 	"debricked/pkg/client"
+	"debricked/pkg/file"
 	"debricked/pkg/git"
 	"fmt"
 	"strings"
@@ -60,6 +61,7 @@ func TestValidateArgsInvalidArg(t *testing.T) {
 
 func TestRun(t *testing.T) {
 	debClient = client.NewDebClient(nil)
+	finder, _ = file.NewFinder(debClient)
 	repositoryName = "testdata/yarn"
 	commitName = "testdata/yarn-commit"
 	err := run(nil, []string{"testdata/yarn"})
@@ -71,7 +73,7 @@ func TestRun(t *testing.T) {
 func TestRunMissingRepositoryProperties(t *testing.T) {
 	debClient = client.NewDebClient(nil)
 	repositoryName = ""
-	err := run(nil, []string{"testdata/yarn"})
+	err := run(nil, []string{"testdata/composer"})
 	if err == nil {
 		t.Fatal("failed to assert that an error occurred")
 	}
@@ -81,6 +83,8 @@ func TestRunMissingRepositoryProperties(t *testing.T) {
 }
 
 func TestScan(t *testing.T) {
+	debClient = client.NewDebClient(nil)
+	finder, _ = file.NewFinder(debClient)
 	directoryPath := "testdata/yarn"
 	repositoryName = directoryPath
 	commitName = "testdata/yarn-commit"
