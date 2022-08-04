@@ -21,7 +21,7 @@ import (
 )
 
 type uploadBatch struct {
-	fileGroups    []file.Group
+	fileGroups    file.Groups
 	gitMetaObject *git.MetaObject
 	ciUploadId    int
 }
@@ -46,32 +46,20 @@ func (uploadBatch *uploadBatch) upload() {
 		}
 	}
 
-	for _, fileGroup := range uploadBatch.fileGroups {
-		if uploadBatch.initialized() {
+	for _, f := range uploadBatch.fileGroups.GetFiles() {
+		if !uploadBatch.initialized() {
+			uploadWorker(f)
+		} else {
 			// Increment WaitGroup Counter
 			wg.Add(1)
-			go uploadWorker(fileGroup.FilePath)
-		} else {
-			uploadWorker(fileGroup.FilePath)
+			go uploadWorker(f)
 		}
-		for _, relatedFile := range fileGroup.RelatedFiles {
-			uploadWorker(relatedFile)
-		}
-		//for _, relatedFile := range fileGroup.RelatedFiles {
-		//	if uploadBatch.initialized() {
-		//		// Increment WaitGroup Counter
-		//		wg.Add(1)
-		//		go uploadWorker(relatedFile)
-		//	} else {
-		//		uploadWorker(relatedFile)
-		//	}
-		//}
 	}
 	// Wait for goroutines to finish
 	wg.Wait()
 }
 
-func newUploadBatch(fileGroups []file.Group, gitMetaObject *git.MetaObject) *uploadBatch {
+func newUploadBatch(fileGroups file.Groups, gitMetaObject *git.MetaObject) *uploadBatch {
 	return &uploadBatch{fileGroups: fileGroups, gitMetaObject: gitMetaObject, ciUploadId: 0}
 }
 

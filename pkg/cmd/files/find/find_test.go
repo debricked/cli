@@ -50,7 +50,7 @@ func TestRun(t *testing.T) {
 func TestFind(t *testing.T) {
 	clientMockAuthorized = true
 	finder, _ = file.NewFinder(clientMock)
-	err := find("../../scan", []string{})
+	err := find("../../scan", []string{}, false)
 	if err != nil {
 		t.Fatal("failed to assert that no error occurred. Error:", err)
 	}

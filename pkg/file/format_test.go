@@ -146,7 +146,7 @@ func TestMatchFile(t *testing.T) {
 	if err != nil {
 		t.Error("failed to assert that error was nil")
 	}
-	if !compiledF.Match("/home/test/regex.test") {
+	if !compiledF.MatchFile("/home/test/regex.test") {
 		t.Error("failed to find filename match")
 	}
 }
@@ -161,7 +161,7 @@ func TestMatchLockFile(t *testing.T) {
 	if err != nil {
 		t.Error("failed to assert that error was nil")
 	}
-	if !compiledF.Match("/home/test/lockFileRegex.test") {
+	if !compiledF.MatchLockFile("/home/test/lockFileRegex.test") {
 		t.Error("failed to find lock file match")
 	}
 }
@@ -176,7 +176,7 @@ func TestMatchNoFile(t *testing.T) {
 	if err != nil {
 		t.Error("failed to assert that error was nil")
 	}
-	if compiledF.Match("nil") {
+	if compiledF.MatchFile("nil") {
 		t.Error("failed to assert that no file was matched")
 	}
 }

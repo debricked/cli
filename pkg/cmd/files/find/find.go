@@ -40,6 +40,17 @@ Examples:
 $ debricked files find . -e "*/**.lock" -e "**/node_modules/**" 
 $ debricked files find . -e "*\**.exe" -e "**\node_modules\**" 
 `)
+	cmd.Flags().BoolVarP(&jsonPrint, "json", "j", false, `Print files in JSON format
+Format:
+[
+  {
+    "dependencyFile": "package.json",
+    "lockFiles": [
+      "yarn.lock"
+    ]
+  },
+]
+`)
 
 	return cmd
 }
@@ -47,16 +58,21 @@ $ debricked files find . -e "*\**.exe" -e "**\node_modules\**"
 func run(_ *cobra.Command, args []string) error {
 	directoryPath := args[0]
 
-	return find(directoryPath, exclusions)
+	return find(directoryPath, exclusions, jsonPrint)
 }
 
-func find(path string, exclusions []string) error {
+func find(path string, exclusions []string, jsonPrint bool) error {
 	fileGroups, err := finder.GetGroups(path, exclusions)
 	if err != nil {
 		return err
 	}
-	for _, group := range fileGroups {
-		group.Print()
+	if jsonPrint {
+		jsonFileGroups, _ := json.Marshal(fileGroups.ToSlice())
+		fmt.Println(string(jsonFileGroups))
+	} else {
+		for _, group := range fileGroups.ToSlice() {
+			group.Print()
+		}
 	}
 
 	return nil
