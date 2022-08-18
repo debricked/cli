@@ -68,7 +68,7 @@ func TestNewFinder(t *testing.T) {
 		t.Error("failed to assert that finder was nil")
 	}
 
-	if !strings.Contains(err.Error(), "DebClient is nil") {
+	if !strings.Contains(err.Error(), "client is nil") {
 		t.Error("failed to assert error message")
 	}
 

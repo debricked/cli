@@ -2,18 +2,13 @@ package scan
 
 import (
 	"debricked/pkg/client"
-	"debricked/pkg/file"
-	"debricked/pkg/git"
+	"debricked/pkg/scanner"
 	"errors"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"io/ioutil"
 	"os"
 )
-
-var debClient client.Client
-var finder *file.Finder
 
 var repositoryName string
 var commitName string
@@ -23,18 +18,19 @@ var repositoryUrl string
 var integrationName string
 var exclusions []string
 
-func NewScanCmd(debrickedClient *client.Client) *cobra.Command {
-	debClient = *debrickedClient
-	finder, _ = file.NewFinder(debClient)
+var scanCmdError error
+
+func NewScanCmd(c *client.Client) *cobra.Command {
+	var s scanner.Scanner
+	s, scanCmdError = scanner.NewDebrickedScanner(c)
 	cmd := &cobra.Command{
 		Use:   "scan [path]",
 		Short: "Start a Debricked dependency scan",
 		Long: `All supported dependency files will be scanned and analysed.
 If the given path contains a git repository all flags but "integration" will be resolved. Otherwise they have to specified.`,
-		Args: validateArgs,
-		RunE: run,
+		Args: ValidateArgs,
+		RunE: RunE(&s),
 	}
-
 	cmd.Flags().StringVarP(&repositoryName, "repository", "r", "", "repository name")
 	cmd.Flags().StringVarP(&commitName, "commit", "c", "", "commit hash")
 	cmd.Flags().StringVarP(&branchName, "branch", "b", "", "branch name")
@@ -58,7 +54,34 @@ $ debricked scan . -e "*\**.exe" -e "**\node_modules\**"
 	return cmd
 }
 
-func validateArgs(_ *cobra.Command, args []string) error {
+func RunE(s *scanner.Scanner) func(_ *cobra.Command, args []string) error {
+	return func(_ *cobra.Command, args []string) error {
+		directoryPath := args[0]
+		options := scanner.DebrickedOptions{
+			DirectoryPath:   directoryPath,
+			Exclusions:      exclusions,
+			RepositoryName:  repositoryName,
+			CommitName:      commitName,
+			BranchName:      branchName,
+			CommitAuthor:    commitAuthor,
+			RepositoryUrl:   repositoryUrl,
+			IntegrationName: integrationName,
+		}
+		if s != nil {
+			scanCmdError = (*s).Scan(options)
+		} else {
+			scanCmdError = errors.New("scanner was nil")
+		}
+
+		if scanCmdError != nil {
+			return errors.New(fmt.Sprintf("%s %s\n", color.RedString("⨯"), scanCmdError.Error()))
+		}
+
+		return scanCmdError
+	}
+}
+
+func ValidateArgs(_ *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return errors.New("requires directory path")
 	}
@@ -68,58 +91,11 @@ func validateArgs(_ *cobra.Command, args []string) error {
 	return fmt.Errorf("invalid directory path specified: %s", args[0])
 }
 
-func run(_ *cobra.Command, args []string) error {
-	directoryPath := args[0]
-	gitMetaObject, err := git.NewMetaObject(directoryPath, repositoryName, commitName, branchName, commitAuthor, repositoryUrl)
-	if err != nil {
-		return errors.New(fmt.Sprintf("%s %s\n", color.RedString("⨯"), err.Error()))
-	}
-	err = scan(directoryPath, gitMetaObject, exclusions)
-	if err != nil {
-		return errors.New(fmt.Sprintf("%s %s\n", color.RedString("⨯"), err.Error()))
-	}
-
-	return nil
-}
-
 func isValidFilepath(path string) bool {
-	_, err := ioutil.ReadDir(path)
+	_, err := os.ReadDir(path)
 	if err != nil {
 		return false
 	}
 
 	return true
-}
-
-func scan(directoryPath string, gitMetaObject *git.MetaObject, exclusions []string) error {
-	fileGroups, err := finder.GetGroups(directoryPath, exclusions)
-	if err != nil {
-		return err
-	}
-
-	batch := newUploadBatch(fileGroups, gitMetaObject)
-	batch.upload()
-	err = batch.conclude()
-	if err != nil {
-		return err
-	}
-
-	result, err := batch.wait()
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("\n%d vulnerabilities found\n", result.VulnerabilitiesFound)
-	fmt.Println("")
-	failPipeline := false
-	for _, rule := range result.AutomationRules {
-		rule.Print(os.Stdout)
-		failPipeline = failPipeline || rule.FailPipeline()
-	}
-	fmt.Printf("For full details, visit: %s\n\n", color.BlueString(result.DetailsUrl))
-	if failPipeline {
-		return errors.New("")
-	}
-
-	return nil
 }

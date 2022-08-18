@@ -1,4 +1,4 @@
-package scan
+package uploader
 
 import (
 	"debricked/pkg/automation"
@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-type scanStatus struct {
+type uploadStatus struct {
 	Progress                       int               `json:"progress"`
 	VulnerabilitiesFound           int               `json:"vulnerabilitiesFound"`
 	UnaffectedVulnerabilitiesFound int               `json:"unaffectedVulnerabilitiesFound"`
@@ -16,8 +16,8 @@ type scanStatus struct {
 	DetailsUrl                     string            `json:"detailsUrl"`
 }
 
-func newScanStatus(response *http.Response) (*scanStatus, error) {
-	status := scanStatus{}
+func newUploadStatus(response *http.Response) (*uploadStatus, error) {
+	status := uploadStatus{}
 	data, _ := io.ReadAll(response.Body)
 	defer response.Body.Close()
 	err := json.Unmarshal(data, &status)

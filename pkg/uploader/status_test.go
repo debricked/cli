@@ -1,4 +1,4 @@
-package scan
+package uploader
 
 import (
 	"net/http"
@@ -22,7 +22,7 @@ func TestNewScanStatusBadResponse(t *testing.T) {
 		Request:          nil,
 		TLS:              nil,
 	}
-	status, err := newScanStatus(res)
+	status, err := newUploadStatus(res)
 	if err == nil {
 		t.Error("failed to assert that error occurred")
 	}

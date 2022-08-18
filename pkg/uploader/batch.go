@@ -1,14 +1,14 @@
-package scan
+package uploader
 
 import (
 	"bytes"
+	"debricked/pkg/client"
 	"debricked/pkg/file"
 	"debricked/pkg/git"
+	"debricked/pkg/tui"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/schollz/progressbar/v3"
 	"io"
 	"log"
 	"mime/multipart"
@@ -21,9 +21,15 @@ import (
 )
 
 type uploadBatch struct {
-	fileGroups    file.Groups
-	gitMetaObject *git.MetaObject
-	ciUploadId    int
+	client          *client.Client
+	fileGroups      file.Groups
+	gitMetaObject   *git.MetaObject
+	integrationName string
+	ciUploadId      int
+}
+
+func newUploadBatch(client *client.Client, fileGroups file.Groups, gitMetaObject *git.MetaObject, integrationName string) *uploadBatch {
+	return &uploadBatch{client: client, fileGroups: fileGroups, gitMetaObject: gitMetaObject, integrationName: integrationName, ciUploadId: 0}
 }
 
 // upload concurrently posts all file groups to Debricked
@@ -59,10 +65,6 @@ func (uploadBatch *uploadBatch) upload() {
 	wg.Wait()
 }
 
-func newUploadBatch(fileGroups file.Groups, gitMetaObject *git.MetaObject) *uploadBatch {
-	return &uploadBatch{fileGroups: fileGroups, gitMetaObject: gitMetaObject, ciUploadId: 0}
-}
-
 // uploadFile Reads file content from filepath and uploads it to Debricked. Returns HTTP status code or 0 if other error occur
 func (uploadBatch *uploadBatch) uploadFile(filePath string) error {
 	body := &bytes.Buffer{}
@@ -83,7 +85,7 @@ func (uploadBatch *uploadBatch) uploadFile(filePath string) error {
 	if uploadBatch.initialized() {
 		_ = writer.WriteField("ciUploadId", strconv.Itoa(uploadBatch.ciUploadId))
 	}
-	response, err := debClient.Post(
+	response, err := (*uploadBatch.client).Post(
 		"/api/1.0/open/uploads/dependencies/files",
 		writer.FormDataContentType(),
 		body,
@@ -96,9 +98,9 @@ func (uploadBatch *uploadBatch) uploadFile(filePath string) error {
 		data, _ := io.ReadAll(response.Body)
 		defer response.Body.Close()
 
-		uploadedFile := uploadedFile{}
-		_ = json.Unmarshal(data, &uploadedFile)
-		uploadBatch.ciUploadId = uploadedFile.CiUploadId
+		uFile := uploadedFile{}
+		_ = json.Unmarshal(data, &uFile)
+		uploadBatch.ciUploadId = uFile.CiUploadId
 	}
 
 	return nil
@@ -112,7 +114,7 @@ func (uploadBatch *uploadBatch) conclude() error {
 	body, err := json.Marshal(uploadConclusion{
 		CiUploadId:      strconv.Itoa(uploadBatch.ciUploadId),
 		RepositoryName:  uploadBatch.gitMetaObject.RepositoryName,
-		IntegrationName: integrationName,
+		IntegrationName: uploadBatch.integrationName,
 		CommitName:      uploadBatch.gitMetaObject.CommitName,
 		Author:          uploadBatch.gitMetaObject.Author,
 	})
@@ -120,7 +122,7 @@ func (uploadBatch *uploadBatch) conclude() error {
 	if err != nil {
 		return err
 	}
-	response, err := debClient.Post(
+	response, err := (*uploadBatch.client).Post(
 		"/api/1.0/open/finishes/dependencies/files/uploads",
 		"application/json",
 		bytes.NewBuffer(body),
@@ -141,15 +143,15 @@ func (uploadBatch *uploadBatch) initialized() bool {
 	return uploadBatch.ciUploadId > 0
 }
 
-// wait track scan progress and return scanStatus upon completion
-func (uploadBatch *uploadBatch) wait() (*scanStatus, error) {
-	bar := newProgressBar()
+// wait track scan progress and return uploadStatus upon completion
+func (uploadBatch *uploadBatch) wait() (*UploadResult, error) {
+	bar := tui.NewProgressBar()
 	_ = bar.RenderBlank()
 	// poll scan status until completion
-	var resultStatus *scanStatus
+	var resultStatus *UploadResult
 	uri := fmt.Sprintf("/api/1.0/open/ci/upload/status?ciUploadId=%s", strconv.Itoa(uploadBatch.ciUploadId))
 	for !bar.IsFinished() {
-		res, err := debClient.Get(uri, "application/json")
+		res, err := (*uploadBatch.client).Get(uri, "application/json")
 		if err != nil {
 			return nil, err
 		}
@@ -160,7 +162,7 @@ func (uploadBatch *uploadBatch) wait() (*scanStatus, error) {
 			}
 			return nil, errors.New("progress polling terminated due to long queue times")
 		}
-		status, err := newScanStatus(res)
+		status, err := newUploadStatus(res)
 		if err != nil {
 			return nil, err
 		}
@@ -170,9 +172,9 @@ func (uploadBatch *uploadBatch) wait() (*scanStatus, error) {
 		}
 
 		if bar.IsFinished() {
-			resultStatus = status
+			resultStatus = newUploadResult(status)
 		} else {
-			time.Sleep(2000 * time.Millisecond)
+			time.Sleep(1000 * time.Millisecond)
 		}
 	}
 
@@ -194,23 +196,4 @@ type uploadConclusion struct {
 	IntegrationName string `json:"integrationName"`
 	CommitName      string `json:"commitName"`
 	Author          string `json:"author"`
-}
-
-func newProgressBar() *progressbar.ProgressBar {
-	return progressbar.NewOptions(100,
-		progressbar.OptionEnableColorCodes(true),
-		progressbar.OptionSetPredictTime(true),
-		progressbar.OptionSetWidth(30),
-		progressbar.OptionSetDescription("[blue]Scanning...[reset]"),
-		progressbar.OptionOnCompletion(func() {
-			color.NoColor = false
-			color.Green("✔")
-		}),
-		progressbar.OptionSetTheme(progressbar.Theme{
-			Saucer:        "[blue]█[reset]",
-			SaucerPadding: " ",
-			BarStart:      "|",
-			BarEnd:        "|",
-		}),
-	)
 }
