@@ -1,4 +1,4 @@
-package scan
+package uploader
 
 import (
 	"bytes"
@@ -12,17 +12,6 @@ import (
 	"testing"
 )
 
-func TestConcludeWithoutAnyFiles(t *testing.T) {
-	batch := newUploadBatch(file.Groups{}, nil)
-	err := batch.conclude()
-	if err == nil {
-		t.Error("failed to assert that error occurred")
-	}
-	if !strings.Contains(err.Error(), "failed to find dependency files") {
-		t.Error("failed to asser error message")
-	}
-}
-
 func TestUploadWithBadFiles(t *testing.T) {
 	group := file.NewGroup("package.json", nil, []string{"yarn.lock"})
 	var groups file.Groups
@@ -33,8 +22,9 @@ func TestUploadWithBadFiles(t *testing.T) {
 	}
 
 	invalidToken := "invalid"
-	debClient = client.NewDebClient(&invalidToken)
-	batch := newUploadBatch(groups, metaObj)
+	var c client.Client
+	c = client.NewDebClient(&invalidToken)
+	batch := newUploadBatch(&c, groups, metaObj, "CLI")
 	output := captureOutput(batch.upload)
 	outputAssertions := []string{
 		"Failed to upload: package.json",
@@ -46,7 +36,17 @@ func TestUploadWithBadFiles(t *testing.T) {
 			t.Error(fmt.Sprintf("failed to assert that output contained %s", assertion))
 		}
 	}
+}
 
+func TestConcludeWithoutAnyFiles(t *testing.T) {
+	batch := newUploadBatch(nil, file.Groups{}, nil, "CLI")
+	err := batch.conclude()
+	if err == nil {
+		t.Error("failed to assert that error occurred")
+	}
+	if !strings.Contains(err.Error(), "failed to find dependency files") {
+		t.Error("failed to asser error message")
+	}
 }
 
 func captureOutput(f func()) string {

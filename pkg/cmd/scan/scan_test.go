@@ -2,15 +2,15 @@ package scan
 
 import (
 	"debricked/pkg/client"
-	"debricked/pkg/file"
-	"debricked/pkg/git"
+	"debricked/pkg/scanner"
 	"fmt"
 	"strings"
 	"testing"
 )
 
 func TestNewScanCmd(t *testing.T) {
-	var c client.Client = client.NewDebClient(nil)
+	var c client.Client
+	c = client.NewDebClient(nil)
 	cmd := NewScanCmd(&c)
 	flags := cmd.Flags()
 	flagAssertions := map[string]string{
@@ -33,14 +33,14 @@ func TestNewScanCmd(t *testing.T) {
 }
 
 func TestValidateArgs(t *testing.T) {
-	err := validateArgs(nil, []string{"/"})
+	err := ValidateArgs(nil, []string{"/"})
 	if err != nil {
 		t.Error("failed to assert that no error occurred. Error:", err)
 	}
 }
 
 func TestValidateArgsMissingArg(t *testing.T) {
-	err := validateArgs(nil, []string{})
+	err := ValidateArgs(nil, []string{})
 	if err == nil {
 		t.Error("failed to assert that an error occurred")
 	}
@@ -50,7 +50,7 @@ func TestValidateArgsMissingArg(t *testing.T) {
 }
 
 func TestValidateArgsInvalidArg(t *testing.T) {
-	err := validateArgs(nil, []string{"invalid-path"})
+	err := ValidateArgs(nil, []string{"invalid-path"})
 	if err == nil {
 		t.Error("failed to assert that an error occurred")
 	}
@@ -59,38 +59,29 @@ func TestValidateArgsInvalidArg(t *testing.T) {
 	}
 }
 
-func TestRun(t *testing.T) {
-	debClient = client.NewDebClient(nil)
-	finder, _ = file.NewFinder(debClient)
-	repositoryName = "testdata/yarn"
-	commitName = "testdata/yarn-commit"
-	err := run(nil, []string{"testdata/yarn"})
+func TestRunE(t *testing.T) {
+	var s scanner.Scanner
+	s = &scannerMock{}
+	runE := RunE(&s)
+	err := runE(nil, []string{"."})
 	if err != nil {
 		t.Fatal("failed to assert that no error occurred. Error:", err)
 	}
 }
 
-func TestRunMissingRepositoryProperties(t *testing.T) {
-	debClient = client.NewDebClient(nil)
-	repositoryName = ""
-	err := run(nil, []string{"testdata/composer"})
+func TestRunEError(t *testing.T) {
+	runE := RunE(nil)
+	err := runE(nil, []string{"."})
 	if err == nil {
-		t.Fatal("failed to assert that an error occurred")
+		t.Error("failed to assert that an error occurred. Error:", err)
 	}
-	if !strings.Contains(err.Error(), "failed to find repository name. Please use --repository flag") {
+	if !strings.Contains(err.Error(), "⨯ scanner was nil") {
 		t.Error("failed to assert error message")
 	}
 }
 
-func TestScan(t *testing.T) {
-	debClient = client.NewDebClient(nil)
-	finder, _ = file.NewFinder(debClient)
-	directoryPath := "testdata/yarn"
-	repositoryName = directoryPath
-	commitName = "testdata/yarn-commit"
-	metaObject, err := git.NewMetaObject(directoryPath, repositoryName, commitName, "", "", "")
-	err = scan(directoryPath, metaObject, []string{})
-	if err != nil {
-		t.Error("failed to assert that scan ran without errors. Error:", err)
-	}
+type scannerMock struct{}
+
+func (*scannerMock) Scan(_ scanner.Options) error {
+	return nil
 }

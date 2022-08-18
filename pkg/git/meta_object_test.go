@@ -14,7 +14,7 @@ func TestNewMetaObjectWithoutRepositoryName(t *testing.T) {
 	if metaObj == nil {
 		t.Error("failed to assert that gitMetaObject was not nil")
 	}
-	if !strings.Contains(err.Error(), "failed to find repository name. Please use --repository flag") {
+	if !strings.Contains(err.Error(), "failed to find repository name") {
 		t.Error("failed to assert that repository name was missing")
 	}
 }
@@ -27,7 +27,7 @@ func TestNewMetaObjectWithoutCommit(t *testing.T) {
 	if metaObj == nil {
 		t.Error("failed to assert that gitMetaObject was not nil")
 	}
-	if !strings.Contains(err.Error(), "failed to find commit hash. Please use --commit flag") {
+	if !strings.Contains(err.Error(), "failed to find commit hash") {
 		t.Error("failed to assert that commit hash was missing")
 	}
 }

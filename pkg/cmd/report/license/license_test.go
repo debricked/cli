@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-const validCommit = "b3b1ff886344d876d13ab916bcfdba41c4e7a8bb"
+const validCommit = "3bad786e721e2337117670eab0ff5bc009d8ce41"
 
 func TestNewLicenseCmd(t *testing.T) {
 	var c client.Client = client.NewDebClient(nil)
@@ -54,7 +54,7 @@ func TestRun(t *testing.T) {
 	debClient = client.NewDebClient(nil)
 	err := run(nil, nil)
 	if err != nil {
-		t.Fatal("failed to assert that no error occurred")
+		t.Fatal("failed to assert that no error occurred. Error: " + err.Error())
 	}
 }
 

@@ -8,12 +8,15 @@ import (
 	"regexp"
 )
 
+var RepositoryNameError = errors.New("failed to find repository name")
+var CommitNameError = errors.New("failed to find commit hash")
+
 func checkErrors(obj *MetaObject) error {
 	if len(obj.RepositoryName) == 0 {
-		return errors.New("failed to find repository name. Please use --repository flag")
+		return RepositoryNameError
 	}
 	if len(obj.CommitName) == 0 {
-		return errors.New("failed to find commit hash. Please use --commit flag")
+		return CommitNameError
 	}
 
 	return nil

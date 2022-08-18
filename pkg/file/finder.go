@@ -15,15 +15,15 @@ type Finder struct {
 	debClient client.Client
 }
 
-func NewFinder(debClient client.Client) (*Finder, error) {
-	if debClient == nil {
-		return nil, errors.New("DebClient is nil")
+func NewFinder(c client.Client) (*Finder, error) {
+	if c == nil {
+		return nil, errors.New("client is nil")
 	}
 
-	return &Finder{debClient}, nil
+	return &Finder{c}, nil
 }
 
-//GetGroups return all file groups in specified path recursively.
+// GetGroups return all file groups in specified path recursively.
 func (finder *Finder) GetGroups(rootPath string, exclusions []string) (Groups, error) {
 	var groups Groups
 
