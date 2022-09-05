@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-DEBRICKED_SCAN_PATH="."
-
 if [[ -n "${TF_BUILD}" ]]; then # https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
   echo "Integration: Azure DevOps"
   # shellcheck disable=SC1091
@@ -34,7 +32,6 @@ export DEBRICKED_SCAN_PATH
 export DEBRICKED_SCAN_REPOSITORY
 export DEBRICKED_SCAN_COMMIT
 export DEBRICKED_SCAN_BRANCH
-export DEBRICKED_SCAN_PATH
 export DEBRICKED_SCAN_REPOSITORY_URL
 export DEBRICKED_SCAN_INTEGRATION
 export DEBRICKED_SCAN_AUTHOR

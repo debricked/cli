@@ -12,6 +12,7 @@ DEBRICKED_SCAN_COMMIT="${GITHUB_SHA}"
 DEBRICKED_SCAN_BRANCH="${refonly}"
 DEBRICKED_SCAN_REPOSITORY_URL="https://github.com/${GITHUB_REPOSITORY}"
 DEBRICKED_SCAN_INTEGRATION=github
+DEBRICKED_SCAN_PATH="."
 if command -v git &> /dev/null
 then
     DEBRICKED_SCAN_AUTHOR="$(git log -1 --pretty=%ae)"
