@@ -18,17 +18,11 @@ jobs:
         with:
           go-version: 1.18
 
-      - name: Lint shell scripts
-        run: shellcheck **/*.sh
-
       - name: Build
         run: go build -v ./...
 
-      - name: Vet
-        run: go vet ./...
-
-      - name: Format (fmt)
-        run: go fmt ./...
+      - name: Static
+        run: bash scripts/test_static.sh
 
       - name: Test
         run: bash scripts/test_cli.sh
