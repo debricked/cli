@@ -8,7 +8,7 @@ import (
 func TestNewRootCmd(t *testing.T) {
 	cmd := NewRootCmd()
 	commands := cmd.Commands()
-	nbrOfCommands := 5
+	nbrOfCommands := 3
 	if len(commands) != nbrOfCommands {
 		t.Error(fmt.Sprintf("failed to assert that there were %d sub commands connected", nbrOfCommands))
 	}

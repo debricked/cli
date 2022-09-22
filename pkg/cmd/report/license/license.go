@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"io"
 	"net/http"
 )
@@ -15,6 +16,11 @@ var debClient client.Client
 
 var email string
 var commitHash string
+
+const (
+	EmailFlag  = "email"
+	CommitFlag = "commit"
+)
 
 func NewLicenseCmd(debrickedClient *client.Client) *cobra.Command {
 	debClient = *debrickedClient
@@ -27,11 +33,13 @@ The finished report will be sent to the specified email address.`,
 		RunE: run,
 	}
 
-	cmd.Flags().StringVarP(&email, "email", "e", "", "The email address that the report will be sent to")
-	_ = cmd.MarkFlagRequired("email")
+	cmd.Flags().StringVarP(&email, EmailFlag, "e", "", "The email address that the report will be sent to")
+	_ = cmd.MarkFlagRequired(EmailFlag)
+	viper.MustBindEnv(EmailFlag)
 
-	cmd.Flags().StringVarP(&commitHash, "commit", "c", "", "commit hash")
-	_ = cmd.MarkFlagRequired("commit")
+	cmd.Flags().StringVarP(&commitHash, CommitFlag, "c", "", "commit hash")
+	_ = cmd.MarkFlagRequired(CommitFlag)
+	viper.MustBindEnv(CommitFlag)
 
 	return cmd
 }
