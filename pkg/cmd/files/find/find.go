@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"io/ioutil"
 )
 
@@ -15,6 +16,11 @@ var finder *file.Finder
 
 var exclusions []string
 var jsonPrint bool
+
+const (
+	ExclusionsFlag = "exclusions"
+	JsonFlag       = "json"
+)
 
 func NewFindCmd(debrickedClient *client.Client) *cobra.Command {
 	debClient = debrickedClient
@@ -27,7 +33,7 @@ For example ` + "`package.json`" + ` with ` + "`package-lock.json`.",
 		Args: validateArgs,
 		RunE: run,
 	}
-	cmd.Flags().StringArrayVarP(&exclusions, "exclude", "e", exclusions, `The following terms are supported to exclude paths:
+	cmd.Flags().StringArrayVarP(&exclusions, ExclusionsFlag, "e", exclusions, `The following terms are supported to exclude paths:
 Special Terms | Meaning
 ------------- | -------
 "*"           | matches any sequence of non-Separator characters 
@@ -40,7 +46,7 @@ Examples:
 $ debricked files find . -e "*/**.lock" -e "**/node_modules/**" 
 $ debricked files find . -e "*\**.exe" -e "**\node_modules\**" 
 `)
-	cmd.Flags().BoolVarP(&jsonPrint, "json", "j", false, `Print files in JSON format
+	cmd.Flags().BoolVarP(&jsonPrint, JsonFlag, "j", false, `Print files in JSON format
 Format:
 [
   {
@@ -51,6 +57,9 @@ Format:
   },
 ]
 `)
+
+	viper.MustBindEnv(ExclusionsFlag)
+	viper.MustBindEnv(JsonFlag)
 
 	return cmd
 }

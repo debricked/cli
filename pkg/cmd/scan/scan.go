@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"os"
 )
 
@@ -17,6 +18,16 @@ var commitAuthor string
 var repositoryUrl string
 var integrationName string
 var exclusions []string
+
+const (
+	RepositoryFlag    = "repository"
+	CommitFlag        = "commit"
+	BranchFlag        = "branch"
+	CommitAuthorFlag  = "author"
+	RepositoryUrlFlag = "repository-url"
+	IntegrationFlag   = "integration"
+	ExclusionsFlag    = "exclusions"
+)
 
 var scanCmdError error
 
@@ -31,13 +42,13 @@ If the given path contains a git repository all flags but "integration" will be 
 		Args: ValidateArgs,
 		RunE: RunE(&s),
 	}
-	cmd.Flags().StringVarP(&repositoryName, "repository", "r", "", "repository name")
-	cmd.Flags().StringVarP(&commitName, "commit", "c", "", "commit hash")
-	cmd.Flags().StringVarP(&branchName, "branch", "b", "", "branch name")
-	cmd.Flags().StringVarP(&commitAuthor, "author", "a", "", "commit author")
-	cmd.Flags().StringVarP(&repositoryUrl, "repository-url", "u", "", "repository URL")
-	cmd.Flags().StringVarP(&integrationName, "integration", "i", "CLI", `name of integration used to trigger scan. For example "GitHub Actions"`)
-	cmd.Flags().StringArrayVarP(&exclusions, "exclude", "e", exclusions, `The following terms are supported to exclude paths:
+	cmd.Flags().StringVarP(&repositoryName, RepositoryFlag, "r", "", "repository name")
+	cmd.Flags().StringVarP(&commitName, CommitFlag, "c", "", "commit hash")
+	cmd.Flags().StringVarP(&branchName, BranchFlag, "b", "", "branch name")
+	cmd.Flags().StringVarP(&commitAuthor, CommitAuthorFlag, "a", "", "commit author")
+	cmd.Flags().StringVarP(&repositoryUrl, RepositoryUrlFlag, "u", "", "repository URL")
+	cmd.Flags().StringVarP(&integrationName, IntegrationFlag, "i", "CLI", `name of integration used to trigger scan. For example "GitHub Actions"`)
+	cmd.Flags().StringArrayVarP(&exclusions, ExclusionsFlag, "e", exclusions, `The following terms are supported to exclude paths:
 Special Terms | Meaning
 ------------- | -------
 "*"           | matches any sequence of non-Separator characters 
@@ -51,6 +62,15 @@ $ debricked scan . -e "*/**.lock" -e "**/node_modules/**"
 $ debricked scan . -e "*\**.exe" -e "**\node_modules\**" 
 `)
 
+	_ = viper.BindPFlags(cmd.Flags())
+	viper.MustBindEnv(RepositoryFlag)
+	viper.MustBindEnv(CommitFlag)
+	viper.MustBindEnv(BranchFlag)
+	viper.MustBindEnv(CommitAuthorFlag)
+	viper.MustBindEnv(RepositoryUrlFlag)
+	viper.MustBindEnv(IntegrationFlag)
+	viper.MustBindEnv(ExclusionsFlag)
+
 	return cmd
 }
 
@@ -59,13 +79,13 @@ func RunE(s *scanner.Scanner) func(_ *cobra.Command, args []string) error {
 		directoryPath := args[0]
 		options := scanner.DebrickedOptions{
 			DirectoryPath:   directoryPath,
-			Exclusions:      exclusions,
-			RepositoryName:  repositoryName,
-			CommitName:      commitName,
-			BranchName:      branchName,
-			CommitAuthor:    commitAuthor,
-			RepositoryUrl:   repositoryUrl,
-			IntegrationName: integrationName,
+			Exclusions:      viper.GetStringSlice(ExclusionsFlag),
+			RepositoryName:  viper.GetString(RepositoryFlag),
+			CommitName:      viper.GetString(CommitFlag),
+			BranchName:      viper.GetString(BranchFlag),
+			CommitAuthor:    viper.GetString(CommitAuthorFlag),
+			RepositoryUrl:   viper.GetString(RepositoryUrlFlag),
+			IntegrationName: viper.GetString(IntegrationFlag),
 		}
 		if s != nil {
 			scanCmdError = (*s).Scan(options)
