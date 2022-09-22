@@ -5,6 +5,8 @@ test:
 	test-cli && test-docker-scripts && test-docker
 test-cli:
 	bash scripts/test_cli.sh
+test-static:
+	bash scripts/test_static.sh
 test-docker-scripts:
 	bash scripts/test_docker_scripts.sh
 test-docker:
