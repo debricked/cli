@@ -12,10 +12,10 @@ import (
 )
 
 type Finder struct {
-	debClient client.Client
+	debClient client.IDebClient
 }
 
-func NewFinder(c client.Client) (*Finder, error) {
+func NewFinder(c client.IDebClient) (*Finder, error) {
 	if c == nil {
 		return nil, errors.New("client is nil")
 	}

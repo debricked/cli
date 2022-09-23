@@ -1,4 +1,4 @@
-package uploader
+package upload
 
 import (
 	"bytes"
@@ -22,7 +22,7 @@ func TestUploadWithBadFiles(t *testing.T) {
 	}
 
 	invalidToken := "invalid"
-	var c client.Client
+	var c client.IDebClient
 	c = client.NewDebClient(&invalidToken)
 	batch := newUploadBatch(&c, groups, metaObj, "CLI")
 	output := captureOutput(batch.upload)

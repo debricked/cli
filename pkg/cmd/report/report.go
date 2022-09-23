@@ -4,10 +4,12 @@ import (
 	"debricked/pkg/client"
 	"debricked/pkg/cmd/report/license"
 	"debricked/pkg/cmd/report/vulnerability"
+	licenseReport "debricked/pkg/report/license"
+	vulnerabilityReport "debricked/pkg/report/vulnerability"
 	"github.com/spf13/cobra"
 )
 
-func NewReportCmd(debClient *client.Client) *cobra.Command {
+func NewReportCmd(debClient *client.IDebClient) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "report",
 		Short: "Generate reports",
@@ -15,8 +17,11 @@ func NewReportCmd(debClient *client.Client) *cobra.Command {
 This is a premium feature. Please visit https://debricked.com/pricing/ for more info.`,
 	}
 
-	cmd.AddCommand(license.NewLicenseCmd(debClient))
-	cmd.AddCommand(vulnerability.NewVulnerabilityCmd(debClient))
+	lReporter := licenseReport.Reporter{DebClient: *debClient}
+	cmd.AddCommand(license.NewLicenseCmd(lReporter))
+
+	vReporter := vulnerabilityReport.Reporter{DebClient: *debClient}
+	cmd.AddCommand(vulnerability.NewVulnerabilityCmd(vReporter))
 
 	return cmd
 }

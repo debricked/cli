@@ -1,4 +1,4 @@
-package scanner
+package scan
 
 import (
 	"debricked/pkg/client"
@@ -8,7 +8,7 @@ import (
 )
 
 func TestNewDebrickedScanner(t *testing.T) {
-	var debClient client.Client
+	var debClient client.IDebClient
 	debClient = client.NewDebClient(nil)
 	s, err := NewDebrickedScanner(&debClient)
 
@@ -22,7 +22,7 @@ func TestNewDebrickedScanner(t *testing.T) {
 }
 
 func TestNewDebrickedScannerWithError(t *testing.T) {
-	var debClient client.Client
+	var debClient client.IDebClient
 	s, err := NewDebrickedScanner(&debClient)
 
 	if err == nil {
@@ -39,7 +39,7 @@ func TestNewDebrickedScannerWithError(t *testing.T) {
 }
 
 func TestScan(t *testing.T) {
-	var debClient client.Client
+	var debClient client.IDebClient
 	debClient = client.NewDebClient(nil)
 	scanner, _ := NewDebrickedScanner(&debClient)
 	directoryPath := "testdata/yarn"
@@ -62,7 +62,7 @@ func TestScan(t *testing.T) {
 }
 
 func TestScanFailingMetaObject(t *testing.T) {
-	var debClient client.Client
+	var debClient client.IDebClient
 	debClient = client.NewDebClient(nil)
 	scanner, _ := NewDebrickedScanner(&debClient)
 	directoryPath := "testdata/yarn"

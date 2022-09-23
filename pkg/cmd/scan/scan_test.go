@@ -2,14 +2,14 @@ package scan
 
 import (
 	"debricked/pkg/client"
-	"debricked/pkg/scanner"
+	"debricked/pkg/scan"
 	"fmt"
 	"strings"
 	"testing"
 )
 
 func TestNewScanCmd(t *testing.T) {
-	var c client.Client
+	var c client.IDebClient
 	c = client.NewDebClient(nil)
 	cmd := NewScanCmd(&c)
 	flags := cmd.Flags()
@@ -60,7 +60,7 @@ func TestValidateArgsInvalidArg(t *testing.T) {
 }
 
 func TestRunE(t *testing.T) {
-	var s scanner.Scanner
+	var s scan.Scanner
 	s = &scannerMock{}
 	runE := RunE(&s)
 	err := runE(nil, []string{"."})
@@ -82,6 +82,6 @@ func TestRunEError(t *testing.T) {
 
 type scannerMock struct{}
 
-func (*scannerMock) Scan(_ scanner.Options) error {
+func (*scannerMock) Scan(_ scan.Options) error {
 	return nil
 }

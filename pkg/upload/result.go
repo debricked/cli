@@ -1,14 +1,10 @@
-package uploader
+package upload
 
 import (
 	"debricked/pkg/automation"
-	"encoding/json"
-	"io"
-	"net/http"
 )
 
-type uploadStatus struct {
-	Progress                       int               `json:"progress"`
+type UploadResult struct {
 	VulnerabilitiesFound           int               `json:"vulnerabilitiesFound"`
 	UnaffectedVulnerabilitiesFound int               `json:"unaffectedVulnerabilitiesFound"`
 	AutomationsAction              string            `json:"automationsAction"`
@@ -16,14 +12,12 @@ type uploadStatus struct {
 	DetailsUrl                     string            `json:"detailsUrl"`
 }
 
-func newUploadStatus(response *http.Response) (*uploadStatus, error) {
-	status := uploadStatus{}
-	data, _ := io.ReadAll(response.Body)
-	defer response.Body.Close()
-	err := json.Unmarshal(data, &status)
-	if err != nil {
-		return nil, err
+func newUploadResult(status *uploadStatus) *UploadResult {
+	return &UploadResult{
+		status.VulnerabilitiesFound,
+		status.UnaffectedVulnerabilitiesFound,
+		status.AutomationsAction,
+		status.AutomationRules,
+		status.DetailsUrl,
 	}
-
-	return &status, err
 }

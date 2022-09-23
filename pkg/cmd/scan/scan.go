@@ -2,7 +2,7 @@ package scan
 
 import (
 	"debricked/pkg/client"
-	"debricked/pkg/scanner"
+	"debricked/pkg/scan"
 	"errors"
 	"fmt"
 	"github.com/fatih/color"
@@ -31,9 +31,9 @@ const (
 
 var scanCmdError error
 
-func NewScanCmd(c *client.Client) *cobra.Command {
-	var s scanner.Scanner
-	s, scanCmdError = scanner.NewDebrickedScanner(c)
+func NewScanCmd(c *client.IDebClient) *cobra.Command {
+	var s scan.Scanner
+	s, scanCmdError = scan.NewDebrickedScanner(c)
 	cmd := &cobra.Command{
 		Use:   "scan [path]",
 		Short: "Start a Debricked dependency scan",
@@ -74,10 +74,10 @@ $ debricked scan . -e "*\**.exe" -e "**\node_modules\**"
 	return cmd
 }
 
-func RunE(s *scanner.Scanner) func(_ *cobra.Command, args []string) error {
+func RunE(s *scan.Scanner) func(_ *cobra.Command, args []string) error {
 	return func(_ *cobra.Command, args []string) error {
 		directoryPath := args[0]
-		options := scanner.DebrickedOptions{
+		options := scan.DebrickedOptions{
 			DirectoryPath:   directoryPath,
 			Exclusions:      viper.GetStringSlice(ExclusionsFlag),
 			RepositoryName:  viper.GetString(RepositoryFlag),

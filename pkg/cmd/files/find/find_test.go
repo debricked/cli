@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-var clientMock client.Client = &debClientMock{}
+var clientMock client.IDebClient = &debClientMock{}
 
 func TestNewFindCmd(t *testing.T) {
 	clientMockAuthorized = true
