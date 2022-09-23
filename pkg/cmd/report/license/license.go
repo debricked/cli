@@ -36,6 +36,8 @@ The finished report will be sent to the specified email address.`,
 	_ = cmd.MarkFlagRequired(CommitFlag)
 	viper.MustBindEnv(CommitFlag)
 
+	_ = viper.BindPFlags(cmd.Flags())
+
 	return cmd
 }
 

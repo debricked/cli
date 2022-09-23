@@ -51,7 +51,7 @@ Format:
   },
 ]
 `)
-
+	_ = viper.BindPFlags(cmd.Flags())
 	viper.MustBindEnv(ExclusionsFlag)
 	viper.MustBindEnv(JsonFlag)
 
@@ -61,11 +61,11 @@ Format:
 func RunE(f file.IFinder) func(_ *cobra.Command, args []string) error {
 	return func(_ *cobra.Command, args []string) error {
 		directoryPath := args[0]
-		fileGroups, err := f.GetGroups(directoryPath, exclusions)
+		fileGroups, err := f.GetGroups(directoryPath, viper.GetStringSlice(ExclusionsFlag))
 		if err != nil {
 			return err
 		}
-		if jsonPrint {
+		if viper.GetBool(JsonFlag) {
 			jsonFileGroups, _ := json.Marshal(fileGroups.ToSlice())
 			fmt.Println(string(jsonFileGroups))
 		} else {

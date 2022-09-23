@@ -61,8 +61,6 @@ Examples:
 $ debricked scan . -e "*/**.lock" -e "**/node_modules/**" 
 $ debricked scan . -e "*\**.exe" -e "**\node_modules\**" 
 `)
-
-	_ = viper.BindPFlags(cmd.Flags())
 	viper.MustBindEnv(RepositoryFlag)
 	viper.MustBindEnv(CommitFlag)
 	viper.MustBindEnv(BranchFlag)
@@ -70,6 +68,8 @@ $ debricked scan . -e "*\**.exe" -e "**\node_modules\**"
 	viper.MustBindEnv(RepositoryUrlFlag)
 	viper.MustBindEnv(IntegrationFlag)
 	viper.MustBindEnv(ExclusionsFlag)
+
+	_ = viper.BindPFlags(cmd.Flags())
 
 	return cmd
 }

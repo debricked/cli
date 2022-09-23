@@ -30,6 +30,7 @@ Complete documentation is available at https://debricked.com/docs/integrations/c
 		`Debricked access token. 
 Read more: https://debricked.com/docs/administration/access-tokens.html`,
 	)
+	_ = viper.BindPFlags(rootCmd.PersistentFlags())
 
 	var debClient client.IDebClient = client.NewDebClient(&accessToken)
 	rootCmd.AddCommand(report.NewReportCmd(&debClient))
