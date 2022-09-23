@@ -1,7 +1,6 @@
 package find
 
 import (
-	"debricked/pkg/client"
 	"debricked/pkg/file"
 	"encoding/json"
 	"errors"
@@ -10,9 +9,6 @@ import (
 	"github.com/spf13/viper"
 	"os"
 )
-
-var debClient *client.IDebClient
-var finder *file.Finder
 
 var exclusions []string
 var jsonPrint bool

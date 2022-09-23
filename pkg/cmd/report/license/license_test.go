@@ -5,6 +5,7 @@ import (
 	"debricked/pkg/report"
 	"errors"
 	"fmt"
+	"github.com/spf13/viper"
 	"strings"
 	"testing"
 )
@@ -18,10 +19,11 @@ func TestNewLicenseCmd(t *testing.T) {
 		t.Error(fmt.Sprintf("failed to assert that there were %d sub commands connected", nbrOfCommands))
 	}
 
+	viperKeys := viper.AllKeys()
 	flags := cmd.Flags()
 	flagAssertions := map[string]string{
-		"commit": "c",
-		"email":  "e",
+		CommitFlag: "c",
+		EmailFlag:  "e",
 	}
 	for name, shorthand := range flagAssertions {
 		flag := flags.Lookup(name)
@@ -30,6 +32,16 @@ func TestNewLicenseCmd(t *testing.T) {
 		}
 		if flag.Shorthand != shorthand {
 			t.Error(fmt.Sprintf("failed to assert that %s flag shorthand %s was set correctly", name, shorthand))
+		}
+
+		match := false
+		for _, key := range viperKeys {
+			if key == name {
+				match = true
+			}
+		}
+		if !match {
+			t.Error("failed to assert that flag was present: " + name)
 		}
 	}
 }
