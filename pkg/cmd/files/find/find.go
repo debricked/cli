@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"io/ioutil"
+	"os"
 )
 
 var debClient *client.IDebClient
@@ -98,7 +98,7 @@ func validateArgs(_ *cobra.Command, args []string) error {
 }
 
 func isValidFilepath(path string) bool {
-	_, err := ioutil.ReadDir(path)
+	_, err := os.ReadDir(path)
 	if err != nil {
 		return false
 	}

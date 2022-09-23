@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -28,7 +27,7 @@ func (mock *debClientMock) Get(_ string, _ string) (*http.Response, error) {
 	if authorized {
 		statusCode = http.StatusOK
 		formatsBytes, _ := json.Marshal(formatsMock)
-		body = ioutil.NopCloser(strings.NewReader(string(formatsBytes)))
+		body = io.NopCloser(strings.NewReader(string(formatsBytes)))
 	} else {
 		statusCode = http.StatusForbidden
 	}
