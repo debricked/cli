@@ -5,6 +5,7 @@ import (
 	"debricked/pkg/file/testdata"
 	"errors"
 	"fmt"
+	"github.com/spf13/viper"
 	"strings"
 	"testing"
 )
@@ -30,6 +31,24 @@ func TestNewFindCmd(t *testing.T) {
 			t.Error(fmt.Sprintf("failed to assert that %s flag shorthand %s was set correctly", name, shorthand))
 		}
 	}
+
+	var flagKeys = []string{
+		ExclusionsFlag,
+		JsonFlag,
+	}
+	viperKeys := viper.AllKeys()
+	for _, flagKey := range flagKeys {
+		match := false
+		for _, key := range viperKeys {
+			if key == flagKey {
+				match = true
+			}
+		}
+		if !match {
+			t.Error("failed to assert that flag was present: " + flagKey)
+		}
+	}
+
 }
 
 func TestRunE(t *testing.T) {
@@ -79,33 +98,3 @@ func TestValidateArgsInvalidArgs(t *testing.T) {
 		t.Error("failed to assert error message")
 	}
 }
-
-//func (mock *debClientMock) Get(_ string, _ string) (*http.Response, error) {
-//	var statusCode int
-//	var body io.ReadCloser = nil
-//	if clientMockAuthorized {
-//		statusCode = http.StatusOK
-//		formatsBytes, _ := json.Marshal(formatsMock)
-//		body = ioutil.NewReadCloser(strings.NewReader(string(formatsBytes)), nil)
-//	} else {
-//		statusCode = http.StatusForbidden
-//	}
-//	res := http.Response{
-//		Status:           "",
-//		StatusCode:       statusCode,
-//		Proto:            "",
-//		ProtoMajor:       0,
-//		ProtoMinor:       0,
-//		Header:           nil,
-//		Body:             body,
-//		ContentLength:    0,
-//		TransferEncoding: nil,
-//		Close:            false,
-//		Uncompressed:     false,
-//		Trailer:          nil,
-//		Request:          nil,
-//		TLS:              nil,
-//	}
-//
-//	return &res, nil
-//}
