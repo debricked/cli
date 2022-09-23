@@ -6,8 +6,8 @@ import (
 	"debricked/pkg/file"
 	"encoding/json"
 	"fmt"
+	"github.com/go-git/go-git/v5/utils/ioutil"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"testing"
@@ -95,7 +95,7 @@ func (mock *debClientMock) Get(_ string, _ string) (*http.Response, error) {
 	if clientMockAuthorized {
 		statusCode = http.StatusOK
 		formatsBytes, _ := json.Marshal(formatsMock)
-		body = ioutil.NopCloser(strings.NewReader(string(formatsBytes)))
+		body = ioutil.NewReadCloser(strings.NewReader(string(formatsBytes)), nil)
 	} else {
 		statusCode = http.StatusForbidden
 	}
