@@ -11,6 +11,11 @@ import (
 	"path/filepath"
 )
 
+type IFinder interface {
+	GetGroups(rootPath string, exclusions []string) (Groups, error)
+	GetSupportedFormats() ([]*CompiledFormat, error)
+}
+
 type Finder struct {
 	debClient client.IDebClient
 }

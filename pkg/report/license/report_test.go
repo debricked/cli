@@ -2,7 +2,7 @@ package license
 
 import (
 	"bytes"
-	"debricked/pkg/report/testdata"
+	"debricked/pkg/client/testdata"
 	"encoding/json"
 	"errors"
 	"fmt"

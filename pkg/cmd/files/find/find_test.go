@@ -1,23 +1,17 @@
 package find
 
 import (
-	"bytes"
-	"debricked/pkg/client"
 	"debricked/pkg/file"
-	"encoding/json"
+	"debricked/pkg/file/testdata"
+	"errors"
 	"fmt"
-	"github.com/go-git/go-git/v5/utils/ioutil"
-	"io"
-	"net/http"
 	"strings"
 	"testing"
 )
 
-var clientMock client.IDebClient = &debClientMock{}
-
 func TestNewFindCmd(t *testing.T) {
-	clientMockAuthorized = true
-	cmd := NewFindCmd(&clientMock)
+	var f file.IFinder
+	cmd := NewFindCmd(f)
 
 	commands := cmd.Commands()
 	nbrOfCommands := 0
@@ -38,21 +32,26 @@ func TestNewFindCmd(t *testing.T) {
 	}
 }
 
-func TestRun(t *testing.T) {
-	clientMockAuthorized = true
-	finder, _ = file.NewFinder(clientMock)
-	err := run(nil, []string{"."})
+func TestRunE(t *testing.T) {
+	f := testdata.NewFinderMock()
+	groups := file.Groups{}
+	groups.Add(file.Group{})
+	f.SetGetGroupsReturnMock(groups, nil)
+	runE := RunE(f)
+	err := runE(nil, []string{"."})
 	if err != nil {
 		t.Fatal("failed to assert that no error occurred. Error:", err)
 	}
 }
 
-func TestFind(t *testing.T) {
-	clientMockAuthorized = true
-	finder, _ = file.NewFinder(clientMock)
-	err := find("../../scan", []string{}, false)
-	if err != nil {
-		t.Fatal("failed to assert that no error occurred. Error:", err)
+func TestRunEError(t *testing.T) {
+	f := testdata.NewFinderMock()
+	errorAssertion := errors.New("finder-error")
+	f.SetGetGroupsReturnMock(file.Groups{}, errorAssertion)
+	runE := RunE(f)
+	err := runE(nil, []string{"."})
+	if err != errorAssertion {
+		t.Fatal("failed to assert that error occured")
 	}
 }
 
@@ -81,73 +80,32 @@ func TestValidateArgsInvalidArgs(t *testing.T) {
 	}
 }
 
-type debClientMock struct{}
-
-func (mock *debClientMock) Post(_ string, _ string, _ *bytes.Buffer) (*http.Response, error) {
-	return nil, nil
-}
-
-var clientMockAuthorized bool
-
-func (mock *debClientMock) Get(_ string, _ string) (*http.Response, error) {
-	var statusCode int
-	var body io.ReadCloser = nil
-	if clientMockAuthorized {
-		statusCode = http.StatusOK
-		formatsBytes, _ := json.Marshal(formatsMock)
-		body = ioutil.NewReadCloser(strings.NewReader(string(formatsBytes)), nil)
-	} else {
-		statusCode = http.StatusForbidden
-	}
-	res := http.Response{
-		Status:           "",
-		StatusCode:       statusCode,
-		Proto:            "",
-		ProtoMajor:       0,
-		ProtoMinor:       0,
-		Header:           nil,
-		Body:             body,
-		ContentLength:    0,
-		TransferEncoding: nil,
-		Close:            false,
-		Uncompressed:     false,
-		Trailer:          nil,
-		Request:          nil,
-		TLS:              nil,
-	}
-
-	return &res, nil
-}
-
-var formatsMock = []file.Format{
-	{
-		// Format with regex and lock file regex
-		Regex:            "composer\\.json",
-		DocumentationUrl: "https://debricked.com/docs/language-support/php.html",
-		LockFileRegexes:  []string{"composer\\.lock"},
-	},
-	{
-		// Format with regex and multiple lock file regexes
-		Regex:            "package\\.json",
-		DocumentationUrl: "https://debricked.com/docs/language-support/javascript.html",
-		LockFileRegexes:  []string{"yarn\\.lock", "package-lock\\.json"},
-	},
-	{
-		// Format with regex and debricked made lock file regex
-		Regex:            "go\\.mod",
-		DocumentationUrl: "https://debricked.com/docs/language-support/golang.html",
-		LockFileRegexes:  []string{"\\.debricked-go-dependencies\\.txt"},
-	},
-	{
-		// Format without regex but with one lock file regex
-		Regex:            "",
-		DocumentationUrl: "https://debricked.com/docs/language-support/rust.html",
-		LockFileRegexes:  []string{"Cargo\\.lock"},
-	},
-	{
-		// Format with regex but without lock file regexes
-		Regex:            "requirements.*(?:\\.txt)",
-		DocumentationUrl: "https://debricked.com/docs/language-support/python.html",
-		LockFileRegexes:  nil,
-	},
-}
+//func (mock *debClientMock) Get(_ string, _ string) (*http.Response, error) {
+//	var statusCode int
+//	var body io.ReadCloser = nil
+//	if clientMockAuthorized {
+//		statusCode = http.StatusOK
+//		formatsBytes, _ := json.Marshal(formatsMock)
+//		body = ioutil.NewReadCloser(strings.NewReader(string(formatsBytes)), nil)
+//	} else {
+//		statusCode = http.StatusForbidden
+//	}
+//	res := http.Response{
+//		Status:           "",
+//		StatusCode:       statusCode,
+//		Proto:            "",
+//		ProtoMajor:       0,
+//		ProtoMinor:       0,
+//		Header:           nil,
+//		Body:             body,
+//		ContentLength:    0,
+//		TransferEncoding: nil,
+//		Close:            false,
+//		Uncompressed:     false,
+//		Trailer:          nil,
+//		Request:          nil,
+//		TLS:              nil,
+//	}
+//
+//	return &res, nil
+//}
