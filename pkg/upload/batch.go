@@ -1,4 +1,4 @@
-package uploader
+package upload
 
 import (
 	"bytes"
@@ -21,14 +21,14 @@ import (
 )
 
 type uploadBatch struct {
-	client          *client.Client
+	client          *client.IDebClient
 	fileGroups      file.Groups
 	gitMetaObject   *git.MetaObject
 	integrationName string
 	ciUploadId      int
 }
 
-func newUploadBatch(client *client.Client, fileGroups file.Groups, gitMetaObject *git.MetaObject, integrationName string) *uploadBatch {
+func newUploadBatch(client *client.IDebClient, fileGroups file.Groups, gitMetaObject *git.MetaObject, integrationName string) *uploadBatch {
 	return &uploadBatch{client: client, fileGroups: fileGroups, gitMetaObject: gitMetaObject, integrationName: integrationName, ciUploadId: 0}
 }
 

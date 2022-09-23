@@ -11,7 +11,7 @@ import (
 	"io/ioutil"
 )
 
-var debClient *client.Client
+var debClient *client.IDebClient
 var finder *file.Finder
 
 var exclusions []string
@@ -22,7 +22,7 @@ const (
 	JsonFlag       = "json"
 )
 
-func NewFindCmd(debrickedClient *client.Client) *cobra.Command {
+func NewFindCmd(debrickedClient *client.IDebClient) *cobra.Command {
 	debClient = debrickedClient
 	finder, _ = file.NewFinder(*debClient)
 	cmd := &cobra.Command{

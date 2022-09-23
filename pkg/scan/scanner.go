@@ -1,10 +1,10 @@
-package scanner
+package scan
 
 import (
 	"debricked/pkg/client"
 	"debricked/pkg/file"
 	"debricked/pkg/git"
-	"debricked/pkg/uploader"
+	"debricked/pkg/upload"
 	"errors"
 	"fmt"
 	"github.com/fatih/color"
@@ -17,10 +17,10 @@ type Scanner interface {
 
 type Options interface{}
 
-type debrickedScanner struct {
-	client   *client.Client
+type DebrickedScanner struct {
+	client   *client.IDebClient
 	finder   *file.Finder
-	uploader *uploader.Uploader
+	uploader *upload.IUploader
 }
 
 type DebrickedOptions struct {
@@ -34,26 +34,26 @@ type DebrickedOptions struct {
 	IntegrationName string
 }
 
-func NewDebrickedScanner(c *client.Client) (*debrickedScanner, error) {
+func NewDebrickedScanner(c *client.IDebClient) (*DebrickedScanner, error) {
 	finder, err := file.NewFinder(*c)
 	if err != nil {
 		return nil, newInitError(err)
 	}
-	var u uploader.Uploader
-	u, err = uploader.NewDebrickedUploader(c)
+	var u upload.IUploader
+	u, err = upload.NewUploader(c)
 
 	if err != nil {
 		return nil, newInitError(err)
 	}
 
-	return &debrickedScanner{
+	return &DebrickedScanner{
 		c,
 		finder,
 		&u,
 	}, nil
 }
 
-func (dScanner *debrickedScanner) Scan(o Options) error {
+func (dScanner *DebrickedScanner) Scan(o Options) error {
 	dOptions := o.(DebrickedOptions)
 	gitMetaObject, err := git.NewMetaObject(
 		dOptions.DirectoryPath,
@@ -72,7 +72,7 @@ func (dScanner *debrickedScanner) Scan(o Options) error {
 		return err
 	}
 
-	uploaderOptions := uploader.DebrickedOptions{FileGroups: fileGroups, GitMetaObject: *gitMetaObject, IntegrationsName: dOptions.IntegrationName}
+	uploaderOptions := upload.DebrickedOptions{FileGroups: fileGroups, GitMetaObject: *gitMetaObject, IntegrationsName: dOptions.IntegrationName}
 	result, err := (*dScanner.uploader).Upload(uploaderOptions)
 	if err != nil {
 		return err

@@ -31,7 +31,7 @@ Complete documentation is available at https://debricked.com/docs/integrations/c
 Read more: https://debricked.com/docs/administration/access-tokens.html`,
 	)
 
-	var debClient client.Client = client.NewDebClient(&accessToken)
+	var debClient client.IDebClient = client.NewDebClient(&accessToken)
 	rootCmd.AddCommand(report.NewReportCmd(&debClient))
 	rootCmd.AddCommand(scan.NewScanCmd(&debClient))
 	rootCmd.AddCommand(files.NewFilesCmd(&debClient))

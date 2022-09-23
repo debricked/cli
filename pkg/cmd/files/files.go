@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewFilesCmd(debClient *client.Client) *cobra.Command {
+func NewFilesCmd(debClient *client.IDebClient) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "files",
 		Short: "Analyze files",

@@ -1,17 +1,17 @@
 package license
 
 import (
-	"debricked/pkg/client"
+	"debricked/pkg/cmd/report/testdata"
+	"debricked/pkg/report"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
 )
 
-const validCommit = "3bad786e721e2337117670eab0ff5bc009d8ce41"
-
 func TestNewLicenseCmd(t *testing.T) {
-	var c client.Client = client.NewDebClient(nil)
-	cmd := NewLicenseCmd(&c)
+	var r report.IReporter
+	cmd := NewLicenseCmd(r)
 	commands := cmd.Commands()
 	nbrOfCommands := 0
 	if len(commands) != nbrOfCommands {
@@ -34,50 +34,23 @@ func TestNewLicenseCmd(t *testing.T) {
 	}
 }
 
-func TestRunUnAuthorized(t *testing.T) {
+func TestRunEError(t *testing.T) {
 	email = "noreply@debricked.com"
-	commitHash = validCommit
-	accessToken := "invalid"
-	debClient = client.NewDebClient(&accessToken)
-	err := run(nil, nil)
-	if err == nil {
-		t.Fatal("failed to assert that an error occurred")
-	}
-	if !strings.Contains(err.Error(), "⨯ Unauthorized. Specify access token") {
+	reporterMock := testdata.NewReporterMock()
+	reporterMock.SetError(errors.New(""))
+	runeE := RunE(reporterMock)
+	err := runeE(nil, nil)
+	if !strings.Contains(err.Error(), "⨯") {
 		t.Error("failed to assert error message")
 	}
 }
 
-func TestRun(t *testing.T) {
+func TestRunE(t *testing.T) {
 	email = "noreply@debricked.com"
-	commitHash = validCommit
-	debClient = client.NewDebClient(nil)
-	err := run(nil, nil)
+	reporterMock := testdata.NewReporterMock()
+	runeE := RunE(reporterMock)
+	err := runeE(nil, nil)
 	if err != nil {
-		t.Fatal("failed to assert that no error occurred. Error: " + err.Error())
-	}
-}
-
-func TestReportInvalidCommitHash(t *testing.T) {
-	email = "noreply@debricked.com"
-	commitHash = "invalid"
-	debClient = client.NewDebClient(nil)
-	err := report()
-	if err == nil {
-		t.Fatal("failed to assert that error occurred")
-	}
-	if !strings.Contains(err.Error(), "No commit was found with the name invalid") {
-		t.Error("failed to assert error message")
-	}
-}
-
-func TestGetCommitId(t *testing.T) {
-	debClient = client.NewDebClient(nil)
-	id, err := getCommitId(validCommit)
-	if err != nil {
-		t.Fatal("failed to assert that no error occurred. Error:", err)
-	}
-	if id < 1 {
-		t.Error("failed to assert that the commit ID was a positive integer")
+		t.Fatal("failed to assert that no error occurred")
 	}
 }

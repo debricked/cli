@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-type Client interface {
+type IDebClient interface {
 	// Post makes a POST request to one of Debricked's API endpoints
 	Post(uri string, contentType string, body *bytes.Buffer) (*http.Response, error)
 	// Get makes a GET request to one of Debricked's API endpoints

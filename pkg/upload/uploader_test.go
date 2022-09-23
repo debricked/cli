@@ -1,4 +1,4 @@
-package uploader
+package upload
 
 import (
 	"bytes"
@@ -13,28 +13,28 @@ import (
 )
 
 func TestNewDebrickedUploader(t *testing.T) {
-	uploader, err := NewDebrickedUploader(nil)
+	uploader, err := NewUploader(nil)
 	if err == nil {
 		t.Error("failed to assert that error occurred")
 	}
 	if uploader != nil {
-		t.Error("failed to assert that uploader was nil")
+		t.Error("failed to assert that Uploader was nil")
 	}
-	var c client.Client
+	var c client.IDebClient
 	c = &debClientMock{}
-	uploader, err = NewDebrickedUploader(&c)
+	uploader, err = NewUploader(&c)
 	if err != nil {
 		t.Error("failed to assert that no error occurred")
 	}
 
 	if uploader == nil {
-		t.Error("failed to assert that uploader was not nil")
+		t.Error("failed to assert that Uploader was not nil")
 	}
 }
 func TestUpload(t *testing.T) {
-	var c client.Client
+	var c client.IDebClient
 	c = &debClientMock{}
-	uploader, _ := NewDebrickedUploader(&c)
+	uploader, _ := NewUploader(&c)
 	metaObject, _ := git.NewMetaObject(
 		"testdata/yarn",
 		"testdata/yarn",
