@@ -22,16 +22,14 @@ const (
 	JsonFlag       = "json"
 )
 
-func NewFindCmd(debrickedClient *client.IDebClient) *cobra.Command {
-	debClient = debrickedClient
-	finder, _ = file.NewFinder(*debClient)
+func NewFindCmd(finder file.IFinder) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "find [path]",
 		Short: "Find all dependency files in inputted path",
 		Long: `Find all dependency files in inputted path. Related files are grouped together. 
 For example ` + "`package.json`" + ` with ` + "`package-lock.json`.",
 		Args: validateArgs,
-		RunE: run,
+		RunE: RunE(finder),
 	}
 	cmd.Flags().StringArrayVarP(&exclusions, ExclusionsFlag, "e", exclusions, `The following terms are supported to exclude paths:
 Special Terms | Meaning
@@ -64,27 +62,24 @@ Format:
 	return cmd
 }
 
-func run(_ *cobra.Command, args []string) error {
-	directoryPath := args[0]
-
-	return find(directoryPath, exclusions, jsonPrint)
-}
-
-func find(path string, exclusions []string, jsonPrint bool) error {
-	fileGroups, err := finder.GetGroups(path, exclusions)
-	if err != nil {
-		return err
-	}
-	if jsonPrint {
-		jsonFileGroups, _ := json.Marshal(fileGroups.ToSlice())
-		fmt.Println(string(jsonFileGroups))
-	} else {
-		for _, group := range fileGroups.ToSlice() {
-			group.Print()
+func RunE(f file.IFinder) func(_ *cobra.Command, args []string) error {
+	return func(_ *cobra.Command, args []string) error {
+		directoryPath := args[0]
+		fileGroups, err := f.GetGroups(directoryPath, exclusions)
+		if err != nil {
+			return err
 		}
-	}
+		if jsonPrint {
+			jsonFileGroups, _ := json.Marshal(fileGroups.ToSlice())
+			fmt.Println(string(jsonFileGroups))
+		} else {
+			for _, group := range fileGroups.ToSlice() {
+				group.Print()
+			}
+		}
 
-	return nil
+		return nil
+	}
 }
 
 func validateArgs(_ *cobra.Command, args []string) error {
