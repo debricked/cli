@@ -1,6 +1,7 @@
 package scan
 
 import (
+	"debricked/pkg/ci"
 	"debricked/pkg/client"
 	"debricked/pkg/scan"
 	"errors"
@@ -32,8 +33,12 @@ const (
 var scanCmdError error
 
 func NewScanCmd(c *client.IDebClient) *cobra.Command {
-	var s scan.Scanner
-	s, scanCmdError = scan.NewDebrickedScanner(c)
+	var ciService ci.IService
+	ciService = ci.NewService(nil)
+
+	var s scan.IScanner
+	s, scanCmdError = scan.NewDebrickedScanner(c, ciService)
+
 	cmd := &cobra.Command{
 		Use:   "scan [path]",
 		Short: "Start a Debricked dependency scan",
@@ -74,7 +79,7 @@ $ debricked scan . -e "*\**.exe" -e "**\node_modules\**"
 	return cmd
 }
 
-func RunE(s *scan.Scanner) func(_ *cobra.Command, args []string) error {
+func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 	return func(_ *cobra.Command, args []string) error {
 		directoryPath := args[0]
 		options := scan.DebrickedOptions{
