@@ -3,11 +3,14 @@ package azure
 import (
 	"debricked/pkg/ci/env"
 	"debricked/pkg/ci/util"
+	"fmt"
+	"os"
+	"path/filepath"
 )
 
 const (
 	EnvKey      = "TF_BUILD"
-	Integration = "azureDevOps"
+	integration = "azureDevOps"
 )
 
 type Ci struct{}
@@ -16,6 +19,15 @@ func (_ Ci) Identify() bool {
 	return util.EnvKeyIsSet(EnvKey)
 }
 
-func (_ Ci) Parse() (env.Env, error) {
-	return env.Env{}, nil
+func (_ Ci) Map() (env.Env, error) {
+	e := env.Env{}
+	owner := filepath.Base(os.Getenv("SYSTEM_COLLECTIONURI"))
+	e.Repository = fmt.Sprintf("%s/%s", owner, os.Getenv("BUILD_REPOSITORY_NAME"))
+	e.Commit = os.Getenv("BUILD_SOURCEVERSION")
+	e.Branch = os.Getenv("BUILD_SOURCEBRANCHNAME")
+	e.RepositoryUrl = os.Getenv("BUILD_REPOSITORY_URI")
+	e.Integration = integration
+	e.Author = os.Getenv("BUILD_REQUESTEDFOREMAIL")
+	e.Filepath = os.Getenv("BUILD_SOURCESDIRECTORY")
+	return e, nil
 }

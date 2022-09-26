@@ -4,6 +4,7 @@ import (
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/storage/memory"
 	"os"
 	"strings"
@@ -35,21 +36,17 @@ func TestFindRepositoryName(t *testing.T) {
 }
 
 func TestFindRepositoryUrl(t *testing.T) {
-	// Filesystem abstraction based on memory
-	fs := memfs.New()
-	// Git objects storer based on memory
-	store := memory.NewStorage()
-	r, err := git.Init(store, fs)
+	repoMock := mockRepository(t)
 	remoteConfig := &config.RemoteConfig{
 		Name:  "debricked/cli",
 		URLs:  []string{"git@github.com:debricked/cli.git"},
 		Fetch: nil,
 	}
-	_, err = r.CreateRemote(remoteConfig)
+	_, err := repoMock.CreateRemote(remoteConfig)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	url, err := FindRepositoryUrl(r)
+	url, err := FindRepositoryUrl(repoMock)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -98,15 +95,8 @@ func TestFindRemoteUrl(t *testing.T) {
 }
 
 func TestFindRepositoryUrlWithFailure(t *testing.T) {
-	// Filesystem abstraction based on memory
-	fs := memfs.New()
-	// Git objects storer based on memory
-	store := memory.NewStorage()
-	r, err := git.Init(store, fs)
-	if err != nil {
-		t.Fatal("failed to get repository. Error:", err)
-	}
-	url, err := FindRepositoryUrl(r)
+	repoMock := mockRepository(t)
+	url, err := FindRepositoryUrl(repoMock)
 	if err == nil {
 		t.Error("failed to assert that an error occurred")
 	}
@@ -119,19 +109,77 @@ func TestFindRepositoryUrlWithFailure(t *testing.T) {
 }
 
 func TestFindRepositoryNameWithoutMetaData(t *testing.T) {
-	// Filesystem abstraction based on memory
-	fs := memfs.New()
-	// Git objects storer based on memory
-	store := memory.NewStorage()
-	r, err := git.Init(store, fs)
-	if err != nil {
-		t.Fatal("failed to get repository. Error:", err)
-	}
-	name, err := FindRepositoryName(r, "test/repository")
+	repoMock := mockRepository(t)
+	name, err := FindRepositoryName(repoMock, "test/repository")
 	if err == nil {
 		t.Error("failed to assert that an error occurred")
 	}
 	if name != "repository" {
 		t.Error("failed to find repository name")
 	}
+}
+
+func TestGetCommit(t *testing.T) {
+	repoMock := mockRepository(t)
+	commit, err := FindCommit(repoMock)
+	if err != nil {
+		t.Error("failed to assert that an error occurred")
+	}
+	if commit == nil {
+		t.Error("failed to find commit")
+	}
+}
+
+func TestGetCommitHash(t *testing.T) {
+	repoMock := mockRepository(t)
+	commitHash, err := FindCommitHash(repoMock)
+	if err != nil {
+		t.Error("failed to assert that an error occurred")
+	}
+	if len(commitHash) == 0 {
+		t.Error("failed assert commit message")
+	}
+}
+
+func TestGetCommitAuthor(t *testing.T) {
+	repoMock := mockRepository(t)
+	commitHash, err := FindCommitAuthor(repoMock)
+	if err != nil {
+		t.Error("failed to assert that an error occurred")
+	}
+	if len(commitHash) == 0 {
+		t.Error("failed assert commit message")
+	}
+}
+
+func TestGetBranch(t *testing.T) {
+	repoMock := mockRepository(t)
+	commitHash, err := FindBranch(repoMock)
+	if err != nil {
+		t.Error("failed to assert that an error occurred")
+	}
+	if len(commitHash) == 0 {
+		t.Error("failed assert commit message")
+	}
+}
+
+func mockRepository(t *testing.T) *git.Repository {
+	// Filesystem abstraction based on memory
+	fs := memfs.New()
+	// Git objects storer based on memory
+	store := memory.NewStorage()
+	r, err := git.Init(store, fs)
+	if err != nil {
+		t.Fatal("failed to init repository. Error:", err)
+	}
+	w, err := r.Worktree()
+	if err != nil {
+		t.Fatal("failed to get worktree. Error:", err)
+	}
+	_, err = w.Commit("Initial commit", &git.CommitOptions{Author: &object.Signature{Name: "author"}})
+	if err != nil {
+		t.Fatal("failed to create commit. Error:", err)
+	}
+
+	return r
 }

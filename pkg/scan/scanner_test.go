@@ -2,6 +2,13 @@ package scan
 
 import (
 	"debricked/pkg/ci"
+	"debricked/pkg/ci/argo"
+	"debricked/pkg/ci/azure"
+	"debricked/pkg/ci/bitbucket"
+	"debricked/pkg/ci/buildkite"
+	"debricked/pkg/ci/circleci"
+	"debricked/pkg/ci/gitlab"
+	"debricked/pkg/ci/travis"
 	"debricked/pkg/client"
 	"debricked/pkg/git"
 	"strings"
@@ -70,7 +77,16 @@ func TestScanFailingMetaObject(t *testing.T) {
 	var debClient client.IDebClient
 	debClient = client.NewDebClient(nil)
 	var ciService ci.IService
-	ciService = ci.NewService(nil)
+	ciService = ci.NewService([]ci.ICi{
+		argo.Ci{},
+		azure.Ci{},
+		bitbucket.Ci{},
+		buildkite.Ci{},
+		circleci.Ci{},
+		//github.Ci{}, Since GitHub actions is used, this ICi is ignored
+		gitlab.Ci{},
+		travis.Ci{},
+	})
 	scanner, _ := NewDebrickedScanner(&debClient, ciService)
 	directoryPath := "testdata/yarn"
 	opts := DebrickedOptions{
@@ -92,5 +108,15 @@ func TestScanFailingMetaObject(t *testing.T) {
 	err = scanner.Scan(opts)
 	if err != git.CommitNameError {
 		t.Error("failed to assert that CommitNameError occurred")
+	}
+}
+
+func TestScanBadOpts(t *testing.T) {
+	var c client.IDebClient
+	scanner, _ := NewDebrickedScanner(&c, nil)
+	var opts IOptions
+	err := scanner.Scan(opts)
+	if err != BadOptsErr {
+		t.Error("failed to assert that BadOptsErr occurred")
 	}
 }

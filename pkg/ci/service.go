@@ -44,7 +44,7 @@ func NewService(cis []ICi) *Service {
 func (s *Service) Find() (env.Env, error) {
 	for _, ci := range s.cis {
 		if ci.Identify() {
-			return ci.Parse()
+			return ci.Map()
 		}
 	}
 
