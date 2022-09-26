@@ -1,7 +1,6 @@
 package git
 
 import (
-	"github.com/go-git/go-git/v5"
 	"log"
 )
 
@@ -16,7 +15,7 @@ type MetaObject struct {
 
 // NewMetaObject returns MetaObject based on git repository existing on directoryPath. Otherwise, inputted arguments are used
 func NewMetaObject(directoryPath string, repositoryName string, commit string, branchName string, commitAuthor string, url string) (*MetaObject, error) {
-	repository, err := git.PlainOpen(directoryPath)
+	repository, err := FindRepository(directoryPath)
 	if err == nil {
 		isSet := func(attribute string) bool { return len(attribute) > 0 }
 

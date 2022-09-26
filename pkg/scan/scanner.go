@@ -13,6 +13,10 @@ import (
 	"os"
 )
 
+var (
+	BadOptsErr = errors.New("failed to type case IOptions")
+)
+
 type IScanner interface {
 	Scan(o IOptions) error
 }
@@ -58,9 +62,12 @@ func NewDebrickedScanner(c *client.IDebClient, ciService ci.IService) (*Debricke
 }
 
 func (dScanner *DebrickedScanner) Scan(o IOptions) error {
-	dOptions := o.(DebrickedOptions)
-	env, _ := dScanner.ciService.Find()
-	dScanner.mapEnvToOptions(&dOptions, env)
+	dOptions, ok := o.(DebrickedOptions)
+	if !ok {
+		return BadOptsErr
+	}
+	e, _ := dScanner.ciService.Find()
+	dScanner.mapEnvToOptions(&dOptions, e)
 
 	gitMetaObject, err := git.NewMetaObject(
 		dOptions.DirectoryPath,
@@ -118,6 +125,9 @@ func (dScanner *DebrickedScanner) mapEnvToOptions(o *DebrickedOptions, env env.E
 	}
 	if len(o.IntegrationName) == 0 {
 		o.IntegrationName = env.Integration
+	}
+	if len(o.DirectoryPath) == 0 {
+		o.DirectoryPath = env.Filepath
 	}
 }
 

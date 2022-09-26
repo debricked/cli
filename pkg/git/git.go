@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"path/filepath"
 	"regexp"
 )
@@ -105,4 +106,43 @@ func ParseGitRemoteUrl(gitRemoteUrl string) (string, error) {
 	}
 
 	return gitRemoteUrl, errors.New("failed to parse git remote URL. git/https regular expressions had no matches")
+}
+
+func FindRepository(directoryPath string) (*git.Repository, error) {
+	return git.PlainOpen(directoryPath)
+}
+
+func FindBranch(repository *git.Repository) (string, error) {
+	head, err := repository.Head()
+	if err != nil {
+		return "", err
+	}
+
+	return head.Name().Short(), nil
+}
+
+func FindCommit(repository *git.Repository) (*object.Commit, error) {
+	head, err := repository.Head()
+	if err != nil {
+		return nil, err
+	}
+	commitObject, err := repository.CommitObject(head.Hash())
+
+	return commitObject, err
+}
+
+func FindCommitAuthor(repository *git.Repository) (string, error) {
+	c, err := FindCommit(repository)
+	if err != nil {
+		return "", err
+	}
+	return c.Author.String(), nil
+}
+
+func FindCommitHash(repository *git.Repository) (string, error) {
+	c, err := FindCommit(repository)
+	if err != nil {
+		return "", err
+	}
+	return c.Hash.String(), nil
 }

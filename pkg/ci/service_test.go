@@ -1,8 +1,8 @@
 package ci
 
 import (
+	"debricked/pkg/ci/azure"
 	"debricked/pkg/ci/circleci"
-	"debricked/pkg/ci/gitlab"
 	"os"
 	"testing"
 )
@@ -19,7 +19,7 @@ func TestNewService(t *testing.T) {
 }
 
 func TestFindNotSupported(t *testing.T) {
-	s := NewService([]ICi{gitlab.Ci{}, circleci.Ci{}})
+	s := NewService([]ICi{azure.Ci{}, circleci.Ci{}})
 	_, err := s.Find()
 	if err != ErrNotSupported {
 		t.Error("failed to assert that error was ErrNotSupported")
@@ -27,16 +27,16 @@ func TestFindNotSupported(t *testing.T) {
 }
 
 func TestFind(t *testing.T) {
-	_ = os.Setenv(circleci.EnvKey, "value")
-	defer os.Unsetenv(circleci.EnvKey)
+	_ = os.Setenv(azure.EnvKey, "value")
+	defer os.Unsetenv(azure.EnvKey)
 
-	s := NewService([]ICi{gitlab.Ci{}, circleci.Ci{}})
+	s := NewService([]ICi{azure.Ci{}, circleci.Ci{}})
 	env, err := s.Find()
 	if err != nil {
 		t.Error("failed to assert that no error occurred")
 	}
 
-	if len(env.Repository) != 0 {
+	if len(env.Integration) == 0 {
 		t.Error("failed to assert that was was no value in env")
 	}
 }
