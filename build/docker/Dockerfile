@@ -15,7 +15,4 @@ COPY --from=dev /cli/debricked /usr/bin/debricked
 ENTRYPOINT ["debricked"]
 
 FROM cli AS scan
-RUN apk add bash
-COPY --from=dev /cli/build/docker/scripts /
-RUN chmod a+x /entrypoint.sh /setup_env.sh /ci/*
-ENTRYPOINT [ "/entrypoint.sh" ]
+ENTRYPOINT [ "debricked",  "scan" ]
