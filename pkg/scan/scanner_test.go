@@ -1,6 +1,7 @@
 package scan
 
 import (
+	"debricked/pkg/ci"
 	"debricked/pkg/client"
 	"debricked/pkg/git"
 	"strings"
@@ -10,7 +11,8 @@ import (
 func TestNewDebrickedScanner(t *testing.T) {
 	var debClient client.IDebClient
 	debClient = client.NewDebClient(nil)
-	s, err := NewDebrickedScanner(&debClient)
+	var ciService ci.IService
+	s, err := NewDebrickedScanner(&debClient, ciService)
 
 	if err != nil {
 		t.Error("failed to assert that no error occurred")
@@ -23,7 +25,8 @@ func TestNewDebrickedScanner(t *testing.T) {
 
 func TestNewDebrickedScannerWithError(t *testing.T) {
 	var debClient client.IDebClient
-	s, err := NewDebrickedScanner(&debClient)
+	var ciService ci.IService
+	s, err := NewDebrickedScanner(&debClient, ciService)
 
 	if err == nil {
 		t.Error("failed to assert that an error occurred")
@@ -41,7 +44,9 @@ func TestNewDebrickedScannerWithError(t *testing.T) {
 func TestScan(t *testing.T) {
 	var debClient client.IDebClient
 	debClient = client.NewDebClient(nil)
-	scanner, _ := NewDebrickedScanner(&debClient)
+	var ciService ci.IService
+	ciService = ci.NewService(nil)
+	scanner, _ := NewDebrickedScanner(&debClient, ciService)
 	directoryPath := "testdata/yarn"
 	repositoryName := directoryPath
 	commitName := "testdata/yarn-commit"
@@ -64,7 +69,9 @@ func TestScan(t *testing.T) {
 func TestScanFailingMetaObject(t *testing.T) {
 	var debClient client.IDebClient
 	debClient = client.NewDebClient(nil)
-	scanner, _ := NewDebrickedScanner(&debClient)
+	var ciService ci.IService
+	ciService = ci.NewService(nil)
+	scanner, _ := NewDebrickedScanner(&debClient, ciService)
 	directoryPath := "testdata/yarn"
 	opts := DebrickedOptions{
 		DirectoryPath:   directoryPath,

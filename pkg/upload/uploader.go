@@ -7,7 +7,7 @@ import (
 	"errors"
 )
 
-type Options interface{}
+type IOptions interface{}
 
 type DebrickedOptions struct {
 	FileGroups       file.Groups
@@ -16,7 +16,7 @@ type DebrickedOptions struct {
 }
 
 type IUploader interface {
-	Upload(o Options) (*UploadResult, error)
+	Upload(o IOptions) (*UploadResult, error)
 }
 
 type Uploader struct {
@@ -30,7 +30,7 @@ func NewUploader(c *client.IDebClient) (*Uploader, error) {
 	return &Uploader{c}, nil
 }
 
-func (uploader *Uploader) Upload(o Options) (*UploadResult, error) {
+func (uploader *Uploader) Upload(o IOptions) (*UploadResult, error) {
 	dOptions := o.(DebrickedOptions)
 	batch := newUploadBatch(uploader.client, dOptions.FileGroups, &dOptions.GitMetaObject, dOptions.IntegrationsName)
 	batch.upload()

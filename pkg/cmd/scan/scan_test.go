@@ -73,7 +73,7 @@ func TestValidateArgsInvalidArg(t *testing.T) {
 }
 
 func TestRunE(t *testing.T) {
-	var s scan.Scanner
+	var s scan.IScanner
 	s = &scannerMock{}
 	runE := RunE(&s)
 	err := runE(nil, []string{"."})
@@ -95,6 +95,6 @@ func TestRunEError(t *testing.T) {
 
 type scannerMock struct{}
 
-func (*scannerMock) Scan(_ scan.Options) error {
+func (*scannerMock) Scan(_ scan.IOptions) error {
 	return nil
 }

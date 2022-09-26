@@ -1,6 +1,8 @@
 package scan
 
 import (
+	"debricked/pkg/ci"
+	"debricked/pkg/ci/env"
 	"debricked/pkg/client"
 	"debricked/pkg/file"
 	"debricked/pkg/git"
@@ -11,16 +13,17 @@ import (
 	"os"
 )
 
-type Scanner interface {
-	Scan(o Options) error
+type IScanner interface {
+	Scan(o IOptions) error
 }
 
-type Options interface{}
+type IOptions interface{}
 
 type DebrickedScanner struct {
-	client   *client.IDebClient
-	finder   *file.Finder
-	uploader *upload.IUploader
+	client    *client.IDebClient
+	finder    *file.Finder
+	uploader  *upload.IUploader
+	ciService ci.IService
 }
 
 type DebrickedOptions struct {
@@ -34,7 +37,7 @@ type DebrickedOptions struct {
 	IntegrationName string
 }
 
-func NewDebrickedScanner(c *client.IDebClient) (*DebrickedScanner, error) {
+func NewDebrickedScanner(c *client.IDebClient, ciService ci.IService) (*DebrickedScanner, error) {
 	finder, err := file.NewFinder(*c)
 	if err != nil {
 		return nil, newInitError(err)
@@ -50,11 +53,15 @@ func NewDebrickedScanner(c *client.IDebClient) (*DebrickedScanner, error) {
 		c,
 		finder,
 		&u,
+		ciService,
 	}, nil
 }
 
-func (dScanner *DebrickedScanner) Scan(o Options) error {
+func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 	dOptions := o.(DebrickedOptions)
+	env, _ := dScanner.ciService.Find()
+	dScanner.mapEnvToOptions(&dOptions, env)
+
 	gitMetaObject, err := git.NewMetaObject(
 		dOptions.DirectoryPath,
 		dOptions.RepositoryName,
@@ -91,6 +98,27 @@ func (dScanner *DebrickedScanner) Scan(o Options) error {
 	}
 
 	return nil
+}
+
+func (dScanner *DebrickedScanner) mapEnvToOptions(o *DebrickedOptions, env env.Env) {
+	if len(o.RepositoryName) == 0 {
+		o.RepositoryName = env.Repository
+	}
+	if len(o.CommitName) == 0 {
+		o.CommitName = env.Commit
+	}
+	if len(o.BranchName) == 0 {
+		o.BranchName = env.Branch
+	}
+	if len(o.CommitAuthor) == 0 {
+		o.CommitAuthor = env.Author
+	}
+	if len(o.RepositoryUrl) == 0 {
+		o.RepositoryUrl = env.RepositoryUrl
+	}
+	if len(o.IntegrationName) == 0 {
+		o.IntegrationName = env.Integration
+	}
 }
 
 func newInitError(err error) error {
