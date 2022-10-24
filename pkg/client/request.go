@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/fatih/color"
+	"github.com/hashicorp/go-retryablehttp"
 	"io"
 	"net/http"
 )
@@ -40,8 +41,8 @@ func post(uri string, debClient *DebClient, contentType string, body *bytes.Buff
 }
 
 // newRequest creates a new HTTP request with necessary headers added
-func newRequest(method string, url string, jwtToken string, format string, body io.Reader) (*http.Request, error) {
-	req, err := http.NewRequest(method, url, body)
+func newRequest(method string, url string, jwtToken string, format string, body io.Reader) (*retryablehttp.Request, error) {
+	req, err := retryablehttp.NewRequest(method, url, body)
 	if err != nil {
 		return nil, err
 	}

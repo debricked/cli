@@ -2,11 +2,14 @@ package upload
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/debricked/cli/pkg/client"
+	"github.com/debricked/cli/pkg/client/testdata"
 	"github.com/debricked/cli/pkg/file"
 	"github.com/debricked/cli/pkg/git"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 	"testing"
@@ -21,14 +24,20 @@ func TestUploadWithBadFiles(t *testing.T) {
 		t.Fatal("failed to create new MetaObject")
 	}
 
-	invalidToken := "invalid"
 	var c client.IDebClient
-	c = client.NewDebClient(&invalidToken)
+	clientMock := testdata.NewDebClientMock()
+	mockRes := testdata.MockResponse{
+		StatusCode:   http.StatusUnauthorized,
+		ResponseBody: nil,
+		Error:        errors.New("error"),
+	}
+	clientMock.AddMockResponse(mockRes)
+	clientMock.AddMockResponse(mockRes)
+	c = clientMock
 	batch := newUploadBatch(&c, groups, metaObj, "CLI")
 	output := captureOutput(batch.upload)
 	outputAssertions := []string{
 		"Failed to upload: package.json",
-		"Unauthorized. Specify access token",
 		"Failed to upload: yarn.lock",
 	}
 	for _, assertion := range outputAssertions {

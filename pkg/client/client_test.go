@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -17,7 +18,7 @@ func setUp(authorized bool) {
 	if authorized {
 		token = os.Getenv("DEBRICKED_TOKEN")
 	} else {
-		token = "invalid"
+		token = hex.EncodeToString([]byte("invalid-token"))
 	}
 	client = NewDebClient(&token)
 }
