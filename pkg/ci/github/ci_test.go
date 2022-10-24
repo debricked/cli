@@ -1,8 +1,8 @@
 package github
 
 import (
-	"debricked/pkg/ci/testdata"
-	"debricked/pkg/ci/util"
+	"github.com/debricked/cli/pkg/ci/testdata"
+	"github.com/debricked/cli/pkg/ci/util"
 	"os"
 	"testing"
 )

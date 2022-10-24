@@ -1,6 +1,6 @@
 package ci
 
-import "debricked/pkg/ci/env"
+import "github.com/debricked/cli/pkg/ci/env"
 
 type ICi interface {
 	Identify() bool

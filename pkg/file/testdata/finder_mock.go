@@ -1,7 +1,7 @@
 package testdata
 
 import (
-	"debricked/pkg/file"
+	"github.com/debricked/cli/pkg/file"
 )
 
 type FinderMock struct {

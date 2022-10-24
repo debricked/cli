@@ -1,8 +1,8 @@
 package files
 
 import (
-	"debricked/pkg/client"
 	"fmt"
+	"github.com/debricked/cli/pkg/client"
 	"testing"
 )
 

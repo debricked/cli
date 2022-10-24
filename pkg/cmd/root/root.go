@@ -1,10 +1,10 @@
 package root
 
 import (
-	"debricked/pkg/client"
-	"debricked/pkg/cmd/files"
-	"debricked/pkg/cmd/report"
-	"debricked/pkg/cmd/scan"
+	"github.com/debricked/cli/pkg/client"
+	"github.com/debricked/cli/pkg/cmd/files"
+	"github.com/debricked/cli/pkg/cmd/report"
+	"github.com/debricked/cli/pkg/cmd/scan"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

@@ -1,9 +1,9 @@
 package files
 
 import (
-	"debricked/pkg/client"
-	"debricked/pkg/cmd/files/find"
-	"debricked/pkg/file"
+	"github.com/debricked/cli/pkg/client"
+	"github.com/debricked/cli/pkg/cmd/files/find"
+	"github.com/debricked/cli/pkg/file"
 	"github.com/spf13/cobra"
 )
 

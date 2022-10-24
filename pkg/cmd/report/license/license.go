@@ -1,10 +1,10 @@
 package license
 
 import (
-	"debricked/pkg/report"
-	"debricked/pkg/report/license"
 	"errors"
 	"fmt"
+	"github.com/debricked/cli/pkg/report"
+	"github.com/debricked/cli/pkg/report/license"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

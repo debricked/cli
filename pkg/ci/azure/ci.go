@@ -1,9 +1,9 @@
 package azure
 
 import (
-	"debricked/pkg/ci/env"
-	"debricked/pkg/ci/util"
 	"fmt"
+	"github.com/debricked/cli/pkg/ci/env"
+	"github.com/debricked/cli/pkg/ci/util"
 	"os"
 	"path/filepath"
 )

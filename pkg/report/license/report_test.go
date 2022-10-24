@@ -2,10 +2,10 @@ package license
 
 import (
 	"bytes"
-	"debricked/pkg/client/testdata"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/debricked/cli/pkg/client/testdata"
 	"github.com/go-git/go-git/v5/utils/ioutil"
 	"io"
 	"net/http"

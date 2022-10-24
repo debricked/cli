@@ -1,7 +1,7 @@
 package azure
 
 import (
-	"debricked/pkg/ci/testdata"
+	"github.com/debricked/cli/pkg/ci/testdata"
 	"os"
 	"testing"
 )

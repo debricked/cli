@@ -1,8 +1,8 @@
 package gitlab
 
 import (
-	"debricked/pkg/ci/env"
-	"debricked/pkg/ci/util"
+	"github.com/debricked/cli/pkg/ci/env"
+	"github.com/debricked/cli/pkg/ci/util"
 	"os"
 )
 

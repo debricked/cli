@@ -1,9 +1,9 @@
 package scan
 
 import (
-	"debricked/pkg/client"
-	"debricked/pkg/scan"
 	"fmt"
+	"github.com/debricked/cli/pkg/client"
+	"github.com/debricked/cli/pkg/scan"
 	"github.com/spf13/viper"
 	"strings"
 	"testing"

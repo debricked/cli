@@ -1,11 +1,11 @@
 package license
 
 import (
-	"debricked/pkg/client"
-	"debricked/pkg/report"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/debricked/cli/pkg/client"
+	"github.com/debricked/cli/pkg/report"
 	"io"
 	"net/http"
 )

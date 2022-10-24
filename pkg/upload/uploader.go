@@ -1,10 +1,10 @@
 package upload
 
 import (
-	"debricked/pkg/client"
-	"debricked/pkg/file"
-	"debricked/pkg/git"
 	"errors"
+	"github.com/debricked/cli/pkg/client"
+	"github.com/debricked/cli/pkg/file"
+	"github.com/debricked/cli/pkg/git"
 )
 
 type IOptions interface{}

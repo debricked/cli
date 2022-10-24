@@ -68,29 +68,29 @@ func TestMatch(t *testing.T) {
 	}
 
 	gs.groups = nil
-	/*	gs.Match(compiledF, "composer.lock")
-		if gs.Size() != 1 {
-			t.Error("failed to assert that there was one Group in Groups")
-		}
+	gs.Match(compiledF, "composer.lock")
+	if gs.Size() != 1 {
+		t.Error("failed to assert that there was one Group in Groups")
+	}
 
-		gs.Match(compiledF, "composer.json")
-		if gs.Size() != 1 {
-			t.Error("failed to assert that there was one Group in Groups")
-		}
+	gs.Match(compiledF, "composer.json")
+	if gs.Size() != 1 {
+		t.Error("failed to assert that there was one Group in Groups")
+	}
 
-		g = gs.groups[0]
-		if g.FilePath != "composer.json" {
-			t.Error("failed to assert that FilePath had correct value directory/composer.json")
-		}
+	g := gs.groups[0]
+	if g.FilePath != "composer.json" {
+		t.Error("failed to assert that FilePath had correct value directory/composer.json")
+	}
 
-		if len(g.RelatedFiles) != 1 {
-			t.Error("failed to assert that there was one lock file")
-		}
+	if len(g.RelatedFiles) != 1 {
+		t.Error("failed to assert that there was one lock file")
+	}
 
-		lockFile = g.RelatedFiles[0]
-		if lockFile != "composer.lock" {
-			t.Error("failed to assert lock file name")
-		}*/
+	lockFile := g.RelatedFiles[0]
+	if lockFile != "composer.lock" {
+		t.Error("failed to assert lock file name")
+	}
 }
 
 func TestGetFiles(t *testing.T) {

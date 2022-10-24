@@ -1,8 +1,8 @@
 package main
 
 import (
-	"debricked/pkg/cmd/root"
 	"fmt"
+	"github.com/debricked/cli/pkg/cmd/root"
 	"os"
 )
 

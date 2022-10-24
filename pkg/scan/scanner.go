@@ -1,14 +1,14 @@
 package scan
 
 import (
-	"debricked/pkg/ci"
-	"debricked/pkg/ci/env"
-	"debricked/pkg/client"
-	"debricked/pkg/file"
-	"debricked/pkg/git"
-	"debricked/pkg/upload"
 	"errors"
 	"fmt"
+	"github.com/debricked/cli/pkg/ci"
+	"github.com/debricked/cli/pkg/ci/env"
+	"github.com/debricked/cli/pkg/client"
+	"github.com/debricked/cli/pkg/file"
+	"github.com/debricked/cli/pkg/git"
+	"github.com/debricked/cli/pkg/upload"
 	"github.com/fatih/color"
 	"os"
 )

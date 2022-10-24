@@ -2,13 +2,13 @@ package upload
 
 import (
 	"bytes"
-	"debricked/pkg/client"
-	"debricked/pkg/file"
-	"debricked/pkg/git"
-	"debricked/pkg/tui"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/debricked/cli/pkg/client"
+	"github.com/debricked/cli/pkg/file"
+	"github.com/debricked/cli/pkg/git"
+	"github.com/debricked/cli/pkg/tui"
 	"io"
 	"log"
 	"mime/multipart"

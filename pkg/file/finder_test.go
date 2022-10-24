@@ -2,9 +2,9 @@ package file
 
 import (
 	"bytes"
-	"debricked/pkg/client"
 	"encoding/json"
 	"fmt"
+	"github.com/debricked/cli/pkg/client"
 	"io"
 	"net/http"
 	"os"

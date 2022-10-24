@@ -1,8 +1,8 @@
 package ci
 
 import (
-	"debricked/pkg/ci/azure"
-	"debricked/pkg/ci/circleci"
+	"github.com/debricked/cli/pkg/ci/azure"
+	"github.com/debricked/cli/pkg/ci/circleci"
 	"os"
 	"testing"
 )

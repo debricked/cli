@@ -1,7 +1,7 @@
 package upload
 
 import (
-	"debricked/pkg/automation"
+	"github.com/debricked/cli/pkg/automation"
 )
 
 type UploadResult struct {

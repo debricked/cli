@@ -2,10 +2,10 @@ package upload
 
 import (
 	"bytes"
-	"debricked/pkg/client"
-	"debricked/pkg/file"
-	"debricked/pkg/git"
 	"encoding/json"
+	"github.com/debricked/cli/pkg/client"
+	"github.com/debricked/cli/pkg/file"
+	"github.com/debricked/cli/pkg/git"
 	"io"
 	"net/http"
 	"strings"

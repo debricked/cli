@@ -1,16 +1,16 @@
 package ci
 
 import (
-	"debricked/pkg/ci/argo"
-	"debricked/pkg/ci/azure"
-	"debricked/pkg/ci/bitbucket"
-	"debricked/pkg/ci/buildkite"
-	"debricked/pkg/ci/circleci"
-	"debricked/pkg/ci/env"
-	"debricked/pkg/ci/github"
-	"debricked/pkg/ci/gitlab"
-	"debricked/pkg/ci/travis"
 	"errors"
+	"github.com/debricked/cli/pkg/ci/argo"
+	"github.com/debricked/cli/pkg/ci/azure"
+	"github.com/debricked/cli/pkg/ci/bitbucket"
+	"github.com/debricked/cli/pkg/ci/buildkite"
+	"github.com/debricked/cli/pkg/ci/circleci"
+	"github.com/debricked/cli/pkg/ci/env"
+	"github.com/debricked/cli/pkg/ci/github"
+	"github.com/debricked/cli/pkg/ci/gitlab"
+	"github.com/debricked/cli/pkg/ci/travis"
 )
 
 type IService interface {

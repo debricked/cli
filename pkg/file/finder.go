@@ -1,10 +1,10 @@
 package file
 
 import (
-	"debricked/pkg/client"
 	"encoding/json"
 	"errors"
 	"github.com/bmatcuk/doublestar/v4"
+	"github.com/debricked/cli/pkg/client"
 	"io"
 	"net/http"
 	"os"

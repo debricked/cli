@@ -1,10 +1,10 @@
 package find
 
 import (
-	"debricked/pkg/file"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/debricked/cli/pkg/file"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"

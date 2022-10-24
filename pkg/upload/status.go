@@ -1,8 +1,8 @@
 package upload
 
 import (
-	"debricked/pkg/automation"
 	"encoding/json"
+	"github.com/debricked/cli/pkg/automation"
 	"io"
 	"net/http"
 )

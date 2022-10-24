@@ -1,10 +1,10 @@
 package license
 
 import (
-	"debricked/pkg/cmd/report/testdata"
-	"debricked/pkg/report"
 	"errors"
 	"fmt"
+	"github.com/debricked/cli/pkg/cmd/report/testdata"
+	"github.com/debricked/cli/pkg/report"
 	"github.com/spf13/viper"
 	"strings"
 	"testing"

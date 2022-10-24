@@ -1,11 +1,11 @@
 package report
 
 import (
-	"debricked/pkg/client"
-	"debricked/pkg/cmd/report/license"
-	"debricked/pkg/cmd/report/vulnerability"
-	licenseReport "debricked/pkg/report/license"
-	vulnerabilityReport "debricked/pkg/report/vulnerability"
+	"github.com/debricked/cli/pkg/client"
+	"github.com/debricked/cli/pkg/cmd/report/license"
+	"github.com/debricked/cli/pkg/cmd/report/vulnerability"
+	licenseReport "github.com/debricked/cli/pkg/report/license"
+	vulnerabilityReport "github.com/debricked/cli/pkg/report/vulnerability"
 	"github.com/spf13/cobra"
 )
 

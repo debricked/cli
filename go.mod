@@ -1,4 +1,4 @@
-module debricked
+module github.com/debricked/cli
 
 go 1.18
 

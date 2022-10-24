@@ -1,11 +1,11 @@
 package scan
 
 import (
-	"debricked/pkg/ci"
-	"debricked/pkg/client"
-	"debricked/pkg/scan"
 	"errors"
 	"fmt"
+	"github.com/debricked/cli/pkg/ci"
+	"github.com/debricked/cli/pkg/client"
+	"github.com/debricked/cli/pkg/scan"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

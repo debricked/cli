@@ -1,6 +1,6 @@
 package testdata
 
-import "debricked/pkg/report"
+import "github.com/debricked/cli/pkg/report"
 
 type ReporterMock struct {
 	err error

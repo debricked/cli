@@ -2,7 +2,7 @@ package testdata
 
 import (
 	"bytes"
-	"debricked/pkg/file"
+	"github.com/debricked/cli/pkg/file"
 	"io"
 	"net/http"
 )

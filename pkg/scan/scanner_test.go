@@ -1,16 +1,16 @@
 package scan
 
 import (
-	"debricked/pkg/ci"
-	"debricked/pkg/ci/argo"
-	"debricked/pkg/ci/azure"
-	"debricked/pkg/ci/bitbucket"
-	"debricked/pkg/ci/buildkite"
-	"debricked/pkg/ci/circleci"
-	"debricked/pkg/ci/gitlab"
-	"debricked/pkg/ci/travis"
-	"debricked/pkg/client"
-	"debricked/pkg/git"
+	"github.com/debricked/cli/pkg/ci"
+	"github.com/debricked/cli/pkg/ci/argo"
+	"github.com/debricked/cli/pkg/ci/azure"
+	"github.com/debricked/cli/pkg/ci/bitbucket"
+	"github.com/debricked/cli/pkg/ci/buildkite"
+	"github.com/debricked/cli/pkg/ci/circleci"
+	"github.com/debricked/cli/pkg/ci/gitlab"
+	"github.com/debricked/cli/pkg/ci/travis"
+	"github.com/debricked/cli/pkg/client"
+	"github.com/debricked/cli/pkg/git"
 	"strings"
 	"testing"
 )
