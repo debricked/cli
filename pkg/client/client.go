@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"github.com/hashicorp/go-retryablehttp"
 	"net/http"
 	"os"
 )
@@ -15,7 +16,7 @@ type IDebClient interface {
 
 type DebClient struct {
 	host        *string
-	httpClient  *http.Client
+	httpClient  *retryablehttp.Client
 	accessToken *string
 	jwtToken    string
 }
@@ -34,7 +35,7 @@ func NewDebClient(accessToken *string) *DebClient {
 
 	return &DebClient{
 		host:        &host,
-		httpClient:  &http.Client{},
+		httpClient:  newRetryClient(),
 		accessToken: accessToken,
 		jwtToken:    "",
 	}

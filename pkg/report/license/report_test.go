@@ -15,9 +15,9 @@ import (
 
 func TestOrder(t *testing.T) {
 	debClientMock := testdata.NewDebClientMock()
-	addCommitIdMockResponse(&debClientMock)
+	addCommitIdMockResponse(debClientMock)
 	debClientMock.AddMockResponse(testdata.MockResponse{StatusCode: http.StatusOK})
-	reporter := Reporter{DebClient: &debClientMock}
+	reporter := Reporter{DebClient: debClientMock}
 	args := OrderArgs{Email: ""}
 	err := reporter.Order(args)
 	if err != nil {
@@ -39,7 +39,7 @@ func TestGetCommitError(t *testing.T) {
 	debClientMock := testdata.NewDebClientMock()
 	errorAssertion := errors.New("commitError")
 	debClientMock.AddMockResponse(testdata.MockResponse{Error: errorAssertion})
-	reporter := Reporter{DebClient: &debClientMock}
+	reporter := Reporter{DebClient: debClientMock}
 	args := OrderArgs{Email: ""}
 	err := reporter.Order(args)
 	if err != errorAssertion {
@@ -51,7 +51,7 @@ func TestOrderUnauthorized(t *testing.T) {
 	debClientMock := testdata.NewDebClientMock()
 	errorAssertion := errors.New("unauthorized")
 	debClientMock.AddMockResponse(testdata.MockResponse{Error: errorAssertion})
-	reporter := Reporter{DebClient: &debClientMock}
+	reporter := Reporter{DebClient: debClientMock}
 	args := OrderArgs{Email: ""}
 	err := reporter.Order(args)
 	if err != errorAssertion {
@@ -61,9 +61,9 @@ func TestOrderUnauthorized(t *testing.T) {
 
 func TestOrderForbidden(t *testing.T) {
 	debClientMock := testdata.NewDebClientMock()
-	addCommitIdMockResponse(&debClientMock)
+	addCommitIdMockResponse(debClientMock)
 	debClientMock.AddMockResponse(testdata.MockResponse{StatusCode: http.StatusForbidden})
-	reporter := Reporter{DebClient: &debClientMock}
+	reporter := Reporter{DebClient: debClientMock}
 	args := OrderArgs{Email: ""}
 	err := reporter.Order(args)
 	if err != SubscriptionError {
@@ -73,9 +73,9 @@ func TestOrderForbidden(t *testing.T) {
 
 func TestOrderNotOkResponse(t *testing.T) {
 	debClientMock := testdata.NewDebClientMock()
-	addCommitIdMockResponse(&debClientMock)
+	addCommitIdMockResponse(debClientMock)
 	debClientMock.AddMockResponse(testdata.MockResponse{StatusCode: http.StatusTeapot})
-	reporter := Reporter{DebClient: &debClientMock}
+	reporter := Reporter{DebClient: debClientMock}
 	args := OrderArgs{Email: ""}
 	err := reporter.Order(args)
 	errMsg := fmt.Sprintf("failed to order report. Status code: %d", http.StatusTeapot)
@@ -86,9 +86,9 @@ func TestOrderNotOkResponse(t *testing.T) {
 
 func TestGetCommitId(t *testing.T) {
 	debClientMock := testdata.NewDebClientMock()
-	addCommitIdMockResponse(&debClientMock)
+	addCommitIdMockResponse(debClientMock)
 	debClientMock.AddMockResponse(testdata.MockResponse{StatusCode: http.StatusOK})
-	reporter := Reporter{DebClient: &debClientMock}
+	reporter := Reporter{DebClient: debClientMock}
 	args := OrderArgs{Email: ""}
 	err := reporter.Order(args)
 	if err != nil {
@@ -100,7 +100,7 @@ func TestGetCommitIdUnauthorized(t *testing.T) {
 	debClientMock := testdata.NewDebClientMock()
 	errorAssertion := errors.New("unauthorized")
 	debClientMock.AddMockResponse(testdata.MockResponse{Error: errorAssertion})
-	reporter := Reporter{DebClient: &debClientMock}
+	reporter := Reporter{DebClient: debClientMock}
 	_, err := reporter.getCommitId("")
 	if err != errorAssertion {
 		t.Error("failed to assert client error")
@@ -110,7 +110,7 @@ func TestGetCommitIdUnauthorized(t *testing.T) {
 func TestGetCommitIdForbidden(t *testing.T) {
 	debClientMock := testdata.NewDebClientMock()
 	debClientMock.AddMockResponse(testdata.MockResponse{StatusCode: http.StatusForbidden})
-	reporter := Reporter{DebClient: &debClientMock}
+	reporter := Reporter{DebClient: debClientMock}
 	_, err := reporter.getCommitId("")
 	if err != SubscriptionError {
 		t.Error("failed to assert subscription error")
@@ -120,7 +120,7 @@ func TestGetCommitIdForbidden(t *testing.T) {
 func TestGetCommitIdNotOkResponse(t *testing.T) {
 	debClientMock := testdata.NewDebClientMock()
 	debClientMock.AddMockResponse(testdata.MockResponse{StatusCode: http.StatusTeapot})
-	reporter := Reporter{DebClient: &debClientMock}
+	reporter := Reporter{DebClient: debClientMock}
 	_, err := reporter.getCommitId("")
 	if !strings.Contains(err.Error(), "No commit was found with the name") {
 		t.Error("failed to assert that not commit error message")
@@ -133,7 +133,7 @@ func TestGetCommitIdNoResult(t *testing.T) {
 		StatusCode:   http.StatusOK,
 		ResponseBody: createIoReadCloserFromCommit(nil),
 	})
-	reporter := Reporter{DebClient: &debClientMock}
+	reporter := Reporter{DebClient: debClientMock}
 	_, err := reporter.getCommitId("")
 	if !strings.Contains(err.Error(), "No commit was found with the name") {
 		t.Error("failed to assert that not commit error message")
