@@ -72,8 +72,15 @@ func (uploadBatch *uploadBatch) uploadFile(filePath string) error {
 	defer writer.Close()
 
 	fileData, _ := writer.CreateFormFile("fileData", filepath.Base(filePath))
-	f, _ := os.Open(filePath)
-	defer f.Close()
+	f, err := os.Open(filepath.Clean(filePath))
+	if err != nil {
+		return err
+	}
+
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
+
 	_, _ = io.Copy(fileData, f)
 
 	_ = writer.WriteField("fileRelativePath", filepath.Dir(filePath))
