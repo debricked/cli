@@ -46,6 +46,19 @@ jobs:
       - name: Test - E2E
         run: go run cmd/debricked/main.go scan . -t ${{ secrets.DEBRICKED_TOKEN }} -e "**/testdata/**"
 
+  gosec:
+    name: Gosec
+    runs-on: ubuntu-latest
+    env:
+      GO111MODULE: on
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v2
+      - name: Run Gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: ./...
+
   docker:
     name: Docker
     runs-on: ubuntu-latest

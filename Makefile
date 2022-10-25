@@ -7,6 +7,8 @@ test-cli:
 	bash scripts/test_cli.sh
 test-static:
 	bash scripts/test_static.sh
+test-security:
+	bash scripts/test_gosec.sh
 test-docker-scripts:
 	bash scripts/test_docker_scripts.sh
 test-docker:
