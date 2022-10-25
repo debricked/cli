@@ -116,7 +116,7 @@ func TestGetGroups(t *testing.T) {
 	excludedFiles := []string{"testdata/go/go.mod", "testdata/misc/requirements.txt"}
 	const nbrOfGroups = 2
 
-	fileGroups, err := finder.GetGroups(directoryPath, exclusions)
+	fileGroups, err := finder.GetGroups(directoryPath, exclusions, false)
 	if err != nil {
 		t.Fatal("failed to assert that no error occurred. Error:", err)
 	}
