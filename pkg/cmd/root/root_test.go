@@ -35,7 +35,7 @@ func TestNewRootCmd(t *testing.T) {
 		t.Error("failed to assert that flag was present: " + AccessTokenFlag)
 	}
 
-	if len(viperKeys) != 10 {
+	if len(viperKeys) != 11 {
 		t.Error("failed to assert number of keys bound by Viper")
 	}
 

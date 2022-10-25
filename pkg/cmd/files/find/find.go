@@ -12,10 +12,12 @@ import (
 
 var exclusions []string
 var jsonPrint bool
+var lockfileOnly bool
 
 const (
-	ExclusionsFlag = "exclusions"
-	JsonFlag       = "json"
+	ExclusionsFlag   = "exclusions"
+	JsonFlag         = "json"
+	LockfileOnlyFlag = "lockfile"
 )
 
 func NewFindCmd(finder file.IFinder) *cobra.Command {
@@ -51,9 +53,11 @@ Format:
   },
 ]
 `)
+	cmd.Flags().BoolVarP(&lockfileOnly, LockfileOnlyFlag, "l", false, "If set, only lock files are found")
 	_ = viper.BindPFlags(cmd.Flags())
 	viper.MustBindEnv(ExclusionsFlag)
 	viper.MustBindEnv(JsonFlag)
+	viper.MustBindEnv(LockfileOnlyFlag)
 
 	return cmd
 }
@@ -61,7 +65,7 @@ Format:
 func RunE(f file.IFinder) func(_ *cobra.Command, args []string) error {
 	return func(_ *cobra.Command, args []string) error {
 		directoryPath := args[0]
-		fileGroups, err := f.GetGroups(directoryPath, viper.GetStringSlice(ExclusionsFlag))
+		fileGroups, err := f.GetGroups(directoryPath, viper.GetStringSlice(ExclusionsFlag), viper.GetBool(LockfileOnlyFlag))
 		if err != nil {
 			return err
 		}

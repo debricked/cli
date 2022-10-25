@@ -7,12 +7,17 @@ type Groups struct {
 }
 
 // Match `format` with `path` and append result to Groups
-func (gs *Groups) Match(format *CompiledFormat, path string) bool {
+func (gs *Groups) Match(format *CompiledFormat, path string, lockfileOnly bool) bool {
 	dir, file := filepath.Split(path)
 
 	// If it is not a match, return
 	fileMatch := format.MatchFile(file)
+	if lockfileOnly {
+		fileMatch = false
+	}
+
 	lockFileMatch := format.MatchLockFile(file)
+
 	if !fileMatch && !lockFileMatch {
 		return false
 	}
