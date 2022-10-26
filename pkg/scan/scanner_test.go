@@ -11,6 +11,7 @@ import (
 	"github.com/debricked/cli/pkg/ci/travis"
 	"github.com/debricked/cli/pkg/client"
 	"github.com/debricked/cli/pkg/git"
+	"github.com/debricked/cli/pkg/upload"
 	"strings"
 	"testing"
 )
@@ -108,6 +109,38 @@ func TestScanFailingMetaObject(t *testing.T) {
 	err = scanner.Scan(opts)
 	if err != git.CommitNameError {
 		t.Error("failed to assert that CommitNameError occurred")
+	}
+}
+
+func TestScanFailingNoFiles(t *testing.T) {
+	var debClient client.IDebClient
+	debClient = client.NewDebClient(nil)
+	var ciService ci.IService
+	ciService = ci.NewService([]ci.ICi{
+		argo.Ci{},
+		azure.Ci{},
+		bitbucket.Ci{},
+		buildkite.Ci{},
+		circleci.Ci{},
+		//github.Ci{}, Since GitHub actions is used, this ICi is ignored
+		gitlab.Ci{},
+		travis.Ci{},
+	})
+	scanner, _ := NewDebrickedScanner(&debClient, ciService)
+	directoryPath := "."
+	opts := DebrickedOptions{
+		DirectoryPath:   directoryPath,
+		Exclusions:      []string{"testdata/**"},
+		RepositoryName:  "name",
+		CommitName:      "commit",
+		BranchName:      "branch",
+		CommitAuthor:    "",
+		RepositoryUrl:   "",
+		IntegrationName: "",
+	}
+	err := scanner.Scan(opts)
+	if err != upload.NoFilesErr {
+		t.Error("failed to assert that error NoFilesErr occurred")
 	}
 }
 

@@ -33,7 +33,7 @@ func TestNewFindCmd(t *testing.T) {
 	}
 
 	var flagKeys = []string{
-		ExclusionsFlag,
+		ExclusionFlag,
 		JsonFlag,
 	}
 	viperKeys := viper.AllKeys()
@@ -56,6 +56,19 @@ func TestRunE(t *testing.T) {
 	groups := file.Groups{}
 	groups.Add(file.Group{})
 	f.SetGetGroupsReturnMock(groups, nil)
+	runE := RunE(f)
+	err := runE(nil, []string{"."})
+	if err != nil {
+		t.Fatal("failed to assert that no error occurred. Error:", err)
+	}
+}
+
+func TestRunENoFiles(t *testing.T) {
+	f := testdata.NewFinderMock()
+	groups := file.Groups{}
+	groups.Add(file.Group{})
+	f.SetGetGroupsReturnMock(groups, nil)
+	exclusions = []string{}
 	runE := RunE(f)
 	err := runE(nil, []string{"."})
 	if err != nil {

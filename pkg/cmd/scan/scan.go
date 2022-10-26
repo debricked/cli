@@ -27,7 +27,7 @@ const (
 	CommitAuthorFlag  = "author"
 	RepositoryUrlFlag = "repository-url"
 	IntegrationFlag   = "integration"
-	ExclusionsFlag    = "exclusions"
+	ExclusionFlag     = "exclusion"
 )
 
 var scanCmdError error
@@ -45,6 +45,9 @@ func NewScanCmd(c *client.IDebClient) *cobra.Command {
 		Long: `All supported dependency files will be scanned and analysed.
 If the given path contains a git repository all flags but "integration" will be resolved. Otherwise they have to specified.`,
 		Args: ValidateArgs,
+		PreRun: func(cmd *cobra.Command, _ []string) {
+			_ = viper.BindPFlags(cmd.Flags())
+		},
 		RunE: RunE(&s),
 	}
 	cmd.Flags().StringVarP(&repositoryName, RepositoryFlag, "r", "", "repository name")
@@ -53,7 +56,7 @@ If the given path contains a git repository all flags but "integration" will be 
 	cmd.Flags().StringVarP(&commitAuthor, CommitAuthorFlag, "a", "", "commit author")
 	cmd.Flags().StringVarP(&repositoryUrl, RepositoryUrlFlag, "u", "", "repository URL")
 	cmd.Flags().StringVarP(&integrationName, IntegrationFlag, "i", "CLI", `name of integration used to trigger scan. For example "GitHub Actions"`)
-	cmd.Flags().StringArrayVarP(&exclusions, ExclusionsFlag, "e", exclusions, `The following terms are supported to exclude paths:
+	cmd.Flags().StringArrayVarP(&exclusions, ExclusionFlag, "e", exclusions, `The following terms are supported to exclude paths:
 Special Terms | Meaning
 ------------- | -------
 "*"           | matches any sequence of non-Separator characters 
@@ -72,9 +75,6 @@ $ debricked scan . -e "*\**.exe" -e "**\node_modules\**"
 	viper.MustBindEnv(CommitAuthorFlag)
 	viper.MustBindEnv(RepositoryUrlFlag)
 	viper.MustBindEnv(IntegrationFlag)
-	viper.MustBindEnv(ExclusionsFlag)
-
-	_ = viper.BindPFlags(cmd.Flags())
 
 	return cmd
 }
@@ -84,7 +84,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 		directoryPath := args[0]
 		options := scan.DebrickedOptions{
 			DirectoryPath:   directoryPath,
-			Exclusions:      viper.GetStringSlice(ExclusionsFlag),
+			Exclusions:      viper.GetStringSlice(ExclusionFlag),
 			RepositoryName:  viper.GetString(RepositoryFlag),
 			CommitName:      viper.GetString(CommitFlag),
 			BranchName:      viper.GetString(BranchFlag),

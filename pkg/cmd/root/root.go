@@ -19,6 +19,9 @@ func NewRootCmd() *cobra.Command {
 		Short: "Debricked CLI - Keep track of your dependencies!",
 		Long: `A fast and flexible software composition analysis CLI tool, given to you by Debricked.
 Complete documentation is available at https://debricked.com/docs/integrations/cli.html#debricked-cli`,
+		PreRun: func(cmd *cobra.Command, _ []string) {
+			_ = viper.BindPFlags(cmd.PersistentFlags())
+		},
 	}
 	viper.SetEnvPrefix("DEBRICKED")
 	viper.MustBindEnv(AccessTokenFlag)
@@ -30,12 +33,11 @@ Complete documentation is available at https://debricked.com/docs/integrations/c
 		`Debricked access token. 
 Read more: https://debricked.com/docs/administration/access-tokens.html`,
 	)
-	_ = viper.BindPFlags(rootCmd.PersistentFlags())
 
 	var debClient client.IDebClient = client.NewDebClient(&accessToken)
 	rootCmd.AddCommand(report.NewReportCmd(&debClient))
-	rootCmd.AddCommand(scan.NewScanCmd(&debClient))
 	rootCmd.AddCommand(files.NewFilesCmd(&debClient))
+	rootCmd.AddCommand(scan.NewScanCmd(&debClient))
 
 	return rootCmd
 }

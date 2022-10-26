@@ -15,7 +15,7 @@ var jsonPrint bool
 var lockfileOnly bool
 
 const (
-	ExclusionsFlag   = "exclusions"
+	ExclusionFlag    = "exclusion"
 	JsonFlag         = "json"
 	LockfileOnlyFlag = "lockfile"
 )
@@ -27,9 +27,12 @@ func NewFindCmd(finder file.IFinder) *cobra.Command {
 		Long: `Find all dependency files in inputted path. Related files are grouped together. 
 For example ` + "`package.json`" + ` with ` + "`package-lock.json`.",
 		Args: validateArgs,
+		PreRun: func(cmd *cobra.Command, _ []string) {
+			_ = viper.BindPFlags(cmd.PersistentFlags())
+		},
 		RunE: RunE(finder),
 	}
-	cmd.Flags().StringArrayVarP(&exclusions, ExclusionsFlag, "e", exclusions, `The following terms are supported to exclude paths:
+	cmd.Flags().StringArrayVarP(&exclusions, ExclusionFlag, "e", exclusions, `The following terms are supported to exclude paths:
 Special Terms | Meaning
 ------------- | -------
 "*"           | matches any sequence of non-Separator characters 
@@ -42,6 +45,7 @@ Examples:
 $ debricked files find . -e "*/**.lock" -e "**/node_modules/**" 
 $ debricked files find . -e "*\**.exe" -e "**\node_modules\**" 
 `)
+
 	cmd.Flags().BoolVarP(&jsonPrint, JsonFlag, "j", false, `Print files in JSON format
 Format:
 [
@@ -54,8 +58,8 @@ Format:
 ]
 `)
 	cmd.Flags().BoolVarP(&lockfileOnly, LockfileOnlyFlag, "l", false, "If set, only lock files are found")
-	_ = viper.BindPFlags(cmd.Flags())
-	viper.MustBindEnv(ExclusionsFlag)
+
+	viper.MustBindEnv(ExclusionFlag)
 	viper.MustBindEnv(JsonFlag)
 	viper.MustBindEnv(LockfileOnlyFlag)
 
@@ -65,7 +69,7 @@ Format:
 func RunE(f file.IFinder) func(_ *cobra.Command, args []string) error {
 	return func(_ *cobra.Command, args []string) error {
 		directoryPath := args[0]
-		fileGroups, err := f.GetGroups(directoryPath, viper.GetStringSlice(ExclusionsFlag), viper.GetBool(LockfileOnlyFlag))
+		fileGroups, err := f.GetGroups(directoryPath, viper.GetStringSlice(ExclusionFlag), viper.GetBool(LockfileOnlyFlag))
 		if err != nil {
 			return err
 		}
