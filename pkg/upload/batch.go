@@ -20,6 +20,10 @@ import (
 	"time"
 )
 
+var (
+	NoFilesErr = errors.New("failed to find dependency files")
+)
+
 type uploadBatch struct {
 	client          *client.IDebClient
 	fileGroups      file.Groups
@@ -116,7 +120,7 @@ func (uploadBatch *uploadBatch) uploadFile(filePath string) error {
 // conclude send the conclusion request to Debricked
 func (uploadBatch *uploadBatch) conclude() error {
 	if uploadBatch.ciUploadId == 0 {
-		return errors.New("failed to find dependency files")
+		return NoFilesErr
 	}
 	body, err := json.Marshal(uploadConclusion{
 		CiUploadId:      strconv.Itoa(uploadBatch.ciUploadId),
