@@ -3,10 +3,11 @@ package git
 import (
 	"errors"
 	"fmt"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/object"
 	"path/filepath"
 	"regexp"
+
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
 var RepositoryNameError = errors.New("failed to find repository name")
@@ -28,30 +29,30 @@ func FindRepositoryUrl(repository *git.Repository) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	// If remoteUrl starts with "http(s)://" and ends with ".git", use capture group to find repository url.
+	// If remoteUrl starts with "http(s)://" use capture group to find repository url.
+	compiledRegex := regexp.MustCompile(`^(https?://.+?)(\.git)?$`)
+	matches := compiledRegex.FindStringSubmatch(remoteUrl)
+	if len(matches) > 1 {
+		return matches[1], nil
+	}
+
+	// If remoteUrl is of the form "git@github.com:organisation/reponame.git"
+	// or "ssh://git@github.com/organisation/reponame.git",
+	// use capture groups to construct repository url
 	var regexes = []string{
-		"^(https?:\\/\\/.+)\\.git$",
-		"^(https?:\\/\\/.+)$",
+		`^git@(.+):([^/].*?)(?:\.git)?$`,
+		`ssh://git@([a-z0-9-.]+)(?::[0-9]+)?/(.+?)(?:\.git)?$`,
 	}
 	for _, regex := range regexes {
 		compiledRegex := regexp.MustCompile(regex)
 		matches := compiledRegex.FindStringSubmatch(remoteUrl)
-		if len(matches) > 1 {
-			return matches[1], nil
+		if len(matches) > 2 {
+			domain := matches[1]
+			uri := matches[2]
+			url := fmt.Sprintf("https://%s/%s", domain, uri)
+
+			return url, nil
 		}
-	}
-
-	// If remoteUrl is of the form "git@github.com:organisation/reponame.git",
-	// use capture groups to construct repository url
-	const gitUrlRegex = "git@(.+):[0-9]*\\/?(.+)\\.git$"
-	compiledRegex := regexp.MustCompile(gitUrlRegex)
-	matches := compiledRegex.FindStringSubmatch(remoteUrl)
-	if len(matches) > 2 {
-		domain := matches[1]
-		uri := matches[2]
-		url := fmt.Sprintf("https://%s/%s", domain, uri)
-
-		return url, nil
 	}
 
 	return "", errors.New("failed to find repository URL")
@@ -91,12 +92,11 @@ func FindRepositoryName(repository *git.Repository, directoryPath string) (strin
 }
 
 func ParseGitRemoteUrl(gitRemoteUrl string) (string, error) {
-	const httpsUrlRegex = "https?:\\/\\/.+\\.[a-z0-9]+\\/(.+)\\.git$"
-	const urlRegex = "https?:\\/\\/.+\\.[a-z0-9]+\\/(.+)$"
-	const gitUrlRegex = "^.*:[0-9]*\\/*(.+)\\.git$"
+	const httpsUrlRegex = `(?:https?|ssh)://.+\.[a-z0-9-]+(?::[0-9]+)?/(.+?)(?:\.git)?$`
+	const gitUrlRegex = `^.*:([^/].*?)(?:\.git)?$`
 	// 1. Try to match against https git URL
 	// 2. Try to match against ssh git URL
-	regexes := []string{httpsUrlRegex, urlRegex, gitUrlRegex}
+	regexes := []string{httpsUrlRegex, gitUrlRegex}
 	for _, regex := range regexes {
 		compiledRegex := regexp.MustCompile(regex)
 		matches := compiledRegex.FindStringSubmatch(gitRemoteUrl)

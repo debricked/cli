@@ -1,14 +1,15 @@
 package git
 
 import (
+	"os"
+	"strings"
+	"testing"
+
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/storage/memory"
-	"os"
-	"strings"
-	"testing"
 )
 
 var repository *git.Repository
@@ -36,33 +37,50 @@ func TestFindRepositoryName(t *testing.T) {
 }
 
 func TestFindRepositoryUrl(t *testing.T) {
-	repoMock := mockRepository(t)
-	remoteConfig := &config.RemoteConfig{
-		Name:  "debricked/cli",
-		URLs:  []string{"git@github.com:debricked/cli.git"},
-		Fetch: nil,
+	remoteUrls := []string{
+		"git@github.com:debricked/cli.git",
+		"git@github.com:debricked/cli",
+		"ssh://git@github.com/debricked/cli",
+		"ssh://git@github.com/debricked/cli.git",
+		"https://github.com/debricked/cli.git",
+		"https://github.com/debricked/cli",
 	}
-	_, err := repoMock.CreateRemote(remoteConfig)
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-	url, err := FindRepositoryUrl(repoMock)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	if url != "https://github.com/debricked/cli" {
-		t.Error("failed to find correct repository url:", url)
+
+	for _, remoteUrl := range remoteUrls {
+		repoMock := mockRepository(t)
+		remoteConfig := &config.RemoteConfig{
+			Name:  "debricked/cli",
+			URLs:  []string{remoteUrl},
+			Fetch: nil,
+		}
+		_, err := repoMock.CreateRemote(remoteConfig)
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+		url, err := FindRepositoryUrl(repoMock)
+		if err != nil {
+			t.Error(err.Error())
+		}
+		if url != "https://github.com/debricked/cli" {
+			t.Error("failed to find correct repository url from:", remoteUrl, "got:", url)
+		}
 	}
 }
 
 func TestParseGitRemoteUrl(t *testing.T) {
 	remoteUrls := []string{
 		"git@github.com:debricked/cli.git",
+		"git@github.com:debricked/cli",
 		"https://github.com/debricked/cli.git",
 		"https://some.git.host/debricked/cli.git",
 		"https://gitlab.com/debricked/cli.git",
 		"git@gitlab.com:debricked/cli.git",
+		"git@some.git.host:debricked/cli.git",
 		"https://github.com/debricked/cli",
+		"ssh://git@github.com/debricked/cli.git",
+		"ssh://git@github.com/debricked/cli",
+		"ssh://git@some.git.host/debricked/cli.git",
+		"ssh://git@some.git.host:1337/debricked/cli.git",
 	}
 	for _, remoteUrl := range remoteUrls {
 		name, err := ParseGitRemoteUrl(remoteUrl)
@@ -76,7 +94,7 @@ func TestParseGitRemoteUrl(t *testing.T) {
 	badUrl := "ftp://github.com/debricked/cli"
 	name, err := ParseGitRemoteUrl(badUrl)
 	if err == nil {
-		t.Error("failed to assert that bad URL generated error")
+		t.Error("failed to assert that bad URL generated error, got:", name)
 	}
 	if name != badUrl {
 		t.Error("failed to assert that parsed git remote URL equals inputted URL")
