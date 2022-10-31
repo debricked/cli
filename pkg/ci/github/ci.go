@@ -36,7 +36,6 @@ func (_ Ci) Map() (env.Env, error) {
 
 	e.RepositoryUrl = fmt.Sprintf("https://github.com/%s", os.Getenv("GITHUB_REPOSITORY"))
 	e.Integration = Integration
-	fmt.Println("Integration:", e.Integration)
 	e.Filepath = "."
 	e.Author = os.Getenv("GITHUB_ACTOR")
 	return e, nil
