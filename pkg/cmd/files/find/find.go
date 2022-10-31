@@ -8,9 +8,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
-var exclusions []string
+var exclusions = file.DefaultExclusions()
 var jsonPrint bool
 var lockfileOnly bool
 
@@ -28,10 +30,13 @@ func NewFindCmd(finder file.IFinder) *cobra.Command {
 For example ` + "`package.json`" + ` with ` + "`package-lock.json`.",
 		Args: validateArgs,
 		PreRun: func(cmd *cobra.Command, _ []string) {
-			_ = viper.BindPFlags(cmd.PersistentFlags())
+			_ = viper.BindPFlags(cmd.Flags())
 		},
 		RunE: RunE(finder),
 	}
+	fileExclusionExample := filepath.Join("*", "**.lock")
+	dirExclusionExample := filepath.Join("**", "node_modules", "**")
+	exampleFlags := fmt.Sprintf("-e \"%s\" -e \"%s\"", fileExclusionExample, dirExclusionExample)
 	cmd.Flags().StringArrayVarP(&exclusions, ExclusionFlag, "e", exclusions, `The following terms are supported to exclude paths:
 Special Terms | Meaning
 ------------- | -------
@@ -41,10 +46,8 @@ Special Terms | Meaning
 "[class]"     | matches any single non-Separator character against a class of characters ([see "character classes"])
 "{alt1,...}"  | matches a sequence of characters if one of the comma-separated alternatives matches
 
-Examples: 
-$ debricked files find . -e "*/**.lock" -e "**/node_modules/**" 
-$ debricked files find . -e "*\**.exe" -e "**\node_modules\**" 
-`)
+Example: 
+$ debricked files find . `+exampleFlags)
 
 	cmd.Flags().BoolVarP(&jsonPrint, JsonFlag, "j", false, `Print files in JSON format
 Format:
@@ -69,6 +72,7 @@ Format:
 func RunE(f file.IFinder) func(_ *cobra.Command, args []string) error {
 	return func(_ *cobra.Command, args []string) error {
 		directoryPath := args[0]
+		fmt.Println(strings.Join(viper.GetStringSlice(ExclusionFlag), ", "))
 		fileGroups, err := f.GetGroups(directoryPath, viper.GetStringSlice(ExclusionFlag), viper.GetBool(LockfileOnlyFlag))
 		if err != nil {
 			return err
