@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/viper"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 var exclusions = file.DefaultExclusions()
@@ -72,7 +71,6 @@ Format:
 func RunE(f file.IFinder) func(_ *cobra.Command, args []string) error {
 	return func(_ *cobra.Command, args []string) error {
 		directoryPath := args[0]
-		fmt.Println(strings.Join(viper.GetStringSlice(ExclusionFlag), ", "))
 		fileGroups, err := f.GetGroups(directoryPath, viper.GetStringSlice(ExclusionFlag), viper.GetBool(LockfileOnlyFlag))
 		if err != nil {
 			return err
