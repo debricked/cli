@@ -25,7 +25,5 @@ jobs:
             ${{ runner.os }}-go-
       - run: |
           printf "$(go mod graph)\n\n$(go list -mod=readonly -e -m all)" > .debricked-go-dependencies.txt
-      - uses: debricked/actions/scan@v1
-        env:
-          DEBRICKED_TOKEN: ${{ secrets.DEBRICKED_TOKEN }}
-          EXCLUDED_DIRECTORIES: "pkg/cmd/scan/testdata"
+      - run: |
+          go run cmd/debricked/main.go scan . -t ${{ secrets.DEBRICKED_TOKEN }} -e "**/testdata/**"
