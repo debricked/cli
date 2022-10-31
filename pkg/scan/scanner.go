@@ -67,7 +67,7 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 		return BadOptsErr
 	}
 	e, _ := dScanner.ciService.Find()
-	dScanner.mapEnvToOptions(&dOptions, e)
+	MapEnvToOptions(&dOptions, e)
 
 	gitMetaObject, err := git.NewMetaObject(
 		dOptions.DirectoryPath,
@@ -107,7 +107,7 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 	return nil
 }
 
-func (dScanner *DebrickedScanner) mapEnvToOptions(o *DebrickedOptions, env env.Env) {
+func MapEnvToOptions(o *DebrickedOptions, env env.Env) {
 	if len(o.RepositoryName) == 0 {
 		o.RepositoryName = env.Repository
 	}
@@ -123,9 +123,12 @@ func (dScanner *DebrickedScanner) mapEnvToOptions(o *DebrickedOptions, env env.E
 	if len(o.RepositoryUrl) == 0 {
 		o.RepositoryUrl = env.RepositoryUrl
 	}
-	if len(o.IntegrationName) == 0 {
-		o.IntegrationName = env.Integration
+	if o.IntegrationName == "CLI" {
+		if len(env.Integration) != 0 {
+			o.IntegrationName = env.Integration
+		}
 	}
+
 	if len(o.DirectoryPath) == 0 {
 		o.DirectoryPath = env.Filepath
 	}

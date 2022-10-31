@@ -11,7 +11,7 @@ import (
 
 const (
 	EnvKey      = "BUILDKITE"
-	integration = "argoWorkflows"
+	Integration = "argoWorkflows"
 )
 
 type Ci struct{}
@@ -25,7 +25,7 @@ func (ci Ci) Map() (env.Env, error) {
 	e.Filepath = "."
 	e.Repository = ci.MapRepository(os.Getenv("DEBRICKED_GIT_URL"))
 	e.RepositoryUrl = ci.MapRepositoryUrl(os.Getenv("DEBRICKED_GIT_URL"))
-	e.Integration = integration
+	e.Integration = Integration
 	repo, err := git.FindRepository(e.Filepath)
 	if err != nil {
 		return e, nil

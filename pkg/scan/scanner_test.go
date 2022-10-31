@@ -7,6 +7,8 @@ import (
 	"github.com/debricked/cli/pkg/ci/bitbucket"
 	"github.com/debricked/cli/pkg/ci/buildkite"
 	"github.com/debricked/cli/pkg/ci/circleci"
+	"github.com/debricked/cli/pkg/ci/env"
+	"github.com/debricked/cli/pkg/ci/github"
 	"github.com/debricked/cli/pkg/ci/gitlab"
 	"github.com/debricked/cli/pkg/ci/travis"
 	"github.com/debricked/cli/pkg/client"
@@ -151,5 +153,101 @@ func TestScanBadOpts(t *testing.T) {
 	err := scanner.Scan(opts)
 	if err != BadOptsErr {
 		t.Error("failed to assert that BadOptsErr occurred")
+	}
+}
+
+func TestMapEnvToOptions(t *testing.T) {
+	dOptionsTemplate := DebrickedOptions{
+		DirectoryPath:   "path",
+		Exclusions:      nil,
+		RepositoryName:  "repository",
+		CommitName:      "commit",
+		BranchName:      "branch",
+		CommitAuthor:    "author",
+		RepositoryUrl:   "url",
+		IntegrationName: "CLI",
+	}
+
+	cases := []struct {
+		name     string
+		template DebrickedOptions
+		opts     DebrickedOptions
+		env      env.Env
+	}{
+		{
+			name:     "No env",
+			template: dOptionsTemplate,
+			opts:     dOptionsTemplate,
+			env: env.Env{
+				Repository:    "",
+				Commit:        "",
+				Branch:        "",
+				Author:        "",
+				RepositoryUrl: "",
+				Integration:   "",
+				Filepath:      "",
+			},
+		},
+		{
+			name: "CI env set",
+			template: DebrickedOptions{
+				DirectoryPath:   "env-path",
+				Exclusions:      nil,
+				RepositoryName:  "env-repository",
+				CommitName:      "env-commit",
+				BranchName:      "env-branch",
+				CommitAuthor:    "author",
+				RepositoryUrl:   "env-url",
+				IntegrationName: github.Integration,
+			},
+			opts: DebrickedOptions{
+				DirectoryPath:   "",
+				Exclusions:      nil,
+				RepositoryName:  "",
+				CommitName:      "",
+				BranchName:      "",
+				CommitAuthor:    "author",
+				RepositoryUrl:   "",
+				IntegrationName: "CLI",
+			},
+			env: env.Env{
+				Repository:    "env-repository",
+				Commit:        "env-commit",
+				Branch:        "env-branch",
+				Author:        "env-author",
+				RepositoryUrl: "env-url",
+				Integration:   github.Integration,
+				Filepath:      "env-path",
+			},
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			MapEnvToOptions(&c.opts, c.env)
+			if c.opts.DirectoryPath != c.template.DirectoryPath {
+				t.Errorf("Failed to assert that %s was equal to %s", c.opts.DirectoryPath, c.template.DirectoryPath)
+			}
+			if c.opts.Exclusions != nil {
+				t.Errorf("Failed to assert that Exclusions was nil")
+			}
+			if c.opts.RepositoryName != c.template.RepositoryName {
+				t.Errorf("Failed to assert that %s was equal to %s", c.opts.RepositoryName, c.template.RepositoryName)
+			}
+			if c.opts.CommitName != c.template.CommitName {
+				t.Errorf("Failed to assert that %s was equal to %s", c.opts.CommitName, c.template.CommitName)
+			}
+			if c.opts.BranchName != c.template.BranchName {
+				t.Errorf("Failed to assert that %s was equal to %s", c.opts.BranchName, c.template.BranchName)
+			}
+			if c.opts.CommitAuthor != c.template.CommitAuthor {
+				t.Errorf("Failed to assert that %s was equal to %s", c.opts.CommitAuthor, c.template.CommitAuthor)
+			}
+			if c.opts.RepositoryUrl != c.template.RepositoryUrl {
+				t.Errorf("Failed to assert that %s was equal to %s", c.opts.RepositoryUrl, c.template.RepositoryUrl)
+			}
+			if c.opts.IntegrationName != c.template.IntegrationName {
+				t.Errorf("Failed to assert that %s was equal to %s", c.opts.IntegrationName, c.template.IntegrationName)
+			}
+		})
 	}
 }

@@ -11,7 +11,7 @@ import (
 
 const (
 	EnvKey      = "BUILDKITE"
-	integration = "buildkite"
+	Integration = "buildkite"
 )
 
 type Ci struct{}
@@ -26,7 +26,7 @@ func (ci Ci) Map() (env.Env, error) {
 	e.Commit = os.Getenv("BUILDKITE_COMMIT")
 	e.Branch = os.Getenv("BUILDKITE_BRANCH")
 	e.RepositoryUrl = ci.MapRepositoryUrl(os.Getenv("BUILDKITE_REPO"))
-	e.Integration = integration
+	e.Integration = Integration
 	e.Filepath = "."
 	repo, err := git.FindRepository(e.Filepath)
 	if err != nil {

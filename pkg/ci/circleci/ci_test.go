@@ -51,7 +51,7 @@ func TestParse(t *testing.T) {
 	if env.Filepath != "." {
 		t.Error("failed to assert that env contained correct filepath")
 	}
-	if env.Integration != integration {
+	if env.Integration != Integration {
 		t.Error("failed to assert that env contained correct integration")
 	}
 	if len(env.Author) == 0 {

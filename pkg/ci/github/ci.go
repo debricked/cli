@@ -9,7 +9,7 @@ import (
 
 const (
 	EnvKey      = "GITHUB_ACTION"
-	integration = "githubActions"
+	Integration = "githubActions"
 )
 
 type Ci struct{}
@@ -24,7 +24,8 @@ func (_ Ci) Map() (env.Env, error) {
 	e.Commit = os.Getenv("GITHUB_SHA")
 	e.Branch = os.Getenv("GITHUB_REF_NAME")
 	e.RepositoryUrl = fmt.Sprintf("https://github.com/%s", os.Getenv("GITHUB_REPOSITORY"))
-	e.Integration = integration
+	e.Integration = Integration
+	fmt.Println("Integration:", e.Integration)
 	e.Filepath = "."
 	e.Author = os.Getenv("GITHUB_ACTOR")
 	return e, nil

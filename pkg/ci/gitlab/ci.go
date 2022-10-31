@@ -8,7 +8,7 @@ import (
 
 const (
 	EnvKey      = "GITLAB_CI"
-	integration = "gitlab"
+	Integration = "gitlab"
 )
 
 type Ci struct{}
@@ -23,7 +23,7 @@ func (_ Ci) Map() (env.Env, error) {
 	e.Commit = os.Getenv("CI_COMMIT_SHA")
 	e.Branch = os.Getenv("CI_COMMIT_REF_NAME")
 	e.RepositoryUrl = os.Getenv("CI_PROJECT_URL")
-	e.Integration = integration
+	e.Integration = Integration
 	e.Filepath = os.Getenv("CI_PROJECT_DIR")
 	e.Author = os.Getenv("CI_COMMIT_AUTHOR")
 	return e, nil
