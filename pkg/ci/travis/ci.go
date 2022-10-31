@@ -10,7 +10,7 @@ import (
 
 const (
 	EnvKey      = "TRAVIS"
-	integration = "travis"
+	Integration = "travis"
 )
 
 type Ci struct{}
@@ -25,7 +25,7 @@ func (_ Ci) Map() (env.Env, error) {
 	e.Commit = os.Getenv("TRAVIS_COMMIT")
 	e.Branch = os.Getenv("TRAVIS_BRANCH")
 	e.RepositoryUrl = fmt.Sprintf("https://github.com/%s", e.Repository)
-	e.Integration = integration
+	e.Integration = Integration
 	//# The absolute path to the directory where the repository being built has been copied on the worker.
 	//# HOME is set to /home/travis on Linux, /Users/travis on MacOS, and /c/Users/travis on Windows.
 	e.Filepath = os.Getenv("TRAVIS_BUILD_DIR")

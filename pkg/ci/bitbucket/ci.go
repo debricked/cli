@@ -10,7 +10,7 @@ import (
 
 const (
 	EnvKey      = "BITBUCKET_BUILD_NUMBER"
-	integration = "bitbucket"
+	Integration = "bitbucket"
 )
 
 type Ci struct{}
@@ -25,7 +25,7 @@ func (_ Ci) Map() (env.Env, error) {
 	e.Commit = os.Getenv("BITBUCKET_COMMIT")
 	e.Branch = os.Getenv("BITBUCKET_BRANCH")
 	e.RepositoryUrl = os.Getenv("BITBUCKET_GIT_HTTP_ORIGIN")
-	e.Integration = integration
+	e.Integration = Integration
 	e.Filepath = "."
 	repo, err := git.FindRepository(e.Filepath)
 	if err != nil {

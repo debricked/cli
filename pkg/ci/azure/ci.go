@@ -10,7 +10,7 @@ import (
 
 const (
 	EnvKey      = "TF_BUILD"
-	integration = "azureDevOps"
+	Integration = "azureDevOps"
 )
 
 type Ci struct{}
@@ -26,7 +26,7 @@ func (_ Ci) Map() (env.Env, error) {
 	e.Commit = os.Getenv("BUILD_SOURCEVERSION")
 	e.Branch = os.Getenv("BUILD_SOURCEBRANCHNAME")
 	e.RepositoryUrl = os.Getenv("BUILD_REPOSITORY_URI")
-	e.Integration = integration
+	e.Integration = Integration
 	e.Author = os.Getenv("BUILD_REQUESTEDFOREMAIL")
 	e.Filepath = os.Getenv("BUILD_SOURCESDIRECTORY")
 	return e, nil
