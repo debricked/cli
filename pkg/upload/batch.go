@@ -38,35 +38,44 @@ func newUploadBatch(client *client.IDebClient, fileGroups file.Groups, gitMetaOb
 
 // upload concurrently posts all file groups to Debricked
 func (uploadBatch *uploadBatch) upload() {
-	var wg sync.WaitGroup
-
-	uploadWorker := func(filePath string) {
-		// Mark upload done
-		if uploadBatch.initialized() {
-			defer wg.Done()
-		}
-		err := uploadBatch.uploadFile(filePath)
-		if err != nil {
-			log.Println("Failed to upload:", filePath)
+	uploadWorker := func(fileQueue <-chan string, fileResults chan<- int) {
+		const ok = 0
+		const fail = 1
+		for f := range fileQueue {
+			err := uploadBatch.uploadFile(f)
 			if err != nil {
-				log.Println(err.Error())
+				log.Println("Failed to upload:", f)
+				if err != nil {
+					log.Println(err.Error())
+					fileResults <- fail
+				}
+			} else {
+				fmt.Println("Successfully uploaded: ", f)
+				fileResults <- ok
 			}
-		} else {
-			fmt.Println("Successfully uploaded: ", filePath)
 		}
 	}
 
-	for _, f := range uploadBatch.fileGroups.GetFiles() {
-		if !uploadBatch.initialized() {
-			uploadWorker(f)
-		} else {
-			// Increment WaitGroup Counter
-			wg.Add(1)
-			go uploadWorker(f)
-		}
+	files := uploadBatch.fileGroups.GetFiles()
+	fileQueue := make(chan string, len(files))
+	fileResults := make(chan int, len(files))
+
+	// Spawn workers
+	for w := 1; w <= 20; w++ {
+		go uploadWorker(fileQueue, fileResults)
 	}
-	// Wait for goroutines to finish
-	wg.Wait()
+
+	// Append file jobs on queue
+	for _, f := range files {
+		fileQueue <- f
+	}
+
+	// Await completion
+	for range files {
+		<-fileResults
+	}
+
+	close(fileQueue)
 }
 
 // uploadFile Reads file content from filepath and uploads it to Debricked. Returns HTTP status code or 0 if other error occur
@@ -105,6 +114,8 @@ func (uploadBatch *uploadBatch) uploadFile(filePath string) error {
 		return err
 	}
 
+	mutex := sync.Mutex{}
+	mutex.Lock()
 	if !uploadBatch.initialized() {
 		data, _ := io.ReadAll(response.Body)
 		defer response.Body.Close()
@@ -113,6 +124,7 @@ func (uploadBatch *uploadBatch) uploadFile(filePath string) error {
 		_ = json.Unmarshal(data, &uFile)
 		uploadBatch.ciUploadId = uFile.CiUploadId
 	}
+	mutex.Unlock()
 
 	return nil
 }
