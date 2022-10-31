@@ -11,8 +11,9 @@ var gitHubActionsEnv = map[string]string{
 	"GITHUB_ACTION":     "githubActions",
 	"GITHUB_REPOSITORY": "debricked/cli",
 	"GITHUB_SHA":        "commit",
-	"GITHUB_REF_NAME":   "main",
+	"GITHUB_REF":        "main",
 	"GITHUB_ACTOR":      "viktigpetterr <test@test.com>",
+	"GITHUB_HEAD_REF":   "main",
 }
 
 func TestIdentify(t *testing.T) {
@@ -42,34 +43,67 @@ func TestIdentify(t *testing.T) {
 	}
 }
 
+type parseCase struct {
+	name string
+	env  map[string]string
+}
+
 func TestParse(t *testing.T) {
-	err := testdata.SetUpCiEnv(gitHubActionsEnv)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer testdata.ResetEnv(gitHubActionsEnv)
+	var cases []parseCase
+	cases = append(cases, parseCase{
+		name: "GITHUB_REF with branch",
+		env:  gitHubActionsEnv,
+	})
+
+	gitHubActionsEnv["GITHUB_REF"] = "refs/tags/main"
+	cases = append(cases, parseCase{
+		name: "GITHUB_REF with tags",
+		env:  gitHubActionsEnv,
+	})
+	gitHubActionsEnv["GITHUB_REF"] = "refs/heads/main"
+	cases = append(cases, parseCase{
+		name: "GITHUB_REF with heads",
+		env:  gitHubActionsEnv,
+	})
+
+	gitHubActionsEnv["GITHUB_REF"] = "refs/pull/18/merge"
+	cases = append(cases, parseCase{
+		name: "GITHUB_REF with merge",
+		env:  gitHubActionsEnv,
+	})
 
 	ci := Ci{}
-	env, _ := ci.Map()
-	if env.Filepath != "." {
-		t.Error("failed to assert that env contained correct filepath")
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			err := testdata.SetUpCiEnv(c.env)
+			defer testdata.ResetEnv(c.env)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			env, _ := ci.Map()
+			if env.Filepath != "." {
+				t.Error("failed to assert that env contained correct filepath")
+			}
+			if env.Integration != Integration {
+				t.Error("failed to assert that env contained correct integration")
+			}
+			if env.Author != "viktigpetterr <test@test.com>" {
+				t.Error("failed to assert that env contained correct author")
+			}
+			if env.Branch != "main" {
+				t.Error("failed to assert that env contained correct branch")
+			}
+			if env.RepositoryUrl != "https://github.com/debricked/cli" {
+				t.Error("failed to assert that env contained correct repository URL")
+			}
+			if env.Commit != "commit" {
+				t.Error("failed to assert that env contained correct commit")
+			}
+			if env.Repository != "debricked/cli" {
+				t.Error("faield to assert that env contained correct repository")
+			}
+		})
 	}
-	if env.Integration != Integration {
-		t.Error("failed to assert that env contained correct integration")
-	}
-	if env.Author != "viktigpetterr <test@test.com>" {
-		t.Error("failed to assert that env contained correct author")
-	}
-	if env.Branch != "main" {
-		t.Error("failed to assert that env contained correct branch")
-	}
-	if env.RepositoryUrl != "https://github.com/debricked/cli" {
-		t.Error("failed to assert that env contained correct repository URL")
-	}
-	if env.Commit != "commit" {
-		t.Error("failed to assert that env contained correct commit")
-	}
-	if env.Repository != "debricked/cli" {
-		t.Error("faield to assert that env contained correct repository")
-	}
+
 }
