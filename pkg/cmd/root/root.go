@@ -39,5 +39,7 @@ Read more: https://debricked.com/docs/administration/access-tokens.html`,
 	rootCmd.AddCommand(files.NewFilesCmd(&debClient))
 	rootCmd.AddCommand(scan.NewScanCmd(&debClient))
 
+	rootCmd.CompletionOptions.DisableDefaultCmd = true
+
 	return rootCmd
 }
