@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"github.com/debricked/cli/pkg/ci"
 	"github.com/debricked/cli/pkg/client"
+	"github.com/debricked/cli/pkg/file"
 	"github.com/debricked/cli/pkg/scan"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
+	"path/filepath"
 )
 
 var repositoryName string
@@ -18,7 +20,7 @@ var branchName string
 var commitAuthor string
 var repositoryUrl string
 var integrationName string
-var exclusions []string
+var exclusions = file.DefaultExclusions()
 
 const (
 	RepositoryFlag    = "repository"
@@ -56,6 +58,10 @@ If the given path contains a git repository all flags but "integration" will be 
 	cmd.Flags().StringVarP(&commitAuthor, CommitAuthorFlag, "a", "", "commit author")
 	cmd.Flags().StringVarP(&repositoryUrl, RepositoryUrlFlag, "u", "", "repository URL")
 	cmd.Flags().StringVarP(&integrationName, IntegrationFlag, "i", "CLI", `name of integration used to trigger scan. For example "GitHub Actions"`)
+
+	fileExclusionExample := filepath.Join("*", "**.lock")
+	dirExclusionExample := filepath.Join("**", "node_modules", "**")
+	exampleFlags := fmt.Sprintf("-e \"%s\" -e \"%s\"", fileExclusionExample, dirExclusionExample)
 	cmd.Flags().StringArrayVarP(&exclusions, ExclusionFlag, "e", exclusions, `The following terms are supported to exclude paths:
 Special Terms | Meaning
 ------------- | -------
@@ -66,9 +72,7 @@ Special Terms | Meaning
 "{alt1,...}"  | matches a sequence of characters if one of the comma-separated alternatives matches
 
 Examples: 
-$ debricked scan . -e "*/**.lock" -e "**/node_modules/**" 
-$ debricked scan . -e "*\**.exe" -e "**\node_modules\**" 
-`)
+$ debricked scan . `+exampleFlags)
 	viper.MustBindEnv(RepositoryFlag)
 	viper.MustBindEnv(CommitFlag)
 	viper.MustBindEnv(BranchFlag)
