@@ -4,6 +4,8 @@ before:
     - go mod tidy
 builds:
   - main: ./cmd/debricked
+    id: cli
+    binary: debricked
     env:
       - CGO_ENABLED=0
     goos:
@@ -12,9 +14,8 @@ builds:
       - darwin
 archives:
   - replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
+      darwin: macOS
+      windows: windows
       386: i386
       amd64: x86_64
 checksum:
