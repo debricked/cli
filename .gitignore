@@ -5,3 +5,5 @@ coverage.html
 node_modules
 debricked
 dist/
+/.debricked-go-dependencies.txt
+/.env
