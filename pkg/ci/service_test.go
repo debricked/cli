@@ -3,6 +3,7 @@ package ci
 import (
 	"github.com/debricked/cli/pkg/ci/azure"
 	"github.com/debricked/cli/pkg/ci/circleci"
+	"github.com/debricked/cli/pkg/ci/gitlab"
 	"os"
 	"testing"
 )
@@ -12,9 +13,20 @@ func TestNewService(t *testing.T) {
 	if len(s.cis) > 0 {
 		t.Error("failed to assert that CiService lacked CIs")
 	}
+
 	s = NewService(nil)
 	if len(s.cis) != 8 {
 		t.Error("failed to assert number of CIs")
+	}
+
+	s.cis = []ICi{gitlab.Ci{}}
+	if len(s.cis) != 1 {
+		t.Error("failed to assert number of CIs")
+	}
+
+	_, ok := s.cis[0].(gitlab.Ci)
+	if !ok {
+		t.Error("failed to asser that the CI was gitlab.Ci")
 	}
 }
 
