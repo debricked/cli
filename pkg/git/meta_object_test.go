@@ -1,6 +1,7 @@
 package git
 
 import (
+	"github.com/debricked/cli/pkg/ci/testdata"
 	"os"
 	"strings"
 	"testing"
@@ -20,6 +21,25 @@ func TestNewMetaObjectWithoutRepositoryName(t *testing.T) {
 }
 
 func TestNewMetaObjectWithoutCommit(t *testing.T) {
+	metaObj, err := NewMetaObject(".", "repository-name", "", "", "", "")
+	if err == nil {
+		t.Error("failed to assert that error occurred")
+	}
+	if metaObj == nil {
+		t.Error("failed to assert that gitMetaObject was not nil")
+	}
+	if !strings.Contains(err.Error(), "failed to find commit hash") {
+		t.Error("failed to assert that commit hash was missing")
+	}
+}
+
+func TestNewMetaObjectWithoutHead(t *testing.T) {
+	cwd, err := testdata.SetUpGitRepository(false)
+	if err != nil {
+		t.Fatal("failed to initialize repository", err)
+	}
+	defer testdata.TearDownGitRepository(cwd)
+
 	metaObj, err := NewMetaObject(".", "repository-name", "", "", "", "")
 	if err == nil {
 		t.Error("failed to assert that error occurred")

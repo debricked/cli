@@ -16,32 +16,36 @@ func SetUpCiEnv(env map[string]string) error {
 	return nil
 }
 
-func SetUpGitRepository() error {
+func SetUpGitRepository(includeCommit bool) (string, error) {
 	cwd, _ := os.Getwd()
 	repoDir := cwd + "/testdata/"
 	repo, err := git.PlainInit(repoDir, false)
 	if err != nil {
-		return err
+		return cwd, err
 	}
 	w, err := repo.Worktree()
 	if err != nil {
-		return err
+		return cwd, err
 	}
-	_, err = w.Commit("Initial commit", &git.CommitOptions{Author: &object.Signature{Name: "author"}})
-	if err != nil {
-		return err
+	if includeCommit {
+		_, err = w.Commit("Initial commit", &git.CommitOptions{Author: &object.Signature{Name: "author"}})
+		if err != nil {
+			return cwd, err
+		}
 	}
+
 	err = os.Chdir(repoDir)
-	return err
+	return cwd, err
 }
 
-func TearDownGitRepository() error {
+func TearDownGitRepository(dir string) error {
 	cwd, _ := os.Getwd()
 	repoDir := cwd + "/.git/"
 	_, err := git.PlainOpen(repoDir)
 	if err != nil {
 		return err
 	}
+	err = os.Chdir(dir)
 	return os.RemoveAll(repoDir)
 }
 

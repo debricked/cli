@@ -37,11 +37,11 @@ func TestParse(t *testing.T) {
 	}
 	defer testdata.ResetEnv(bitbucketEnv)
 
-	err = testdata.SetUpGitRepository()
+	cwd, err := testdata.SetUpGitRepository(true)
 	if err != nil {
 		t.Fatal("failed to initialize repository", err)
 	}
-	defer testdata.TearDownGitRepository()
+	defer testdata.TearDownGitRepository(cwd)
 
 	ci := Ci{}
 	env, err := ci.Map()

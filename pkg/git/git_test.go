@@ -47,7 +47,7 @@ func TestFindRepositoryUrl(t *testing.T) {
 	}
 
 	for _, remoteUrl := range remoteUrls {
-		repoMock := mockRepository(t)
+		repoMock := mockRepository(true, t)
 		remoteConfig := &config.RemoteConfig{
 			Name:  "debricked/cli",
 			URLs:  []string{remoteUrl},
@@ -113,7 +113,7 @@ func TestFindRemoteUrl(t *testing.T) {
 }
 
 func TestFindRepositoryUrlWithFailure(t *testing.T) {
-	repoMock := mockRepository(t)
+	repoMock := mockRepository(true, t)
 	url, err := FindRepositoryUrl(repoMock)
 	if err == nil {
 		t.Error("failed to assert that an error occurred")
@@ -127,7 +127,7 @@ func TestFindRepositoryUrlWithFailure(t *testing.T) {
 }
 
 func TestFindRepositoryNameWithoutMetaData(t *testing.T) {
-	repoMock := mockRepository(t)
+	repoMock := mockRepository(true, t)
 	name, err := FindRepositoryName(repoMock, "test/repository")
 	if err == nil {
 		t.Error("failed to assert that an error occurred")
@@ -138,7 +138,7 @@ func TestFindRepositoryNameWithoutMetaData(t *testing.T) {
 }
 
 func TestGetCommit(t *testing.T) {
-	repoMock := mockRepository(t)
+	repoMock := mockRepository(true, t)
 	commit, err := FindCommit(repoMock)
 	if err != nil {
 		t.Error("failed to assert that an error occurred")
@@ -149,7 +149,7 @@ func TestGetCommit(t *testing.T) {
 }
 
 func TestGetCommitHash(t *testing.T) {
-	repoMock := mockRepository(t)
+	repoMock := mockRepository(true, t)
 	commitHash, err := FindCommitHash(repoMock)
 	if err != nil {
 		t.Error("failed to assert that an error occurred")
@@ -160,7 +160,7 @@ func TestGetCommitHash(t *testing.T) {
 }
 
 func TestGetCommitAuthor(t *testing.T) {
-	repoMock := mockRepository(t)
+	repoMock := mockRepository(true, t)
 	commitHash, err := FindCommitAuthor(repoMock)
 	if err != nil {
 		t.Error("failed to assert that an error occurred")
@@ -171,7 +171,7 @@ func TestGetCommitAuthor(t *testing.T) {
 }
 
 func TestGetBranch(t *testing.T) {
-	repoMock := mockRepository(t)
+	repoMock := mockRepository(true, t)
 	commitHash, err := FindBranch(repoMock)
 	if err != nil {
 		t.Error("failed to assert that an error occurred")
@@ -181,7 +181,7 @@ func TestGetBranch(t *testing.T) {
 	}
 }
 
-func mockRepository(t *testing.T) *git.Repository {
+func mockRepository(withCommit bool, t *testing.T) *git.Repository {
 	// Filesystem abstraction based on memory
 	fs := memfs.New()
 	// Git objects storer based on memory
@@ -194,9 +194,11 @@ func mockRepository(t *testing.T) *git.Repository {
 	if err != nil {
 		t.Fatal("failed to get worktree. Error:", err)
 	}
-	_, err = w.Commit("Initial commit", &git.CommitOptions{Author: &object.Signature{Name: "author"}})
-	if err != nil {
-		t.Fatal("failed to create commit. Error:", err)
+	if withCommit {
+		_, err = w.Commit("Initial commit", &git.CommitOptions{Author: &object.Signature{Name: "author"}})
+		if err != nil {
+			t.Fatal("failed to create commit. Error:", err)
+		}
 	}
 
 	return r
