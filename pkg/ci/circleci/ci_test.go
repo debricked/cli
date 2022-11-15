@@ -37,8 +37,8 @@ func TestParse(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = testdata.SetUpGitRepository()
-	defer testdata.TearDownGitRepository()
+	cwd, err := testdata.SetUpGitRepository(true)
+	defer testdata.TearDownGitRepository(cwd)
 	if err != nil {
 		t.Error("failed to initialize repository", err)
 	}
