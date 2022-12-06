@@ -13,14 +13,14 @@ type MetaObject struct {
 	Author            string
 }
 
-// NewMetaObject returns MetaObject based on git repository existing on directoryPath. Otherwise, inputted arguments are used
-func NewMetaObject(directoryPath string, repositoryName string, commit string, branchName string, commitAuthor string, url string) (*MetaObject, error) {
-	repository, err := FindRepository(directoryPath)
+// NewMetaObject returns MetaObject based on git repository existing on path. Otherwise, inputted arguments are used
+func NewMetaObject(path string, repositoryName string, commit string, branchName string, commitAuthor string, url string) (*MetaObject, error) {
+	repository, err := FindRepository(path)
 	if err == nil {
 		isSet := func(attribute string) bool { return len(attribute) > 0 }
 
 		if !isSet(repositoryName) {
-			repositoryName, err = FindRepositoryName(repository, directoryPath)
+			repositoryName, err = FindRepositoryName(repository, path)
 			if err != nil {
 				log.Println(err.Error())
 			}

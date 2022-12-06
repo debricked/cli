@@ -10,7 +10,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"os"
 	"path/filepath"
 )
 
@@ -46,7 +45,6 @@ func NewScanCmd(c *client.IDebClient) *cobra.Command {
 		Short: "Start a Debricked dependency scan",
 		Long: `All supported dependency files will be scanned and analysed.
 If the given path contains a git repository all flags but "integration" will be resolved. Otherwise they have to specified.`,
-		Args: ValidateArgs,
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			_ = viper.BindPFlags(cmd.Flags())
 		},
@@ -85,9 +83,12 @@ $ debricked scan . `+exampleFlags)
 
 func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 	return func(_ *cobra.Command, args []string) error {
-		directoryPath := args[0]
+		path := ""
+		if len(args) > 0 {
+			path = args[0]
+		}
 		options := scan.DebrickedOptions{
-			DirectoryPath:   directoryPath,
+			Path:            path,
 			Exclusions:      viper.GetStringSlice(ExclusionFlag),
 			RepositoryName:  viper.GetString(RepositoryFlag),
 			CommitName:      viper.GetString(CommitFlag),
@@ -108,23 +109,4 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 
 		return scanCmdError
 	}
-}
-
-func ValidateArgs(_ *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return errors.New("requires directory path")
-	}
-	if isValidFilepath(args[0]) {
-		return nil
-	}
-	return fmt.Errorf("invalid directory path specified: %s", args[0])
-}
-
-func isValidFilepath(path string) bool {
-	_, err := os.ReadDir(path)
-	if err != nil {
-		return false
-	}
-
-	return true
 }

@@ -110,13 +110,13 @@ func TestGetSupportedFormatsFailed(t *testing.T) {
 
 func TestGetGroups(t *testing.T) {
 	setUp(true)
-	directoryPath := "."
+	path := ""
 
 	exclusions := []string{"testdata/go/*.mod", "testdata/misc/**"}
 	excludedFiles := []string{"testdata/go/go.mod", "testdata/misc/requirements.txt"}
 	const nbrOfGroups = 2
 
-	fileGroups, err := finder.GetGroups(directoryPath, exclusions, false)
+	fileGroups, err := finder.GetGroups(path, exclusions, false)
 	if err != nil {
 		t.Fatal("failed to assert that no error occurred. Error:", err)
 	}
@@ -124,7 +124,7 @@ func TestGetGroups(t *testing.T) {
 		t.Error(fmt.Sprintf("failed to assert that %d groups were created. %d was found", nbrOfGroups, fileGroups.Size()))
 	}
 	for _, fileGroup := range fileGroups.ToSlice() {
-		hasContent := fileGroup.CompiledFormat != nil && (strings.Contains(fileGroup.FilePath, directoryPath) || len(fileGroup.RelatedFiles) > 0)
+		hasContent := fileGroup.CompiledFormat != nil && (strings.Contains(fileGroup.FilePath, path) || len(fileGroup.RelatedFiles) > 0)
 		if !hasContent {
 			t.Error("failed to assert that format had content")
 		}

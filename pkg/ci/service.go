@@ -46,7 +46,7 @@ func (s *Service) Find() (env.Env, error) {
 	for _, ci := range s.cis {
 		if ci.Identify() {
 			m, err := ci.Map()
-			fmt.Println("Integration", m.Integration)
+			fmt.Println("Integration:", m.Integration)
 			return m, err
 		}
 	}

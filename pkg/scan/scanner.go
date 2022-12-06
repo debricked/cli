@@ -31,7 +31,7 @@ type DebrickedScanner struct {
 }
 
 type DebrickedOptions struct {
-	DirectoryPath   string
+	Path            string
 	Exclusions      []string
 	RepositoryName  string
 	CommitName      string
@@ -70,7 +70,7 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 	MapEnvToOptions(&dOptions, e)
 
 	gitMetaObject, err := git.NewMetaObject(
-		dOptions.DirectoryPath,
+		dOptions.Path,
 		dOptions.RepositoryName,
 		dOptions.CommitName,
 		dOptions.BranchName,
@@ -81,7 +81,7 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 		return err
 	}
 
-	fileGroups, err := dScanner.finder.GetGroups(dOptions.DirectoryPath, dOptions.Exclusions, false)
+	fileGroups, err := dScanner.finder.GetGroups(dOptions.Path, dOptions.Exclusions, false)
 	if err != nil {
 		return err
 	}
@@ -128,9 +128,8 @@ func MapEnvToOptions(o *DebrickedOptions, env env.Env) {
 			o.IntegrationName = env.Integration
 		}
 	}
-
-	if len(o.DirectoryPath) == 0 {
-		o.DirectoryPath = env.Filepath
+	if len(env.Filepath) > 0 {
+		o.Path = env.Filepath
 	}
 }
 

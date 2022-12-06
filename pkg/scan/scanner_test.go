@@ -57,11 +57,11 @@ func TestScan(t *testing.T) {
 	var ciService ci.IService
 	ciService = ci.NewService(nil)
 	scanner, _ := NewDebrickedScanner(&debClient, ciService)
-	directoryPath := "testdata/yarn"
-	repositoryName := directoryPath
+	path := "testdata/yarn"
+	repositoryName := path
 	commitName := "testdata/yarn-commit"
 	opts := DebrickedOptions{
-		DirectoryPath:   directoryPath,
+		Path:            path,
 		Exclusions:      nil,
 		RepositoryName:  repositoryName,
 		CommitName:      commitName,
@@ -91,9 +91,9 @@ func TestScanFailingMetaObject(t *testing.T) {
 		travis.Ci{},
 	})
 	scanner, _ := NewDebrickedScanner(&debClient, ciService)
-	directoryPath := "testdata/yarn"
+	path := "testdata/yarn"
 	opts := DebrickedOptions{
-		DirectoryPath:   directoryPath,
+		Path:            path,
 		Exclusions:      nil,
 		RepositoryName:  "",
 		CommitName:      "",
@@ -107,7 +107,7 @@ func TestScanFailingMetaObject(t *testing.T) {
 		t.Error("failed to assert that RepositoryNameError occurred")
 	}
 
-	opts.RepositoryName = directoryPath
+	opts.RepositoryName = path
 	err = scanner.Scan(opts)
 	if err != git.CommitNameError {
 		t.Error("failed to assert that CommitNameError occurred")
@@ -129,9 +129,9 @@ func TestScanFailingNoFiles(t *testing.T) {
 		travis.Ci{},
 	})
 	scanner, _ := NewDebrickedScanner(&debClient, ciService)
-	directoryPath := "."
+	path := "."
 	opts := DebrickedOptions{
-		DirectoryPath:   directoryPath,
+		Path:            path,
 		Exclusions:      []string{"testdata/**"},
 		RepositoryName:  "name",
 		CommitName:      "commit",
@@ -158,7 +158,7 @@ func TestScanBadOpts(t *testing.T) {
 
 func TestMapEnvToOptions(t *testing.T) {
 	dOptionsTemplate := DebrickedOptions{
-		DirectoryPath:   "path",
+		Path:            "path",
 		Exclusions:      nil,
 		RepositoryName:  "repository",
 		CommitName:      "commit",
@@ -191,7 +191,7 @@ func TestMapEnvToOptions(t *testing.T) {
 		{
 			name: "CI env set",
 			template: DebrickedOptions{
-				DirectoryPath:   "env-path",
+				Path:            "env-path",
 				Exclusions:      nil,
 				RepositoryName:  "env-repository",
 				CommitName:      "env-commit",
@@ -201,7 +201,7 @@ func TestMapEnvToOptions(t *testing.T) {
 				IntegrationName: github.Integration,
 			},
 			opts: DebrickedOptions{
-				DirectoryPath:   "",
+				Path:            "input-path",
 				Exclusions:      nil,
 				RepositoryName:  "",
 				CommitName:      "",
@@ -220,12 +220,45 @@ func TestMapEnvToOptions(t *testing.T) {
 				Filepath:      "env-path",
 			},
 		},
+		{
+			name: "CI env set without directory path",
+			template: DebrickedOptions{
+				Path:            "input-path",
+				Exclusions:      nil,
+				RepositoryName:  "env-repository",
+				CommitName:      "env-commit",
+				BranchName:      "env-branch",
+				CommitAuthor:    "author",
+				RepositoryUrl:   "env-url",
+				IntegrationName: github.Integration,
+			},
+			opts: DebrickedOptions{
+				Path:            "input-path",
+				Exclusions:      nil,
+				RepositoryName:  "",
+				CommitName:      "",
+				BranchName:      "",
+				CommitAuthor:    "author",
+				RepositoryUrl:   "",
+				IntegrationName: "CLI",
+			},
+			env: env.Env{
+				Repository:    "env-repository",
+				Commit:        "env-commit",
+				Branch:        "env-branch",
+				Author:        "env-author",
+				RepositoryUrl: "env-url",
+				Integration:   github.Integration,
+				Filepath:      "",
+			},
+		},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			MapEnvToOptions(&c.opts, c.env)
-			if c.opts.DirectoryPath != c.template.DirectoryPath {
-				t.Errorf("Failed to assert that %s was equal to %s", c.opts.DirectoryPath, c.template.DirectoryPath)
+			strings.EqualFold(c.opts.Path, c.template.Path)
+			if !strings.EqualFold(c.opts.Path, c.template.Path) {
+				t.Errorf("Failed to assert that %s was equal to %s", c.opts.Path, c.template.Path)
 			}
 			if c.opts.Exclusions != nil {
 				t.Errorf("Failed to assert that Exclusions was nil")

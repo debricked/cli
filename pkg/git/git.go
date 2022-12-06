@@ -80,8 +80,8 @@ func FindRemoteUrl(repository *git.Repository) (string, error) {
 	return remoteURL, err
 }
 
-func FindRepositoryName(repository *git.Repository, directoryPath string) (string, error) {
-	absolutePath, _ := filepath.Abs(directoryPath)
+func FindRepositoryName(repository *git.Repository, path string) (string, error) {
+	absolutePath, _ := filepath.Abs(path)
 	repositoryName := filepath.Base(absolutePath)
 	gitRemoteUrl, err := FindRemoteUrl(repository)
 	if err != nil {
@@ -108,8 +108,8 @@ func ParseGitRemoteUrl(gitRemoteUrl string) (string, error) {
 	return gitRemoteUrl, errors.New("failed to parse git remote URL. git/https regular expressions had no matches")
 }
 
-func FindRepository(directoryPath string) (*git.Repository, error) {
-	return git.PlainOpen(directoryPath)
+func FindRepository(path string) (*git.Repository, error) {
+	return git.PlainOpen(path)
 }
 
 func FindBranch(repository *git.Repository) (string, error) {
