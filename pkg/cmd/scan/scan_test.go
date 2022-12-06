@@ -45,38 +45,21 @@ func TestNewScanCmd(t *testing.T) {
 	}
 }
 
-func TestValidateArgs(t *testing.T) {
-	err := ValidateArgs(nil, []string{"/"})
-	if err != nil {
-		t.Error("failed to assert that no error occurred. Error:", err)
-	}
-}
-
-func TestValidateArgsMissingArg(t *testing.T) {
-	err := ValidateArgs(nil, []string{})
-	if err == nil {
-		t.Error("failed to assert that an error occurred")
-	}
-	if !strings.Contains(err.Error(), "requires directory path") {
-		t.Error("failed assert error")
-	}
-}
-
-func TestValidateArgsInvalidArg(t *testing.T) {
-	err := ValidateArgs(nil, []string{"invalid-path"})
-	if err == nil {
-		t.Error("failed to assert that an error occurred")
-	}
-	if !strings.Contains(err.Error(), "invalid directory path specified") {
-		t.Error("failed assert error")
-	}
-}
-
 func TestRunE(t *testing.T) {
 	var s scan.IScanner
 	s = &scannerMock{}
 	runE := RunE(&s)
 	err := runE(nil, []string{"."})
+	if err != nil {
+		t.Fatal("failed to assert that no error occurred. Error:", err)
+	}
+}
+
+func TestRunENoPath(t *testing.T) {
+	var s scan.IScanner
+	s = &scannerMock{}
+	runE := RunE(&s)
+	err := runE(nil, []string{})
 	if err != nil {
 		t.Fatal("failed to assert that no error occurred. Error:", err)
 	}

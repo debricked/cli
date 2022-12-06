@@ -36,6 +36,9 @@ func (finder *Finder) GetGroups(rootPath string, exclusions []string, lockfileOn
 	if err != nil {
 		return groups, err
 	}
+	if len(rootPath) == 0 {
+		rootPath = filepath.Base("")
+	}
 
 	// Traverse files to find dependency file groups
 	err = filepath.Walk(

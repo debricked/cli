@@ -2,12 +2,10 @@ package find
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/debricked/cli/pkg/file"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"os"
 	"path/filepath"
 )
 
@@ -27,7 +25,6 @@ func NewFindCmd(finder file.IFinder) *cobra.Command {
 		Short: "Find all dependency files in inputted path",
 		Long: `Find all dependency files in inputted path. Related files are grouped together. 
 For example ` + "`package.json`" + ` with ` + "`package-lock.json`.",
-		Args: validateArgs,
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			_ = viper.BindPFlags(cmd.Flags())
 		},
@@ -70,8 +67,11 @@ Format:
 
 func RunE(f file.IFinder) func(_ *cobra.Command, args []string) error {
 	return func(_ *cobra.Command, args []string) error {
-		directoryPath := args[0]
-		fileGroups, err := f.GetGroups(directoryPath, viper.GetStringSlice(ExclusionFlag), viper.GetBool(LockfileOnlyFlag))
+		path := ""
+		if len(args) > 0 {
+			path = args[0]
+		}
+		fileGroups, err := f.GetGroups(path, viper.GetStringSlice(ExclusionFlag), viper.GetBool(LockfileOnlyFlag))
 		if err != nil {
 			return err
 		}
@@ -86,23 +86,4 @@ func RunE(f file.IFinder) func(_ *cobra.Command, args []string) error {
 
 		return nil
 	}
-}
-
-func validateArgs(_ *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return errors.New("requires path")
-	}
-	if isValidFilepath(args[0]) {
-		return nil
-	}
-	return fmt.Errorf("invalid path specified: %s", args[0])
-}
-
-func isValidFilepath(path string) bool {
-	_, err := os.ReadDir(path)
-	if err != nil {
-		return false
-	}
-
-	return true
 }
