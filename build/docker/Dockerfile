@@ -12,7 +12,6 @@ ENV DEBRICKED_TOKEN=""
 RUN apk add git
 WORKDIR /root/
 COPY --from=dev /cli/debricked /usr/bin/debricked
-ENTRYPOINT ["debricked"]
 
 FROM cli AS scan
 ENTRYPOINT [ "debricked",  "scan" ]
