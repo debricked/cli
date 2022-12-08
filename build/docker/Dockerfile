@@ -1,6 +1,7 @@
 FROM golang:1.19-alpine AS dev
 WORKDIR /cli
-RUN apk add git
+RUN apk update \
+    && apk --no-cache --update add git build-base
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 COPY . .
