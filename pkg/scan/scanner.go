@@ -11,6 +11,7 @@ import (
 	"github.com/debricked/cli/pkg/upload"
 	"github.com/fatih/color"
 	"os"
+	"path/filepath"
 )
 
 var (
@@ -66,8 +67,14 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 	if !ok {
 		return BadOptsErr
 	}
+
 	e, _ := dScanner.ciService.Find()
+
 	MapEnvToOptions(&dOptions, e)
+
+	if err := SetWorkingDirectory(&dOptions); err != nil {
+		return err
+	}
 
 	gitMetaObject, err := git.NewMetaObject(
 		dOptions.Path,
@@ -103,6 +110,19 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 	if failPipeline {
 		return errors.New("")
 	}
+
+	return nil
+}
+
+// SetWorkingDirectory sets working directory in accordance with the path option
+func SetWorkingDirectory(d *DebrickedOptions) error {
+	absPath, _ := filepath.Abs(d.Path)
+	err := os.Chdir(absPath)
+	if err != nil {
+		return err
+	}
+	d.Path = ""
+	fmt.Printf("Working directory: %s\n", absPath)
 
 	return nil
 }
