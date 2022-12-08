@@ -16,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -96,7 +97,7 @@ func (uploadBatch *uploadBatch) uploadFile(filePath string) error {
 
 	_, _ = io.Copy(fileData, f)
 
-	_ = writer.WriteField("fileRelativePath", filepath.Dir(filePath))
+	_ = writer.WriteField("fileRelativePath", getRelativeFilePath(filePath))
 	_ = writer.WriteField("repositoryName", uploadBatch.gitMetaObject.RepositoryName)
 	_ = writer.WriteField("commitName", uploadBatch.gitMetaObject.CommitName)
 	_ = writer.WriteField("repositoryUrl", uploadBatch.gitMetaObject.RepositoryUrl)
@@ -219,4 +220,13 @@ type uploadConclusion struct {
 	IntegrationName string `json:"integrationName"`
 	CommitName      string `json:"commitName"`
 	Author          string `json:"author"`
+}
+
+func getRelativeFilePath(filePath string) string {
+	relFilePath := filepath.Dir(filePath)
+	if strings.EqualFold(".", relFilePath) {
+		relFilePath = ""
+	}
+
+	return relFilePath
 }
