@@ -2,7 +2,7 @@ If you are new to contributing to open-source projects, we want to encourage you
 
 feel free to reach out to any of the maintainers or other community members if you have any questions.
 
-## Contribute to Debricked-CLI!
+## Contributing to Debricked CLI
 
 ### Projects setup and Architecture
 
@@ -20,7 +20,9 @@ Requirements
 
 ### Feature Request
 
-You're also welcome to submit ideas for enhancements to Debricked-CLI. When doing so, please search the issue list to see if the enhancement has already been filed. If it has, vote for it (add a reaction to it) and optionally add a comment with your perspective on the idea.
+You're also welcome to submit ideas for enhancements to Debricked CLI. When doing so, please search the issue list to
+see if the enhancement has already been filed. If it has, vote for it (add a reaction to it) and optionally add a
+comment with your perspective on the idea.
 
 ## Ready? Let’s go!
 
