@@ -54,7 +54,7 @@ jobs:
           retention-days: 2
 
       - name: Test - E2E
-        run: go run cmd/debricked/main.go scan . -t ${{ secrets.DEBRICKED_TOKEN }} -e "**/testdata/**"
+        run: go run cmd/debricked/main.go scan -t ${{ secrets.DEBRICKED_TOKEN }} -e "**/testdata/**" -r debricked/cli-test -c E2E-test-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}
 
   static:
     name: Static
