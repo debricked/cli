@@ -42,7 +42,8 @@ project via the command prompt.
   
 <h2>Contributing</h2>
 
-Thank you for your interest in making debricked-cli even better! Read more about contributing to the project [here](CONTRIBUTE.md)
+Thank you for your interest in making Debricked CLI even better! Read more about contributing to the
+project [here](CONTRIBUTING.md)
 
 <h2>Beta software ⚠️</h2>
 
