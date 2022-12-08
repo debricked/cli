@@ -24,7 +24,7 @@ func (_ Ci) Map() (env.Env, error) {
 	e.Repository = os.Getenv("GITHUB_REPOSITORY")
 	e.Commit = os.Getenv("GITHUB_SHA")
 
-	// Github gives branches as: refs/heads/master, and tags as refs/tags/v1.1.0.
+	// GitHub gives branches as: refs/heads/master, and tags as refs/tags/v1.1.0.
 	// Remove prefix refs/{tags,heads} from the name before sending to Debricked.
 	gitHubRef := os.Getenv("GITHUB_REF")
 	branch := strings.Replace(gitHubRef, "refs/heads/", "", 1)
