@@ -14,6 +14,8 @@ import (
 	"github.com/debricked/cli/pkg/client"
 	"github.com/debricked/cli/pkg/git"
 	"github.com/debricked/cli/pkg/upload"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -60,6 +62,7 @@ func TestScan(t *testing.T) {
 	path := "testdata/yarn"
 	repositoryName := path
 	commitName := "testdata/yarn-commit"
+	cwd, _ := os.Getwd()
 	opts := DebrickedOptions{
 		Path:            path,
 		Exclusions:      nil,
@@ -74,6 +77,8 @@ func TestScan(t *testing.T) {
 	if err != nil {
 		t.Error("failed to assert that scan ran without errors. Error:", err)
 	}
+	// reset working directory that has been manipulated in scanner.Scan
+	_ = os.Chdir(cwd)
 }
 
 func TestScanFailingMetaObject(t *testing.T) {
@@ -91,6 +96,7 @@ func TestScanFailingMetaObject(t *testing.T) {
 		travis.Ci{},
 	})
 	scanner, _ := NewDebrickedScanner(&debClient, ciService)
+	cwd, _ := os.Getwd()
 	path := "testdata/yarn"
 	opts := DebrickedOptions{
 		Path:            path,
@@ -106,12 +112,16 @@ func TestScanFailingMetaObject(t *testing.T) {
 	if err != git.RepositoryNameError {
 		t.Error("failed to assert that RepositoryNameError occurred")
 	}
+	// reset working directory that has been manipulated in scanner.Scan
+	_ = os.Chdir(cwd)
 
 	opts.RepositoryName = path
 	err = scanner.Scan(opts)
 	if err != git.CommitNameError {
 		t.Error("failed to assert that CommitNameError occurred")
 	}
+	// reset working directory that has been manipulated in scanner.Scan
+	_ = os.Chdir(cwd)
 }
 
 func TestScanFailingNoFiles(t *testing.T) {
@@ -129,9 +139,8 @@ func TestScanFailingNoFiles(t *testing.T) {
 		travis.Ci{},
 	})
 	scanner, _ := NewDebrickedScanner(&debClient, ciService)
-	path := "."
 	opts := DebrickedOptions{
-		Path:            path,
+		Path:            "",
 		Exclusions:      []string{"testdata/**"},
 		RepositoryName:  "name",
 		CommitName:      "commit",
@@ -141,6 +150,7 @@ func TestScanFailingNoFiles(t *testing.T) {
 		IntegrationName: "",
 	}
 	err := scanner.Scan(opts)
+
 	if err != upload.NoFilesErr {
 		t.Error("failed to assert that error NoFilesErr occurred")
 	}
@@ -280,6 +290,58 @@ func TestMapEnvToOptions(t *testing.T) {
 			}
 			if c.opts.IntegrationName != c.template.IntegrationName {
 				t.Errorf("Failed to assert that %s was equal to %s", c.opts.IntegrationName, c.template.IntegrationName)
+			}
+		})
+	}
+}
+
+func TestSetWorkingDirectory(t *testing.T) {
+	absPath, _ := filepath.Abs("")
+	cases := []struct {
+		name        string
+		opts        DebrickedOptions
+		errMessages []string
+	}{
+		{
+			name: "empty path",
+			opts: DebrickedOptions{Path: ""},
+		},
+		{
+			name: "absolute path",
+			opts: DebrickedOptions{Path: absPath},
+		},
+		{
+			name: "relative path",
+			opts: DebrickedOptions{Path: ".."},
+		},
+		{
+			name: "current working directory",
+			opts: DebrickedOptions{Path: "."},
+		},
+		{
+			name:        "bad path",
+			opts:        DebrickedOptions{Path: "bad-path"},
+			errMessages: []string{"no such file or directory", "The system cannot find the file specified"},
+		},
+	}
+	cwd, _ := os.Getwd()
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			err := SetWorkingDirectory(&c.opts)
+			defer os.Chdir(cwd)
+
+			if len(c.errMessages) > 0 {
+				containsCorrectErrMsg := false
+				for _, errMsg := range c.errMessages {
+					containsCorrectErrMsg = containsCorrectErrMsg || strings.Contains(err.Error(), errMsg)
+				}
+				if !containsCorrectErrMsg {
+					t.Errorf("failed to assert that error message contained either of: %s or %s. Got: %s", c.errMessages[0], c.errMessages[1], err.Error())
+				}
+			} else {
+				if len(c.opts.Path) != 0 {
+					t.Errorf("failed to assert that Path was empty. Got: %s", c.opts.Path)
+				}
 			}
 		})
 	}
