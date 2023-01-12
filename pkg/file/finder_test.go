@@ -221,3 +221,29 @@ func TestExclude(t *testing.T) {
 		})
 	}
 }
+
+func TestGetGroupsWithOnlyLockFiles(t *testing.T) {
+	setUp(true)
+	path := "testdata/misc"
+	const nbrOfGroups = 1
+	fileGroups, err := finder.GetGroups(path, []string{"**/requirements.txt"}, false)
+	if err != nil {
+		t.Fatal("failed to assert that no error occurred. Error:", err)
+	}
+	if fileGroups.Size() != nbrOfGroups {
+		t.Fatal(fmt.Sprintf("failed to assert that %d groups were created. %d was found", nbrOfGroups, fileGroups.Size()))
+	}
+
+	fileGroup := fileGroups.groups[0]
+	if fileGroup.HasFile() {
+		t.Error("failed to assert that file group lacked file")
+	}
+	if len(fileGroup.RelatedFiles) != 1 {
+		t.Error("failed to assert that there was one related file")
+	}
+
+	file := fileGroup.GetAllFiles()[0]
+	if !strings.Contains(file, "Cargo.lock") {
+		t.Error("failed to assert that the related file was Cargo.lock")
+	}
+}

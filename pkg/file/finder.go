@@ -6,6 +6,7 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/debricked/cli/pkg/client"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -83,6 +84,8 @@ func (finder *Finder) GetSupportedFormats() ([]*CompiledFormat, error) {
 		compiledDependencyFileFormat, err := NewCompiledFormat(format)
 		if err == nil {
 			compiledDependencyFileFormats = append(compiledDependencyFileFormats, compiledDependencyFileFormat)
+		} else {
+			log.Println(err.Error())
 		}
 	}
 

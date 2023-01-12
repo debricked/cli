@@ -1,7 +1,6 @@
 package file
 
 import (
-	"errors"
 	"regexp"
 )
 
@@ -12,18 +11,14 @@ type Format struct {
 }
 
 func NewCompiledFormat(format *Format) (*CompiledFormat, error) {
-	if len(format.Regex) < 1 {
-		return nil, errors.New("invalid regex string")
+	var compiledRegex *regexp.Regexp
+	var err error
+	if len(format.Regex) > 0 {
+		compiledRegex, err = regexp.Compile(format.Regex)
 	}
-
-	compiledRegex, err := regexp.Compile(format.Regex)
-	if err != nil {
-		return nil, err
-	}
-
 	var compiledLockFileRegexes []*regexp.Regexp
 	for _, lockFileRegex := range format.LockFileRegexes {
-		if len(format.Regex) > 0 {
+		if len(lockFileRegex) > 0 {
 			compiledLockFileRegex, err := regexp.Compile(lockFileRegex)
 			if err == nil {
 				compiledLockFileRegexes = append(compiledLockFileRegexes, compiledLockFileRegex)
@@ -37,7 +32,7 @@ func NewCompiledFormat(format *Format) (*CompiledFormat, error) {
 		compiledLockFileRegexes,
 	}
 
-	return &compiledFormat, nil
+	return &compiledFormat, err
 }
 
 type CompiledFormat struct {
@@ -47,7 +42,7 @@ type CompiledFormat struct {
 }
 
 func (format *CompiledFormat) MatchFile(filename string) bool {
-	if format.Regex.MatchString(filename) {
+	if format.Regex != nil && format.Regex.MatchString(filename) {
 		return true
 	}
 
