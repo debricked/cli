@@ -40,10 +40,13 @@ func (rule *Rule) Print(mirror io.Writer) {
 	fmt.Println()
 }
 
+// FailPipeline checks if rule should fail the pipeline
 func (rule *Rule) FailPipeline() bool {
-	for _, action := range rule.RuleActions {
-		if action == "failPipeline" {
-			return true
+	if rule.Triggered {
+		for _, action := range rule.RuleActions {
+			if action == "failPipeline" {
+				return true
+			}
 		}
 	}
 

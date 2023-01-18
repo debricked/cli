@@ -116,3 +116,17 @@ func TestFailPipeline(t *testing.T) {
 		t.Error("failed to assert that rule failed")
 	}
 }
+
+func TestFailPipelineUnTriggered(t *testing.T) {
+	rule := Rule{
+		RuleDescription: "Rule description",
+		RuleActions:     []string{"warnPipeline", "email", "failPipeline"},
+		RuleLink:        "link",
+		HasCves:         false,
+		Triggered:       false,
+		TriggerEvents:   nil,
+	}
+	if rule.FailPipeline() {
+		t.Error("failed to assert that rule passed")
+	}
+}
