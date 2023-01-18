@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/debricked/cli/pkg/ci"
 	"github.com/debricked/cli/pkg/client"
+	"github.com/debricked/cli/pkg/cmd/scan/docker"
 	"github.com/debricked/cli/pkg/file"
 	"github.com/debricked/cli/pkg/scan"
 	"github.com/fatih/color"
@@ -77,6 +78,8 @@ $ debricked scan . `+exampleFlags)
 	viper.MustBindEnv(CommitAuthorFlag)
 	viper.MustBindEnv(RepositoryUrlFlag)
 	viper.MustBindEnv(IntegrationFlag)
+
+	cmd.AddCommand(docker.NewDockerCmd(c))
 
 	return cmd
 }

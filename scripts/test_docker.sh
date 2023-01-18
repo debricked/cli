@@ -4,13 +4,13 @@ type="$1"
 
 case $type in
   "dev")
-    docker build -f build/docker/Dockerfile -t debricked/cli-dev:latest --target dev .
+    docker build -f build/docker/Dockerfile -t debricked/cli-dev:dev --target dev .
     ;;
   "cli")
-    docker build -f build/docker/Dockerfile -t debricked/cli:latest --target cli .
+    docker build -f build/docker/Dockerfile -t debricked/cli:dev --target cli .
     ;;
   "scan")
-    docker build -f build/docker/Dockerfile -t debricked/cli-scan:latest --target scan .
+    docker build -f build/docker/Dockerfile -t debricked/cli-scan:dev --target scan .
     ;;
   *)
     echo "${type} type is not supported!"

@@ -7,9 +7,8 @@ on:
   pull_request:
 
 jobs:
-  vulnerabilities-scan:
+  scan:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v2
@@ -27,3 +26,12 @@ jobs:
           printf "$(go mod graph)\n\n$(go list -mod=readonly -e -m all)" > .debricked-go-dependencies.txt
       - run: |
           go run cmd/debricked/main.go scan -t ${{ secrets.DEBRICKED_TOKEN }} -e "**/testdata/**"
+
+  docker-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build Docker image
+        run: bash scripts/test_docker.sh cli
+      - name: Scan Docker image
+        run: go run cmd/debricked/main.go scan docker debricked/cli:dev -t ${{ secrets.DEBRICKED_TOKEN }}
