@@ -15,7 +15,8 @@ import (
 )
 
 var (
-	BadOptsErr = errors.New("failed to type case IOptions")
+	BadOptsErr      = errors.New("failed to type case IOptions")
+	FailPipelineErr = errors.New("")
 )
 
 type IScanner interface {
@@ -108,7 +109,7 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 	}
 	fmt.Printf("For full details, visit: %s\n\n", color.BlueString(result.DetailsUrl))
 	if failPipeline {
-		return errors.New("")
+		return FailPipelineErr
 	}
 
 	return nil

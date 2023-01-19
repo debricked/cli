@@ -82,7 +82,7 @@ $ debricked scan . `+exampleFlags)
 }
 
 func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
-	return func(_ *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
 		path := ""
 		if len(args) > 0 {
 			path = args[0]
@@ -103,7 +103,11 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			scanCmdError = errors.New("scanner was nil")
 		}
 
-		if scanCmdError != nil {
+		if scanCmdError == scan.FailPipelineErr {
+			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
+			return scanCmdError
+		} else if scanCmdError != nil {
 			return errors.New(fmt.Sprintf("%s %s\n", color.RedString("⨯"), scanCmdError.Error()))
 		}
 

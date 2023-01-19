@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/debricked/cli/pkg/client"
 	"github.com/debricked/cli/pkg/scan"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"strings"
 	"testing"
@@ -65,6 +66,25 @@ func TestRunENoPath(t *testing.T) {
 	}
 }
 
+func TestRunEFailPipelineErr(t *testing.T) {
+	var s scan.IScanner
+	mock := &scannerMock{}
+	mock.setErr(scan.FailPipelineErr)
+	s = mock
+	runE := RunE(&s)
+	cmd := &cobra.Command{}
+	err := runE(cmd, nil)
+	if err != scan.FailPipelineErr {
+		t.Error("failed to assert that scan. FailPipelineErr occurred. Error:", err)
+	}
+	if !cmd.SilenceUsage {
+		t.Error("failed to assert that usage was silenced")
+	}
+	if !cmd.SilenceErrors {
+		t.Error("failed to assert that errors were silenced")
+	}
+}
+
 func TestRunEError(t *testing.T) {
 	runE := RunE(nil)
 	err := runE(nil, []string{"."})
@@ -76,8 +96,14 @@ func TestRunEError(t *testing.T) {
 	}
 }
 
-type scannerMock struct{}
+type scannerMock struct {
+	err error
+}
 
-func (*scannerMock) Scan(_ scan.IOptions) error {
-	return nil
+func (s *scannerMock) Scan(_ scan.IOptions) error {
+	return s.err
+}
+
+func (s *scannerMock) setErr(err error) {
+	s.err = err
 }
