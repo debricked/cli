@@ -8,6 +8,7 @@ import (
 	"github.com/debricked/cli/pkg/client/testdata"
 	"github.com/debricked/cli/pkg/file"
 	"github.com/debricked/cli/pkg/git"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -64,4 +65,30 @@ func captureOutput(f func()) string {
 	f()
 	log.SetOutput(os.Stderr)
 	return buf.String()
+}
+
+func TestWaitWithPollingTerminatedError(t *testing.T) {
+	group := file.NewGroup("package.json", nil, []string{"yarn.lock"})
+	var groups file.Groups
+	groups.Add(*group)
+	metaObj, err := git.NewMetaObject("", "repository-name", "commit-name", "", "", "")
+	if err != nil {
+		t.Fatal("failed to create new MetaObject")
+	}
+
+	var c client.IDebClient
+	clientMock := testdata.NewDebClientMock()
+	mockRes := testdata.MockResponse{
+		StatusCode:   http.StatusCreated,
+		ResponseBody: io.NopCloser(strings.NewReader("{}")),
+	}
+	clientMock.AddMockResponse(mockRes)
+	c = clientMock
+	batch := newUploadBatch(&c, groups, metaObj, "CLI")
+
+	uploadResult, err := batch.wait()
+
+	if uploadResult != nil && err != PollingTerminatedErr {
+		t.Fatal("Upload result must be nil and err must be PollingTerminatedErr")
+	}
 }

@@ -22,7 +22,8 @@ import (
 )
 
 var (
-	NoFilesErr = errors.New("failed to find dependency files")
+	NoFilesErr           = errors.New("failed to find dependency files")
+	PollingTerminatedErr = errors.New("progress polling terminated due to long queue times")
 )
 
 type uploadBatch struct {
@@ -182,9 +183,9 @@ func (uploadBatch *uploadBatch) wait() (*UploadResult, error) {
 		if res.StatusCode == http.StatusCreated {
 			err := bar.Finish()
 			if err != nil {
-				return nil, err
+				return resultStatus, err
 			}
-			return nil, errors.New("progress polling terminated due to long queue times")
+			return resultStatus, PollingTerminatedErr
 		}
 		status, err := newUploadStatus(res)
 		if err != nil {

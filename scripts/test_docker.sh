@@ -13,7 +13,7 @@ case $type in
     docker build -f build/docker/Dockerfile -t debricked/cli-scan:latest --target scan .
     ;;
   *)
-    echo "${type} type is not supported!"
+    echo -e "Please use the following type dev, cli, scan. For example ./test_docker.sh dev"
     exit 1
     ;;
 esac

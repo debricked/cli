@@ -40,7 +40,12 @@ func (uploader *Uploader) Upload(o IOptions) (*UploadResult, error) {
 	}
 
 	result, err := batch.wait()
+
 	if err != nil {
+		// the command should not fail because some file can't be scanned
+		if err == PollingTerminatedErr {
+			return result, nil
+		}
 		return nil, err
 	}
 

@@ -100,6 +100,11 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 		return err
 	}
 
+	if result == nil {
+		fmt.Println("Progress polling terminated due to long scan times. Please try again later")
+		return nil
+	}
+
 	fmt.Printf("\n%d vulnerabilities found\n", result.VulnerabilitiesFound)
 	fmt.Println("")
 	failPipeline := false
