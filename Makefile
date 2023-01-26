@@ -1,14 +1,13 @@
 install:
 	go install ./cmd/debricked
 
+lint:
+	bash scripts/test_lint.sh
+
 test:
-	make test-cli && make test-static && make test-security && make test-docker
+	make test-cli && make lint && make test-security && make test-docker
 test-cli:
 	bash scripts/test_cli.sh
-test-static:
-	bash scripts/test_static.sh
-test-security:
-	bash scripts/test_gosec.sh
 test-docker:
 	bash scripts/test_docker.sh cli
 

@@ -1,0 +1,23 @@
+linters:
+  # Enable specific linter
+  # https://golangci-lint.run/usage/linters
+  enable:
+    - errcheck #  Errcheck is a program for checking for unchecked errors in go programs. These unchecked errors can be critical bugs in some cases
+    - gosimple # Linter for Go source code that specializes in simplifying code
+    - govet # Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string
+    - ineffassign # Detects when assignments to existing variables are not used
+    - staticcheck # It's a set of rules from staticcheck. It's not the same thing as the staticcheck binary. The author of staticcheck doesn't support or approve the use of staticcheck as a library inside golangci-lint.
+    - staticcheck # It's a set of rules from staticcheck. It's not the same thing as the staticcheck binary. The author of staticcheck doesn't support or approve the use of staticcheck as a library inside golangci-lint.
+    - typecheck # Like the front-end of a Go compiler, parses and type-checks Go code
+    - unused # Checks Go code for unused constants, variables, functions and types'
+    - gofmt # Gofmt checks whether code was gofmt-ed. By default, this tool runs with -s option to check for code simplification
+    - godox # Tool for detection of FIXME, TODO and other comment keywords #
+    - bodyclose # Checks whether HTTP response body is closed successfully
+    - cyclop # Checks function and package cyclomatic complexity
+    - dupl # Tool for code clone detection
+    - gocognit # Computes and checks the cognitive complexity of functions
+    - goconst # Finds repeated strings that could be replaced by a constant
+    - gosec # Inspects source code for security problems
+    - nilerr # Finds the code that returns nil even if it checks that the error is not nil
+    - nilnil # Checks that there is no simultaneous return of `nil` error and an invalid value
+    - nlreturn # nlreturn checks for a new line before return and branch statements to increase code clarity

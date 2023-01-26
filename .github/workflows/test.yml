@@ -56,26 +56,18 @@ jobs:
       - name: Test - E2E
         run: go run cmd/debricked/main.go scan -t ${{ secrets.DEBRICKED_TOKEN }} -e "**/testdata/**" -r debricked/cli-test -c E2E-test-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}
 
-  static:
-    name: Static
+  golangci:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Static
-        run: bash scripts/test_static.sh
-
-  gosec:
-    name: Gosec
-    runs-on: ubuntu-latest
-    env:
-      GO111MODULE: on
-    steps:
-      - name: Checkout Source
-        uses: actions/checkout@v3
-      - name: Run Gosec Security Scanner
-        uses: securego/gosec@master
+      - uses: actions/setup-go@v3
         with:
-          args: ./...
+          go-version: 1.19
+      - uses: actions/checkout@v3
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.50
 
   docker:
     name: Docker
