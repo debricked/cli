@@ -51,10 +51,12 @@ func (finder *Finder) GetGroups(rootPath string, exclusions []string, lockfileOn
 			if !fileInfo.IsDir() && !excluded(exclusions, path) {
 				for _, format := range formats {
 					if groups.Match(format, path, lockfileOnly) {
+
 						break
 					}
 				}
 			}
+
 			return nil
 		},
 	)

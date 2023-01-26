@@ -5,6 +5,11 @@ import (
 	"testing"
 )
 
+const (
+	url   = "url"
+	regex = "regex"
+)
+
 var formatsMock = []Format{
 	{
 		// Format with regex and lock file regex
@@ -40,18 +45,18 @@ var formatsMock = []Format{
 
 func TestNewCompiledFormat(t *testing.T) {
 	f := &Format{
-		"regex",
-		"url",
+		regex,
+		url,
 		[]string{"lockFileRegex"},
 	}
 	compiledF, err := NewCompiledFormat(f)
 	if err != nil {
 		t.Error("failed to assert that error was nil")
 	}
-	if compiledF.Regex.String() != "regex" {
+	if compiledF.Regex.String() != regex {
 		t.Error("failed to assert that regex was set")
 	}
-	if *compiledF.DocumentationUrl != "url" {
+	if *compiledF.DocumentationUrl != url {
 		t.Error("failed to assert that documentation url was set")
 	}
 	if len(compiledF.LockFileRegexes) != 1 {
@@ -93,18 +98,18 @@ func TestNewCompiledFormatBadRegex(t *testing.T) {
 
 func TestNewCompiledFormatNoLockFileRegex(t *testing.T) {
 	f := &Format{
-		"regex",
-		"url",
+		regex,
+		url,
 		[]string{},
 	}
 	compiledF, err := NewCompiledFormat(f)
 	if err != nil {
 		t.Error("failed to assert that error was nil")
 	}
-	if compiledF.Regex.String() != "regex" {
+	if compiledF.Regex.String() != regex {
 		t.Error("failed to assert that regex was set")
 	}
-	if *compiledF.DocumentationUrl != "url" {
+	if *compiledF.DocumentationUrl != url {
 		t.Error("failed to assert that documentation url was set")
 	}
 	if len(compiledF.LockFileRegexes) != 0 {
@@ -114,18 +119,18 @@ func TestNewCompiledFormatNoLockFileRegex(t *testing.T) {
 
 func TestNewCompiledFormatBadLockFileRegex(t *testing.T) {
 	f := &Format{
-		"regex",
-		"url",
+		regex,
+		url,
 		[]string{")"},
 	}
 	compiledF, err := NewCompiledFormat(f)
 	if err != nil {
 		t.Error("failed to assert that error was nil")
 	}
-	if compiledF.Regex.String() != "regex" {
+	if compiledF.Regex.String() != regex {
 		t.Error("failed to assert that regex was set")
 	}
-	if *compiledF.DocumentationUrl != "url" {
+	if *compiledF.DocumentationUrl != url {
 		t.Error("failed to assert that documentation url was set")
 	}
 	if len(compiledF.LockFileRegexes) != 0 {
@@ -136,8 +141,8 @@ func TestNewCompiledFormatBadLockFileRegex(t *testing.T) {
 func TestNewCompiledFormatNoFileRegex(t *testing.T) {
 	f := &Format{
 		"",
-		"url",
-		[]string{"regex"},
+		url,
+		[]string{regex},
 	}
 	compiledF, err := NewCompiledFormat(f)
 	if err != nil {
@@ -146,7 +151,7 @@ func TestNewCompiledFormatNoFileRegex(t *testing.T) {
 	if compiledF.Regex != nil {
 		t.Error("failed to assert that regex was set")
 	}
-	if *compiledF.DocumentationUrl != "url" {
+	if *compiledF.DocumentationUrl != url {
 		t.Error("failed to assert that documentation url was set")
 	}
 	if len(compiledF.LockFileRegexes) != 1 {
@@ -156,8 +161,8 @@ func TestNewCompiledFormatNoFileRegex(t *testing.T) {
 
 func TestMatchFile(t *testing.T) {
 	f := &Format{
-		"regex",
-		"url",
+		regex,
+		url,
 		[]string{},
 	}
 	compiledF, err := NewCompiledFormat(f)
@@ -171,8 +176,8 @@ func TestMatchFile(t *testing.T) {
 
 func TestMatchLockFile(t *testing.T) {
 	f := &Format{
-		"regex",
-		"url",
+		regex,
+		url,
 		[]string{"lockFileRegex"},
 	}
 	compiledF, err := NewCompiledFormat(f)
@@ -186,8 +191,8 @@ func TestMatchLockFile(t *testing.T) {
 
 func TestMatchNoFile(t *testing.T) {
 	f := &Format{
-		"regex",
-		"url",
+		regex,
+		url,
 		[]string{"lockFileRegex"},
 	}
 	compiledF, err := NewCompiledFormat(f)

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/debricked/cli/pkg/client"
+	"github.com/debricked/cli/pkg/client/testdata"
 	"github.com/debricked/cli/pkg/file"
 	"github.com/debricked/cli/pkg/git"
 	"io"
@@ -20,9 +21,8 @@ func TestNewDebrickedUploader(t *testing.T) {
 	if uploader != nil {
 		t.Error("failed to assert that Uploader was nil")
 	}
-	var c client.IDebClient
-	c = &debClientMock{}
-	uploader, err = NewUploader(&c)
+	var c client.IDebClient = &debClientMock{}
+	uploader, err = NewUploader(c)
 	if err != nil {
 		t.Error("failed to assert that no error occurred")
 	}
@@ -31,10 +31,10 @@ func TestNewDebrickedUploader(t *testing.T) {
 		t.Error("failed to assert that Uploader was not nil")
 	}
 }
+
 func TestUpload(t *testing.T) {
-	var c client.IDebClient
-	c = &debClientMock{}
-	uploader, _ := NewUploader(&c)
+	var c client.IDebClient = &debClientMock{}
+	uploader, _ := NewUploader(c)
 	metaObject, _ := git.NewMetaObject(
 		"testdata/yarn",
 		"testdata/yarn",
@@ -53,6 +53,50 @@ func TestUpload(t *testing.T) {
 	}
 	if result == nil {
 		t.Error("failed to assert that result was not nil")
+	}
+}
+
+func TestUploadPollingError(t *testing.T) {
+	debClientMock := testdata.NewDebClientMock()
+	// Create mocked file upload response
+	uploadMockRes := testdata.MockResponse{
+		StatusCode:   http.StatusOK,
+		ResponseBody: io.NopCloser(strings.NewReader("{\"ciUploadId\": 1}")),
+	}
+	debClientMock.AddMockUriResponse("/api/1.0/open/uploads/dependencies/files", uploadMockRes)
+
+	// Create a mocked finish response
+	finishMockRes := testdata.MockResponse{
+		StatusCode:   http.StatusNoContent,
+		ResponseBody: io.NopCloser(strings.NewReader("{}")),
+	}
+	debClientMock.AddMockUriResponse("/api/1.0/open/finishes/dependencies/files/uploads", finishMockRes)
+
+	// Create mocked scan result response, 201 is returned when the queue time are too long
+	scanMockRes := testdata.MockResponse{
+		StatusCode:   http.StatusCreated,
+		ResponseBody: io.NopCloser(strings.NewReader("{}")),
+	}
+	debClientMock.AddMockUriResponse("/api/1.0/open/ci/upload/status", scanMockRes)
+	uploader, _ := NewUploader(debClientMock)
+	metaObject, _ := git.NewMetaObject(
+		"testdata/yarn",
+		"testdata/yarn",
+		"testdata/yarn-commit",
+		"",
+		"",
+		"",
+	)
+	g := file.NewGroup("testdata/yarn/package.json", nil, []string{"testdata/yarn/yarn.lock"})
+	groups := file.Groups{}
+	groups.Add(*g)
+	uploaderOptions := DebrickedOptions{FileGroups: groups, GitMetaObject: *metaObject, IntegrationsName: "CLI"}
+	result, err := uploader.Upload(uploaderOptions)
+	if err != nil {
+		t.Error("failed to assert that PollingTerminatedErr occurred")
+	}
+	if result != nil {
+		t.Error("failed to assert that result was nil")
 	}
 }
 

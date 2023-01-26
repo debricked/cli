@@ -1,7 +1,6 @@
 package scan
 
 import (
-	"fmt"
 	"github.com/debricked/cli/pkg/client"
 	"github.com/debricked/cli/pkg/scan"
 	"github.com/spf13/cobra"
@@ -11,8 +10,7 @@ import (
 )
 
 func TestNewScanCmd(t *testing.T) {
-	var c client.IDebClient
-	c = client.NewDebClient(nil)
+	var c client.IDebClient = client.NewDebClient(nil)
 	cmd := NewScanCmd(&c)
 
 	viperKeys := viper.AllKeys()
@@ -28,10 +26,10 @@ func TestNewScanCmd(t *testing.T) {
 	for name, shorthand := range flagAssertions {
 		flag := flags.Lookup(name)
 		if flag == nil {
-			t.Error(fmt.Sprintf("failed to assert that %s flag was set", name))
+			t.Fatalf("failed to assert that %s flag was set", name)
 		}
 		if flag.Shorthand != shorthand {
-			t.Error(fmt.Sprintf("failed to assert that %s flag shorthand %s was set correctly", name, shorthand))
+			t.Errorf("failed to assert that %s flag shorthand %s was set correctly", name, shorthand)
 		}
 
 		match := false
@@ -47,8 +45,7 @@ func TestNewScanCmd(t *testing.T) {
 }
 
 func TestRunE(t *testing.T) {
-	var s scan.IScanner
-	s = &scannerMock{}
+	var s scan.IScanner = &scannerMock{}
 	runE := RunE(&s)
 	err := runE(nil, []string{"."})
 	if err != nil {
@@ -57,8 +54,7 @@ func TestRunE(t *testing.T) {
 }
 
 func TestRunENoPath(t *testing.T) {
-	var s scan.IScanner
-	s = &scannerMock{}
+	var s scan.IScanner = &scannerMock{}
 	runE := RunE(&s)
 	err := runE(nil, []string{})
 	if err != nil {

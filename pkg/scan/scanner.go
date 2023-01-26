@@ -49,7 +49,7 @@ func NewDebrickedScanner(c *client.IDebClient, ciService ci.IService) (*Debricke
 		return nil, newInitError(err)
 	}
 	var u upload.IUploader
-	u, err = upload.NewUploader(c)
+	u, err = upload.NewUploader(*c)
 
 	if err != nil {
 		return nil, newInitError(err)
@@ -102,6 +102,7 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 
 	if result == nil {
 		fmt.Println("Progress polling terminated due to long scan times. Please try again later")
+
 		return nil
 	}
 

@@ -7,5 +7,6 @@ func EnvKeyIsSet(key string) bool {
 	if isPresent && len(value) > 0 {
 		return true
 	}
+
 	return false
 }

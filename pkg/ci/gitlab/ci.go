@@ -26,5 +26,6 @@ func (_ Ci) Map() (env.Env, error) {
 	e.Integration = Integration
 	e.Filepath = os.Getenv("CI_PROJECT_DIR")
 	e.Author = os.Getenv("CI_COMMIT_AUTHOR")
+
 	return e, nil
 }

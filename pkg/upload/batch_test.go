@@ -3,7 +3,6 @@ package upload
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"github.com/debricked/cli/pkg/client"
 	"github.com/debricked/cli/pkg/client/testdata"
 	"github.com/debricked/cli/pkg/file"
@@ -43,7 +42,7 @@ func TestUploadWithBadFiles(t *testing.T) {
 	}
 	for _, assertion := range outputAssertions {
 		if !strings.Contains(output, assertion) {
-			t.Error(fmt.Sprintf("failed to assert that output contained %s", assertion))
+			t.Errorf("failed to assert that output contained %s", assertion)
 		}
 	}
 }
@@ -64,6 +63,7 @@ func captureOutput(f func()) string {
 	log.SetOutput(&buf)
 	f()
 	log.SetOutput(os.Stderr)
+
 	return buf.String()
 }
 

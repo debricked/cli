@@ -12,6 +12,10 @@ import (
 	"github.com/go-git/go-git/v5/storage/memory"
 )
 
+const (
+	debrickedCli = "debricked/cli"
+)
+
 var repository *git.Repository
 
 func setUp(t *testing.T) {
@@ -31,7 +35,7 @@ func TestFindRepositoryName(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if name != "debricked/cli" {
+	if name != debrickedCli {
 		t.Error("failed to find correct repository name:", name)
 	}
 }
@@ -49,7 +53,7 @@ func TestFindRepositoryUrl(t *testing.T) {
 	for _, remoteUrl := range remoteUrls {
 		repoMock := mockRepository(true, t)
 		remoteConfig := &config.RemoteConfig{
-			Name:  "debricked/cli",
+			Name:  debrickedCli,
 			URLs:  []string{remoteUrl},
 			Fetch: nil,
 		}
@@ -87,7 +91,7 @@ func TestParseGitRemoteUrl(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if name != "debricked/cli" {
+		if name != debrickedCli {
 			t.Error("failed to find correct git repository name:", name)
 		}
 	}
@@ -107,7 +111,7 @@ func TestFindRemoteUrl(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if !strings.Contains(url, "debricked/cli") || !strings.Contains(url, "github.com") {
+	if !strings.Contains(url, debrickedCli) || !strings.Contains(url, "github.com") {
 		t.Error("failed to find correct git remote url:", url)
 	}
 }

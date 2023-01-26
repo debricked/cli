@@ -26,6 +26,7 @@ func (rule *Rule) Print(mirror io.Writer) {
 		for _, action := range rule.RuleActions {
 			if action == "failPipeline" {
 				failPipeline = true
+
 				break
 			}
 		}

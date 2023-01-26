@@ -67,6 +67,7 @@ func FindRemoteUrl(repository *git.Repository) (string, error) {
 		remoteLinks := remote.Config().URLs
 		for _, remoteLink := range remoteLinks {
 			remoteURL = remoteLink
+
 			break
 		}
 		if remoteURL != "" {
@@ -77,6 +78,7 @@ func FindRemoteUrl(repository *git.Repository) (string, error) {
 	if remoteURL == "" {
 		err = errors.New("failed to find repository remote URL")
 	}
+
 	return remoteURL, err
 }
 
@@ -100,7 +102,7 @@ func ParseGitRemoteUrl(gitRemoteUrl string) (string, error) {
 	for _, regex := range regexes {
 		compiledRegex := regexp.MustCompile(regex)
 		matches := compiledRegex.FindStringSubmatch(gitRemoteUrl)
-		if matches != nil && len(matches) > 1 {
+		if len(matches) > 1 {
 			return matches[1], nil
 		}
 	}
@@ -136,13 +138,16 @@ func FindCommitAuthor(repository *git.Repository) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return c.Author.String(), nil
 }
 
 func FindCommitHash(repository *git.Repository) (string, error) {
 	c, err := FindCommit(repository)
 	if err != nil {
+
 		return "", err
 	}
+
 	return c.Hash.String(), nil
 }

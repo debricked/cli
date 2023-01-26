@@ -2,7 +2,6 @@ package find
 
 import (
 	"errors"
-	"fmt"
 	"github.com/debricked/cli/pkg/file"
 	"github.com/debricked/cli/pkg/file/testdata"
 	"github.com/spf13/viper"
@@ -16,7 +15,7 @@ func TestNewFindCmd(t *testing.T) {
 	commands := cmd.Commands()
 	nbrOfCommands := 0
 	if len(commands) != nbrOfCommands {
-		t.Error(fmt.Sprintf("failed to assert that there were %d sub commands connected", nbrOfCommands))
+		t.Errorf("failed to assert that there were %d sub commands connected", nbrOfCommands)
 	}
 
 	flags := cmd.Flags()
@@ -24,10 +23,10 @@ func TestNewFindCmd(t *testing.T) {
 	for name, shorthand := range flagAssertions {
 		flag := flags.Lookup(name)
 		if flag == nil {
-			t.Error(fmt.Sprintf("failed to assert that %s flag was set", name))
+			t.Fatalf("failed to assert that %s flag was set", name)
 		}
 		if flag.Shorthand != shorthand {
-			t.Error(fmt.Sprintf("failed to assert that %s flag shorthand %s was set correctly", name, shorthand))
+			t.Errorf("failed to assert that %s flag shorthand %s was set correctly", name, shorthand)
 		}
 	}
 

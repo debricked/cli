@@ -30,10 +30,12 @@ func (ci Ci) Map() (env.Env, error) {
 	e.Filepath = "."
 	repo, err := git.FindRepository(e.Filepath)
 	if err != nil {
-		return e, nil
+
+		return e, err
 	}
 	author, err := git.FindCommitAuthor(repo)
 	e.Author = author
+
 	return e, err
 }
 
@@ -42,13 +44,13 @@ func (ci Ci) Map() (env.Env, error) {
 //  2. If BUILDKITE_REPO starts with "git@" and ends with ".git", use capture group to find repository.
 //  3. return BUILDKITE_REPO.
 func (_ Ci) MapRepository(buildkiteRepo string) string {
-	httpRegex, _ := regexp.Compile("^https?://.+\\.[a-z0-9]+/(.+)\\.git$")
+	httpRegex, _ := regexp.Compile(`^https?://.+\.[a-z0-9]+/(.+)\.git$`)
 	matches := httpRegex.FindStringSubmatch(buildkiteRepo)
 	if len(matches) == 2 {
 		return matches[1]
 	}
 
-	sshRegex, _ := regexp.Compile("^.*:[0-9]*/*(.+)\\.git$")
+	sshRegex, _ := regexp.Compile(`^.*:[0-9]*/*(.+)\.git$`)
 	matches = sshRegex.FindStringSubmatch(buildkiteRepo)
 	if len(matches) == 2 {
 		return matches[1]
@@ -63,13 +65,13 @@ func (_ Ci) MapRepository(buildkiteRepo string) string {
 //     rewrite and use "https://github.com/organisation/reponame".
 //  3. return buildkiteRepo.
 func (_ Ci) MapRepositoryUrl(buildkiteRepo string) string {
-	httpRegex, _ := regexp.Compile("^(https?://.+)\\.git$")
+	httpRegex, _ := regexp.Compile(`^(https?://.+)\.git$`)
 	matches := httpRegex.FindStringSubmatch(buildkiteRepo)
 	if len(matches) == 2 {
 		return matches[1]
 	}
 
-	sshRegex, _ := regexp.Compile("git@(.+):[0-9]*/?(.+)\\.git$")
+	sshRegex, _ := regexp.Compile(`git@(.+):[0-9]*/?(.+)\.git$`)
 	matches = sshRegex.FindStringSubmatch(buildkiteRepo)
 	if len(matches) == 3 {
 		return fmt.Sprintf("https://%s/%s", matches[1], matches[2])

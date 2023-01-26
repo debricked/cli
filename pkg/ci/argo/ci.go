@@ -28,14 +28,33 @@ func (ci Ci) Map() (env.Env, error) {
 	e.Integration = Integration
 	repo, err := git.FindRepository(e.Filepath)
 	if err != nil {
-		return e, nil
+		return e, err
 	}
-	commit, err := git.FindCommitHash(repo)
+
+	var gitErrs []error
+
+	commit, commitErr := git.FindCommitHash(repo)
+	if commitErr != nil {
+		gitErrs = append(gitErrs, commitErr)
+	}
 	e.Commit = commit
-	branch, err := git.FindBranch(repo)
+
+	branch, branchErr := git.FindBranch(repo)
+	if branchErr != nil {
+		gitErrs = append(gitErrs, branchErr)
+	}
 	e.Branch = branch
-	author, err := git.FindCommitAuthor(repo)
+
+	author, authorErr := git.FindCommitAuthor(repo)
+	if authorErr != nil {
+		gitErrs = append(gitErrs, authorErr)
+	}
 	e.Author = author
+
+	if len(gitErrs) > 0 {
+		err = gitErrs[0]
+	}
+
 	return e, err
 }
 
@@ -44,13 +63,13 @@ func (ci Ci) Map() (env.Env, error) {
 //  2. If gitUrl starts with "git@" and ends with ".git", use capture group to set repository.
 //  3. Return gitUrl.
 func (_ Ci) MapRepository(gitUrl string) string {
-	httpRegex, _ := regexp.Compile("^https?://.+\\.[a-z0-9]+/(.+)\\.git$")
+	httpRegex, _ := regexp.Compile(`^https?://.+\.[a-z0-9]+/(.+)\.git$`)
 	matches := httpRegex.FindStringSubmatch(gitUrl)
 	if len(matches) == 2 {
 		return matches[1]
 	}
 
-	sshRegex, _ := regexp.Compile("^.*:[0-9]*/*(.+)\\.git$")
+	sshRegex, _ := regexp.Compile(`^.*:[0-9]*/*(.+)\.git$`)
 	matches = sshRegex.FindStringSubmatch(gitUrl)
 	if len(matches) == 2 {
 		return matches[1]
@@ -65,13 +84,13 @@ func (_ Ci) MapRepository(gitUrl string) string {
 //     rewrite and use "https://github.com/organisation/reponame" as repository URL.
 //  3. Otherwise, return gitUrl
 func (_ Ci) MapRepositoryUrl(gitUrl string) string {
-	httpRegex, _ := regexp.Compile("^(https?://.+)\\.git$")
+	httpRegex, _ := regexp.Compile(`^(https?://.+)\.git$`)
 	matches := httpRegex.FindStringSubmatch(gitUrl)
 	if len(matches) == 2 {
 		return matches[1]
 	}
 
-	sshRegex, _ := regexp.Compile("git@(.+):[0-9]*/?(.+)\\.git$")
+	sshRegex, _ := regexp.Compile(`git@(.+):[0-9]*/?(.+)\.git$`)
 	matches = sshRegex.FindStringSubmatch(gitUrl)
 	if len(matches) == 3 {
 		return fmt.Sprintf("https://%s/%s", matches[1], matches[2])

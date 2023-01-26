@@ -29,5 +29,6 @@ func (_ Ci) Map() (env.Env, error) {
 	e.Integration = Integration
 	e.Author = os.Getenv("BUILD_REQUESTEDFOREMAIL")
 	e.Filepath = os.Getenv("BUILD_SOURCESDIRECTORY")
+
 	return e, nil
 }

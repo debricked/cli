@@ -1,6 +1,7 @@
 package travis
 
 import (
+	"github.com/debricked/cli/pkg/ci/env"
 	"github.com/debricked/cli/pkg/ci/testdata"
 	"os"
 	"testing"
@@ -30,13 +31,13 @@ func TestIdentify(t *testing.T) {
 
 func TestParse(t *testing.T) {
 	err := testdata.SetUpCiEnv(travisEnv)
-	defer testdata.ResetEnv(travisEnv)
+	defer testdata.ResetEnv(travisEnv, t)
 	if err != nil {
 		t.Error(err)
 	}
 
 	cwd, err := testdata.SetUpGitRepository(true)
-	defer testdata.TearDownGitRepository(cwd)
+	defer testdata.TearDownGitRepository(cwd, t)
 	if err != nil {
 		t.Error("failed to initialize repository", err)
 	}
@@ -46,6 +47,10 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Error("failed to assert that no error occurred")
 	}
+	assertEnv(env, t)
+}
+
+func assertEnv(env env.Env, t *testing.T) {
 	if env.Filepath != "." {
 		t.Error("failed to assert that env contained correct filepath")
 	}

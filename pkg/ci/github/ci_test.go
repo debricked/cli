@@ -76,7 +76,7 @@ func TestParse(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			err := testdata.SetUpCiEnv(c.env)
-			defer testdata.ResetEnv(c.env)
+			defer testdata.ResetEnv(c.env, t)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -35,8 +35,10 @@ func post(uri string, debClient *DebClient, contentType string, body *bytes.Buff
 		return nil, err
 	}
 	req := func() (*http.Response, error) {
+
 		return post(uri, debClient, contentType, body, false)
 	}
+
 	return interpret(res, req, debClient, retry)
 }
 
@@ -62,8 +64,10 @@ Read more on https://debricked.com/docs/administration/access-tokens.html`
 			if err != nil {
 				return nil, errors.New(errMsg)
 			}
+
 			return request()
 		}
+
 		return nil, errors.New(errMsg)
 	}
 
@@ -80,23 +84,24 @@ func (debClient *DebClient) authenticate() error {
 
 	data := map[string]string{"refresh_token": *debClient.accessToken}
 	jsonData, _ := json.Marshal(data)
-	res, err := debClient.httpClient.Post(
+	res, reqErr := debClient.httpClient.Post(
 		*debClient.host+uri,
 		"application/json",
 		bytes.NewBuffer(jsonData),
 	)
-	if err != nil {
-		return err
+	if reqErr != nil {
+		return reqErr
 	}
 
 	defer res.Body.Close()
 	var tokenData map[string]string
-	body, err := io.ReadAll(res.Body)
-	err = json.Unmarshal(body, &tokenData)
+	body, _ := io.ReadAll(res.Body)
+	err := json.Unmarshal(body, &tokenData)
 	if err != nil {
 		var errMessage errorMessage
 		_ = json.Unmarshal(body, &errMessage)
-		return errors.New(fmt.Sprintf("%s %s\n", color.RedString("⨯"), errMessage.Message))
+
+		return fmt.Errorf("%s %s\n", color.RedString("⨯"), errMessage.Message)
 	}
 	debClient.jwtToken = tokenData["token"]
 

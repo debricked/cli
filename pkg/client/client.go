@@ -7,6 +7,8 @@ import (
 	"os"
 )
 
+const DefaultDebrickedUri = "https://debricked.com"
+
 type IDebClient interface {
 	// Post makes a POST request to one of Debricked's API endpoints
 	Post(uri string, contentType string, body *bytes.Buffer) (*http.Response, error)
@@ -30,7 +32,7 @@ func NewDebClient(accessToken *string) *DebClient {
 	}
 	host := os.Getenv("DEBRICKED_URI")
 	if len(host) == 0 {
-		host = "https://debricked.com"
+		host = DefaultDebrickedUri
 	}
 
 	return &DebClient{

@@ -34,8 +34,7 @@ const (
 var scanCmdError error
 
 func NewScanCmd(c *client.IDebClient) *cobra.Command {
-	var ciService ci.IService
-	ciService = ci.NewService(nil)
+	var ciService ci.IService = ci.NewService(nil)
 
 	var s scan.IScanner
 	s, scanCmdError = scan.NewDebrickedScanner(c, ciService)
@@ -55,12 +54,23 @@ If the given path contains a git repository all flags but "integration" will be 
 	cmd.Flags().StringVarP(&branchName, BranchFlag, "b", "", "branch name")
 	cmd.Flags().StringVarP(&commitAuthor, CommitAuthorFlag, "a", "", "commit author")
 	cmd.Flags().StringVarP(&repositoryUrl, RepositoryUrlFlag, "u", "", "repository URL")
-	cmd.Flags().StringVarP(&integrationName, IntegrationFlag, "i", "CLI", `name of integration used to trigger scan. For example "GitHub Actions"`)
+	cmd.Flags().StringVarP(
+		&integrationName,
+		IntegrationFlag,
+		"i",
+		"CLI",
+		`name of integration used to trigger scan. For example "GitHub Actions"`,
+	)
 
 	fileExclusionExample := filepath.Join("*", "**.lock")
 	dirExclusionExample := filepath.Join("**", "node_modules", "**")
 	exampleFlags := fmt.Sprintf("-e \"%s\" -e \"%s\"", fileExclusionExample, dirExclusionExample)
-	cmd.Flags().StringArrayVarP(&exclusions, ExclusionFlag, "e", exclusions, `The following terms are supported to exclude paths:
+	cmd.Flags().StringArrayVarP(
+		&exclusions,
+		ExclusionFlag,
+		"e",
+		exclusions,
+		`The following terms are supported to exclude paths:
 Special Terms | Meaning
 ------------- | -------
 "*"           | matches any sequence of non-Separator characters 
@@ -106,9 +116,10 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 		if scanCmdError == scan.FailPipelineErr {
 			cmd.SilenceUsage = true
 			cmd.SilenceErrors = true
+
 			return scanCmdError
 		} else if scanCmdError != nil {
-			return errors.New(fmt.Sprintf("%s %s\n", color.RedString("⨯"), scanCmdError.Error()))
+			return fmt.Errorf("%s %s\n", color.RedString("⨯"), scanCmdError.Error())
 		}
 
 		return scanCmdError

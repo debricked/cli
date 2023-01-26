@@ -38,5 +38,6 @@ func (_ Ci) Map() (env.Env, error) {
 	e.Integration = Integration
 	e.Filepath = "."
 	e.Author = os.Getenv("GITHUB_ACTOR")
+
 	return e, nil
 }

@@ -38,7 +38,7 @@ func TestNewMetaObjectWithoutHead(t *testing.T) {
 	if err != nil {
 		t.Fatal("failed to initialize repository", err)
 	}
-	defer testdata.TearDownGitRepository(cwd)
+	defer testdata.TearDownGitRepository(cwd, t)
 
 	metaObj, err := NewMetaObject(".", "repository-name", "", "", "", "")
 	if err == nil {

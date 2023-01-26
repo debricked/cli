@@ -23,11 +23,12 @@ type Uploader struct {
 	client *client.IDebClient
 }
 
-func NewUploader(c *client.IDebClient) (*Uploader, error) {
+func NewUploader(c client.IDebClient) (*Uploader, error) {
 	if c == nil {
 		return nil, errors.New("client is nil")
 	}
-	return &Uploader{c}, nil
+
+	return &Uploader{&c}, nil
 }
 
 func (uploader *Uploader) Upload(o IOptions) (*UploadResult, error) {
@@ -46,6 +47,7 @@ func (uploader *Uploader) Upload(o IOptions) (*UploadResult, error) {
 		if err == PollingTerminatedErr {
 			return result, nil
 		}
+
 		return nil, err
 	}
 

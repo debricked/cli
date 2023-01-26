@@ -30,10 +30,12 @@ func (ci Ci) Map() (env.Env, error) {
 	e.Filepath = "."
 	repo, err := git.FindRepository(e.Filepath)
 	if err != nil {
-		return e, nil
+
+		return e, err
 	}
 	author, err := git.FindCommitAuthor(repo)
 	e.Author = author
+
 	return e, err
 }
 
@@ -43,13 +45,13 @@ func (ci Ci) Map() (env.Env, error) {
 //     rewrite and use "https://github.com/organisation/reponame" as repo url.
 //  3. return circleCiRepo
 func (_ Ci) MapRepositoryUrl(circleCiRepo string) string {
-	httpRegex, _ := regexp.Compile("^(https?://.+)\\.git$")
+	httpRegex, _ := regexp.Compile(`^(https?://.+)\.git$`)
 	matches := httpRegex.FindStringSubmatch(circleCiRepo)
 	if len(matches) == 2 {
 		return matches[1]
 	}
 
-	sshRegex, _ := regexp.Compile("git@(.+):[0-9]*/?(.+)\\.git$")
+	sshRegex, _ := regexp.Compile(`git@(.+):[0-9]*/?(.+)\.git$`)
 	matches = sshRegex.FindStringSubmatch(circleCiRepo)
 	if len(matches) == 3 {
 		return fmt.Sprintf("https://%s/%s", matches[1], matches[2])

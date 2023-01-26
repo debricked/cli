@@ -51,9 +51,11 @@ func (gs *Groups) matchExistingGroup(format *CompiledFormat, fileMatch bool, loc
 		if gDir == dir && format == g.CompiledFormat {
 			if fileMatch {
 				g.FilePath = dir + file
+
 				return true
 			} else if lockFileMatch {
 				g.RelatedFiles = append(g.RelatedFiles, dir+file)
+
 				return true
 			}
 		}
@@ -67,6 +69,7 @@ func (gs *Groups) ToSlice() []Group {
 	for _, g := range gs.groups {
 		groups = append(groups, *g)
 	}
+
 	return groups
 }
 
@@ -83,5 +86,6 @@ func (gs *Groups) GetFiles() []string {
 	for _, g := range gs.groups {
 		files = append(files, g.GetAllFiles()...)
 	}
+
 	return files
 }

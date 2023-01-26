@@ -27,10 +27,7 @@ func TestNewDebClientWithTokenParameter(t *testing.T) {
 	accessToken := "token"
 
 	debClient := NewDebClient(&accessToken)
-	if debClient == nil {
-		t.Error("failed to assert that debricked client was not nil")
-	}
-	if *debClient.host != "https://debricked.com" {
+	if *debClient.host != DefaultDebrickedUri {
 		t.Error("failed to assert that host was set properly")
 	}
 	if *debClient.accessToken != accessToken {
@@ -40,10 +37,7 @@ func TestNewDebClientWithTokenParameter(t *testing.T) {
 
 func TestNewDebClientWithNilToken(t *testing.T) {
 	debClient := NewDebClient(nil)
-	if debClient == nil {
-		t.Error("failed to assert that debricked client was not nil")
-	}
-	if *debClient.host != "https://debricked.com" {
+	if *debClient.host != DefaultDebrickedUri {
 		t.Error("failed to assert that host was set properly")
 	}
 	if debClient.accessToken == nil {
@@ -54,10 +48,7 @@ func TestNewDebClientWithNilToken(t *testing.T) {
 func TestNewDebClientWithTokenEnvVariable(t *testing.T) {
 	accessToken := ""
 	debClient := NewDebClient(&accessToken)
-	if debClient == nil {
-		t.Error("failed to assert that debricked client was not nil")
-	}
-	if *debClient.host != "https://debricked.com" {
+	if *debClient.host != DefaultDebrickedUri {
 		t.Error("failed to assert that host was set properly")
 	}
 	if len(*debClient.accessToken) == 0 {
@@ -70,10 +61,6 @@ func TestNewDebClientWithWithURI(t *testing.T) {
 	os.Setenv("DEBRICKED_URI", "https://subdomain.debricked.com")
 	debClient := NewDebClient(&accessToken)
 	os.Setenv("DEBRICKED_URI", "")
-
-	if debClient == nil {
-		t.Error("failed to assert that debricked client was not nil")
-	}
 	if *debClient.host != "https://subdomain.debricked.com" {
 		t.Error("failed to assert that host was set properly")
 	}
@@ -81,10 +68,12 @@ func TestNewDebClientWithWithURI(t *testing.T) {
 
 func TestClientUnauthorized(t *testing.T) {
 	setUp(false)
-	_, err := client.Get("/api/1.0/open/user-profile/is-admin", "application/json")
+	res, err := client.Get("/api/1.0/open/user-profile/is-admin", "application/json")
 	if err == nil {
 		t.Error("failed to assert client error")
+		defer res.Body.Close()
 	}
+
 	if !strings.Contains(err.Error(), "Unauthorized. Specify access token") {
 		t.Error("Failed to assert unauthorized error message")
 	}
@@ -122,14 +111,15 @@ func TestPost(t *testing.T) {
 	if err != nil {
 		t.Fatal("failed to assert that no client error occurred. Error:", err)
 	}
+	defer res.Body.Close()
 	if res.StatusCode != http.StatusForbidden {
 		t.Error("failed to assert that status code was 403")
 	}
 }
 
 func TestAuthenticate(t *testing.T) {
-	token := "0501ac404fd1823d0d4c047f957637a912d3b94713ee32a6"
-	client = NewDebClient(&token)
+	tkn := "0501ac404fd1823d0d4c047f957637a912d3b94713ee32a6"
+	client = NewDebClient(&tkn)
 	err := client.authenticate()
 	if err == nil {
 		t.Fatal("failed to assert that error occurred")

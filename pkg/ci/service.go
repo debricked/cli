@@ -39,6 +39,7 @@ func NewService(cis []ICi) *Service {
 			},
 		}
 	}
+
 	return &Service{cis}
 }
 
@@ -47,6 +48,7 @@ func (s *Service) Find() (env.Env, error) {
 		if ci.Identify() {
 			m, err := ci.Map()
 			fmt.Println("Integration:", m.Integration)
+
 			return m, err
 		}
 	}

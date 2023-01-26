@@ -2,7 +2,6 @@ package license
 
 import (
 	"errors"
-	"fmt"
 	"github.com/debricked/cli/pkg/cmd/report/testdata"
 	"github.com/debricked/cli/pkg/report"
 	"github.com/spf13/viper"
@@ -16,7 +15,7 @@ func TestNewLicenseCmd(t *testing.T) {
 	commands := cmd.Commands()
 	nbrOfCommands := 0
 	if len(commands) != nbrOfCommands {
-		t.Error(fmt.Sprintf("failed to assert that there were %d sub commands connected", nbrOfCommands))
+		t.Errorf("failed to assert that there were %d sub commands connected", nbrOfCommands)
 	}
 
 	viperKeys := viper.AllKeys()
@@ -28,10 +27,10 @@ func TestNewLicenseCmd(t *testing.T) {
 	for name, shorthand := range flagAssertions {
 		flag := flags.Lookup(name)
 		if flag == nil {
-			t.Error(fmt.Sprintf("failed to assert that %s flag was set", name))
+			t.Fatalf("failed to assert that %s flag was set", name)
 		}
 		if flag.Shorthand != shorthand {
-			t.Error(fmt.Sprintf("failed to assert that %s flag shorthand %s was set correctly", name, shorthand))
+			t.Errorf("failed to assert that %s flag shorthand %s was set correctly", name, shorthand)
 		}
 
 		match := false

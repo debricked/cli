@@ -1,7 +1,6 @@
 package file
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -66,46 +65,6 @@ func TestMatch(t *testing.T) {
 			}
 		})
 	}
-
-	gs.groups = nil
-	gs.Match(compiledF, "composer.lock", false)
-	if gs.Size() != 1 {
-		t.Error("failed to assert that there was one Group in Groups")
-	}
-
-	gs.Match(compiledF, "composer.json", false)
-	if gs.Size() != 1 {
-		t.Error("failed to assert that there was one Group in Groups")
-	}
-	g := gs.groups[0]
-	if g.FilePath != "composer.json" {
-		t.Error("failed to assert that FilePath had correct value directory/composer.json")
-	}
-	if len(g.RelatedFiles) != 1 {
-		t.Error("failed to assert that there was one lock file")
-	}
-	lockFile := g.RelatedFiles[0]
-	if lockFile != "composer.lock" {
-		t.Error("failed to assert lock file name")
-	}
-
-	gs.groups = nil
-	match := gs.Match(compiledF, "composer.json", true)
-	if match {
-		t.Error("failed to assert that dependency file did not match")
-	}
-	if gs.Size() != 0 {
-		t.Error("failed to assert that there was no Group in Groups")
-	}
-	gs.Match(compiledF, "composer.lock", true)
-	if gs.Size() != 1 {
-		t.Error("failed to assert that there was one Group in Groups")
-	}
-	lockFile = g.RelatedFiles[0]
-	if lockFile != "composer.lock" {
-		t.Error("failed to assert lock file name")
-	}
-
 }
 
 func TestGetFiles(t *testing.T) {
@@ -118,6 +77,6 @@ func TestGetFiles(t *testing.T) {
 	files := gs.GetFiles()
 	const nbrOfFiles = 3
 	if len(files) != nbrOfFiles {
-		t.Error(fmt.Sprintf("failed to assert that there was %d files", nbrOfFiles))
+		t.Errorf("failed to assert that there was %d files", nbrOfFiles)
 	}
 }

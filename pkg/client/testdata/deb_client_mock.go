@@ -49,6 +49,9 @@ type MockResponse struct {
 }
 
 func (mock *DebClientMock) AddMockResponse(response MockResponse) {
+	if response.ResponseBody == nil {
+		response.ResponseBody = io.NopCloser(bytes.NewReader(nil))
+	}
 	mock.responseQueue = append(mock.responseQueue, response)
 }
 
@@ -94,7 +97,7 @@ func (mock *DebClientMock) popResponse(uri string) (*http.Response, error) {
 			Body:             responseMock.ResponseBody,
 			ContentLength:    0,
 			TransferEncoding: nil,
-			Close:            false,
+			Close:            true,
 			Uncompressed:     false,
 			Trailer:          nil,
 			Request:          nil,

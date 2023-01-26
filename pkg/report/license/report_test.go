@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/debricked/cli/pkg/client/testdata"
-	"github.com/go-git/go-git/v5/utils/ioutil"
 	"io"
 	"net/http"
 	"strings"
@@ -122,7 +121,7 @@ func TestGetCommitIdNotOkResponse(t *testing.T) {
 	debClientMock.AddMockResponse(testdata.MockResponse{StatusCode: http.StatusTeapot})
 	reporter := Reporter{DebClient: debClientMock}
 	_, err := reporter.getCommitId("")
-	if !strings.Contains(err.Error(), "No commit was found with the name") {
+	if !strings.Contains(err.Error(), "no commit was found with the name") {
 		t.Error("failed to assert that not commit error message")
 	}
 }
@@ -135,7 +134,7 @@ func TestGetCommitIdNoResult(t *testing.T) {
 	})
 	reporter := Reporter{DebClient: debClientMock}
 	_, err := reporter.getCommitId("")
-	if !strings.Contains(err.Error(), "No commit was found with the name") {
+	if !strings.Contains(err.Error(), "no commit was found with the name") {
 		t.Error("failed to assert that not commit error message")
 	}
 }
@@ -162,5 +161,6 @@ func createIoReadCloserFromCommit(c *commit) io.ReadCloser {
 	}
 	body, _ := json.Marshal(commitResponse)
 	reader := bytes.NewReader(body)
-	return ioutil.NewReadCloser(reader, nil)
+
+	return io.NopCloser(reader)
 }

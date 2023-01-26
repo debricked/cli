@@ -26,9 +26,12 @@ import (
 	"testing"
 )
 
+const (
+	testdataYarn = "testdata/yarn"
+)
+
 func TestNewDebrickedScanner(t *testing.T) {
-	var debClient client.IDebClient
-	debClient = client.NewDebClient(nil)
+	var debClient client.IDebClient = client.NewDebClient(nil)
 	var ciService ci.IService
 	s, err := NewDebrickedScanner(&debClient, ciService)
 
@@ -60,12 +63,10 @@ func TestNewDebrickedScannerWithError(t *testing.T) {
 }
 
 func TestScan(t *testing.T) {
-	var debClient client.IDebClient
-	debClient = client.NewDebClient(nil)
-	var ciService ci.IService
-	ciService = ci.NewService(nil)
+	var debClient client.IDebClient = client.NewDebClient(nil)
+	var ciService ci.IService = ci.NewService(nil)
 	scanner, _ := NewDebrickedScanner(&debClient, ciService)
-	path := "testdata/yarn"
+	path := testdataYarn
 	repositoryName := path
 	commitName := "testdata/yarn-commit"
 	cwd, _ := os.Getwd()
@@ -88,10 +89,8 @@ func TestScan(t *testing.T) {
 }
 
 func TestScanFailingMetaObject(t *testing.T) {
-	var debClient client.IDebClient
-	debClient = client.NewDebClient(nil)
-	var ciService ci.IService
-	ciService = ci.NewService([]ci.ICi{
+	var debClient client.IDebClient = client.NewDebClient(nil)
+	var ciService ci.IService = ci.NewService([]ci.ICi{
 		argo.Ci{},
 		azure.Ci{},
 		bitbucket.Ci{},
@@ -103,7 +102,7 @@ func TestScanFailingMetaObject(t *testing.T) {
 	})
 	scanner, _ := NewDebrickedScanner(&debClient, ciService)
 	cwd, _ := os.Getwd()
-	path := "testdata/yarn"
+	path := testdataYarn
 	opts := DebrickedOptions{
 		Path:            path,
 		Exclusions:      nil,
@@ -131,10 +130,8 @@ func TestScanFailingMetaObject(t *testing.T) {
 }
 
 func TestScanFailingNoFiles(t *testing.T) {
-	var debClient client.IDebClient
-	debClient = client.NewDebClient(nil)
-	var ciService ci.IService
-	ciService = ci.NewService([]ci.ICi{
+	var debClient client.IDebClient = client.NewDebClient(nil)
+	var ciService ci.IService = ci.NewService([]ci.ICi{
 		argo.Ci{},
 		azure.Ci{},
 		bitbucket.Ci{},
@@ -211,10 +208,9 @@ func TestScanEmptyResult(t *testing.T) {
 
 	debClient = clientMock
 
-	var ciService ci.IService
-	ciService = ci.NewService(nil)
+	var ciService ci.IService = ci.NewService(nil)
 	scanner, _ := NewDebrickedScanner(&debClient, ciService)
-	path := "testdata/yarn"
+	path := testdataYarn
 	repositoryName := path
 	commitName := "testdata/yarn-commit"
 	cwd, _ := os.Getwd()

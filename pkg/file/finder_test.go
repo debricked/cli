@@ -3,7 +3,6 @@ package file
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/debricked/cli/pkg/client"
 	"io"
 	"net/http"
@@ -16,7 +15,7 @@ import (
 type debClientMock struct{}
 
 func (mock *debClientMock) Post(_ string, _ string, _ *bytes.Buffer) (*http.Response, error) {
-	return nil, nil
+	return &http.Response{}, nil
 }
 
 var authorized bool
@@ -121,7 +120,7 @@ func TestGetGroups(t *testing.T) {
 		t.Fatal("failed to assert that no error occurred. Error:", err)
 	}
 	if fileGroups.Size() != nbrOfGroups {
-		t.Error(fmt.Sprintf("failed to assert that %d groups were created. %d was found", nbrOfGroups, fileGroups.Size()))
+		t.Errorf("failed to assert that %d groups were created. %d was found", nbrOfGroups, fileGroups.Size())
 	}
 	for _, fileGroup := range fileGroups.ToSlice() {
 		hasContent := fileGroup.CompiledFormat != nil && (strings.Contains(fileGroup.FilePath, path) || len(fileGroup.RelatedFiles) > 0)
@@ -148,6 +147,7 @@ func TestExclude(t *testing.T) {
 				return err
 			}
 			files = append(files, path)
+
 			return nil
 		})
 
@@ -211,11 +211,12 @@ func TestExclude(t *testing.T) {
 				for _, expectedExcludedFile := range c.expectedExclusions {
 					if baseName == expectedExcludedFile {
 						asserted = true
+
 						break
 					}
 				}
 				if !asserted {
-					t.Error(fmt.Sprintf("%s ignored when it should pass", file))
+					t.Errorf("%s ignored when it should pass", file)
 				}
 			}
 		})
@@ -231,7 +232,7 @@ func TestGetGroupsWithOnlyLockFiles(t *testing.T) {
 		t.Fatal("failed to assert that no error occurred. Error:", err)
 	}
 	if fileGroups.Size() != nbrOfGroups {
-		t.Fatal(fmt.Sprintf("failed to assert that %d groups were created. %d was found", nbrOfGroups, fileGroups.Size()))
+		t.Fatalf("failed to assert that %d groups were created. %d was found", nbrOfGroups, fileGroups.Size())
 	}
 
 	fileGroup := fileGroups.groups[0]

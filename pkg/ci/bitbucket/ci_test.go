@@ -1,6 +1,7 @@
 package bitbucket
 
 import (
+	"github.com/debricked/cli/pkg/ci/env"
 	"github.com/debricked/cli/pkg/ci/testdata"
 	"os"
 	"testing"
@@ -35,19 +36,24 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer testdata.ResetEnv(bitbucketEnv)
+	defer testdata.ResetEnv(bitbucketEnv, t)
 
 	cwd, err := testdata.SetUpGitRepository(true)
 	if err != nil {
 		t.Fatal("failed to initialize repository", err)
 	}
-	defer testdata.TearDownGitRepository(cwd)
+	defer testdata.TearDownGitRepository(cwd, t)
 
 	ci := Ci{}
 	env, err := ci.Map()
 	if err != nil {
 		t.Error("failed to assert that no error occurred")
 	}
+	assertEnv(env, t)
+}
+
+func assertEnv(env env.Env, t *testing.T) {
+
 	if env.Filepath != "." {
 		t.Error("failed to assert that env contained correct filepath")
 	}

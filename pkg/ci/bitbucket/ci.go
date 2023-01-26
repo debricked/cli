@@ -29,9 +29,10 @@ func (_ Ci) Map() (env.Env, error) {
 	e.Filepath = "."
 	repo, err := git.FindRepository(e.Filepath)
 	if err != nil {
-		return e, nil
+		return e, err
 	}
 	author, err := git.FindCommitAuthor(repo)
 	e.Author = author
+
 	return e, err
 }

@@ -1,7 +1,6 @@
 package license
 
 import (
-	"errors"
 	"fmt"
 	"github.com/debricked/cli/pkg/report"
 	"github.com/debricked/cli/pkg/report/license"
@@ -48,7 +47,7 @@ func RunE(r report.IReporter) func(_ *cobra.Command, args []string) error {
 		}
 
 		if err := r.Order(orderArgs); err != nil {
-			return errors.New(fmt.Sprintf("%s %s\n", color.RedString("⨯"), err.Error()))
+			return fmt.Errorf("%s %s\n", color.RedString("⨯"), err.Error())
 		}
 
 		fmt.Printf("%s Successfully ordered license report\n", color.GreenString("✔"))

@@ -4,6 +4,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"os"
+	"testing"
 )
 
 func SetUpCiEnv(env map[string]string) error {
@@ -38,23 +39,28 @@ func SetUpGitRepository(includeCommit bool) (string, error) {
 	return cwd, err
 }
 
-func TearDownGitRepository(dir string) error {
+func TearDownGitRepository(dir string, t *testing.T) {
 	cwd, _ := os.Getwd()
 	repoDir := cwd + "/.git/"
 	_, err := git.PlainOpen(repoDir)
 	if err != nil {
-		return err
+		t.Fatal(err)
 	}
 	err = os.Chdir(dir)
-	return os.RemoveAll(repoDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.RemoveAll(repoDir)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
-func ResetEnv(ciEnv map[string]string) error {
+func ResetEnv(ciEnv map[string]string, t *testing.T) {
 	for _, variable := range ciEnv {
 		err := os.Unsetenv(variable)
 		if err != nil {
-			return err
+			t.Fatal(err)
 		}
 	}
-	return nil
 }

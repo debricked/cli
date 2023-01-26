@@ -36,7 +36,7 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer testdata.ResetEnv(gitLabEnv)
+	defer testdata.ResetEnv(gitLabEnv, t)
 
 	ci := Ci{}
 	env, _ := ci.Map()

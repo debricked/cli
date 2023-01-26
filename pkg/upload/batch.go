@@ -155,8 +155,9 @@ func (uploadBatch *uploadBatch) conclude() error {
 	if err != nil {
 		return err
 	}
+	defer response.Body.Close()
 	if response.StatusCode != http.StatusNoContent {
-		return errors.New(fmt.Sprintf("Failed to conclude upload due to status code %d", response.StatusCode))
+		return fmt.Errorf("Failed to conclude upload due to status code %d", response.StatusCode)
 	} else {
 		fmt.Println("Successfully concluded upload")
 	}
@@ -185,6 +186,7 @@ func (uploadBatch *uploadBatch) wait() (*UploadResult, error) {
 			if err != nil {
 				return resultStatus, err
 			}
+
 			return resultStatus, PollingTerminatedErr
 		}
 		status, err := newUploadStatus(res)

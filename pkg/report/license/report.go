@@ -40,12 +40,13 @@ func (r Reporter) Order(args report.IOrderArgs) error {
 	if err != nil {
 		return err
 	}
+	defer res.Body.Close()
 	if res.StatusCode == http.StatusForbidden {
 		return SubscriptionError
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("failed to order report. Status code: %d", res.StatusCode))
+		return fmt.Errorf("failed to order report. Status code: %d", res.StatusCode)
 	}
 
 	return nil
@@ -64,20 +65,24 @@ func (r Reporter) getCommitId(hash string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode == http.StatusForbidden {
 		return 0, SubscriptionError
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return 0, errors.New(fmt.Sprintf("No commit was found with the name %s", hash))
+		return 0, fmt.Errorf("no commit was found with the name %s", hash)
 	}
 
 	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return 0, err
+	}
 	var commits []commit
 	err = json.Unmarshal(body, &commits)
 	if len(commits) == 0 {
-		return 0, errors.New(fmt.Sprintf("No commit was found with the name %s", hash))
+		return 0, fmt.Errorf("no commit was found with the name %s", hash)
 	}
 
 	return commits[0].Id, err
