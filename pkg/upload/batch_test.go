@@ -35,15 +35,19 @@ func TestUploadWithBadFiles(t *testing.T) {
 	clientMock.AddMockResponse(mockRes)
 	c = clientMock
 	batch := newUploadBatch(&c, groups, metaObj, "CLI")
-	output := captureOutput(batch.upload)
-	outputAssertions := []string{
-		"Failed to upload: package.json",
-		"Failed to upload: yarn.lock",
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	err = batch.upload()
+	log.SetOutput(os.Stderr)
+	output := buf.String()
+	if output != "" {
+		t.Error("failed to assert that there was no output")
 	}
-	for _, assertion := range outputAssertions {
-		if !strings.Contains(output, assertion) {
-			t.Errorf("failed to assert that output contained %s", assertion)
-		}
+	if err == nil {
+		t.Error("failed to assert that an error occurred")
+	}
+	if !strings.EqualFold("failed to initialize a scan due to badly formatted files", err.Error()) {
+		t.Error("failed to assert error message")
 	}
 }
 
@@ -56,15 +60,6 @@ func TestConcludeWithoutAnyFiles(t *testing.T) {
 	if !strings.Contains(err.Error(), "failed to find dependency files") {
 		t.Error("failed to asser error message")
 	}
-}
-
-func captureOutput(f func()) string {
-	var buf bytes.Buffer
-	log.SetOutput(&buf)
-	f()
-	log.SetOutput(os.Stderr)
-
-	return buf.String()
 }
 
 func TestWaitWithPollingTerminatedError(t *testing.T) {
@@ -90,5 +85,67 @@ func TestWaitWithPollingTerminatedError(t *testing.T) {
 
 	if uploadResult != nil && err != PollingTerminatedErr {
 		t.Fatal("Upload result must be nil and err must be PollingTerminatedErr")
+	}
+}
+
+func TestInitUploadBadFile(t *testing.T) {
+	group := file.NewGroup("testdata/misc/requirements.txt", nil, nil)
+	var groups file.Groups
+	groups.Add(*group)
+	metaObj, err := git.NewMetaObject("", "repository-name", "commit-name", "", "", "")
+	if err != nil {
+		t.Fatal("failed to create new MetaObject")
+	}
+
+	clientMock := testdata.NewDebClientMock()
+	mockRes := testdata.MockResponse{
+		StatusCode:   http.StatusOK,
+		ResponseBody: io.NopCloser(strings.NewReader(`{"message":"An empty file is not allowed"}`)),
+	}
+	clientMock.AddMockResponse(mockRes)
+
+	var c client.IDebClient = clientMock
+	batch := newUploadBatch(&c, groups, metaObj, "CLI")
+
+	files, err := batch.initUpload()
+	if len(files) != 0 {
+		t.Error("failed to assert that batch could not initialize upload")
+	}
+	if err == nil {
+		t.Error("failed to assert that error occurred")
+	}
+	if !strings.EqualFold("failed to initialize a scan due to badly formatted files", err.Error()) {
+		t.Error("failed to assert error message")
+	}
+}
+
+func TestInitUpload(t *testing.T) {
+	group := file.NewGroup("testdata/yarn/package.json", nil, []string{"testdata/yarn/package.json"})
+	var groups file.Groups
+	groups.Add(*group)
+	metaObj, err := git.NewMetaObject("", "repository-name", "commit-name", "", "", "")
+	if err != nil {
+		t.Fatal("failed to create new MetaObject")
+	}
+
+	clientMock := testdata.NewDebClientMock()
+	mockRes := testdata.MockResponse{
+		StatusCode:   http.StatusOK,
+		ResponseBody: io.NopCloser(strings.NewReader(`{"ciUploadId": 1}`)),
+	}
+	clientMock.AddMockResponse(mockRes)
+
+	var c client.IDebClient = clientMock
+	batch := newUploadBatch(&c, groups, metaObj, "CLI")
+
+	files, err := batch.initUpload()
+	if len(files) != 1 {
+		t.Error("failed to assert that the init deleted one file from the files to be uploaded")
+	}
+	if err != nil {
+		t.Error("failed to assert that error no occurred")
+	}
+	if batch.ciUploadId != 1 {
+		t.Error("failed to assert ciUploadId")
 	}
 }

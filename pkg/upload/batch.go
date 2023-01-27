@@ -24,6 +24,8 @@ import (
 var (
 	NoFilesErr           = errors.New("failed to find dependency files")
 	PollingTerminatedErr = errors.New("progress polling terminated due to long queue times")
+	EmptyFileErr         = errors.New("tried to upload empty file")
+	InitScanErr          = errors.New("failed to initialize a scan")
 )
 
 type uploadBatch struct {
@@ -39,7 +41,7 @@ func newUploadBatch(client *client.IDebClient, fileGroups file.Groups, gitMetaOb
 }
 
 // upload concurrently posts all file groups to Debricked
-func (uploadBatch *uploadBatch) upload() {
+func (uploadBatch *uploadBatch) upload() error {
 	uploadWorker := func(fileQueue <-chan string, fileResults chan<- int) {
 		const ok = 0
 		const fail = 1
@@ -52,13 +54,18 @@ func (uploadBatch *uploadBatch) upload() {
 					fileResults <- fail
 				}
 			} else {
-				fmt.Println("Successfully uploaded: ", f)
+				printSuccessfulUpload(f)
 				fileResults <- ok
 			}
 		}
 	}
 
-	files := uploadBatch.fileGroups.GetFiles()
+	files, err := uploadBatch.initUpload()
+	if err != nil {
+
+		return err
+	}
+
 	fileQueue := make(chan string, len(files))
 	fileResults := make(chan int, len(files))
 
@@ -78,6 +85,8 @@ func (uploadBatch *uploadBatch) upload() {
 	}
 
 	close(fileQueue)
+
+	return nil
 }
 
 // uploadFile Reads file content from filepath and uploads it to Debricked. Returns HTTP status code or 0 if other error occur
@@ -124,6 +133,9 @@ func (uploadBatch *uploadBatch) uploadFile(filePath string) error {
 
 		uFile := uploadedFile{}
 		_ = json.Unmarshal(data, &uFile)
+		if uFile.CiUploadId == 0 {
+			return EmptyFileErr
+		}
 		uploadBatch.ciUploadId = uFile.CiUploadId
 	}
 	mutex.Unlock()
@@ -208,6 +220,28 @@ func (uploadBatch *uploadBatch) wait() (*UploadResult, error) {
 	return resultStatus, nil
 }
 
+// initUpload initialises a scan by uploading one file. This enables the scan to
+// get assigned a `ciUploadId`
+func (uploadBatch *uploadBatch) initUpload() ([]string, error) {
+	files := uploadBatch.fileGroups.GetFiles()
+	if len(files) == 0 {
+		return files, nil
+	}
+
+	for len(files) > 0 {
+		entryFile := files[0]
+		files = files[1:]
+		err := uploadBatch.uploadFile(entryFile)
+		if err == nil {
+			printSuccessfulUpload(entryFile)
+
+			return files, nil
+		}
+	}
+
+	return files, errors.New("failed to initialize a scan due to badly formatted files")
+}
+
 type uploadedFile struct {
 	CiUploadId           int    `json:"ciUploadId"`
 	UploadProgramsFileId int    `json:"uploadProgramsFileId"`
@@ -232,4 +266,8 @@ func getRelativeFilePath(filePath string) string {
 	}
 
 	return relFilePath
+}
+
+func printSuccessfulUpload(f string) {
+	fmt.Println("Successfully uploaded: ", f)
 }

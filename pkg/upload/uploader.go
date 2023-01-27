@@ -34,14 +34,18 @@ func NewUploader(c client.IDebClient) (*Uploader, error) {
 func (uploader *Uploader) Upload(o IOptions) (*UploadResult, error) {
 	dOptions := o.(DebrickedOptions)
 	batch := newUploadBatch(uploader.client, dOptions.FileGroups, &dOptions.GitMetaObject, dOptions.IntegrationsName)
-	batch.upload()
-	err := batch.conclude()
+
+	err := batch.upload()
+	if err != nil {
+		return nil, err
+	}
+
+	err = batch.conclude()
 	if err != nil {
 		return nil, err
 	}
 
 	result, err := batch.wait()
-
 	if err != nil {
 		// the command should not fail because some file can't be scanned
 		if err == PollingTerminatedErr {
