@@ -6,6 +6,6 @@
   "author": "viktigpetterr <viktor.pettersson@debricked.com>",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.17.3"
+    "lodash": "^4.17.21"
   }
 }
