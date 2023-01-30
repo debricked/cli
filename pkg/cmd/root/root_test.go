@@ -6,7 +6,7 @@ import (
 )
 
 func TestNewRootCmd(t *testing.T) {
-	cmd := NewRootCmd()
+	cmd := NewRootCmd("v0.0.0")
 	commands := cmd.Commands()
 	nbrOfCommands := 3
 	if len(commands) != nbrOfCommands {

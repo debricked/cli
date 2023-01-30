@@ -1,5 +1,5 @@
 install:
-	go install ./cmd/debricked
+	bash scripts/install.sh
 
 lint:
 	bash scripts/test_lint.sh

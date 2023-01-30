@@ -13,7 +13,7 @@ var accessToken string
 
 const AccessTokenFlag = "access-token"
 
-func NewRootCmd() *cobra.Command {
+func NewRootCmd(version string) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "debricked",
 		Short: "Debricked CLI - Keep track of your dependencies!",
@@ -22,6 +22,7 @@ Complete documentation is available at https://debricked.com/docs/integrations/c
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			_ = viper.BindPFlags(cmd.PersistentFlags())
 		},
+		Version: version,
 	}
 	viper.SetEnvPrefix("DEBRICKED")
 	viper.MustBindEnv(AccessTokenFlag)
@@ -40,6 +41,8 @@ Read more: https://debricked.com/docs/administration/access-tokens.html`,
 	rootCmd.AddCommand(scan.NewScanCmd(&debClient))
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
+
+	//rootCmd.SetVersionTemplate()
 
 	return rootCmd
 }
