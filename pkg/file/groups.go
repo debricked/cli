@@ -11,11 +11,7 @@ func (gs *Groups) Match(format *CompiledFormat, path string, lockfileOnly bool) 
 	dir, file := filepath.Split(path)
 
 	// If it is not a match, return
-	fileMatch := format.MatchFile(file)
-	if lockfileOnly {
-		fileMatch = false
-	}
-
+	fileMatch := !lockfileOnly && format.MatchFile(file)
 	lockFileMatch := format.MatchLockFile(file)
 
 	if !fileMatch && !lockFileMatch {
