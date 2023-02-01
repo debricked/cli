@@ -1,6 +1,6 @@
-If you are new to contributing to open-source projects, we want to encourage you to take a look at this great guide made by GitHub on how to contribute to open-source projects [https://opensource.guide/how-to-contribute/](https://opensource.guide/how-to-contribute/)
+If you are new to contributing to open-source projects, we want to encourage you to take a look at this great guide made by GitHub on how to contribute to open-source projects [https://opensource.guide/how-to-contribute/](https://opensource.guide/how-to-contribute/).
 
-feel free to reach out to any of the maintainers or other community members if you have any questions.
+Feel free to reach out to any of the maintainers or other community members if you have any questions.
 
 ## Contributing to Debricked CLI
 
@@ -39,7 +39,7 @@ To get started, [fork this project](https://github.com/debricked/cli/fork) to yo
 
 `$ git rebase debricked-cli/main`
 
-`$ git push --force`
+`$ git push --force-with-lease`
 
 ## Doing your work
 
@@ -57,11 +57,13 @@ Before submitting your PRs, we would appreciate it if you took some time to clea
 
 1. Commit the change(s) and push to your fork
 
-`$ git add .
+```
+$ git add .
 $ git commit -S -m "This is a cool commit"
-$ git push -u origin my-cool-branch`
+$ git push -u origin my-cool-branch
+```
 
-2. [submit a pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request).
+2. [Submit a pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request).
 
 # Bug Reports
 
@@ -73,7 +75,7 @@ Make sure to include as much details as possible by using our general guidelines
 - Determine if your bug is really a bug and not an error on your side.
 - Make sure not to create duplicate issues, search the current issues before creating a new one.
 - Collect information about the bug:
-    - Possibly your input and the output
+    - Possibly your input and the output.
     - Can you reliably reproduce the issue? And can you also reproduce it with older versions?
 
 > Never report security related issues, vulnerabilities or bugs to the issue tracker, or elsewhere in public. Instead sensitive bugs must be sent by email to **[security@debricked.com](mailto:security@debricked.com)**
