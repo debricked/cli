@@ -149,11 +149,12 @@ func (uploadBatch *uploadBatch) conclude() error {
 		return NoFilesErr
 	}
 	body, err := json.Marshal(uploadConclusion{
-		CiUploadId:      strconv.Itoa(uploadBatch.ciUploadId),
-		RepositoryName:  uploadBatch.gitMetaObject.RepositoryName,
-		IntegrationName: uploadBatch.integrationName,
-		CommitName:      uploadBatch.gitMetaObject.CommitName,
-		Author:          uploadBatch.gitMetaObject.Author,
+		CiUploadId:           strconv.Itoa(uploadBatch.ciUploadId),
+		RepositoryName:       uploadBatch.gitMetaObject.RepositoryName,
+		IntegrationName:      uploadBatch.integrationName,
+		CommitName:           uploadBatch.gitMetaObject.CommitName,
+		Author:               uploadBatch.gitMetaObject.Author,
+		DebrickedIntegration: "cli",
 	})
 
 	if err != nil {
@@ -252,11 +253,12 @@ type uploadedFile struct {
 }
 
 type uploadConclusion struct {
-	CiUploadId      string `json:"ciUploadId"`
-	RepositoryName  string `json:"repositoryName"`
-	IntegrationName string `json:"integrationName"`
-	CommitName      string `json:"commitName"`
-	Author          string `json:"author"`
+	CiUploadId           string `json:"ciUploadId"`
+	RepositoryName       string `json:"repositoryName"`
+	IntegrationName      string `json:"integrationName"`
+	CommitName           string `json:"commitName"`
+	Author               string `json:"author"`
+	DebrickedIntegration string `json:"debrickedIntegration"`
 }
 
 func getRelativeFilePath(filePath string) string {
