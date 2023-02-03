@@ -12,7 +12,7 @@ func TestNewFilesCmd(t *testing.T) {
 	var debClient client.IDebClient = testdata.NewDebClientMock()
 	cmd := NewFilesCmd(&debClient)
 	commands := cmd.Commands()
-	nbrOfCommands := 1
+	nbrOfCommands := 2
 	assert.Lenf(t, commands, nbrOfCommands, "failed to assert that there were %d sub commands connected", nbrOfCommands)
 }
 

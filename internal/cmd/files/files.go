@@ -21,5 +21,7 @@ func NewFilesCmd(debClient *client.IDebClient) *cobra.Command {
 	f, _ := file.NewFinder(*debClient)
 	cmd.AddCommand(find.NewFindCmd(f))
 
+	cmd.AddCommand(resolve.NewResolveCmd())
+
 	return cmd
 }
