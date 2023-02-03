@@ -3,6 +3,7 @@ package files
 import (
 	"github.com/debricked/cli/pkg/client"
 	"github.com/debricked/cli/pkg/cmd/files/find"
+	"github.com/debricked/cli/pkg/cmd/files/resolve"
 	"github.com/debricked/cli/pkg/file"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -20,6 +21,8 @@ func NewFilesCmd(debClient *client.IDebClient) *cobra.Command {
 
 	f, _ := file.NewFinder(*debClient)
 	cmd.AddCommand(find.NewFindCmd(f))
+
+	cmd.AddCommand(resolve.NewResolveCmd())
 
 	return cmd
 }
