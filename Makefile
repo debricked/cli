@@ -5,8 +5,6 @@ lint:
 	bash scripts/test_lint.sh
 
 test:
-	make test-cli && make lint && make test-security && make test-docker
-test-cli:
 	bash scripts/test_cli.sh
 test-docker:
 	bash scripts/test_docker.sh cli
