@@ -3,6 +3,7 @@ package scan
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/debricked/cli/pkg/ci"
 	"github.com/debricked/cli/pkg/ci/argo"
 	"github.com/debricked/cli/pkg/ci/azure"
@@ -63,13 +64,25 @@ func TestNewDebrickedScannerWithError(t *testing.T) {
 }
 
 func TestScan(t *testing.T) {
-	var debClient client.IDebClient = client.NewDebClient(nil)
+	var debClient client.IDebClient
+	clientMock := testdata.NewDebClientMock()
+	addMockedFormatsResponse(clientMock)
+	addMockedFileUploadResponse(clientMock)
+	addMockedFinishResponse(clientMock, http.StatusNoContent)
+	addMockedStatusResponse(clientMock, http.StatusOK, 50)
+	addMockedStatusResponse(clientMock, http.StatusOK, 100)
+	debClient = clientMock
+
 	var ciService ci.IService = ci.NewService(nil)
+
 	scanner, _ := NewDebrickedScanner(&debClient, ciService)
+
 	path := testdataYarn
 	repositoryName := path
 	commitName := "testdata/yarn-commit"
 	cwd, _ := os.Getwd()
+	// reset working directory that has been manipulated in scanner.Scan
+	defer resetWd(t, cwd)
 	opts := DebrickedOptions{
 		Path:            path,
 		Exclusions:      nil,
@@ -80,12 +93,39 @@ func TestScan(t *testing.T) {
 		RepositoryUrl:   "",
 		IntegrationName: "",
 	}
+
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
 	err := scanner.Scan(opts)
+
+	_ = w.Close()
+	output, _ := io.ReadAll(r)
+	os.Stdout = rescueStdout
+
 	if err != nil {
 		t.Error("failed to assert that scan ran without errors. Error:", err)
 	}
-	// reset working directory that has been manipulated in scanner.Scan
-	_ = os.Chdir(cwd)
+
+	outputAssertions := []string{
+		"Working directory: /",
+		"cli/pkg/scan/testdata/yarn\n",
+		"Successfully uploaded:  yarn.lock\n",
+		"Successfully concluded upload\n",
+		"Scanning...",
+		"0% |",
+		"50% |",
+		"100% |",
+		"32m✔",
+		"0 vulnerabilities found\n\n",
+		"For full details, visit:",
+	}
+	for _, assertion := range outputAssertions {
+		if !strings.Contains(string(output), assertion) {
+			t.Errorf("failed to assert %s in output", assertion)
+		}
+	}
 }
 
 func TestScanFailingMetaObject(t *testing.T) {
@@ -130,7 +170,10 @@ func TestScanFailingMetaObject(t *testing.T) {
 }
 
 func TestScanFailingNoFiles(t *testing.T) {
-	var debClient client.IDebClient = client.NewDebClient(nil)
+	var debClient client.IDebClient
+	clientMock := testdata.NewDebClientMock()
+	addMockedFormatsResponse(clientMock)
+	debClient = clientMock
 	var ciService ci.IService = ci.NewService([]ci.ICi{
 		argo.Ci{},
 		azure.Ci{},
@@ -172,39 +215,12 @@ func TestScanBadOpts(t *testing.T) {
 func TestScanEmptyResult(t *testing.T) {
 	var debClient client.IDebClient
 	clientMock := testdata.NewDebClientMock()
-
-	// Create mocked formats response
-	formats := []file.Format{{
-		Regex:           "",
-		LockFileRegexes: []string{"yarn\\.lock"},
-	}}
-	formatsBytes, _ := json.Marshal(formats)
-	formatsMockRes := testdata.MockResponse{
-		StatusCode:   http.StatusOK,
-		ResponseBody: io.NopCloser(bytes.NewReader(formatsBytes)),
-	}
-	clientMock.AddMockUriResponse("/api/1.0/open/files/supported-formats", formatsMockRes)
-
-	// Create mocked file upload response
-	uploadMockRes := testdata.MockResponse{
-		StatusCode:   http.StatusOK,
-		ResponseBody: io.NopCloser(strings.NewReader("{\"ciUploadId\": 1}")),
-	}
-	clientMock.AddMockUriResponse("/api/1.0/open/uploads/dependencies/files", uploadMockRes)
-
-	// Create a mocked finish response
-	finishMockRes := testdata.MockResponse{
-		StatusCode:   http.StatusNoContent,
-		ResponseBody: io.NopCloser(strings.NewReader("{}")),
-	}
-	clientMock.AddMockUriResponse("/api/1.0/open/finishes/dependencies/files/uploads", finishMockRes)
-
+	addMockedFormatsResponse(clientMock)
+	addMockedFileUploadResponse(clientMock)
+	addMockedFinishResponse(clientMock, http.StatusNoContent)
+	addMockedStatusResponse(clientMock, http.StatusOK, 50)
 	// Create mocked scan result response, 201 is returned when the queue time are too long
-	scanMockRes := testdata.MockResponse{
-		StatusCode:   http.StatusCreated,
-		ResponseBody: io.NopCloser(strings.NewReader("{}")),
-	}
-	clientMock.AddMockUriResponse("/api/1.0/open/ci/upload/status", scanMockRes)
+	addMockedStatusResponse(clientMock, http.StatusCreated, 0)
 
 	debClient = clientMock
 
@@ -214,6 +230,9 @@ func TestScanEmptyResult(t *testing.T) {
 	repositoryName := path
 	commitName := "testdata/yarn-commit"
 	cwd, _ := os.Getwd()
+	// reset working directory that has been manipulated in scanner.Scan
+	defer resetWd(t, cwd)
+
 	opts := DebrickedOptions{
 		Path:            path,
 		Exclusions:      nil,
@@ -242,9 +261,6 @@ func TestScanEmptyResult(t *testing.T) {
 	if err != nil || !existsMessageInCMDOutput {
 		t.Error("failed to assert that scan ran without errors. Error:", err)
 	}
-
-	// reset working directory that has been manipulated in scanner.Scan
-	_ = os.Chdir(cwd)
 }
 
 func TestMapEnvToOptions(t *testing.T) {
@@ -406,15 +422,10 @@ func TestSetWorkingDirectory(t *testing.T) {
 		},
 	}
 	cwd, _ := os.Getwd()
+	defer resetWd(t, cwd)
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			err := SetWorkingDirectory(&c.opts)
-			defer func(dir string) {
-				err := os.Chdir(dir)
-				if err != nil {
-					t.Fatal("Can not read the directory: ", dir)
-				}
-			}(cwd)
 
 			if len(c.errMessages) > 0 {
 				containsCorrectErrMsg := false
@@ -430,5 +441,49 @@ func TestSetWorkingDirectory(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func addMockedFormatsResponse(clientMock *testdata.DebClientMock) {
+	formats := []file.Format{{
+		Regex:           "",
+		LockFileRegexes: []string{"yarn\\.lock"},
+	}}
+	formatsBytes, _ := json.Marshal(formats)
+	formatsMockRes := testdata.MockResponse{
+		StatusCode:   http.StatusOK,
+		ResponseBody: io.NopCloser(bytes.NewReader(formatsBytes)),
+	}
+	clientMock.AddMockUriResponse("/api/1.0/open/files/supported-formats", formatsMockRes)
+}
+
+func addMockedFileUploadResponse(clientMock *testdata.DebClientMock) {
+	uploadMockRes := testdata.MockResponse{
+		StatusCode:   http.StatusOK,
+		ResponseBody: io.NopCloser(strings.NewReader("{\"ciUploadId\": 1}")),
+	}
+	clientMock.AddMockUriResponse("/api/1.0/open/uploads/dependencies/files", uploadMockRes)
+}
+
+func addMockedFinishResponse(clientMock *testdata.DebClientMock, statusCode int) {
+	finishMockRes := testdata.MockResponse{
+		StatusCode:   statusCode,
+		ResponseBody: io.NopCloser(strings.NewReader("{}")),
+	}
+	clientMock.AddMockUriResponse("/api/1.0/open/finishes/dependencies/files/uploads", finishMockRes)
+}
+
+func addMockedStatusResponse(clientMock *testdata.DebClientMock, statusCode int, progress int) {
+	finishMockRes := testdata.MockResponse{
+		StatusCode:   statusCode,
+		ResponseBody: io.NopCloser(strings.NewReader(fmt.Sprintf(`{"progress": %d}`, progress))),
+	}
+	clientMock.AddMockUriResponse("/api/1.0/open/ci/upload/status", finishMockRes)
+}
+
+func resetWd(t *testing.T, wd string) {
+	err := os.Chdir(wd)
+	if err != nil {
+		t.Fatal("Can not read the directory: ", wd)
 	}
 }

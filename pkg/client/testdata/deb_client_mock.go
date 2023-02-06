@@ -11,7 +11,7 @@ import (
 type DebClientMock struct {
 	realDebClient    *client.DebClient
 	responseQueue    []MockResponse
-	responseUriQueue map[string]MockResponse
+	responseUriQueue map[string][]MockResponse
 }
 
 func NewDebClientMock() *DebClientMock {
@@ -19,7 +19,7 @@ func NewDebClientMock() *DebClientMock {
 	return &DebClientMock{
 		realDebClient:    debClient,
 		responseQueue:    []MockResponse{},
-		responseUriQueue: map[string]MockResponse{}}
+		responseUriQueue: map[string][]MockResponse{}}
 }
 
 func (mock *DebClientMock) Get(uri string, format string) (*http.Response, error) {
@@ -56,7 +56,12 @@ func (mock *DebClientMock) AddMockResponse(response MockResponse) {
 }
 
 func (mock *DebClientMock) AddMockUriResponse(uri string, response MockResponse) {
-	mock.responseUriQueue[uri] = response
+	_, ok := mock.responseUriQueue[uri]
+	if !ok {
+		mock.responseUriQueue[uri] = []MockResponse{}
+	}
+
+	mock.responseUriQueue[uri] = append(mock.responseUriQueue[uri], response)
 }
 
 func (mock *DebClientMock) RemoveQueryParamsFromUri(uri string) string {
@@ -74,11 +79,11 @@ func (mock *DebClientMock) RemoveQueryParamsFromUri(uri string) string {
 
 func (mock *DebClientMock) popResponse(uri string) (*http.Response, error) {
 	var responseMock MockResponse
-	_, existsInUriQueue := mock.responseUriQueue[uri]
+	uriQueue, existsInUriQueue := mock.responseUriQueue[uri]
 	existsInQueue := len(mock.responseQueue) != 0
-	if existsInUriQueue {
-		responseMock = mock.responseUriQueue[uri]
-		delete(mock.responseUriQueue, uri)
+	if existsInUriQueue && len(uriQueue) > 0 {
+		responseMock = mock.responseUriQueue[uri][0]                // The first element is the one to be dequeued.
+		mock.responseUriQueue[uri] = mock.responseUriQueue[uri][1:] // Slice off the element once it is dequeued.
 	} else if existsInQueue {
 		responseMock = mock.responseQueue[0]        // The first element is the one to be dequeued.
 		mock.responseQueue = mock.responseQueue[1:] // Slice off the element once it is dequeued.
