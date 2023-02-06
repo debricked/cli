@@ -1,52 +1,11 @@
 package client
 
 import (
-	"bytes"
 	"github.com/hashicorp/go-retryablehttp"
 	"net/http"
-	"os"
 )
 
-const DefaultDebrickedUri = "https://debricked.com"
-
-type IDebClient interface {
-	// Post makes a POST request to one of Debricked's API endpoints
-	Post(uri string, contentType string, body *bytes.Buffer) (*http.Response, error)
-	// Get makes a GET request to one of Debricked's API endpoints
-	Get(uri string, format string) (*http.Response, error)
-}
-
-type DebClient struct {
-	host        *string
-	httpClient  *retryablehttp.Client
-	accessToken *string
-	jwtToken    string
-}
-
-func NewDebClient(accessToken *string) *DebClient {
-	if accessToken == nil {
-		accessToken = new(string)
-	}
-	if len(*accessToken) == 0 {
-		*accessToken = os.Getenv("DEBRICKED_TOKEN")
-	}
-	host := os.Getenv("DEBRICKED_URI")
-	if len(host) == 0 {
-		host = DefaultDebrickedUri
-	}
-
-	return &DebClient{
-		host:        &host,
-		httpClient:  newRetryClient(),
-		accessToken: accessToken,
-		jwtToken:    "",
-	}
-}
-
-func (debClient *DebClient) Post(uri string, contentType string, body *bytes.Buffer) (*http.Response, error) {
-	return post(uri, debClient, contentType, body, true)
-}
-
-func (debClient *DebClient) Get(uri string, format string) (*http.Response, error) {
-	return get(uri, debClient, true, format)
+type IClient interface {
+	Do(req *retryablehttp.Request) (*http.Response, error)
+	Post(url, bodyType string, body interface{}) (*http.Response, error)
 }

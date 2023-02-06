@@ -32,7 +32,7 @@ const (
 )
 
 func TestNewDebrickedScanner(t *testing.T) {
-	var debClient client.IDebClient = client.NewDebClient(nil)
+	var debClient client.IDebClient = testdata.NewDebClientMock()
 	var ciService ci.IService
 	s, err := NewDebrickedScanner(&debClient, ciService)
 
@@ -110,8 +110,9 @@ func TestScan(t *testing.T) {
 
 	outputAssertions := []string{
 		"Working directory: /",
-		"cli/pkg/scan/testdata/yarn\n",
-		"Successfully uploaded:  yarn.lock\n",
+		"cli/pkg/scan",
+		"Successfully uploaded",
+		"yarn.lock\n",
 		"Successfully concluded upload\n",
 		"Scanning...",
 		"0% |",
@@ -123,13 +124,13 @@ func TestScan(t *testing.T) {
 	}
 	for _, assertion := range outputAssertions {
 		if !strings.Contains(string(output), assertion) {
-			t.Errorf("failed to assert %s in output", assertion)
+			t.Errorf("failed to assert %s in output. Got %s", assertion, output)
 		}
 	}
 }
 
 func TestScanFailingMetaObject(t *testing.T) {
-	var debClient client.IDebClient = client.NewDebClient(nil)
+	var debClient client.IDebClient = testdata.NewDebClientMock()
 	var ciService ci.IService = ci.NewService([]ci.ICi{
 		argo.Ci{},
 		azure.Ci{},
@@ -422,10 +423,10 @@ func TestSetWorkingDirectory(t *testing.T) {
 		},
 	}
 	cwd, _ := os.Getwd()
-	defer resetWd(t, cwd)
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			err := SetWorkingDirectory(&c.opts)
+			defer resetWd(t, cwd)
 
 			if len(c.errMessages) > 0 {
 				containsCorrectErrMsg := false

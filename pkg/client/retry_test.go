@@ -6,7 +6,7 @@ import (
 )
 
 func TestNewRetryClient(t *testing.T) {
-	c := newRetryClient()
+	c := NewRetryClient()
 	if c.RetryMax != 3 {
 		t.Errorf("failed to assert that RetryMax was %d", c.RetryMax)
 	}

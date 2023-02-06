@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func newRetryClient() *retryablehttp.Client {
+func NewRetryClient() *retryablehttp.Client {
 	client := retryablehttp.NewClient()
 	client.RetryMax = 3
 	client.RetryWaitMax = time.Second * 15

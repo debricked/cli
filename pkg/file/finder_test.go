@@ -3,7 +3,7 @@ package file
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/debricked/cli/pkg/client"
+	"github.com/debricked/cli/pkg/client/testdata"
 	"io"
 	"net/http"
 	"os"
@@ -70,7 +70,7 @@ func TestNewFinder(t *testing.T) {
 		t.Error("failed to assert error message")
 	}
 
-	finder, err = NewFinder(client.NewDebClient(nil))
+	finder, err = NewFinder(testdata.NewDebClientMock())
 	if err != nil {
 		t.Error("failed to assert that no error occurred")
 	}

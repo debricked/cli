@@ -15,7 +15,7 @@ type DebClientMock struct {
 }
 
 func NewDebClientMock() *DebClientMock {
-	debClient := client.NewDebClient(nil)
+	debClient := client.NewDebClient(nil, nil)
 	return &DebClientMock{
 		realDebClient:    debClient,
 		responseQueue:    []MockResponse{},
