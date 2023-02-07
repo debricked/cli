@@ -51,9 +51,9 @@ func TestUploadWithBadFiles(t *testing.T) {
 	}
 }
 
-func TestConcludeWithoutAnyFiles(t *testing.T) {
+func TestInitAnalysisWithoutAnyFiles(t *testing.T) {
 	batch := newUploadBatch(nil, file.Groups{}, nil, "CLI")
-	err := batch.conclude()
+	err := batch.initAnalysis()
 	if err == nil {
 		t.Error("failed to assert that error occurred")
 	}

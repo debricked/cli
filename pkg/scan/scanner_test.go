@@ -113,7 +113,7 @@ func TestScan(t *testing.T) {
 		"cli/pkg/scan",
 		"Successfully uploaded",
 		"yarn.lock\n",
-		"Successfully concluded upload\n",
+		"Successfully initialized scan\n",
 		"Scanning...",
 		"0% |",
 		"50% |",

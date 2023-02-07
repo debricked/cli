@@ -139,12 +139,12 @@ func (uploadBatch *uploadBatch) uploadFile(filePath string) error {
 	return nil
 }
 
-// conclude send the conclusion request to Debricked
-func (uploadBatch *uploadBatch) conclude() error {
+// initAnalysis send the finish request that starts the analysis
+func (uploadBatch *uploadBatch) initAnalysis() error {
 	if uploadBatch.ciUploadId == 0 {
 		return NoFilesErr
 	}
-	body, err := json.Marshal(uploadConclusion{
+	body, err := json.Marshal(uploadFinish{
 		CiUploadId:           strconv.Itoa(uploadBatch.ciUploadId),
 		RepositoryName:       uploadBatch.gitMetaObject.RepositoryName,
 		IntegrationName:      uploadBatch.integrationName,
@@ -166,9 +166,9 @@ func (uploadBatch *uploadBatch) conclude() error {
 	}
 	defer response.Body.Close()
 	if response.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("Failed to conclude upload due to status code %d", response.StatusCode)
+		return fmt.Errorf("Failed to initialize scan due to status code %d", response.StatusCode)
 	} else {
-		fmt.Println("Successfully concluded upload")
+		fmt.Println("Successfully initialized scan")
 	}
 
 	return nil
@@ -248,7 +248,7 @@ type uploadedFile struct {
 	EstimateDaysLeft     int    `json:"estimateDaysLeft"`
 }
 
-type uploadConclusion struct {
+type uploadFinish struct {
 	CiUploadId           string `json:"ciUploadId"`
 	RepositoryName       string `json:"repositoryName"`
 	IntegrationName      string `json:"integrationName"`

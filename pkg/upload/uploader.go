@@ -40,7 +40,7 @@ func (uploader *Uploader) Upload(o IOptions) (*UploadResult, error) {
 		return nil, err
 	}
 
-	err = batch.conclude()
+	err = batch.initAnalysis()
 	if err != nil {
 		return nil, err
 	}
