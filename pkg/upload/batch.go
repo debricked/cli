@@ -17,7 +17,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -125,8 +124,6 @@ func (uploadBatch *uploadBatch) uploadFile(filePath string) error {
 		return err
 	}
 
-	mutex := sync.Mutex{}
-	mutex.Lock()
 	if !uploadBatch.initialized() {
 		data, _ := io.ReadAll(response.Body)
 		defer response.Body.Close()
@@ -138,7 +135,6 @@ func (uploadBatch *uploadBatch) uploadFile(filePath string) error {
 		}
 		uploadBatch.ciUploadId = uFile.CiUploadId
 	}
-	mutex.Unlock()
 
 	return nil
 }
