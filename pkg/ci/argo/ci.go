@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	EnvKey      = "BUILDKITE"
+	EnvKey      = "ARGO_AGENT_TASK_WORKERS"
 	Integration = "argoWorkflows"
 )
 

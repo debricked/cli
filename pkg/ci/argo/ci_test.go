@@ -13,8 +13,9 @@ const (
 )
 
 var argoEnv = map[string]string{
-	"DEBRICKED_GIT_URL": "https://github.com/debricked/cli.git",
-	"BASE_DIRECTORY":    "/",
+	"DEBRICKED_GIT_URL":       "https://github.com/debricked/cli.git",
+	"BASE_DIRECTORY":          "/",
+	"ARGO_AGENT_TASK_WORKERS": "16",
 }
 
 func TestIdentify(t *testing.T) {
