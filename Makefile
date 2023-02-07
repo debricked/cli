@@ -2,7 +2,7 @@ install:
 	bash scripts/install.sh
 
 lint:
-	bash scripts/test_lint.sh
+	bash scripts/lint.sh
 
 test:
 	bash scripts/test_cli.sh

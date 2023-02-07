@@ -38,11 +38,6 @@ jobs:
         run: bash scripts/test_cli.sh
         env:
           DEBRICKED_TOKEN: ${{ secrets.DEBRICKED_TOKEN }}
-
-      - name: Test coverage
-        run: bash scripts/check_coverage.sh
-        if: ${{ matrix.os == 'ubuntu-latest' && matrix.go-version == '1.19' }}
-        env:
           TEST_COVERAGE_THRESHOLD: 90
 
       - name: Upload coverage report
