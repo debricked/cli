@@ -22,7 +22,7 @@ jobs:
           cache: true
       # More assembly might be required: Docker logins, GPG, etc. It all depends
       # on the needs.
-      - uses: goreleaser/goreleaser-action@v3
+      - uses: goreleaser/goreleaser-action@v4
         with:
           distribution: goreleaser
           version: latest
