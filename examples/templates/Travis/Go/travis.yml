@@ -1,0 +1,19 @@
+language: go
+
+services: docker
+jobs:
+  include:
+    - stage: Debricked-scan
+      on:
+        branch: "*"
+      env:
+        -  DEBRICKED_TOKEN=${DEBRICKED_TOKEN}
+      before_install:
+        -  env > file.env
+        -  printf "$(go mod graph)\n\n$(go list -mod=readonly -e -m all)" > .debricked-go-dependencies.txt
+      cache:
+        directories:
+          - $HOME/.cache/go-build
+          - $HOME/gopath/pkg/mod
+      install: skip
+      script: docker run -v $(pwd):$(pwd) --env-file ./file.env debricked/scan

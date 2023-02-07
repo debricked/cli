@@ -1,0 +1,20 @@
+steps:
+  - label: ":maven: mvn dependency:tree"
+    command: mvn dependency:tree -DoutputFile=.debricked-maven-dependencies.tgf -DoutputType=tgf
+    plugins:
+      - docker#v5.3.0:
+          image: maven
+          workdir: /app
+    artifact_paths: "**/.debricked-maven-dependencies.tgf"
+  - wait
+  - label: ":shield: Debricked"
+    command:
+      - buildkite-agent artifact download "**.debricked-gradle-dependencies.txt" .
+      - debricked scan
+    plugins:
+      - docker#v5.3.0:
+          image: "debricked/cli"
+          mount-buildkite-agent: true
+          propagate-environment: true
+          environment:
+            - "DEBRICKED_TOKEN"

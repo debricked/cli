@@ -1,0 +1,21 @@
+stages:
+  - build
+  - scan
+
+build:
+  stage: build
+  image: gradle:alpine
+  script:
+    - sh ./gradlew dependencies > .debricked-gradle-dependencies.txt
+  artifacts:
+    paths:
+      - .debricked-gradle-dependencies.txt
+    expire_in: 1 day
+
+debricked:
+  stage: scan
+  image:
+    name: debricked/cli
+  script: debricked scan
+  variables:
+    DEBRICKED_TOKEN: $DEBRICKED_TOKEN

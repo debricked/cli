@@ -1,0 +1,17 @@
+version: 2.1
+
+jobs:
+  scan:
+    docker:
+      - image: debricked/cli
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/repo
+      - run: debricked scan
+
+workflows:
+  debricked-scan:
+    jobs:
+      - scan

@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: debricked-
+spec:
+  entrypoint: debricked
+  arguments:
+    parameters:
+      - name: git-url # For example: https://github.com/debricked/go-templates.git
+      - name: debricked-token # Consider using kubernetes secrets instead. For more details, see: https://github.com/argoproj/argo-workflows/blob/master/examples/secrets.yaml
+
+  templates:
+    - name: debricked
+      inputs:
+        parameters:
+          - name: git-url
+          - name: debricked-token
+        artifacts:
+          - name: repository
+            path: /repository
+            git: # For more details, see: https://github.com/argoproj/argo-workflows/blob/master/examples/input-artifact-git.yaml
+              repo: "{{inputs.parameters.git-url}}"
+      container:
+        name: 'debricked-scan'
+        image: debricked/cli
+        workingDir: /repository
+        command:
+          - debricked scan
+        env:
+          - name: DEBRICKED_TOKEN
+            value: "{{inputs.parameters.debricked-token}}"
+          - name: DEBRICKED_GIT_URL
+            value: "{{inputs.parameters.git-url}}"

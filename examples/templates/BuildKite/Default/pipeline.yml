@@ -1,0 +1,11 @@
+steps:
+  - label: ":shield: Debricked"
+    command:
+      - debricked scan
+    plugins:
+      - docker#v5.3.0:
+          image: debricked/cli
+          mount-buildkite-agent: true
+          propagate-environment: true
+          environment:
+            - "DEBRICKED_TOKEN"

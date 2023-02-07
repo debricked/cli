@@ -1,0 +1,15 @@
+image:
+  name: atlassian/default-image:2
+
+test: &test
+  step:
+    name: Debricked Scan
+    image: debricked/cli
+    script:
+      - debricked scan
+    services:
+      - docker
+
+pipelines:
+  default:
+    - <<: *test

@@ -1,0 +1,22 @@
+steps:
+  - label: ":gradle: ./gradlew dependencies"
+    command:
+      - sh ./gradlew dependencies > .debricked-gradle-dependencies.txt
+      - rm -rf .gradle
+    plugins:
+      - docker#v5.3.0:
+          image: "gradle:jdk11"
+          workdir: /app
+    artifact_paths: "**/.debricked-gradle-dependencies.txt"
+  - wait
+  - label: ":shield: Debricked"
+    command:
+      - buildkite-agent artifact download "**.debricked-maven-dependencies.txt" .
+      - debricked scan
+    plugins:
+      - docker#v5.3.0:
+          image: "debricked/cli"
+          mount-buildkite-agent: true
+          propagate-environment: true
+          environment:
+            - "DEBRICKED_TOKEN"

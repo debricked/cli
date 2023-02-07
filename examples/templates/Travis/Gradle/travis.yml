@@ -1,0 +1,25 @@
+language: java
+
+services: docker
+jobs:
+  include:
+    - stage: Debricked-scan
+      on:
+        branch: "*"
+      env:
+        -  DEBRICKED_TOKEN=${DEBRICKED_TOKEN}
+
+      before_install:
+        -  env > file.env
+        -  ./gradlew dependencies > .debricked-gradle-dependencies.txt
+
+      #https://docs.travis-ci.com/user/languages/java/#projects-using-gradle
+      before_cache:
+        - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+        - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+      cache:
+        directories:
+          - $HOME/.gradle/caches/
+          - $HOME/.gradle/wrapper/
+      install: skip
+      script: docker run -v $(pwd):$(pwd) --env-file ./file.env  debricked/scan

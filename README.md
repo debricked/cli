@@ -45,23 +45,23 @@ This product is not in a stable phase. Breaking changes can occur at any time.
 
 ## Installation
 Check out the [releases](https://github.com/debricked/cli/releases/latest) page. Choose the asset that is applicable for your system.
-Bellow follow some common ways to install the CLI.
+Below follow some common ways to install the CLI.
 ### Linux
 ```sh
-curl -L https://github.com/debricked/cli/releases/download/v0.0.8/cli_0.0.8_linux_x86_64.tar.gz | tar -xz debricked
+curl -L https://github.com/debricked/cli/releases/download/v0.0.10/cli_0.0.10_linux_x86_64.tar.gz | tar -xz debricked
 ```
 ```sh
 ./debricked
 ```
 ### Mac
 ```sh
-curl -L https://github.com/debricked/cli/releases/download/v0.0.8/cli_0.0.8_macOS_arm64.tar.gz | tar -xz debricked
+curl -L https://github.com/debricked/cli/releases/download/v0.0.10/cli_0.0.10_macOS_arm64.tar.gz | tar -xz debricked
 ```
 ```sh
 ./debricked
 ```
 ### Windows
-1. [Download zip](https://github.com/debricked/cli/releases/download/v0.0.8/cli_0.0.8_windows_x86_64.tar.gz)
+1. [Download zip](https://github.com/debricked/cli/releases/download/v0.0.10/cli_0.0.10_windows_x86_64.tar.gz)
 2. Unpack zip
 ```sh
 .\debricked
@@ -76,9 +76,10 @@ Once you've installed the CLI, you're ready to scan your project. You can scan a
 2. [Create an access token](https://debricked.com/docs/administration/access-tokens.html#creating-access-tokens)
 3. `debricked scan -t <access-token>`
 
-If you would rather use Debricked CLI in your CI/CD pipelines, check out the [docs](https://debricked.com/docs/integrations/ci-build-systems/).
-
 When the scan is complete, you will see the total number of vulnerabilities found and a list of automation rules that have been evaluated. Read more about automations [here](https://debricked.com/docs/automation/automation-overview.html#automation-overview).
+
+### CI/CD integration
+If you would rather use `debricked` in your CI/CD pipelines, check out the [templates](examples/templates).
 
 ## Contributing
 Thank you for your interest in making Debricked CLI even better! Read more about contributing to the

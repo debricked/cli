@@ -1,0 +1,11 @@
+stages:
+  - scan
+
+debricked:
+  stage: scan
+  image:
+    name: debricked/cli
+  script:
+    - debricked scan
+  variables:
+    DEBRICKED_TOKEN: $DEBRICKED_TOKEN

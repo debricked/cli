@@ -1,0 +1,20 @@
+steps:
+  - label: ":go: go mod graph"
+    command: |
+      printf "$(go mod graph)\n\n$(go list -mod=readonly -e -m all)" > .debricked-go-dependencies.txt
+    plugins:
+      - golang#v2.0.0:
+          version: 1.17
+    artifact_paths: "**/.debricked-go-dependencies.txt"
+  - wait
+  - label: ":shield: Debricked"
+    command:
+      - buildkite-agent artifact download "**.debricked-go-dependencies.txt" .
+      - debricked scan
+    plugins:
+      - docker#v5.3.0:
+          image: "debricked/cli"
+          mount-buildkite-agent: true
+          propagate-environment: true
+          environment:
+            - "DEBRICKED_TOKEN"

@@ -1,0 +1,25 @@
+trigger:
+  branches:
+    include:
+      - '*' # Run on all branches
+
+resources:
+  - repo: self
+
+stages:
+  - stage: debricked
+    jobs:
+      - job: debricked
+        displayName: Debricked scan
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - script: printf "$(go mod graph)\n\n$(go list -mod=readonly -e -m all)" > .debricked-go-dependencies.txt
+            displayName: 'go mod graph & go list'
+
+          - script: |
+              env > env.list
+              docker run -v $HOME:$HOME --env-file ./env.list debricked/scan
+            displayName: Debricked scan
+            env:
+              DEBRICKED_TOKEN: $(DEBRICKED_TOKEN)
