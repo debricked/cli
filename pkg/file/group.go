@@ -32,6 +32,10 @@ func (fileGroup *Group) HasFile() bool {
 	return fileGroup.FilePath != ""
 }
 
+func (fileGroup *Group) HasLockFiles() bool {
+	return len(fileGroup.RelatedFiles) > 0
+}
+
 func (fileGroup *Group) GetAllFiles() []string {
 	var files []string
 	if fileGroup.HasFile() {

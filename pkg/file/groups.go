@@ -1,6 +1,14 @@
 package file
 
-import "path/filepath"
+import (
+	"path/filepath"
+)
+
+const (
+	StrictAll          = 0
+	StrictLockAndPairs = 1
+	StrictPairs        = 2
+)
 
 type Groups struct {
 	groups []*Group
@@ -58,6 +66,26 @@ func (gs *Groups) matchExistingGroup(format *CompiledFormat, fileMatch bool, loc
 	}
 
 	return false
+}
+
+func (gs *Groups) FilterGroupsByStrictness(strictness int) {
+	var groups []*Group
+
+	if strictness == StrictAll {
+		return
+	}
+
+	for _, group := range gs.groups {
+		if !group.HasLockFiles() {
+			continue
+		}
+
+		if strictness == StrictLockAndPairs || (strictness == StrictPairs && group.HasFile()) {
+			groups = append(groups, group)
+		}
+	}
+
+	gs.groups = groups
 }
 
 func (gs *Groups) ToSlice() []Group {

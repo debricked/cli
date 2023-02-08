@@ -13,7 +13,7 @@ import (
 )
 
 type IFinder interface {
-	GetGroups(rootPath string, exclusions []string, lockfileOnly bool) (Groups, error)
+	GetGroups(rootPath string, exclusions []string, lockfileOnly bool, strictness int) (Groups, error)
 	GetSupportedFormats() ([]*CompiledFormat, error)
 }
 
@@ -30,7 +30,7 @@ func NewFinder(c client.IDebClient) (*Finder, error) {
 }
 
 // GetGroups return all file groups in specified path recursively.
-func (finder *Finder) GetGroups(rootPath string, exclusions []string, lockfileOnly bool) (Groups, error) {
+func (finder *Finder) GetGroups(rootPath string, exclusions []string, lockfileOnly bool, strictness int) (Groups, error) {
 	var groups Groups
 
 	formats, err := finder.GetSupportedFormats()
@@ -60,6 +60,8 @@ func (finder *Finder) GetGroups(rootPath string, exclusions []string, lockfileOn
 			return nil
 		},
 	)
+
+	groups.FilterGroupsByStrictness(strictness)
 
 	return groups, err
 }

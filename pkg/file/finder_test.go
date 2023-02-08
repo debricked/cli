@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/debricked/cli/pkg/client/testdata"
+	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"os"
@@ -115,7 +116,7 @@ func TestGetGroups(t *testing.T) {
 	excludedFiles := []string{"testdata/go/go.mod", "testdata/misc/requirements.txt"}
 	const nbrOfGroups = 2
 
-	fileGroups, err := finder.GetGroups(path, exclusions, false)
+	fileGroups, err := finder.GetGroups(path, exclusions, false, StrictAll)
 	if err != nil {
 		t.Fatal("failed to assert that no error occurred. Error:", err)
 	}
@@ -227,7 +228,7 @@ func TestGetGroupsWithOnlyLockFiles(t *testing.T) {
 	setUp(true)
 	path := "testdata/misc"
 	const nbrOfGroups = 1
-	fileGroups, err := finder.GetGroups(path, []string{"**/requirements.txt"}, false)
+	fileGroups, err := finder.GetGroups(path, []string{"**/requirements.txt"}, false, StrictAll)
 	if err != nil {
 		t.Fatal("failed to assert that no error occurred. Error:", err)
 	}
@@ -246,5 +247,86 @@ func TestGetGroupsWithOnlyLockFiles(t *testing.T) {
 	file := fileGroup.GetAllFiles()[0]
 	if !strings.Contains(file, "Cargo.lock") {
 		t.Error("failed to assert that the related file was Cargo.lock")
+	}
+}
+
+func TestGetGroupsWithStrictFlag(t *testing.T) {
+	setUp(true)
+	cases := []struct {
+		name                   string
+		strictness             int
+		testedGroupIndex       int
+		expectedNumberOfGroups int
+		expectedManifestFile   string
+		expectedLockFiles      []string
+	}{
+		{
+			name:                   "StrictnessSetTo0",
+			strictness:             StrictAll,
+			testedGroupIndex:       3,
+			expectedNumberOfGroups: 5,
+			expectedManifestFile:   "requirements.txt",
+			expectedLockFiles:      []string{},
+		},
+		{
+			name:                   "StrictnessSetTo1",
+			strictness:             StrictLockAndPairs,
+			testedGroupIndex:       1,
+			expectedNumberOfGroups: 3,
+			expectedManifestFile:   "",
+			expectedLockFiles: []string{
+				"Cargo.lock",
+			},
+		},
+		{
+			name:                   "StrictnessSetTo2",
+			strictness:             StrictPairs,
+			testedGroupIndex:       0,
+			expectedNumberOfGroups: 1,
+			expectedManifestFile:   "composer.json",
+			expectedLockFiles: []string{
+				"composer.lock",
+			},
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			path := "testdata"
+			fileGroups, err := finder.GetGroups(path, []string{}, false, c.strictness)
+			fileGroup := fileGroups.groups[c.testedGroupIndex]
+
+			assert.Nilf(t, err, "failed to assert that no error occurred. Error: %s", err)
+			assert.NotNilf(t, fileGroup, "failed to find group with index: %d", c.testedGroupIndex)
+			assert.Equalf(
+				t,
+				c.expectedNumberOfGroups,
+				fileGroups.Size(),
+				"failed to assert that %d groups were created. %d were found",
+				c.expectedNumberOfGroups,
+				fileGroups.Size(),
+			)
+			assert.Containsf(
+				t,
+				fileGroup.FilePath,
+				c.expectedManifestFile,
+				"actual manifest file %s doesn't match expected %s",
+				fileGroup.FilePath,
+				c.expectedManifestFile,
+			)
+
+			if len(c.expectedLockFiles) > 0 {
+				for i := range c.expectedLockFiles {
+					assert.Containsf(
+						t,
+						fileGroup.RelatedFiles[i],
+						c.expectedLockFiles[i],
+						"actual lock file %s doesn't match expected %s",
+						fileGroup.RelatedFiles[i],
+						c.expectedLockFiles[i],
+					)
+				}
+			}
+		})
 	}
 }

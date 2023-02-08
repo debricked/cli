@@ -5,6 +5,7 @@ import (
 	"github.com/debricked/cli/pkg/file"
 	"github.com/debricked/cli/pkg/file/testdata"
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -33,6 +34,8 @@ func TestNewFindCmd(t *testing.T) {
 	var flagKeys = []string{
 		ExclusionFlag,
 		JsonFlag,
+		LockfileOnlyFlag,
+		StrictFlag,
 	}
 	viperKeys := viper.AllKeys()
 	for _, flagKey := range flagKeys {
@@ -92,7 +95,27 @@ func TestRunEError(t *testing.T) {
 	f.SetGetGroupsReturnMock(file.Groups{}, errorAssertion)
 	runE := RunE(f)
 	err := runE(nil, []string{"."})
-	if err != errorAssertion {
-		t.Fatal("failed to assert that error occured")
-	}
+
+	assert.EqualError(t, err, "finder-error", "error doesn't match expected")
+}
+
+func TestRunEWithInvalidStrictFlag(t *testing.T) {
+	viper.Set(StrictFlag, 123)
+
+	f := testdata.NewFinderMock()
+	runE := RunE(f)
+	err := runE(nil, []string{"."})
+
+	assert.EqualError(t, err, "'strict' supports values within range 0-2", "error doesn't match expected")
+}
+
+func TestRunEWithBothStrictAndLockOnlyFlagsSet(t *testing.T) {
+	viper.Set(StrictFlag, file.StrictLockAndPairs)
+	viper.Set(LockfileOnlyFlag, true)
+
+	f := testdata.NewFinderMock()
+	runE := RunE(f)
+	err := runE(nil, []string{"."})
+
+	assert.EqualError(t, err, "'lockfile' and 'strict' flags are mutually exclusive", "error doesn't match expected")
 }

@@ -2,6 +2,7 @@ package find
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/debricked/cli/pkg/file"
 	"github.com/spf13/cobra"
@@ -12,11 +13,13 @@ import (
 var exclusions = file.DefaultExclusions()
 var jsonPrint bool
 var lockfileOnly bool
+var strictness int
 
 const (
 	ExclusionFlag    = "exclusion"
 	JsonFlag         = "json"
 	LockfileOnlyFlag = "lockfile"
+	StrictFlag       = "strict"
 )
 
 func NewFindCmd(finder file.IFinder) *cobra.Command {
@@ -57,10 +60,18 @@ Format:
 ]
 `)
 	cmd.Flags().BoolVarP(&lockfileOnly, LockfileOnlyFlag, "l", false, "If set, only lock files are found")
+	cmd.Flags().IntVarP(&strictness, StrictFlag, "s", file.StrictAll, `Allows to control which files will be matched:
+Strictness Level | Meaning
+---------------- | -------
+0 (default)      | Returns all matched manifest and lock files regardless if they're paired or not
+1                | Returns only lock files and pairs of manifest and lock-file
+2                | Returns only pairs of manifest and lock-file
+`)
 
 	viper.MustBindEnv(ExclusionFlag)
 	viper.MustBindEnv(JsonFlag)
 	viper.MustBindEnv(LockfileOnlyFlag)
+	viper.MustBindEnv(StrictFlag)
 
 	return cmd
 }
@@ -71,7 +82,18 @@ func RunE(f file.IFinder) func(_ *cobra.Command, args []string) error {
 		if len(args) > 0 {
 			path = args[0]
 		}
-		fileGroups, err := f.GetGroups(path, viper.GetStringSlice(ExclusionFlag), viper.GetBool(LockfileOnlyFlag))
+
+		err := AssertFlagsAreValid()
+		if err != nil {
+			return err
+		}
+
+		fileGroups, err := f.GetGroups(
+			path,
+			viper.GetStringSlice(ExclusionFlag),
+			viper.GetBool(LockfileOnlyFlag),
+			viper.GetInt(StrictFlag),
+		)
 		if err != nil {
 			return err
 		}
@@ -86,4 +108,16 @@ func RunE(f file.IFinder) func(_ *cobra.Command, args []string) error {
 
 		return nil
 	}
+}
+
+func AssertFlagsAreValid() error {
+	if viper.GetBool(LockfileOnlyFlag) && viper.GetInt(StrictFlag) != file.StrictAll {
+		return errors.New("'lockfile' and 'strict' flags are mutually exclusive")
+	}
+
+	if viper.GetInt(StrictFlag) < file.StrictAll || viper.GetInt(StrictFlag) > file.StrictPairs {
+		return errors.New("'strict' supports values within range 0-2")
+	}
+
+	return nil
 }

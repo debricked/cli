@@ -1,6 +1,7 @@
 package file
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -78,5 +79,82 @@ func TestGetFiles(t *testing.T) {
 	const nbrOfFiles = 3
 	if len(files) != nbrOfFiles {
 		t.Errorf("failed to assert that there was %d files", nbrOfFiles)
+	}
+}
+
+func TestFilterGroupsByStrictness(t *testing.T) {
+	g1 := NewGroup("file1", nil, []string{})
+	g2 := NewGroup("", nil, []string{"lockfile2"})
+	g3 := NewGroup("file3", nil, []string{"lockfile3"})
+
+	gs := Groups{}
+	gs.Add(*g1)
+	gs.Add(*g2)
+	gs.Add(*g3)
+
+	cases := []struct {
+		name                   string
+		strictness             int
+		expectedNumberOfGroups int
+		expectedManifestFile   string
+		expectedLockFiles      []string
+	}{
+		{
+			name:                   "StrictnessSetTo0",
+			strictness:             StrictAll,
+			expectedNumberOfGroups: 3,
+			expectedManifestFile:   "file1",
+			expectedLockFiles:      []string{},
+		},
+		{
+			name:                   "StrictnessSetTo1",
+			strictness:             StrictLockAndPairs,
+			expectedNumberOfGroups: 2,
+			expectedManifestFile:   "",
+			expectedLockFiles: []string{
+				"lockfile2",
+			},
+		},
+		{
+			name:                   "StrictnessSetTo2",
+			strictness:             StrictPairs,
+			expectedNumberOfGroups: 1,
+			expectedManifestFile:   "file3",
+			expectedLockFiles: []string{
+				"lockfile3",
+			},
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			gs.FilterGroupsByStrictness(c.strictness)
+			fileGroup := gs.groups[0]
+
+			assert.Equalf(
+				t,
+				c.expectedNumberOfGroups,
+				gs.Size(),
+				"failed to assert that %d groups were created. %d were found",
+				c.expectedNumberOfGroups,
+				gs.Size(),
+			)
+			assert.Equalf(
+				t,
+				fileGroup.FilePath,
+				c.expectedManifestFile,
+				"actual manifest file %s doesn't match expected %s",
+				fileGroup.FilePath,
+				c.expectedManifestFile,
+			)
+			assert.EqualValuesf(
+				t,
+				fileGroup.RelatedFiles,
+				c.expectedLockFiles,
+				"actual lock files list %s doesn't match expected %s",
+				fileGroup.RelatedFiles,
+				c.expectedLockFiles,
+			)
+		})
 	}
 }

@@ -89,7 +89,7 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 		return err
 	}
 
-	fileGroups, err := dScanner.finder.GetGroups(dOptions.Path, dOptions.Exclusions, false)
+	fileGroups, err := dScanner.finder.GetGroups(dOptions.Path, dOptions.Exclusions, false, file.StrictAll)
 	if err != nil {
 		return err
 	}
