@@ -1,6 +1,7 @@
 package file
 
 import (
+	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
 )
@@ -63,6 +64,7 @@ func TestNewCompiledFormat(t *testing.T) {
 		t.Error("failed to assert that one lock file regex exists")
 	}
 }
+
 func TestNewCompiledFormatNoRegexes(t *testing.T) {
 	f := &Format{
 		"",
@@ -123,19 +125,8 @@ func TestNewCompiledFormatBadLockFileRegex(t *testing.T) {
 		url,
 		[]string{")"},
 	}
-	compiledF, err := NewCompiledFormat(f)
-	if err != nil {
-		t.Error("failed to assert that error was nil")
-	}
-	if compiledF.Regex.String() != regex {
-		t.Error("failed to assert that regex was set")
-	}
-	if *compiledF.DocumentationUrl != url {
-		t.Error("failed to assert that documentation url was set")
-	}
-	if len(compiledF.LockFileRegexes) != 0 {
-		t.Error("failed to assert that no lock file regexes exists")
-	}
+	_, err := NewCompiledFormat(f)
+	assert.Error(t, err)
 }
 
 func TestNewCompiledFormatNoFileRegex(t *testing.T) {
@@ -157,6 +148,17 @@ func TestNewCompiledFormatNoFileRegex(t *testing.T) {
 	if len(compiledF.LockFileRegexes) != 1 {
 		t.Error("failed to assert that one lock file regex exists")
 	}
+}
+
+func TestNewCompiledFormatPcre(t *testing.T) {
+	f := &Format{
+		"(?!.+)",
+		"",
+		[]string{"(?!.+)"},
+	}
+	compiledF, err := NewCompiledFormat(f)
+	assert.NoError(t, err)
+	assert.True(t, compiledF.pcre, "failed to assert that the pcre was set to true")
 }
 
 func TestMatchFile(t *testing.T) {
@@ -202,4 +204,26 @@ func TestMatchNoFile(t *testing.T) {
 	if compiledF.MatchFile("nil") {
 		t.Error("failed to assert that no file was matched")
 	}
+}
+
+func TestMatchPcreFile(t *testing.T) {
+	f := &Format{
+		`((?!WORKSPACE|BUILD)).*(?:\.bazel)`,
+		url,
+		[]string{},
+	}
+	compiledF, err := NewCompiledFormat(f)
+	assert.NoError(t, err)
+	assert.True(t, compiledF.MatchFile("deps.bazel"))
+}
+
+func TestMatchPcreLockFile(t *testing.T) {
+	f := &Format{
+		"",
+		url,
+		[]string{`((?!WORKSPACE|BUILD)).*(?:\.bzl)`},
+	}
+	compiledF, err := NewCompiledFormat(f)
+	assert.NoError(t, err)
+	assert.True(t, compiledF.MatchLockFile("deps.bzl"))
 }
