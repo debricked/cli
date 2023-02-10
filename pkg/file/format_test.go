@@ -2,7 +2,6 @@ package file
 
 import (
 	"github.com/stretchr/testify/assert"
-	"strings"
 	"testing"
 )
 
@@ -50,19 +49,13 @@ func TestNewCompiledFormat(t *testing.T) {
 		url,
 		[]string{"lockFileRegex"},
 	}
+
 	compiledF, err := NewCompiledFormat(f)
-	if err != nil {
-		t.Error("failed to assert that error was nil")
-	}
-	if compiledF.Regex.String() != regex {
-		t.Error("failed to assert that regex was set")
-	}
-	if *compiledF.DocumentationUrl != url {
-		t.Error("failed to assert that documentation url was set")
-	}
-	if len(compiledF.LockFileRegexes) != 1 {
-		t.Error("failed to assert that one lock file regex exists")
-	}
+
+	assert.NoError(t, err)
+	assert.Equal(t, regex, compiledF.Regex.String())
+	assert.Equal(t, url, *compiledF.DocumentationUrl, "failed to assert that documentation url was set")
+	assert.Len(t, compiledF.LockFileRegexes, 1, "failed to assert that one lock file regex exists")
 }
 
 func TestNewCompiledFormatNoRegexes(t *testing.T) {
@@ -71,13 +64,12 @@ func TestNewCompiledFormatNoRegexes(t *testing.T) {
 		"",
 		[]string{},
 	}
+
 	compiledF, err := NewCompiledFormat(f)
-	if err != nil {
-		t.Error("failed to assert that no error occurred")
-	}
-	if compiledF == nil {
-		t.Error("failed to assert that compiled format was not nil")
-	}
+
+	assert.NoError(t, err)
+	assert.Nil(t, compiledF.Regex)
+	assert.Len(t, compiledF.LockFileRegexes, 0)
 }
 
 func TestNewCompiledFormatBadRegex(t *testing.T) {
@@ -86,16 +78,12 @@ func TestNewCompiledFormatBadRegex(t *testing.T) {
 		"",
 		[]string{},
 	}
+
 	compiledF, err := NewCompiledFormat(f)
-	if err == nil {
-		t.Error("failed to assert that error occurred")
-	}
-	if strings.Contains("unexpected )", err.Error()) {
-		t.Error("failed to assert error message")
-	}
-	if compiledF == nil {
-		t.Error("failed to assert that compiled format was not nil")
-	}
+
+	assert.Error(t, err)
+	assert.ErrorContains(t, err, "unexpected )")
+	assert.NotNil(t, compiledF)
 }
 
 func TestNewCompiledFormatNoLockFileRegex(t *testing.T) {
@@ -125,8 +113,10 @@ func TestNewCompiledFormatBadLockFileRegex(t *testing.T) {
 		url,
 		[]string{")"},
 	}
-	_, err := NewCompiledFormat(f)
+	compiledF, err := NewCompiledFormat(f)
 	assert.Error(t, err)
+	assert.ErrorContains(t, err, "unexpected )")
+	assert.NotNil(t, compiledF)
 }
 
 func TestNewCompiledFormatNoFileRegex(t *testing.T) {
@@ -136,18 +126,10 @@ func TestNewCompiledFormatNoFileRegex(t *testing.T) {
 		[]string{regex},
 	}
 	compiledF, err := NewCompiledFormat(f)
-	if err != nil {
-		t.Error("failed to assert that error was nil")
-	}
-	if compiledF.Regex != nil {
-		t.Error("failed to assert that regex was set")
-	}
-	if *compiledF.DocumentationUrl != url {
-		t.Error("failed to assert that documentation url was set")
-	}
-	if len(compiledF.LockFileRegexes) != 1 {
-		t.Error("failed to assert that one lock file regex exists")
-	}
+	assert.Nil(t, err)
+	assert.Nil(t, compiledF.Regex)
+	assert.Equal(t, url, *compiledF.DocumentationUrl)
+	assert.Len(t, compiledF.LockFileRegexes, 1, "failed to assert that one lock file regex exists")
 }
 
 func TestNewCompiledFormatPcre(t *testing.T) {
@@ -183,12 +165,8 @@ func TestMatchLockFile(t *testing.T) {
 		[]string{"lockFileRegex"},
 	}
 	compiledF, err := NewCompiledFormat(f)
-	if err != nil {
-		t.Error("failed to assert that error was nil")
-	}
-	if !compiledF.MatchLockFile("/home/test/lockFileRegex.test") {
-		t.Error("failed to find lock file match")
-	}
+	assert.NoError(t, err)
+	assert.True(t, compiledF.MatchLockFile("/home/test/lockFileRegex.test"))
 }
 
 func TestMatchNoFile(t *testing.T) {
@@ -198,12 +176,8 @@ func TestMatchNoFile(t *testing.T) {
 		[]string{"lockFileRegex"},
 	}
 	compiledF, err := NewCompiledFormat(f)
-	if err != nil {
-		t.Error("failed to assert that error was nil")
-	}
-	if compiledF.MatchFile("nil") {
-		t.Error("failed to assert that no file was matched")
-	}
+	assert.NoError(t, err)
+	assert.False(t, compiledF.MatchFile("nil"))
 }
 
 func TestMatchPcreFile(t *testing.T) {

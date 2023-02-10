@@ -38,32 +38,21 @@ func TestMatch(t *testing.T) {
 		gs.groups = nil
 		t.Run(c.name, func(t *testing.T) {
 			gs.Match(compiledF, "/", false)
-			if gs.Size() != 0 {
-				t.Error("failed to assert that groups size was 0")
-			}
+			assert.Equal(t, 0, gs.Size())
 
 			gs.Match(compiledF, c.sequence[0], false)
-			if gs.Size() != 1 {
-				t.Error("failed to assert that there was one Group in Groups")
-			}
+			assert.Equal(t, 1, gs.Size(), "failed to assert that there was one Group in Groups")
+
 			gs.Match(compiledF, c.sequence[1], false)
-			if gs.Size() != 1 {
-				t.Error("failed to assert that there was one Group in Groups")
-			}
+			assert.Equal(t, 1, gs.Size(), "failed to assert that there was one Group in Groups")
 
 			g := gs.groups[0]
-			if g.FilePath != c.file {
-				t.Error("failed to assert that FilePath had correct value directory/composer.json")
-			}
+			assert.Equal(t, c.file, g.FilePath, "failed to assert that FilePath had correct value directory/composer.json")
 
-			if len(g.RelatedFiles) != 1 {
-				t.Error("failed to assert that there was one lock file")
-			}
+			assert.Len(t, g.RelatedFiles, 1, "failed to assert that there was one lock file")
 
 			lockFile := g.RelatedFiles[0]
-			if lockFile != c.lockFile {
-				t.Error("failed to assert lock file name")
-			}
+			assert.Equal(t, c.lockFile, lockFile, "failed to assert lock file name")
 		})
 	}
 }

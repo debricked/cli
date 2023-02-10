@@ -60,52 +60,33 @@ func setUp(auth bool) {
 
 func TestNewFinder(t *testing.T) {
 	finder, err := NewFinder(nil)
-	if err == nil {
-		t.Error("failed to assert that error occurred")
-	}
-	if finder != nil {
-		t.Error("failed to assert that finder was nil")
-	}
 
-	if !strings.Contains(err.Error(), "client is nil") {
-		t.Error("failed to assert error message")
-	}
+	assert.NotNil(t, err)
+	assert.Nil(t, finder)
+	assert.ErrorContains(t, err, "client is nil")
 
 	finder, err = NewFinder(testdata.NewDebClientMock())
-	if err != nil {
-		t.Error("failed to assert that no error occurred")
-	}
-	if finder == nil {
-		t.Error("failed to assert that finder was not nil")
-	}
+	assert.Nil(t, err)
+	assert.NotNil(t, finder)
 }
 
 func TestGetSupportedFormats(t *testing.T) {
 	setUp(true)
 	formats, err := finder.GetSupportedFormats()
-	if err != nil {
-		t.Fatal("failed to assert that no error occurred. Error:", err)
-	}
-	if len(formats) == 0 {
-		t.Error("failed to assert that there is formats")
-	}
+	assert.NoError(t, err)
+	assert.GreaterOrEqual(t, len(formats), 1)
 	for _, format := range formats {
 		hasContent := format.Regex != nil || len(format.LockFileRegexes) > 0
-		if !hasContent {
-			t.Error("failed to assert that format had content")
-		}
+		assert.True(t, hasContent, "failed to assert that format had content")
 	}
 }
 
 func TestGetSupportedFormatsFailed(t *testing.T) {
 	setUp(false)
 	formats, err := finder.GetSupportedFormats()
-	if len(formats) > 0 {
-		t.Error("failed to assert that no formats were found")
-	}
-	if !strings.Contains(err.Error(), "failed to fetch supported formats") {
-		t.Error("failed to assert error message")
-	}
+	assert.Error(t, err)
+	assert.ErrorContains(t, err, "failed to fetch supported formats")
+	assert.Empty(t, formats)
 }
 
 func TestGetGroups(t *testing.T) {
@@ -117,24 +98,20 @@ func TestGetGroups(t *testing.T) {
 	const nbrOfGroups = 2
 
 	fileGroups, err := finder.GetGroups(path, exclusions, false, StrictAll)
-	if err != nil {
-		t.Fatal("failed to assert that no error occurred. Error:", err)
-	}
-	if fileGroups.Size() != nbrOfGroups {
-		t.Errorf("failed to assert that %d groups were created. %d was found", nbrOfGroups, fileGroups.Size())
-	}
+
+	assert.NoError(t, err)
+	assert.Equalf(t, nbrOfGroups, fileGroups.Size(), "failed to assert that %d groups were created. %d was found", nbrOfGroups, fileGroups.Size())
+
 	for _, fileGroup := range fileGroups.ToSlice() {
+
 		hasContent := fileGroup.CompiledFormat != nil && (strings.Contains(fileGroup.FilePath, path) || len(fileGroup.RelatedFiles) > 0)
-		if !hasContent {
-			t.Error("failed to assert that format had content")
-		}
+		assert.True(t, hasContent, "failed to assert that format had content")
+
 		groupFiles := fileGroup.RelatedFiles
 		groupFiles = append(groupFiles, fileGroup.FilePath)
 		for _, groupFile := range groupFiles {
 			for _, exFile := range excludedFiles {
-				if groupFile == exFile {
-					t.Error("failed to assert that file was excluded")
-				}
+				assert.NotEqualf(t, groupFile, exFile, "failed to assert that file was excluded")
 			}
 		}
 	}
@@ -202,9 +179,8 @@ func TestExclude(t *testing.T) {
 					excludedFiles = append(excludedFiles, file)
 				}
 			}
-			if len(excludedFiles) != len(c.expectedExclusions) {
-				t.Error("failed to assert that the same number of files were ignored")
-			}
+
+			assert.Equal(t, len(c.expectedExclusions), len(excludedFiles), "failed to assert that the same number of files were ignored")
 
 			for _, file := range excludedFiles {
 				baseName := filepath.Base(file)
@@ -216,9 +192,8 @@ func TestExclude(t *testing.T) {
 						break
 					}
 				}
-				if !asserted {
-					t.Errorf("%s ignored when it should pass", file)
-				}
+
+				assert.Truef(t, asserted, "%s ignored when it should pass", file)
 			}
 		})
 	}
@@ -229,25 +204,16 @@ func TestGetGroupsWithOnlyLockFiles(t *testing.T) {
 	path := "testdata/misc"
 	const nbrOfGroups = 1
 	fileGroups, err := finder.GetGroups(path, []string{"**/requirements.txt"}, false, StrictAll)
-	if err != nil {
-		t.Fatal("failed to assert that no error occurred. Error:", err)
-	}
-	if fileGroups.Size() != nbrOfGroups {
-		t.Fatalf("failed to assert that %d groups were created. %d was found", nbrOfGroups, fileGroups.Size())
-	}
+	assert.NoError(t, err)
+	assert.Equalf(t, nbrOfGroups, fileGroups.Size(), "failed to assert that %d groups were created. %d was found", nbrOfGroups, fileGroups.Size())
 
 	fileGroup := fileGroups.groups[0]
-	if fileGroup.HasFile() {
-		t.Error("failed to assert that file group lacked file")
-	}
-	if len(fileGroup.RelatedFiles) != 1 {
-		t.Error("failed to assert that there was one related file")
-	}
+	assert.False(t, fileGroup.HasFile(), "failed to assert that file group lacked file")
+	assert.Len(t, fileGroup.RelatedFiles, 1, "failed to assert that there was one related file")
 
 	file := fileGroup.GetAllFiles()[0]
-	if !strings.Contains(file, "Cargo.lock") {
-		t.Error("failed to assert that the related file was Cargo.lock")
-	}
+
+	assert.Contains(t, file, "Cargo.lock", "failed to assert that the related file was Cargo.lock")
 }
 
 func TestGetGroupsWithStrictFlag(t *testing.T) {
