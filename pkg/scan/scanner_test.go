@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -64,6 +65,9 @@ func TestNewDebrickedScannerWithError(t *testing.T) {
 }
 
 func TestScan(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skipf("TestScan is skipped due to Windows env")
+	}
 	var debClient client.IDebClient
 	clientMock := testdata.NewDebClientMock()
 	addMockedFormatsResponse(clientMock)
@@ -214,6 +218,9 @@ func TestScanBadOpts(t *testing.T) {
 }
 
 func TestScanEmptyResult(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skipf("TestScan is skipped due to Windows env")
+	}
 	var debClient client.IDebClient
 	clientMock := testdata.NewDebClientMock()
 	addMockedFormatsResponse(clientMock)
