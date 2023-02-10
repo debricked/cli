@@ -26,7 +26,6 @@ func (_ Ci) Map() (env.Env, error) {
 	e.Branch = os.Getenv("BITBUCKET_BRANCH")
 	e.RepositoryUrl = os.Getenv("BITBUCKET_GIT_HTTP_ORIGIN")
 	e.Integration = Integration
-	e.Filepath = "."
 	repo, err := git.FindRepository(e.Filepath)
 	if err != nil {
 		return e, err

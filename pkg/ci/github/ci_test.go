@@ -82,7 +82,7 @@ func TestParse(t *testing.T) {
 			}
 
 			env, _ := ci.Map()
-			if env.Filepath != "." {
+			if env.Filepath != "" {
 				t.Error("failed to assert that env contained correct filepath")
 			}
 			if env.Integration != Integration {

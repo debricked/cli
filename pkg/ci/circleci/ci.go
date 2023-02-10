@@ -27,7 +27,6 @@ func (ci Ci) Map() (env.Env, error) {
 	e.Branch = os.Getenv("CIRCLE_BRANCH")
 	e.RepositoryUrl = ci.MapRepositoryUrl(os.Getenv("CIRCLE_REPOSITORY_URL"))
 	e.Integration = Integration
-	e.Filepath = "."
 	repo, err := git.FindRepository(e.Filepath)
 	if err != nil {
 

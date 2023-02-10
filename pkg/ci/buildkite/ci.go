@@ -27,7 +27,6 @@ func (ci Ci) Map() (env.Env, error) {
 	e.Branch = os.Getenv("BUILDKITE_BRANCH")
 	e.RepositoryUrl = ci.MapRepositoryUrl(os.Getenv("BUILDKITE_REPO"))
 	e.Integration = Integration
-	e.Filepath = "."
 	repo, err := git.FindRepository(e.Filepath)
 	if err != nil {
 

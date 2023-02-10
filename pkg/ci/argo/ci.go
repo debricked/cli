@@ -22,7 +22,6 @@ func (_ Ci) Identify() bool {
 
 func (ci Ci) Map() (env.Env, error) {
 	e := env.Env{}
-	e.Filepath = "."
 	e.Repository = ci.MapRepository(os.Getenv("DEBRICKED_GIT_URL"))
 	e.RepositoryUrl = ci.MapRepositoryUrl(os.Getenv("DEBRICKED_GIT_URL"))
 	e.Integration = Integration

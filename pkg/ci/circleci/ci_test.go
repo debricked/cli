@@ -99,7 +99,7 @@ func TestMapRepositoryUrlGit(t *testing.T) {
 }
 
 func assertEnv(env env.Env, t *testing.T) {
-	if env.Filepath != "." {
+	if env.Filepath != "" {
 		t.Error("failed to assert that env contained correct filepath")
 	}
 	if env.Integration != Integration {
