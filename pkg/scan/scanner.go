@@ -155,7 +155,7 @@ func MapEnvToOptions(o *DebrickedOptions, env env.Env) {
 			o.IntegrationName = env.Integration
 		}
 	}
-	if len(env.Filepath) > 0 {
+	if len(o.Path) == 0 && len(env.Filepath) > 0 {
 		o.Path = env.Filepath
 	}
 }

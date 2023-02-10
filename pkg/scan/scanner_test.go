@@ -19,6 +19,7 @@ import (
 	"github.com/debricked/cli/pkg/file"
 	"github.com/debricked/cli/pkg/git"
 	"github.com/debricked/cli/pkg/upload"
+	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"os"
@@ -28,9 +29,18 @@ import (
 	"testing"
 )
 
-const (
-	testdataYarn = "testdata/yarn"
-)
+var testdataYarn = filepath.Join("testdata", "yarn")
+
+var ciService ci.IService = ci.NewService([]ci.ICi{
+	argo.Ci{},
+	azure.Ci{},
+	bitbucket.Ci{},
+	buildkite.Ci{},
+	circleci.Ci{},
+	//github.Ci{}, Since GitHub actions is used, this ICi is ignored
+	gitlab.Ci{},
+	travis.Ci{},
+})
 
 func TestNewDebrickedScanner(t *testing.T) {
 	var debClient client.IDebClient = testdata.NewDebClientMock()
@@ -135,16 +145,6 @@ func TestScan(t *testing.T) {
 
 func TestScanFailingMetaObject(t *testing.T) {
 	var debClient client.IDebClient = testdata.NewDebClientMock()
-	var ciService ci.IService = ci.NewService([]ci.ICi{
-		argo.Ci{},
-		azure.Ci{},
-		bitbucket.Ci{},
-		buildkite.Ci{},
-		circleci.Ci{},
-		//github.Ci{}, Since GitHub actions is used, this ICi is ignored
-		gitlab.Ci{},
-		travis.Ci{},
-	})
 	scanner, _ := NewDebrickedScanner(&debClient, ciService)
 	cwd, _ := os.Getwd()
 	path := testdataYarn
@@ -179,16 +179,6 @@ func TestScanFailingNoFiles(t *testing.T) {
 	clientMock := testdata.NewDebClientMock()
 	addMockedFormatsResponse(clientMock)
 	debClient = clientMock
-	var ciService ci.IService = ci.NewService([]ci.ICi{
-		argo.Ci{},
-		azure.Ci{},
-		bitbucket.Ci{},
-		buildkite.Ci{},
-		circleci.Ci{},
-		//github.Ci{}, Since GitHub actions is used, this ICi is ignored
-		gitlab.Ci{},
-		travis.Ci{},
-	})
 	scanner, _ := NewDebrickedScanner(&debClient, ciService)
 	opts := DebrickedOptions{
 		Path:            "",
@@ -271,6 +261,30 @@ func TestScanEmptyResult(t *testing.T) {
 	}
 }
 
+func TestScanInCiWithPathSet(t *testing.T) {
+	var debClient client.IDebClient = testdata.NewDebClientMock()
+	scanner, _ := NewDebrickedScanner(&debClient, ciService)
+	cwd, _ := os.Getwd()
+	defer resetWd(t, cwd)
+	path := testdataYarn
+	_ = os.Setenv("GITLAB_CI", "gitlab")
+	_ = os.Setenv("CI_PROJECT_DIR", ".")
+	opts := DebrickedOptions{
+		Path:            path,
+		Exclusions:      nil,
+		RepositoryName:  "",
+		CommitName:      "",
+		BranchName:      "",
+		CommitAuthor:    "",
+		RepositoryUrl:   "",
+		IntegrationName: "",
+	}
+	err := scanner.Scan(opts)
+	assert.ErrorIs(t, git.RepositoryNameError, err)
+	cwd, _ = os.Getwd()
+	assert.Contains(t, cwd, testdataYarn)
+}
+
 func TestMapEnvToOptions(t *testing.T) {
 	dOptionsTemplate := DebrickedOptions{
 		Path:            "path",
@@ -316,7 +330,7 @@ func TestMapEnvToOptions(t *testing.T) {
 				IntegrationName: github.Integration,
 			},
 			opts: DebrickedOptions{
-				Path:            "input-path",
+				Path:            "",
 				Exclusions:      nil,
 				RepositoryName:  "",
 				CommitName:      "",
@@ -367,35 +381,50 @@ func TestMapEnvToOptions(t *testing.T) {
 				Filepath:      "",
 			},
 		},
+		{
+			name: "CI env set with directory path",
+			template: DebrickedOptions{
+				Path:            "input-path",
+				Exclusions:      nil,
+				RepositoryName:  "env-repository",
+				CommitName:      "env-commit",
+				BranchName:      "env-branch",
+				CommitAuthor:    "author",
+				RepositoryUrl:   "env-url",
+				IntegrationName: github.Integration,
+			},
+			opts: DebrickedOptions{
+				Path:            "input-path",
+				Exclusions:      nil,
+				RepositoryName:  "",
+				CommitName:      "",
+				BranchName:      "",
+				CommitAuthor:    "author",
+				RepositoryUrl:   "",
+				IntegrationName: "CLI",
+			},
+			env: env.Env{
+				Repository:    "env-repository",
+				Commit:        "env-commit",
+				Branch:        "env-branch",
+				Author:        "env-author",
+				RepositoryUrl: "env-url",
+				Integration:   github.Integration,
+				Filepath:      "env-path",
+			},
+		},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			MapEnvToOptions(&c.opts, c.env)
-			strings.EqualFold(c.opts.Path, c.template.Path)
-			if !strings.EqualFold(c.opts.Path, c.template.Path) {
-				t.Errorf("Failed to assert that %s was equal to %s", c.opts.Path, c.template.Path)
-			}
-			if c.opts.Exclusions != nil {
-				t.Errorf("Failed to assert that Exclusions was nil")
-			}
-			if c.opts.RepositoryName != c.template.RepositoryName {
-				t.Errorf("Failed to assert that %s was equal to %s", c.opts.RepositoryName, c.template.RepositoryName)
-			}
-			if c.opts.CommitName != c.template.CommitName {
-				t.Errorf("Failed to assert that %s was equal to %s", c.opts.CommitName, c.template.CommitName)
-			}
-			if c.opts.BranchName != c.template.BranchName {
-				t.Errorf("Failed to assert that %s was equal to %s", c.opts.BranchName, c.template.BranchName)
-			}
-			if c.opts.CommitAuthor != c.template.CommitAuthor {
-				t.Errorf("Failed to assert that %s was equal to %s", c.opts.CommitAuthor, c.template.CommitAuthor)
-			}
-			if c.opts.RepositoryUrl != c.template.RepositoryUrl {
-				t.Errorf("Failed to assert that %s was equal to %s", c.opts.RepositoryUrl, c.template.RepositoryUrl)
-			}
-			if c.opts.IntegrationName != c.template.IntegrationName {
-				t.Errorf("Failed to assert that %s was equal to %s", c.opts.IntegrationName, c.template.IntegrationName)
-			}
+			assert.Equal(t, c.template.Path, c.opts.Path)
+			assert.Nil(t, c.opts.Exclusions)
+			assert.Equal(t, c.template.RepositoryName, c.opts.RepositoryName)
+			assert.Equal(t, c.template.CommitName, c.opts.CommitName)
+			assert.Equal(t, c.template.BranchName, c.opts.BranchName)
+			assert.Equal(t, c.template.CommitAuthor, c.opts.CommitAuthor)
+			assert.Equal(t, c.template.RepositoryUrl, c.opts.RepositoryUrl)
+			assert.Equal(t, c.template.IntegrationName, c.opts.IntegrationName)
 		})
 	}
 }
