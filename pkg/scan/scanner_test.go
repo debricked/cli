@@ -47,13 +47,8 @@ func TestNewDebrickedScanner(t *testing.T) {
 	var ciService ci.IService
 	s, err := NewDebrickedScanner(&debClient, ciService)
 
-	if err != nil {
-		t.Error("failed to assert that no error occurred")
-	}
-
-	if s == nil {
-		t.Error("failed to assert that scanner was not nil")
-	}
+	assert.NoError(t, err)
+	assert.NotNil(t, s)
 }
 
 func TestNewDebrickedScannerWithError(t *testing.T) {
@@ -61,17 +56,9 @@ func TestNewDebrickedScannerWithError(t *testing.T) {
 	var ciService ci.IService
 	s, err := NewDebrickedScanner(&debClient, ciService)
 
-	if err == nil {
-		t.Error("failed to assert that an error occurred")
-	}
-
-	if s != nil {
-		t.Error("failed to assert that scanner was nil")
-	}
-
-	if !strings.Contains(err.Error(), "failed to initialize the uploader") {
-		t.Error("failed to assert error message")
-	}
+	assert.Error(t, err)
+	assert.Nil(t, s)
+	assert.ErrorContains(t, err, "failed to initialize the uploader")
 }
 
 func TestScan(t *testing.T) {
@@ -137,9 +124,7 @@ func TestScan(t *testing.T) {
 		"For full details, visit:",
 	}
 	for _, assertion := range outputAssertions {
-		if !strings.Contains(string(output), assertion) {
-			t.Errorf("failed to assert %s in output. Got %s", assertion, output)
-		}
+		assert.Contains(t, string(output), assertion)
 	}
 }
 
@@ -158,19 +143,16 @@ func TestScanFailingMetaObject(t *testing.T) {
 		RepositoryUrl:   "",
 		IntegrationName: "",
 	}
+
 	err := scanner.Scan(opts)
-	if err != git.RepositoryNameError {
-		t.Error("failed to assert that RepositoryNameError occurred")
-	}
-	// reset working directory that has been manipulated in scanner.Scan
+
+	assert.ErrorIs(t, err, git.RepositoryNameError)
 	_ = os.Chdir(cwd)
 
 	opts.RepositoryName = path
 	err = scanner.Scan(opts)
-	if err != git.CommitNameError {
-		t.Error("failed to assert that CommitNameError occurred")
-	}
-	// reset working directory that has been manipulated in scanner.Scan
+
+	assert.ErrorIs(t, err, git.CommitNameError)
 	_ = os.Chdir(cwd)
 }
 
@@ -192,19 +174,17 @@ func TestScanFailingNoFiles(t *testing.T) {
 	}
 	err := scanner.Scan(opts)
 
-	if err != upload.NoFilesErr {
-		t.Error("failed to assert that error NoFilesErr occurred")
-	}
+	assert.ErrorIs(t, err, upload.NoFilesErr)
 }
 
 func TestScanBadOpts(t *testing.T) {
 	var c client.IDebClient
 	scanner, _ := NewDebrickedScanner(&c, nil)
 	var opts IOptions
+
 	err := scanner.Scan(opts)
-	if err != BadOptsErr {
-		t.Error("failed to assert that BadOptsErr occurred")
-	}
+
+	assert.ErrorIs(t, err, BadOptsErr)
 }
 
 func TestScanEmptyResult(t *testing.T) {
@@ -256,9 +236,8 @@ func TestScanEmptyResult(t *testing.T) {
 		string(out),
 		"Progress polling terminated due to long scan times. Please try again later")
 
-	if err != nil || !existsMessageInCMDOutput {
-		t.Error("failed to assert that scan ran without errors. Error:", err)
-	}
+	assert.NoError(t, err, "failed to assert that scan ran without errors")
+	assert.True(t, existsMessageInCMDOutput, "failed to assert that scan ran without errors")
 }
 
 func TestScanInCiWithPathSet(t *testing.T) {
@@ -469,13 +448,9 @@ func TestSetWorkingDirectory(t *testing.T) {
 				for _, errMsg := range c.errMessages {
 					containsCorrectErrMsg = containsCorrectErrMsg || strings.Contains(err.Error(), errMsg)
 				}
-				if !containsCorrectErrMsg {
-					t.Errorf("failed to assert that error message contained either of: %s or %s. Got: %s", c.errMessages[0], c.errMessages[1], err.Error())
-				}
+				assert.Truef(t, containsCorrectErrMsg, "failed to assert that error message contained either of: %s or %s. Got: %s", c.errMessages[0], c.errMessages[1], err.Error())
 			} else {
-				if len(c.opts.Path) != 0 {
-					t.Errorf("failed to assert that Path was empty. Got: %s", c.opts.Path)
-				}
+				assert.Lenf(t, c.opts.Path, 0, "failed to assert that Path was empty. Got: %s", c.opts.Path)
 			}
 		})
 	}
