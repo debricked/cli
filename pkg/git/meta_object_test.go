@@ -34,7 +34,7 @@ func TestNewMetaObjectWithoutCommit(t *testing.T) {
 }
 
 func TestNewMetaObjectWithoutHead(t *testing.T) {
-	cwd, err := testdata.SetUpGitRepository(false)
+	cwd, err := testdata.SetUpGitRepository(t, false)
 	if err != nil {
 		t.Fatal("failed to initialize repository", err)
 	}

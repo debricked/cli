@@ -1,28 +1,21 @@
 package util
 
 import (
+	"github.com/debricked/cli/pkg/ci/testdata"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 )
 
 func TestEnvKeyIsSet(t *testing.T) {
 	envKey := "DEBRICKED_CLI_KEY"
-	if EnvKeyIsSet(envKey) {
-		t.Error("failed to assert that env key was not set")
-	}
+	assert.False(t, EnvKeyIsSet(envKey), "failed to assert that env key was not set")
 
 	_ = os.Setenv(envKey, "")
-	if EnvKeyIsSet(envKey) {
-		t.Error("failed to assert that env key lacked value")
-	}
+	defer testdata.UnsetEnvVar(t, envKey)
+
+	assert.False(t, EnvKeyIsSet(envKey), "failed to assert that env key lacked value")
 
 	_ = os.Setenv(envKey, "value")
-	if !EnvKeyIsSet(envKey) {
-		t.Error("failed to assert that env key was set")
-	}
-
-	err := os.Unsetenv(envKey)
-	if err != nil {
-		t.Fatal("failed to reset env var")
-	}
+	assert.True(t, EnvKeyIsSet(envKey), "failed to assert that env key was set")
 }

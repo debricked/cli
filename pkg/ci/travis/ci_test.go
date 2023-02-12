@@ -3,7 +3,7 @@ package travis
 import (
 	"github.com/debricked/cli/pkg/ci/env"
 	"github.com/debricked/cli/pkg/ci/testdata"
-	"os"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -15,61 +15,30 @@ var travisEnv = map[string]string{
 }
 
 func TestIdentify(t *testing.T) {
-	ci := Ci{}
-
-	if ci.Identify() {
-		t.Error("failed to assert that CI was not identified")
-	}
-
-	_ = os.Setenv(EnvKey, "value")
-	defer os.Unsetenv(EnvKey)
-
-	if !ci.Identify() {
-		t.Error("failed to assert that CI was identified")
-	}
+	testdata.AssertIdentify(t, Ci{}.Identify, EnvKey)
 }
 
 func TestParse(t *testing.T) {
-	err := testdata.SetUpCiEnv(travisEnv)
-	defer testdata.ResetEnv(travisEnv, t)
-	if err != nil {
-		t.Error(err)
-	}
+	testdata.SetUpCiEnv(t, travisEnv)
+	defer testdata.ResetEnv(t, travisEnv)
 
-	cwd, err := testdata.SetUpGitRepository(true)
+	cwd := testdata.SetUpGitRepository(t, true)
 	defer testdata.TearDownGitRepository(cwd, t)
-	if err != nil {
-		t.Error("failed to initialize repository", err)
-	}
 
 	ci := Ci{}
-	env, err := ci.Map()
+	e, err := ci.Map()
 	if err != nil {
 		t.Error("failed to assert that no error occurred")
 	}
-	assertEnv(env, t)
+	assertEnv(t, e)
 }
 
-func assertEnv(env env.Env, t *testing.T) {
-	if env.Filepath != "." {
-		t.Error("failed to assert that env contained correct filepath")
-	}
-	if env.Integration != Integration {
-		t.Error("failed to assert that env contained correct integration")
-	}
-	if len(env.Author) == 0 {
-		t.Error("failed to assert that env contained correct author")
-	}
-	if env.Branch != "main" {
-		t.Error("failed to assert that env contained correct branch")
-	}
-	if env.RepositoryUrl != "https://github.com/debricked/cli" {
-		t.Error("failed to assert that env contained correct repository URL")
-	}
-	if env.Commit != "commit" {
-		t.Error("failed to assert that env contained correct commit")
-	}
-	if env.Repository != "debricked/cli" {
-		t.Error("faield to assert that env contained correct repository")
-	}
+func assertEnv(t *testing.T, env env.Env) {
+	assert.Equal(t, travisEnv["TRAVIS_BUILD_DIR"], env.Filepath)
+	assert.Equal(t, Integration, env.Integration)
+	assert.NotEmpty(t, env.Author)
+	assert.Equal(t, travisEnv["TRAVIS_BRANCH"], env.Branch)
+	assert.Equal(t, "https://github.com/debricked/cli", env.RepositoryUrl)
+	assert.Equal(t, travisEnv["TRAVIS_COMMIT"], env.Commit)
+	assert.Equal(t, "debricked/cli", env.Repository)
 }

@@ -7,36 +7,39 @@ import (
 	"testing"
 )
 
-func SetUpCiEnv(env map[string]string) error {
+func SetUpCiEnv(t *testing.T, env map[string]string) {
 	for variable, value := range env {
 		err := os.Setenv(variable, value)
 		if err != nil {
-			return err
+			t.Fatal("failed to set up Ci env. Err: ", err)
 		}
 	}
-	return nil
 }
 
-func SetUpGitRepository(includeCommit bool) (string, error) {
+func SetUpGitRepository(t *testing.T, includeCommit bool) string {
 	cwd, _ := os.Getwd()
 	repoDir := cwd + "/testdata/"
 	repo, err := git.PlainInit(repoDir, false)
 	if err != nil {
-		return cwd, err
+		t.Fatal(err)
 	}
 	w, err := repo.Worktree()
 	if err != nil {
-		return cwd, err
+		t.Fatal(err)
 	}
 	if includeCommit {
 		_, err = w.Commit("Initial commit", &git.CommitOptions{Author: &object.Signature{Name: "author"}})
 		if err != nil {
-			return cwd, err
+			t.Fatal(err)
 		}
 	}
 
 	err = os.Chdir(repoDir)
-	return cwd, err
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return cwd
 }
 
 func TearDownGitRepository(dir string, t *testing.T) {
@@ -56,11 +59,15 @@ func TearDownGitRepository(dir string, t *testing.T) {
 	}
 }
 
-func ResetEnv(ciEnv map[string]string, t *testing.T) {
+func ResetEnv(t *testing.T, ciEnv map[string]string) {
 	for _, variable := range ciEnv {
-		err := os.Unsetenv(variable)
-		if err != nil {
-			t.Fatal(err)
-		}
+		UnsetEnvVar(t, variable)
+	}
+}
+
+func UnsetEnvVar(t *testing.T, envVar string) {
+	err := os.Unsetenv(envVar)
+	if err != nil {
+		t.Fatal(err)
 	}
 }

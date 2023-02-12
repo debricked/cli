@@ -3,7 +3,7 @@ package bitbucket
 import (
 	"github.com/debricked/cli/pkg/ci/env"
 	"github.com/debricked/cli/pkg/ci/testdata"
-	"os"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -17,62 +17,30 @@ var bitbucketEnv = map[string]string{
 }
 
 func TestIdentify(t *testing.T) {
-	ci := Ci{}
-
-	if ci.Identify() {
-		t.Error("failed to assert that CI was not identified")
-	}
-
-	_ = os.Setenv(EnvKey, "value")
-	defer os.Unsetenv(EnvKey)
-
-	if !ci.Identify() {
-		t.Error("failed to assert that CI was identified")
-	}
+	testdata.AssertIdentify(t, Ci{}.Identify, EnvKey)
 }
 
 func TestParse(t *testing.T) {
-	err := testdata.SetUpCiEnv(bitbucketEnv)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer testdata.ResetEnv(bitbucketEnv, t)
+	testdata.SetUpCiEnv(t, bitbucketEnv)
+	defer testdata.ResetEnv(t, bitbucketEnv)
 
-	cwd, err := testdata.SetUpGitRepository(true)
-	if err != nil {
-		t.Fatal("failed to initialize repository", err)
-	}
+	cwd := testdata.SetUpGitRepository(t, true)
 	defer testdata.TearDownGitRepository(cwd, t)
 
 	ci := Ci{}
-	env, err := ci.Map()
+	e, err := ci.Map()
 	if err != nil {
 		t.Error("failed to assert that no error occurred")
 	}
-	assertEnv(env, t)
+	assertEnv(e, t)
 }
 
 func assertEnv(env env.Env, t *testing.T) {
-
-	if env.Filepath != "" {
-		t.Error("failed to assert that env contained correct filepath")
-	}
-	if env.Integration != Integration {
-		t.Error("failed to assert that env contained correct integration")
-	}
-	if len(env.Author) == 0 {
-		t.Error("failed to assert that env contained correct author")
-	}
-	if env.Branch != "main" {
-		t.Error("failed to assert that env contained correct branch")
-	}
-	if env.RepositoryUrl != "https://github.com/debricked/cli" {
-		t.Error("failed to assert that env contained correct repository URL")
-	}
-	if env.Commit != "commit" {
-		t.Error("failed to assert that env contained correct commit")
-	}
-	if env.Repository != "debricked/cli" {
-		t.Error("faield to assert that env contained correct repository")
-	}
+	assert.Empty(t, env.Filepath)
+	assert.Equal(t, Integration, env.Integration)
+	assert.NotEmpty(t, env.Author)
+	assert.Equal(t, bitbucketEnv["BITBUCKET_BRANCH"], env.Branch)
+	assert.Equal(t, bitbucketEnv["BITBUCKET_GIT_HTTP_ORIGIN"], env.RepositoryUrl)
+	assert.Equal(t, bitbucketEnv["BITBUCKET_COMMIT"], env.Commit)
+	assert.Equal(t, "debricked/cli", env.Repository)
 }

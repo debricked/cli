@@ -3,7 +3,7 @@ package circleci
 import (
 	"github.com/debricked/cli/pkg/ci/env"
 	"github.com/debricked/cli/pkg/ci/testdata"
-	"os"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -21,103 +21,49 @@ var circleCiEnv = map[string]string{
 }
 
 func TestIdentify(t *testing.T) {
-	ci := Ci{}
-
-	if ci.Identify() {
-		t.Error("failed to assert that CI was not identified")
-	}
-
-	_ = os.Setenv(EnvKey, "value")
-	defer os.Unsetenv(EnvKey)
-
-	if !ci.Identify() {
-		t.Error("failed to assert that CI was identified")
-	}
+	testdata.AssertIdentify(t, Ci{}.Identify, EnvKey)
 }
 
 func TestParse(t *testing.T) {
-	err := testdata.SetUpCiEnv(circleCiEnv)
-	defer testdata.ResetEnv(circleCiEnv, t)
-	if err != nil {
-		t.Error(err)
-	}
+	testdata.SetUpCiEnv(t, circleCiEnv)
+	defer testdata.ResetEnv(t, circleCiEnv)
 
-	cwd, err := testdata.SetUpGitRepository(true)
+	cwd := testdata.SetUpGitRepository(t, true)
 	defer testdata.TearDownGitRepository(cwd, t)
-	if err != nil {
-		t.Error("failed to initialize repository", err)
-	}
 
 	ci := Ci{}
-	env, err := ci.Map()
+	e, err := ci.Map()
 	if err != nil {
 		t.Error("failed to assert that no error occurred")
 	}
 
-	assertEnv(env, t)
+	assertEnv(e, t)
 }
 
-func TestMapRepositoryUrlHttp(t *testing.T) {
+func TestMapRepositoryUrl(t *testing.T) {
 	ci := Ci{}
-	buildkiteRepo := "https://github.com/debricked/cli.git"
-	repository := ci.MapRepositoryUrl(buildkiteRepo)
-	if repository != debrickedUrl {
-		t.Error("failed to assert that repository was set correctly")
+	cases := map[string]string{
+		"https://github.com/debricked/cli.git":    debrickedUrl,
+		"http://gitlab.com/debricked/cli.git":     "http://gitlab.com/debricked/cli",
+		"http://gitlab.com/debricked/sub/cli.git": "http://gitlab.com/debricked/sub/cli",
+		"git@github.com:debricked/cli.git":        debrickedUrl,
+		"git@gitlab.com:debricked/cli.git":        "https://gitlab.com/debricked/cli",
+		"tcp@scm.com:debricked/sub/cli.git":       "tcp@scm.com:debricked/sub/cli.git",
 	}
-	buildkiteRepo = "http://gitlab.com/debricked/cli.git"
-	repository = ci.MapRepositoryUrl(buildkiteRepo)
-	if repository != "http://gitlab.com/debricked/cli" {
-		t.Error("failed to assert that repository was set correctly")
-	}
-
-	buildkiteRepo = "http://gitlab.com/debricked/sub/cli.git"
-	repository = ci.MapRepositoryUrl(buildkiteRepo)
-	if repository != "http://gitlab.com/debricked/sub/cli" {
-		t.Error("failed to assert that repository was set correctly")
-	}
-}
-
-func TestMapRepositoryUrlGit(t *testing.T) {
-	ci := Ci{}
-	buildkiteRepo := "git@github.com:debricked/cli.git"
-	repository := ci.MapRepositoryUrl(buildkiteRepo)
-	if repository != debrickedUrl {
-		t.Error("failed to assert that repository was set correctly")
-	}
-
-	buildkiteRepo = "git@gitlab.com:debricked/cli.git"
-	repository = ci.MapRepositoryUrl(buildkiteRepo)
-	if repository != "https://gitlab.com/debricked/cli" {
-		t.Error("failed to assert that repository was set correctly")
-	}
-
-	buildkiteRepo = "tcp@scm.com:debricked/sub/cli.git"
-	repository = ci.MapRepositoryUrl(buildkiteRepo)
-	if repository != "tcp@scm.com:debricked/sub/cli.git" {
-		t.Error("failed to assert that repository was set correctly")
+	for gitUrl, assertion := range cases {
+		t.Run(gitUrl, func(t *testing.T) {
+			repository := ci.MapRepositoryUrl(gitUrl)
+			assert.Equal(t, assertion, repository)
+		})
 	}
 }
 
 func assertEnv(env env.Env, t *testing.T) {
-	if env.Filepath != "" {
-		t.Error("failed to assert that env contained correct filepath")
-	}
-	if env.Integration != Integration {
-		t.Error("failed to assert that env contained correct integration")
-	}
-	if len(env.Author) == 0 {
-		t.Error("failed to assert that env contained correct author")
-	}
-	if env.Branch != "main" {
-		t.Error("failed to assert that env contained correct branch")
-	}
-	if env.RepositoryUrl != debrickedUrl {
-		t.Error("failed to assert that env contained correct repository URL")
-	}
-	if env.Commit != "commit" {
-		t.Error("failed to assert that env contained correct commit")
-	}
-	if env.Repository != "debricked/cli" {
-		t.Error("faield to assert that env contained correct repository")
-	}
+	assert.Empty(t, env.Filepath)
+	assert.Equal(t, Integration, env.Integration)
+	assert.NotEmpty(t, env.Author)
+	assert.Equal(t, circleCiEnv["CIRCLE_BRANCH"], env.Branch)
+	assert.Equal(t, debrickedUrl, env.RepositoryUrl)
+	assert.Equal(t, circleCiEnv["CIRCLE_SHA1"], env.Commit)
+	assert.Equal(t, "debricked/cli", env.Repository)
 }

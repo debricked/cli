@@ -2,7 +2,7 @@ package azure
 
 import (
 	"github.com/debricked/cli/pkg/ci/testdata"
-	"os"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -18,48 +18,22 @@ var azureEnv = map[string]string{
 }
 
 func TestIdentify(t *testing.T) {
-	ci := Ci{}
-
-	if ci.Identify() {
-		t.Error("failed to assert that CI was not identified")
-	}
-
-	_ = os.Setenv(EnvKey, "value")
-	defer os.Unsetenv(EnvKey)
-
-	if !ci.Identify() {
-		t.Error("failed to assert that CI was identified")
-	}
+	testdata.AssertIdentify(t, Ci{}.Identify, EnvKey)
 }
 
 func TestParse(t *testing.T) {
-	err := testdata.SetUpCiEnv(azureEnv)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer testdata.ResetEnv(azureEnv, t)
-
+	testdata.SetUpCiEnv(t, azureEnv)
+	defer testdata.ResetEnv(t, azureEnv)
 	ci := Ci{}
+
 	env, _ := ci.Map()
-	if env.Filepath != azureEnv["BUILD_SOURCESDIRECTORY"] {
-		t.Error("failed to assert that env contained correct filepath")
-	}
-	if env.Integration != Integration {
-		t.Error("failed to assert that env contained correct integration")
-	}
-	if env.Author != "viktigpetterr <test@test.com>" {
-		t.Error("failed to assert that env contained correct author")
-	}
-	if env.Branch != "main" {
-		t.Error("failed to assert that env contained correct branch")
-	}
-	if env.RepositoryUrl != "https://github.com/debricked/cli" {
-		t.Error("failed to assert that env contained correct repository URL")
-	}
-	if env.Commit != "commit" {
-		t.Error("failed to assert that env contained correct commit")
-	}
-	if env.Repository != "debricked/cli" {
-		t.Error("faield to assert that env contained correct repository")
-	}
+
+	assert.Equal(t, azureEnv["BUILD_SOURCESDIRECTORY"], env.Filepath)
+	assert.Equal(t, Integration, env.Integration)
+	assert.Equal(t, azureEnv["BUILD_REQUESTEDFOREMAIL"], env.Author)
+	assert.Equal(t, azureEnv["BUILD_SOURCEBRANCHNAME"], env.Branch)
+	assert.Equal(t, azureEnv["BUILD_REPOSITORY_URI"], env.RepositoryUrl)
+	assert.Equal(t, azureEnv["BUILD_SOURCEVERSION"], env.Commit)
+	assert.Equal(t, "debricked/cli", env.Repository)
+
 }
