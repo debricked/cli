@@ -2,10 +2,12 @@ package strategy
 
 import (
 	"fmt"
+
 	"github.com/debricked/cli/pkg/resolution/file"
 	"github.com/debricked/cli/pkg/resolution/pm/gomod"
 	"github.com/debricked/cli/pkg/resolution/pm/gradle"
 	"github.com/debricked/cli/pkg/resolution/pm/maven"
+	"github.com/debricked/cli/pkg/resolution/pm/pip"
 )
 
 type IFactory interface {
@@ -27,6 +29,8 @@ func (sf Factory) Make(pmFileBatch file.IBatch) (IStrategy, error) {
 		return gradle.NewStrategy(pmFileBatch.Files()), nil
 	case gomod.Name:
 		return gomod.NewStrategy(pmFileBatch.Files()), nil
+	case pip.Name:
+		return pip.NewStrategy(pmFileBatch.Files()), nil
 	default:
 		return nil, fmt.Errorf("failed to make strategy from %s", name)
 	}
