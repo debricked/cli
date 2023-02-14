@@ -2,7 +2,6 @@ package pip
 
 import (
 	"os/exec"
-	"strings"
 )
 
 type ICmdFactory interface {
@@ -24,8 +23,12 @@ func (_ CmdFactory) MakeListCmd() (*exec.Cmd, error) {
 func (_ CmdFactory) MakeShowCmd(list []string) (*exec.Cmd, error) {
 	path, err := exec.LookPath("pip")
 
+	args := []string{"pip", "show"}
+	args = append(args, list...)
+
 	return &exec.Cmd{
 		Path: path,
-		Args: []string{"pip", "show", strings.Join(list, " ")},
+		//expand list with ...
+		Args: args,
 	}, err
 }

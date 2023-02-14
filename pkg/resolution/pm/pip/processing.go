@@ -25,7 +25,7 @@ func (j *Job) parseRequirements() ([]string, error) {
 	scanner := bufio.NewScanner(file)
 	packages := []string{}
 
-	pattern := regexp.MustCompile(`^([^\s]+)(?:[=<>!~]+(.+))?$`)
+	pattern := regexp.MustCompile(`^([^\s]+?)(?:[=<>!~]+(.+))?$`)
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -55,6 +55,8 @@ func (j *Job) parseGraph(packages []string, installedPackagesMetadata string) ([
 	visitedPackagesRelations := map[string][]string{}
 
 	PackageMetadata, _ := j.parsePackageMetadata(installedPackagesMetadata)
+	fmt.Println("metadata", PackageMetadata)
+	fmt.Println("metadata", PackageMetadata)
 
 	for len(packages) > 0 {
 		if _, ok := visitedPackagesVersions[packages[0]]; ok {
@@ -62,12 +64,18 @@ func (j *Job) parseGraph(packages []string, installedPackagesMetadata string) ([
 			continue
 		}
 		p := packages[0]
+		packages = packages[1:]
+
+		pm := PackageMetadata[p]
+		fmt.Println("pm", p, pm)
+
 		version := PackageMetadata[p].version
 		dependencies := PackageMetadata[p].dependencies
-		packages = append(packages, dependencies...)
 
+		packages = append(packages, dependencies...)
 		visitedPackagesVersions[p] = version
 		visitedPackagesRelations[p] = dependencies
+
 	}
 	//transform maps to list of strings
 	nodes := []string{}
@@ -77,6 +85,7 @@ func (j *Job) parseGraph(packages []string, installedPackagesMetadata string) ([
 		nodes = append(nodes, fmt.Sprintf("%s %s", k, v))
 	}
 
+	fmt.Println("Visited", visitedPackagesRelations)
 	for k, v := range visitedPackagesRelations {
 		for _, d := range v {
 			edges = append(edges, fmt.Sprintf("%s %s", k, d))

@@ -1,6 +1,7 @@
 package pip
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -54,6 +55,7 @@ func (j *Job) Run() {
 
 	ShowCmdOutput, err := j.runShowCmd(installedPackages)
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 
@@ -63,6 +65,8 @@ func (j *Job) Run() {
 
 	nodes, edges, err := j.parseGraph(requiredPackages, installedPackagesMetadata)
 
+	fmt.Println("Nodes: ", nodes)
+	fmt.Println("Edges: ", edges)
 	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.file, fileName))
 	if err != nil {
 		j.err = err

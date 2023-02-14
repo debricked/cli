@@ -31,6 +31,13 @@ func TestParseGraph(t *testing.T) {
 	assert.Nil(t, job.err)
 }
 
+func TestParsePackageMetadata(t *testing.T) {
+	// TODO Fix test for parse Package metadata
+	job := NewJob("file", CmdFactory{}, writer.FileWriter{})
+	assert.Equal(t, "file", job.file)
+	assert.Nil(t, job.err)
+}
+
 func TestParsePipList(t *testing.T) {
 	// TODO Fix test for parse Pip List
 	job := NewJob("file", CmdFactory{}, writer.FileWriter{})
