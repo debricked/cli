@@ -1,0 +1,12 @@
+Flask==2.1.5
+sentry-sdk==1.5.4
+sentry-sdk[flask]
+
+pandas>=1.4.0
+# matplotlib
+# seaborn
+tqdm
+
+
+ cryptography>=3.3.2,<4.0.0
+# test
