@@ -1,0 +1,43 @@
+Name: Flask
+Version: 2.1.2
+Summary: A simple framework for building complex web applications.
+Home-page: https://palletsprojects.com/p/flask
+Author: Armin Ronacher
+Author-email: armin.ronacher@active-4.com
+License: BSD-3-Clause
+Location: /path/to/site-packages
+Requires: click, importlib-metadata, itsdangerous, Jinja2, Werkzeug
+Required-by: Flask-Script, Flask-Compress, Flask-Bcrypt
+---
+Name: tqdm
+Version: 4.64.0
+Summary: Fast, Extensible Progress Meter
+Home-page: https://tqdm.github.io
+Author: 
+Author-email: 
+License: MPLv2.0, MIT Licences
+Location: /path/to/site-packages
+Requires: 
+Required-by: transformers, nltk
+---
+Name: pandas
+Version: 1.4.2
+Summary: Powerful data structures for data analysis, time series, and statistics
+Home-page: https://pandas.pydata.org
+Author: The Pandas Development Team
+Author-email: pandas-dev@python.org
+License: BSD-3-Clause
+Location: /path/to/site-packages
+Requires: python-dateutil, pytz, numpy
+Required-by: xarray, seaborn, hvplot, holoviews
+---
+Name: numpy
+Version: 1.21.5
+Summary: NumPy is the fundamental package for array computing with Python.
+Home-page: https://www.numpy.org
+Author: Travis E. Oliphant et al.
+Author-email: 
+License: BSD
+Location: /path/to/site-packages
+Requires: 
+Required-by: xarray, transformers, pandas, astropy

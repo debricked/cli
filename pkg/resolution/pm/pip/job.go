@@ -1,8 +1,6 @@
 package pip
 
 import (
-	"bufio"
-	"fmt"
 	"os"
 	"strings"
 
@@ -43,47 +41,28 @@ func (j *Job) Error() error {
 
 func (j *Job) Run() {
 
-	file, err := os.Open(j.file)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	defer file.Close()
-
-	// Create a new scanner to read the file line by line
-	scanner := bufio.NewScanner(file)
-	packages := []string{}
-
-	// Loop through each line of the file
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		// Split the line by spaces
-		fields := strings.Fields(line)
-
-		// If the line starts with a # symbol, it's a comment, so we skip it
-		if len(fields) == 0 || fields[0][0] == '#' {
-			continue
-		}
-
-		// Print the first field, which should be the package name
-		packages = append(packages, fields[0])
-	}
-
-	// Check for any scanning errors
-	if err := scanner.Err(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	fmt.Println(packages)
-
-	fmt.Println("Run List cmd")
 	listCmdOutput, err := j.runListCmd()
+
 	if err != nil {
 		return
 	}
-	fmt.Println("Make file")
+
+	installedPackages, err := j.parsePipList(string(listCmdOutput))
+	if err != nil {
+		return
+	}
+
+	ShowCmdOutput, err := j.runShowCmd(installedPackages)
+	if err != nil {
+		return
+	}
+
+	installedPackagesMetadata := string(ShowCmdOutput)
+
+	requiredPackages, err := j.parseRequirements()
+
+	nodes, edges, err := j.parseGraph(requiredPackages, installedPackagesMetadata)
+
 	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.file, fileName))
 	if err != nil {
 		j.err = err
@@ -91,27 +70,37 @@ func (j *Job) Run() {
 	}
 	defer closeFile(j, lockFile)
 
-	var fileContents []byte
-	fileContents = append(fileContents, []byte("\nVERYGOOD DELIMITER\n")...)
-	fileContents = append(fileContents, listCmdOutput...)
+	var fileContents []string
 
-	j.err = j.fileWriter.Write(lockFile, fileContents)
-}
+	fileContents = append(fileContents, nodes...)
+	fileContents = append(fileContents, "\n*********\n")
+	fileContents = append(fileContents, edges...)
 
-func (j *Job) parseRequiredNamesCmd() ([]byte, error) {
-	return nil, nil
-}
+	res := []byte(strings.Join(fileContents, "\n"))
 
-func (j *Job) parseInstalledNamesCmd() ([]byte, error) {
-	return nil, nil
-}
-
-func (j *Job) parseRelationNamesCmd() ([]byte, error) {
-	return nil, nil
+	j.err = j.fileWriter.Write(lockFile, res)
 }
 
 func (j *Job) runListCmd() ([]byte, error) {
 	listCmd, err := j.cmdFactory.MakeListCmd()
+	if err != nil {
+		j.err = err
+
+		return nil, err
+	}
+
+	listCmdOutput, err := listCmd.Output()
+	if err != nil {
+		j.err = err
+
+		return nil, err
+	}
+
+	return listCmdOutput, nil
+}
+
+func (j *Job) runShowCmd(packages []string) ([]byte, error) {
+	listCmd, err := j.cmdFactory.MakeShowCmd(packages)
 	if err != nil {
 		j.err = err
 
