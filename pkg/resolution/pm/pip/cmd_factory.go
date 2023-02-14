@@ -23,8 +23,12 @@ func (_ CmdFactory) MakeListCmd() (*exec.Cmd, error) {
 func (_ CmdFactory) MakeShowCmd(list []string) (*exec.Cmd, error) {
 	path, err := exec.LookPath("pip")
 
+	args := []string{"pip", "show"}
+	args = append(args, list...)
+
 	return &exec.Cmd{
 		Path: path,
-		Args: []string{"pip", "show", list[0]},
+		//expand list with ...
+		Args: args,
 	}, err
 }
