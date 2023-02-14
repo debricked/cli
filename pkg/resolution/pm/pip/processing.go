@@ -9,9 +9,9 @@ import (
 )
 
 type PackageMetadata struct {
-	name         string
-	version      string
-	dependencies []string
+	Name         string
+	Version      string
+	Dependencies []string
 }
 
 func (j *Job) parseRequirements() ([]string, error) {
@@ -51,44 +51,43 @@ func (j *Job) parseRequirements() ([]string, error) {
 
 func (j *Job) parseGraph(packages []string, installedPackagesMetadata string) ([]string, []string, error) {
 
-	visitedPackagesVersions := map[string]string{}
-	visitedPackagesRelations := map[string][]string{}
+	visitedPackageMetadata := map[string]PackageMetadata{}
 
-	PackageMetadata, _ := j.parsePackageMetadata(installedPackagesMetadata)
-	fmt.Println("metadata", PackageMetadata)
-	fmt.Println("metadata", PackageMetadata)
+	pmd, _ := j.parsePackageMetadata(installedPackagesMetadata)
+
+	for k, v := range pmd {
+		fmt.Println("k", k, "v", v)
+	}
 
 	for len(packages) > 0 {
-		if _, ok := visitedPackagesVersions[packages[0]]; ok {
+		if _, ok := visitedPackageMetadata[packages[0]]; ok {
 			packages = packages[1:]
 			continue
 		}
-		p := packages[0]
+		p := strings.ToLower(packages[0])
 		packages = packages[1:]
 
-		pm := PackageMetadata[p]
-		fmt.Println("pm", p, pm)
-
-		version := PackageMetadata[p].version
-		dependencies := PackageMetadata[p].dependencies
+		dependencies := pmd[p].Dependencies
 
 		packages = append(packages, dependencies...)
-		visitedPackagesVersions[p] = version
-		visitedPackagesRelations[p] = dependencies
+		visitedPackageMetadata[p] = pmd[p]
 
 	}
 	//transform maps to list of strings
 	nodes := []string{}
 	edges := []string{}
 
-	for k, v := range visitedPackagesVersions {
-		nodes = append(nodes, fmt.Sprintf("%s %s", k, v))
+	for _, v := range visitedPackageMetadata {
+		if v.Name == "" {
+			continue
+		}
+		nodes = append(nodes, fmt.Sprintf("%s %s", v.Name, v.Version))
 	}
 
-	fmt.Println("Visited", visitedPackagesRelations)
-	for k, v := range visitedPackagesRelations {
-		for _, d := range v {
-			edges = append(edges, fmt.Sprintf("%s %s", k, d))
+	fmt.Println("Visited", visitedPackageMetadata)
+	for _, v := range visitedPackageMetadata {
+		for _, d := range v.Dependencies {
+			edges = append(edges, fmt.Sprintf("%s %s", v.Name, d))
 		}
 	}
 
@@ -107,24 +106,23 @@ func (j *Job) parsePackageMetadata(installedPackagesMetadata string) (map[string
 
 		name, version, dependencies := "", "", []string{}
 		for _, line := range lines {
-			fields := strings.Split(line, ":")
+			fields := strings.Split(line, ": ")
 			if len(fields) == 0 {
 				continue
 			}
-			if fields[0] == "Name" {
+			switch fields[0] {
+			case "Name":
 				name = fields[1]
-			}
-			if fields[0] == "Version" {
+			case "Version":
 				version = fields[1]
-			}
-			if fields[0] == "Requires" {
-				dependencies = strings.Split(fields[1], ",")
+			case "Requires":
+				if fields[1] != "" {
+					dependencies = strings.Split(fields[1], ", ")
+				}
 			}
 		}
-
-		m[name] = PackageMetadata{name, version, dependencies}
+		m[strings.ToLower(name)] = PackageMetadata{name, version, dependencies}
 	}
-
 	return m, nil
 }
 
