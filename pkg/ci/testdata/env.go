@@ -28,6 +28,19 @@ func SetUpGitRepository(t *testing.T, includeCommit bool) string {
 		t.Fatal(err)
 	}
 	if includeCommit {
+		tempFilepath := repoDir + "test.txt"
+		f, err := os.Create(tempFilepath)
+		if err != nil {
+			t.Fatal("failed to create file. Error:", err)
+		}
+		err = f.Close()
+		if err != nil {
+			t.Fatal("failed to close created file. Error:", err)
+		}
+		_, err = w.Add("test.txt")
+		if err != nil {
+			t.Fatal("failed to add file to worktree. Error:", err)
+		}
 		_, err = w.Commit("Initial commit", &git.CommitOptions{Author: &object.Signature{Name: "author"}})
 		if err != nil {
 			t.Fatal(err)
@@ -44,7 +57,7 @@ func SetUpGitRepository(t *testing.T, includeCommit bool) string {
 
 func TearDownGitRepository(dir string, t *testing.T) {
 	cwd, _ := os.Getwd()
-	repoDir := cwd + "/.git/"
+	repoDir := cwd
 	_, err := git.PlainOpen(repoDir)
 	if err != nil {
 		t.Fatal(err)
