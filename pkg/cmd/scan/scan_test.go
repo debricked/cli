@@ -6,7 +6,7 @@ import (
 	"github.com/debricked/cli/pkg/scan"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"strings"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -26,12 +26,8 @@ func TestNewScanCmd(t *testing.T) {
 	}
 	for name, shorthand := range flagAssertions {
 		flag := flags.Lookup(name)
-		if flag == nil {
-			t.Fatalf("failed to assert that %s flag was set", name)
-		}
-		if flag.Shorthand != shorthand {
-			t.Errorf("failed to assert that %s flag shorthand %s was set correctly", name, shorthand)
-		}
+		assert.NotNil(t, flag)
+		assert.Equalf(t, shorthand, flag.Shorthand, "failed to assert that %s flag shorthand %s was set correctly", name, shorthand)
 
 		match := false
 		for _, key := range viperKeys {
@@ -39,28 +35,26 @@ func TestNewScanCmd(t *testing.T) {
 				match = true
 			}
 		}
-		if !match {
-			t.Error("failed to assert that flag was present: " + name)
-		}
+		assert.Truef(t, match, "failed to assert that %s was present", name)
 	}
 }
 
 func TestRunE(t *testing.T) {
 	var s scan.IScanner = &scannerMock{}
 	runE := RunE(&s)
+
 	err := runE(nil, []string{"."})
-	if err != nil {
-		t.Fatal("failed to assert that no error occurred. Error:", err)
-	}
+
+	assert.NoError(t, err)
 }
 
 func TestRunENoPath(t *testing.T) {
 	var s scan.IScanner = &scannerMock{}
 	runE := RunE(&s)
+
 	err := runE(nil, []string{})
-	if err != nil {
-		t.Fatal("failed to assert that no error occurred. Error:", err)
-	}
+
+	assert.NoError(t, err)
 }
 
 func TestRunEFailPipelineErr(t *testing.T) {
@@ -70,27 +64,19 @@ func TestRunEFailPipelineErr(t *testing.T) {
 	s = mock
 	runE := RunE(&s)
 	cmd := &cobra.Command{}
+
 	err := runE(cmd, nil)
-	if err != scan.FailPipelineErr {
-		t.Error("failed to assert that scan. FailPipelineErr occurred. Error:", err)
-	}
-	if !cmd.SilenceUsage {
-		t.Error("failed to assert that usage was silenced")
-	}
-	if !cmd.SilenceErrors {
-		t.Error("failed to assert that errors were silenced")
-	}
+
+	assert.Error(t, err, scan.FailPipelineErr)
+	assert.True(t, cmd.SilenceUsage, "failed to assert that usage was silenced")
+	assert.True(t, cmd.SilenceErrors, "failed to assert that errors were silenced")
 }
 
 func TestRunEError(t *testing.T) {
 	runE := RunE(nil)
 	err := runE(nil, []string{"."})
-	if err == nil {
-		t.Error("failed to assert that an error occurred. Error:", err)
-	}
-	if !strings.Contains(err.Error(), "⨯ scanner was nil") {
-		t.Error("failed to assert error message")
-	}
+
+	assert.ErrorContains(t, err, "⨯ scanner was nil")
 }
 
 type scannerMock struct {

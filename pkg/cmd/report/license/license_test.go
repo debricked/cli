@@ -5,7 +5,7 @@ import (
 	"github.com/debricked/cli/pkg/cmd/report/testdata"
 	"github.com/debricked/cli/pkg/report"
 	"github.com/spf13/viper"
-	"strings"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -14,9 +14,7 @@ func TestNewLicenseCmd(t *testing.T) {
 	cmd := NewLicenseCmd(r)
 	commands := cmd.Commands()
 	nbrOfCommands := 0
-	if len(commands) != nbrOfCommands {
-		t.Errorf("failed to assert that there were %d sub commands connected", nbrOfCommands)
-	}
+	assert.Len(t, commands, nbrOfCommands)
 
 	viperKeys := viper.AllKeys()
 	flags := cmd.Flags()
@@ -26,12 +24,8 @@ func TestNewLicenseCmd(t *testing.T) {
 	}
 	for name, shorthand := range flagAssertions {
 		flag := flags.Lookup(name)
-		if flag == nil {
-			t.Fatalf("failed to assert that %s flag was set", name)
-		}
-		if flag.Shorthand != shorthand {
-			t.Errorf("failed to assert that %s flag shorthand %s was set correctly", name, shorthand)
-		}
+		assert.NotNil(t, flag)
+		assert.Equal(t, shorthand, flag.Shorthand)
 
 		match := false
 		for _, key := range viperKeys {
@@ -39,9 +33,7 @@ func TestNewLicenseCmd(t *testing.T) {
 				match = true
 			}
 		}
-		if !match {
-			t.Error("failed to assert that flag was present: " + name)
-		}
+		assert.Truef(t, match, "failed to assert that flag was present: "+name)
 	}
 }
 
@@ -50,18 +42,18 @@ func TestRunEError(t *testing.T) {
 	reporterMock := testdata.NewReporterMock()
 	reporterMock.SetError(errors.New(""))
 	runeE := RunE(reporterMock)
+
 	err := runeE(nil, nil)
-	if !strings.Contains(err.Error(), "⨯") {
-		t.Error("failed to assert error message")
-	}
+
+	assert.ErrorContains(t, err, "⨯")
 }
 
 func TestRunE(t *testing.T) {
 	email = "noreply@debricked.com"
 	reporterMock := testdata.NewReporterMock()
 	runeE := RunE(reporterMock)
+
 	err := runeE(nil, nil)
-	if err != nil {
-		t.Fatal("failed to assert that no error occurred")
-	}
+
+	assert.NoError(t, err)
 }

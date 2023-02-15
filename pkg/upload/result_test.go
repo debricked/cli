@@ -1,6 +1,7 @@
 package upload
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -14,7 +15,6 @@ func TestNewUploadResult(t *testing.T) {
 		DetailsUrl:                     "",
 	}
 	result := newUploadResult(status)
-	if result == nil {
-		t.Error("failed to assert that result was not nil")
-	}
+
+	assert.NotNil(t, result)
 }

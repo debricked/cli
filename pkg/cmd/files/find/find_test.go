@@ -15,20 +15,14 @@ func TestNewFindCmd(t *testing.T) {
 
 	commands := cmd.Commands()
 	nbrOfCommands := 0
-	if len(commands) != nbrOfCommands {
-		t.Errorf("failed to assert that there were %d sub commands connected", nbrOfCommands)
-	}
+	assert.Len(t, commands, nbrOfCommands)
 
 	flags := cmd.Flags()
 	flagAssertions := map[string]string{}
 	for name, shorthand := range flagAssertions {
 		flag := flags.Lookup(name)
-		if flag == nil {
-			t.Fatalf("failed to assert that %s flag was set", name)
-		}
-		if flag.Shorthand != shorthand {
-			t.Errorf("failed to assert that %s flag shorthand %s was set correctly", name, shorthand)
-		}
+		assert.NotNil(t, flag)
+		assert.Equal(t, shorthand, flag.Shorthand)
 	}
 
 	var flagKeys = []string{
@@ -45,9 +39,7 @@ func TestNewFindCmd(t *testing.T) {
 				match = true
 			}
 		}
-		if !match {
-			t.Error("failed to assert that flag was present: " + flagKey)
-		}
+		assert.Truef(t, match, "failed to assert that flag was present: "+flagKey)
 	}
 
 }
@@ -58,10 +50,10 @@ func TestRunE(t *testing.T) {
 	groups.Add(file.Group{})
 	f.SetGetGroupsReturnMock(groups, nil)
 	runE := RunE(f)
+
 	err := runE(nil, []string{"."})
-	if err != nil {
-		t.Fatal("failed to assert that no error occurred. Error:", err)
-	}
+
+	assert.NoError(t, err)
 }
 
 func TestRunENoPath(t *testing.T) {
@@ -70,10 +62,10 @@ func TestRunENoPath(t *testing.T) {
 	groups.Add(file.Group{})
 	f.SetGetGroupsReturnMock(groups, nil)
 	runE := RunE(f)
+
 	err := runE(nil, []string{})
-	if err != nil {
-		t.Fatal("failed to assert that no error occurred. Error:", err)
-	}
+
+	assert.NoError(t, err)
 }
 
 func TestRunENoFiles(t *testing.T) {
@@ -83,10 +75,10 @@ func TestRunENoFiles(t *testing.T) {
 	f.SetGetGroupsReturnMock(groups, nil)
 	exclusions = []string{}
 	runE := RunE(f)
+
 	err := runE(nil, []string{"."})
-	if err != nil {
-		t.Fatal("failed to assert that no error occurred. Error:", err)
-	}
+
+	assert.NoError(t, err)
 }
 
 func TestRunEError(t *testing.T) {

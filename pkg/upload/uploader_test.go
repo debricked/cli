@@ -7,6 +7,7 @@ import (
 	"github.com/debricked/cli/pkg/client/testdata"
 	"github.com/debricked/cli/pkg/file"
 	"github.com/debricked/cli/pkg/git"
+	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"strings"
@@ -15,21 +16,13 @@ import (
 
 func TestNewDebrickedUploader(t *testing.T) {
 	uploader, err := NewUploader(nil)
-	if err == nil {
-		t.Error("failed to assert that error occurred")
-	}
-	if uploader != nil {
-		t.Error("failed to assert that Uploader was nil")
-	}
+	assert.Error(t, err)
+	assert.Nil(t, uploader)
+
 	var c client.IDebClient = &debClientMock{}
 	uploader, err = NewUploader(c)
-	if err != nil {
-		t.Error("failed to assert that no error occurred")
-	}
-
-	if uploader == nil {
-		t.Error("failed to assert that Uploader was not nil")
-	}
+	assert.NoError(t, err)
+	assert.NotNil(t, uploader)
 }
 
 func TestUpload(t *testing.T) {
@@ -48,12 +41,9 @@ func TestUpload(t *testing.T) {
 	groups.Add(*g)
 	uploaderOptions := DebrickedOptions{FileGroups: groups, GitMetaObject: *metaObject, IntegrationsName: "CLI"}
 	result, err := uploader.Upload(uploaderOptions)
-	if err != nil {
-		t.Error("failed to assert that no error occurred")
-	}
-	if result == nil {
-		t.Error("failed to assert that result was not nil")
-	}
+
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
 }
 
 func TestUploadPollingError(t *testing.T) {
@@ -92,12 +82,9 @@ func TestUploadPollingError(t *testing.T) {
 	groups.Add(*g)
 	uploaderOptions := DebrickedOptions{FileGroups: groups, GitMetaObject: *metaObject, IntegrationsName: "CLI"}
 	result, err := uploader.Upload(uploaderOptions)
-	if err != nil {
-		t.Error("failed to assert that PollingTerminatedErr occurred")
-	}
-	if result != nil {
-		t.Error("failed to assert that result was nil")
-	}
+
+	assert.NoError(t, err)
+	assert.Nil(t, result)
 }
 
 type debClientMock struct{}

@@ -2,6 +2,7 @@ package root
 
 import (
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -15,12 +16,8 @@ func TestNewRootCmd(t *testing.T) {
 
 	flags := cmd.PersistentFlags()
 	flag := flags.Lookup(AccessTokenFlag)
-	if flag == nil {
-		t.Fatal("failed to assert that access-token flag was set")
-	}
-	if flag.Shorthand != "t" {
-		t.Error("failed to assert that access-token flag shorthand was set correctly")
-	}
+	assert.NotNil(t, flag)
+	assert.Equal(t, "t", flag.Shorthand)
 
 	match := false
 	viperKeys := viper.AllKeys()
@@ -31,11 +28,6 @@ func TestNewRootCmd(t *testing.T) {
 			break
 		}
 	}
-	if !match {
-		t.Error("failed to assert that flag was present: " + AccessTokenFlag)
-	}
-
-	if len(viperKeys) != 12 {
-		t.Error("failed to assert number of keys bound by Viper")
-	}
+	assert.Truef(t, match, "failed to assert that flag was present: "+AccessTokenFlag)
+	assert.Len(t, viperKeys, 12)
 }

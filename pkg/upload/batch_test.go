@@ -7,6 +7,7 @@ import (
 	"github.com/debricked/cli/pkg/client/testdata"
 	"github.com/debricked/cli/pkg/file"
 	"github.com/debricked/cli/pkg/git"
+	"github.com/stretchr/testify/assert"
 	"io"
 	"log"
 	"net/http"
@@ -40,26 +41,16 @@ func TestUploadWithBadFiles(t *testing.T) {
 	err = batch.upload()
 	log.SetOutput(os.Stderr)
 	output := buf.String()
-	if output != "" {
-		t.Error("failed to assert that there was no output")
-	}
-	if err == nil {
-		t.Error("failed to assert that an error occurred")
-	}
-	if !strings.EqualFold("failed to initialize a scan due to badly formatted files", err.Error()) {
-		t.Error("failed to assert error message")
-	}
+
+	assert.Empty(t, output)
+	assert.ErrorContains(t, err, "failed to initialize a scan due to badly formatted files")
 }
 
 func TestInitAnalysisWithoutAnyFiles(t *testing.T) {
 	batch := newUploadBatch(nil, file.Groups{}, nil, "CLI")
 	err := batch.initAnalysis()
-	if err == nil {
-		t.Error("failed to assert that error occurred")
-	}
-	if !strings.Contains(err.Error(), "failed to find dependency files") {
-		t.Error("failed to asser error message")
-	}
+
+	assert.ErrorContains(t, err, "failed to find dependency files")
 }
 
 func TestWaitWithPollingTerminatedError(t *testing.T) {
@@ -83,9 +74,8 @@ func TestWaitWithPollingTerminatedError(t *testing.T) {
 
 	uploadResult, err := batch.wait()
 
-	if uploadResult != nil && err != PollingTerminatedErr {
-		t.Fatal("Upload result must be nil and err must be PollingTerminatedErr")
-	}
+	assert.Nil(t, uploadResult)
+	assert.ErrorIs(t, err, PollingTerminatedErr)
 }
 
 func TestInitUploadBadFile(t *testing.T) {
@@ -108,15 +98,9 @@ func TestInitUploadBadFile(t *testing.T) {
 	batch := newUploadBatch(&c, groups, metaObj, "CLI")
 
 	files, err := batch.initUpload()
-	if len(files) != 0 {
-		t.Error("failed to assert that batch could not initialize upload")
-	}
-	if err == nil {
-		t.Error("failed to assert that error occurred")
-	}
-	if !strings.EqualFold("failed to initialize a scan due to badly formatted files", err.Error()) {
-		t.Error("failed to assert error message")
-	}
+
+	assert.Empty(t, files)
+	assert.ErrorContains(t, err, "failed to initialize a scan due to badly formatted files")
 }
 
 func TestInitUpload(t *testing.T) {
@@ -139,13 +123,8 @@ func TestInitUpload(t *testing.T) {
 	batch := newUploadBatch(&c, groups, metaObj, "CLI")
 
 	files, err := batch.initUpload()
-	if len(files) != 1 {
-		t.Error("failed to assert that the init deleted one file from the files to be uploaded")
-	}
-	if err != nil {
-		t.Error("failed to assert that error no occurred")
-	}
-	if batch.ciUploadId != 1 {
-		t.Error("failed to assert ciUploadId")
-	}
+
+	assert.Len(t, files, 1, "failed to assert that the init deleted one file from the files to be uploaded")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, batch.ciUploadId)
 }

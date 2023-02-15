@@ -1,6 +1,7 @@
 package upload
 
 import (
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
 )
@@ -23,10 +24,7 @@ func TestNewScanStatusBadResponse(t *testing.T) {
 		TLS:              nil,
 	}
 	status, err := newUploadStatus(res)
-	if err == nil {
-		t.Error("failed to assert that error occurred")
-	}
-	if status != nil {
-		t.Error("failed to assert that scanStatus was nil")
-	}
+
+	assert.Error(t, err)
+	assert.Nil(t, status)
 }
