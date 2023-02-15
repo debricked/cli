@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	fileName = ".debricked-python-dependencies.txt"
+	fileName = ".debricked-pip-tree.txt"
 )
 
 type Job struct {
