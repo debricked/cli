@@ -188,6 +188,10 @@ func TestGetBranch(t *testing.T) {
 func mockRepository(withCommit bool, t *testing.T) *git.Repository {
 	// Filesystem abstraction based on memory
 	fs := memfs.New()
+	_, err := fs.Create("test.txt")
+	if err != nil {
+		t.Fatal("Failed to create file")
+	}
 	// Git objects storer based on memory
 	store := memory.NewStorage()
 	r, err := git.Init(store, fs)
@@ -199,6 +203,10 @@ func mockRepository(withCommit bool, t *testing.T) *git.Repository {
 		t.Fatal("failed to get worktree. Error:", err)
 	}
 	if withCommit {
+		_, err = w.Add("test.txt")
+		if err != nil {
+			t.Fatal("failed to add file to worktree. Error:", err)
+		}
 		_, err = w.Commit("Initial commit", &git.CommitOptions{Author: &object.Signature{Name: "author"}})
 		if err != nil {
 			t.Fatal("failed to create commit. Error:", err)
