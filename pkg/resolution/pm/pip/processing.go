@@ -14,102 +14,105 @@ type PackageMetadata struct {
 	Dependencies []string
 }
 
+func (j *Job) parsePipList(pipListOutput string) ([]string, error) {
+	lines := strings.Split(pipListOutput, "\n")
+	packages := []string{}
+	for _, line := range lines[2:] {
+		fields := strings.Split(line, " ")
+		if len(fields) > 0 {
+			packages = append(packages, fields[0])
+		}
+	}
+	return packages, nil
+}
+
 func (j *Job) parseRequirements() ([]string, error) {
 	file, err := os.Open(j.file)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		j.err = err
+		return nil, err
 	}
 	defer file.Close()
-
 	scanner := bufio.NewScanner(file)
 	packages := []string{}
-
 	pattern := regexp.MustCompile(`^([^\s]+?)(?:[=<>!~]+(.+))?$`)
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
+
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
 
-		// Match package name and version using regular expression
 		match := pattern.FindStringSubmatch(line)
+
 		if match != nil {
 			packages = append(packages, match[1])
 		}
 	}
 
-	// Check for any scanning errors
 	if err := scanner.Err(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		j.err = err
+		return nil, err
 	}
 
 	return packages, nil
 }
 
-func (j *Job) parseGraph(packages []string, installedPackagesMetadata string) ([]string, []string, error) {
-
+func (j *Job) parseGraph(packages []string, installedPackagesMetadata string) ([]string, []string, []string, error) {
 	visitedPackageMetadata := map[string]PackageMetadata{}
-
-	pmd, _ := j.parsePackageMetadata(installedPackagesMetadata)
-
-	for k, v := range pmd {
-		fmt.Println("k", k, "v", v)
-	}
+	packageMetaData, _ := j.parsePackageMetadata(installedPackagesMetadata)
+	missingMetadata := []string{}
 
 	for len(packages) > 0 {
-		if _, ok := visitedPackageMetadata[packages[0]]; ok {
-			packages = packages[1:]
-			continue
-		}
-		p := strings.ToLower(packages[0])
+		currentPackage := strings.ToLower(packages[0])
 		packages = packages[1:]
 
-		dependencies := pmd[p].Dependencies
+		if _, ok := visitedPackageMetadata[currentPackage]; ok {
+			continue
+		}
 
+		dependencies := packageMetaData[currentPackage].Dependencies
 		packages = append(packages, dependencies...)
-		visitedPackageMetadata[p] = pmd[p]
-
+		if val, ok := packageMetaData[currentPackage]; ok {
+			visitedPackageMetadata[currentPackage] = val
+		} else {
+			missingMetadata = append(missingMetadata, currentPackage)
+		}
 	}
-	//transform maps to list of strings
+
 	nodes := []string{}
 	edges := []string{}
 
 	for _, v := range visitedPackageMetadata {
-		if v.Name == "" {
-			continue
-		}
 		nodes = append(nodes, fmt.Sprintf("%s %s", v.Name, v.Version))
 	}
 
-	fmt.Println("Visited", visitedPackageMetadata)
+	fmt.Println("Found", len(visitedPackageMetadata), "installed dependencies.")
 	for _, v := range visitedPackageMetadata {
 		for _, d := range v.Dependencies {
 			edges = append(edges, fmt.Sprintf("%s %s", v.Name, d))
 		}
 	}
 
-	// return two bytes arrays
-
-	return nodes, edges, nil
+	return nodes, edges, missingMetadata, nil
 }
 
 func (j *Job) parsePackageMetadata(installedPackagesMetadata string) (map[string]PackageMetadata, error) {
-
-	m := map[string]PackageMetadata{}
-
+	result := map[string]PackageMetadata{}
 	metadata := strings.Split(installedPackagesMetadata, "---")
+
 	for _, packageMetadata := range metadata {
 		lines := strings.Split(packageMetadata, "\n")
-
 		name, version, dependencies := "", "", []string{}
+
 		for _, line := range lines {
 			fields := strings.Split(line, ": ")
+
 			if len(fields) == 0 {
 				continue
 			}
+
 			switch fields[0] {
 			case "Name":
 				name = fields[1]
@@ -121,21 +124,8 @@ func (j *Job) parsePackageMetadata(installedPackagesMetadata string) (map[string
 				}
 			}
 		}
-		m[strings.ToLower(name)] = PackageMetadata{name, version, dependencies}
-	}
-	return m, nil
-}
 
-func (j *Job) parsePipList(pipListOutput string) ([]string, error) {
-
-	lines := strings.Split(pipListOutput, "\n")
-	packages := []string{}
-	//skip 2 lines
-	for _, line := range lines[2:] {
-		fields := strings.Split(line, " ")
-		if len(fields) > 0 {
-			packages = append(packages, fields[0])
-		}
+		result[strings.ToLower(name)] = PackageMetadata{name, version, dependencies}
 	}
-	return packages, nil
+	return result, nil
 }

@@ -28,7 +28,6 @@ func (_ CmdFactory) MakeShowCmd(list []string) (*exec.Cmd, error) {
 
 	return &exec.Cmd{
 		Path: path,
-		//expand list with ...
 		Args: args,
 	}, err
 }
