@@ -54,20 +54,28 @@ func (j *Job) Run() {
 	}
 
 	ShowCmdOutput, err := j.runShowCmd(installedPackages)
+
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	installedPackagesMetadata := string(ShowCmdOutput)
-
 	requiredPackages, err := j.parseRequirements()
 
-	nodes, edges, err := j.parseGraph(requiredPackages, installedPackagesMetadata)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
-	fmt.Println("Nodes: ", nodes)
-	fmt.Println("Edges: ", edges)
+	nodes, edges, err := j.parseGraph(requiredPackages, string(ShowCmdOutput))
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.file, fileName))
+
 	if err != nil {
 		j.err = err
 		return
@@ -75,9 +83,10 @@ func (j *Job) Run() {
 	defer closeFile(j, lockFile)
 
 	var fileContents []string
-
+	fileContents = append(fileContents, "Nodes")
 	fileContents = append(fileContents, nodes...)
-	fileContents = append(fileContents, "\n*********\n")
+	fileContents = append(fileContents, "***")
+	fileContents = append(fileContents, "Edges")
 	fileContents = append(fileContents, edges...)
 
 	res := []byte(strings.Join(fileContents, "\n"))
