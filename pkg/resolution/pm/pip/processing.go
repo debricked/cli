@@ -19,7 +19,8 @@ func (j *Job) parseRequirements() ([]string, error) {
 	file, err := os.Open(j.file)
 
 	if err != nil {
-		os.Exit(1)
+		j.err = err
+		return nil, err
 	}
 
 	defer file.Close()
@@ -44,48 +45,52 @@ func (j *Job) parseRequirements() ([]string, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		os.Exit(1)
+		j.err = err
+		return nil, err
 	}
 
 	return packages, nil
 }
 
 func (j *Job) parseGraph(packages []string, installedPackagesMetadata string) ([]string, []string, error) {
-
 	visitedPackageMetadata := map[string]PackageMetadata{}
-
-	packageMetadata, _ := j.parsePackageMetadata(installedPackagesMetadata)
+	pmd, _ := j.parsePackageMetadata(installedPackagesMetadata)
+	nonInstalledPackages := []string{}
 
 	for len(packages) > 0 {
+		p := strings.ToLower(packages[0])
+		packages = packages[1:]
 
-		// Skip if package is already visited
-		if _, ok := visitedPackageMetadata[packages[0]]; ok {
-			packages = packages[1:]
+		if _, ok := visitedPackageMetadata[p]; ok {
 			continue
 		}
 
-		currentPackage := strings.ToLower(packages[0])
-
-		packages = packages[1:]
-
-		dependencies := packageMetadata[currentPackage].Dependencies
-
+		dependencies := pmd[p].Dependencies
 		packages = append(packages, dependencies...)
-
-		visitedPackageMetadata[currentPackage] = packageMetadata[currentPackage]
-
+		if val, ok := pmd[p]; ok {
+			visitedPackageMetadata[p] = val
+		} else {
+			nonInstalledPackages = append(nonInstalledPackages, p)
+		}
 	}
 
 	nodes := []string{}
 	edges := []string{}
 
-	for _, v := range visitedPackageMetadata {
-		if v.Name == "" {
-			continue
+	// Only print if verbose is activated?
+	if len(nonInstalledPackages) > 0 {
+		fmt.Println("Failed to find dependencies:")
+		for _, p := range nonInstalledPackages {
+			fmt.Println(p)
 		}
+		fmt.Println()
+	}
+
+	for _, v := range visitedPackageMetadata {
 		nodes = append(nodes, fmt.Sprintf("%s %s", v.Name, v.Version))
 	}
 
+	fmt.Println("Found", len(visitedPackageMetadata), "installed dependencies.")
 	for _, v := range visitedPackageMetadata {
 		for _, d := range v.Dependencies {
 			edges = append(edges, fmt.Sprintf("%s %s", v.Name, d))
