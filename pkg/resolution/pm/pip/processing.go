@@ -14,10 +14,20 @@ type PackageMetadata struct {
 	Dependencies []string
 }
 
+func (j *Job) parsePipList(pipListOutput string) ([]string, error) {
+	lines := strings.Split(pipListOutput, "\n")
+	packages := []string{}
+	for _, line := range lines[2:] {
+		fields := strings.Split(line, " ")
+		if len(fields) > 0 {
+			packages = append(packages, fields[0])
+		}
+	}
+	return packages, nil
+}
+
 func (j *Job) parseRequirements() ([]string, error) {
-
 	file, err := os.Open(j.file)
-
 	if err != nil {
 		j.err = err
 		return nil, err
@@ -54,23 +64,23 @@ func (j *Job) parseRequirements() ([]string, error) {
 
 func (j *Job) parseGraph(packages []string, installedPackagesMetadata string) ([]string, []string, error) {
 	visitedPackageMetadata := map[string]PackageMetadata{}
-	pmd, _ := j.parsePackageMetadata(installedPackagesMetadata)
+	packageMetaData, _ := j.parsePackageMetadata(installedPackagesMetadata)
 	nonInstalledPackages := []string{}
 
 	for len(packages) > 0 {
-		p := strings.ToLower(packages[0])
+		currentPackage := strings.ToLower(packages[0])
 		packages = packages[1:]
 
-		if _, ok := visitedPackageMetadata[p]; ok {
+		if _, ok := visitedPackageMetadata[currentPackage]; ok {
 			continue
 		}
 
-		dependencies := pmd[p].Dependencies
+		dependencies := packageMetaData[currentPackage].Dependencies
 		packages = append(packages, dependencies...)
-		if val, ok := pmd[p]; ok {
-			visitedPackageMetadata[p] = val
+		if val, ok := packageMetaData[currentPackage]; ok {
+			visitedPackageMetadata[currentPackage] = val
 		} else {
-			nonInstalledPackages = append(nonInstalledPackages, p)
+			nonInstalledPackages = append(nonInstalledPackages, currentPackage)
 		}
 	}
 
@@ -136,22 +146,4 @@ func (j *Job) parsePackageMetadata(installedPackagesMetadata string) (map[string
 		result[strings.ToLower(name)] = PackageMetadata{name, version, dependencies}
 	}
 	return result, nil
-}
-
-func (j *Job) parsePipList(pipListOutput string) ([]string, error) {
-
-	lines := strings.Split(pipListOutput, "\n")
-
-	packages := []string{}
-
-	for _, line := range lines[2:] {
-
-		fields := strings.Split(line, " ")
-
-		if len(fields) > 0 {
-			packages = append(packages, fields[0])
-		}
-	}
-
-	return packages, nil
 }

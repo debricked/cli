@@ -1,0 +1,9 @@
+Package                       Version      Editable project location
+----------------------------- ------------ ------------------------------------------------------
+aiohttp                       3.7.4
+cryptography                  3.4.7
+numpy                         1.23.4
+Flask                         2.0.3
+open-source-health            0.1          /path/to/folder
+pandas                        1.4.3
+tqdm                          4.63.0
