@@ -32,15 +32,12 @@ func (j *Job) parseRequirements() ([]string, error) {
 		j.err = err
 		return nil, err
 	}
-
 	defer file.Close()
-
 	scanner := bufio.NewScanner(file)
 	packages := []string{}
 	pattern := regexp.MustCompile(`^([^\s]+?)(?:[=<>!~]+(.+))?$`)
 
 	for scanner.Scan() {
-
 		line := strings.TrimSpace(scanner.Text())
 
 		if line == "" || strings.HasPrefix(line, "#") {
@@ -62,10 +59,10 @@ func (j *Job) parseRequirements() ([]string, error) {
 	return packages, nil
 }
 
-func (j *Job) parseGraph(packages []string, installedPackagesMetadata string) ([]string, []string, error) {
+func (j *Job) parseGraph(packages []string, installedPackagesMetadata string) ([]string, []string, []string, error) {
 	visitedPackageMetadata := map[string]PackageMetadata{}
 	packageMetaData, _ := j.parsePackageMetadata(installedPackagesMetadata)
-	nonInstalledPackages := []string{}
+	missingMetadata := []string{}
 
 	for len(packages) > 0 {
 		currentPackage := strings.ToLower(packages[0])
@@ -80,21 +77,12 @@ func (j *Job) parseGraph(packages []string, installedPackagesMetadata string) ([
 		if val, ok := packageMetaData[currentPackage]; ok {
 			visitedPackageMetadata[currentPackage] = val
 		} else {
-			nonInstalledPackages = append(nonInstalledPackages, currentPackage)
+			missingMetadata = append(missingMetadata, currentPackage)
 		}
 	}
 
 	nodes := []string{}
 	edges := []string{}
-
-	// Only print if verbose is activated?
-	if len(nonInstalledPackages) > 0 {
-		fmt.Println("Failed to find dependencies:")
-		for _, p := range nonInstalledPackages {
-			fmt.Println(p)
-		}
-		fmt.Println()
-	}
 
 	for _, v := range visitedPackageMetadata {
 		nodes = append(nodes, fmt.Sprintf("%s %s", v.Name, v.Version))
@@ -107,23 +95,18 @@ func (j *Job) parseGraph(packages []string, installedPackagesMetadata string) ([
 		}
 	}
 
-	return nodes, edges, nil
+	return nodes, edges, missingMetadata, nil
 }
 
 func (j *Job) parsePackageMetadata(installedPackagesMetadata string) (map[string]PackageMetadata, error) {
-
 	result := map[string]PackageMetadata{}
-
 	metadata := strings.Split(installedPackagesMetadata, "---")
 
 	for _, packageMetadata := range metadata {
-
 		lines := strings.Split(packageMetadata, "\n")
-
 		name, version, dependencies := "", "", []string{}
 
 		for _, line := range lines {
-
 			fields := strings.Split(line, ": ")
 
 			if len(fields) == 0 {
@@ -131,7 +114,6 @@ func (j *Job) parsePackageMetadata(installedPackagesMetadata string) (map[string
 			}
 
 			switch fields[0] {
-
 			case "Name":
 				name = fields[1]
 			case "Version":

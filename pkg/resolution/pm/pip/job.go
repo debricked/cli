@@ -67,11 +67,16 @@ func (j *Job) Run() {
 		return
 	}
 
-	nodes, edges, err := j.parseGraph(requiredPackages, string(ShowCmdOutput))
+	nodes, edges, missed, err := j.parseGraph(requiredPackages, string(ShowCmdOutput))
 
 	if err != nil {
 		fmt.Println(err)
 		return
+	}
+
+	if missed != nil {
+		fmt.Println("Missed dependency nodes:")
+		fmt.Println(missed)
 	}
 
 	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.file, fileName))
