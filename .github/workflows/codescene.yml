@@ -1,0 +1,63 @@
+name: CodeScene
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  delta-analysis:
+    name: Delta analysis
+    runs-on: ubuntu-latest
+    container:
+      image: empear/codescene-ci-cd:latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Run delta analysis
+        env:
+          CODESCENE_USER: ${{ secrets.CODESCENE_USER }}
+          CODESCENE_PASSWORD: ${{ secrets.CODESCENE_PASSWORD }}
+          CODESCENE_DELTA_ANALYSIS_URL: ${{ secrets.CODESCENE_DELTA_ANALYSIS_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global --add safe.directory /__w/cli/cli
+          git branch -a
+          # Extract data from event
+          export PREVIOUS_COMMIT=$(jq -r '.before' < ${GITHUB_EVENT_PATH})
+          export PR_NUMBER=$(jq -r '.pull_request.number' < ${GITHUB_EVENT_PATH})
+          # Check required env vars
+          if [[ -z "${CODESCENE_DELTA_ANALYSIS_URL}" ]] ; then 
+            echo "No value specified for CODESCENE_DELTA_ANALYSIS_URL!"
+            exit 1
+          fi
+          if [[ -z "${CODESCENE_USER}" ]] ; then 
+            echo "No value specified for CODESCENE_USER!"
+            exit 1
+          fi
+          if [[ -z "${CODESCENE_PASSWORD}" ]] ; then 
+            echo "No value specified for CODESCENE_PASSWORD!"
+            exit 1
+          fi
+          # Perform analysis
+          codescene-ci-cd.sh \
+            --codescene-delta-analysis-url ${CODESCENE_DELTA_ANALYSIS_URL} \
+            --codescene-user ${CODESCENE_USER} \
+            --codescene-password ${CODESCENE_PASSWORD} \
+            --codescene-repository ${GITHUB_REPOSITORY#*/} \
+            --fail-on-failed-goal \
+            --fail-on-declining-code-health \
+            --analyze-branch-diff \
+            --current-commit "remotes/origin/${{ github.head_ref }}" \
+            --base-revision "remotes/origin/${{ github.base_ref }}" \
+            --risk-threshold ${CODESCENE_RISK_THRESHOLD-7} \
+            --coupling-threshold-percent ${CODESCENE_COUPLING_THRESHOLD_PERCENT-80} \
+            --http-timeout ${CODESCENE_TIMEOUT-30000} \
+            --create-github-comment \
+            --github-api-url "https://api.github.com" \
+            --github-api-token ${GITHUB_TOKEN} \
+            --github-owner ${GITHUB_REPOSITORY%/*} \
+            --github-repo ${GITHUB_REPOSITORY#*/} \
+            --github-pull-request-id ${PR_NUMBER} \
+            --log-result
