@@ -8,6 +8,7 @@ import (
 	"github.com/debricked/cli/pkg/client"
 	"github.com/debricked/cli/pkg/file"
 	"github.com/debricked/cli/pkg/git"
+	"github.com/debricked/cli/pkg/tui"
 	"github.com/debricked/cli/pkg/upload"
 	"github.com/fatih/color"
 	"os"
@@ -110,7 +111,7 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 	fmt.Println("")
 	failPipeline := false
 	for _, rule := range result.AutomationRules {
-		rule.Print(os.Stdout)
+		tui.NewRuleCard(os.Stdout, rule).Render()
 		failPipeline = failPipeline || rule.FailPipeline()
 	}
 	fmt.Printf("For full details, visit: %s\n\n", color.BlueString(result.DetailsUrl))
