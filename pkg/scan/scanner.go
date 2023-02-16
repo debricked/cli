@@ -112,7 +112,7 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 	failPipeline := false
 	for _, rule := range result.AutomationRules {
 		tui.NewRuleCard(os.Stdout, rule).Render()
-		failPipeline = failPipeline || rule.FailPipeline()
+		failPipeline = failPipeline || (rule.Triggered && rule.FailPipeline())
 	}
 	fmt.Printf("For full details, visit: %s\n\n", color.BlueString(result.DetailsUrl))
 	if failPipeline {

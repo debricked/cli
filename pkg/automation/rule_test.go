@@ -30,5 +30,5 @@ func TestFailPipelineUnTriggered(t *testing.T) {
 		Triggered:       false,
 		TriggerEvents:   nil,
 	}
-	assert.False(t, rule.FailPipeline(), "failed to assert that rule passed")
+	assert.True(t, rule.FailPipeline(), "failed to assert that rule failed")
 }
