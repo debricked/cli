@@ -2,14 +2,19 @@ package pip
 
 import (
 	"errors"
+	"fmt"
+	"os"
+	"strings"
 	"testing"
 
+	"github.com/debricked/cli/pkg/resolution/pm/pip/testdata"
 	"github.com/debricked/cli/pkg/resolution/pm/writer"
+	writerTestdata "github.com/debricked/cli/pkg/resolution/pm/writer/testdata"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewJob(t *testing.T) {
-	job := NewJob("file", CmdFactory{}, writer.FileWriter{})
+	job := NewJob("file", false, CmdFactory{}, writer.FileWriter{})
 	assert.Equal(t, "file", job.file)
 	assert.Nil(t, job.err)
 }
@@ -26,3 +31,32 @@ func TestError(t *testing.T) {
 }
 
 // TODO add more tests a la maven / golang
+
+func TestRun(t *testing.T) {
+	// Load gt-data
+	list, err := os.ReadFile("testdata/list.txt")
+	assert.Nil(t, err)
+	req, err := os.ReadFile("testdata/requirements.txt")
+	assert.Nil(t, err)
+	show, err := os.ReadFile("testdata/show.txt")
+	assert.Nil(t, err)
+
+	delimeter := "***"
+	var fileContents []string
+	fileContents = append(fileContents, string(req)+"\n")
+	fileContents = append(fileContents, delimeter)
+	fileContents = append(fileContents, string(list)+"\n")
+	fileContents = append(fileContents, delimeter)
+	fileContents = append(fileContents, string(show)+"\n")
+	res := []byte(strings.Join(fileContents, "\n"))
+
+	fileWriterMock := &writerTestdata.FileWriterMock{}
+	cmdFactoryMock := testdata.CmdFactoryMock{InstallCmdName: "echo", ListCmdName: "echo", CatCmdName: "echo", ShowCmdName: "echo"}
+	job := NewJob("file", false, cmdFactoryMock, fileWriterMock)
+
+	job.Run()
+
+	assert.NoError(t, job.Error())
+	fmt.Println(string(fileWriterMock.Contents))
+	assert.Equal(t, string(res), string(fileWriterMock.Contents))
+}

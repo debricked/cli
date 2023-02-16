@@ -15,6 +15,7 @@ const (
 
 type Job struct {
 	file       string
+	install    bool
 	cmdFactory ICmdFactory
 	fileWriter writer.IFileWriter
 	err        error
@@ -22,14 +23,20 @@ type Job struct {
 
 func NewJob(
 	file string,
+	install bool,
 	cmdFactory ICmdFactory,
 	fileWriter writer.IFileWriter,
 ) *Job {
 	return &Job{
 		file:       file,
+		install:    install,
 		cmdFactory: cmdFactory,
 		fileWriter: fileWriter,
 	}
+}
+
+func (j *Job) Install() bool {
+	return j.install
 }
 
 func (j *Job) File() string {
@@ -42,6 +49,51 @@ func (j *Job) Error() error {
 
 func (j *Job) Run() {
 
+	if j.install {
+
+		// TODO create virtualenv
+		// TODO activate virtualenv
+		// TODO install in virtualenv
+		// TODO deactivate virtualenv
+
+		_, err := j.runCreateVenvCmd()
+
+		if err != nil {
+			j.err = err
+			return
+		}
+
+		fmt.Println("Created virtualenv for " + j.file + ".venv")
+
+		_, err = j.runActivateVenvCmd()
+
+		if err != nil {
+			j.err = err
+			fmt.Println(err)
+			return
+		}
+
+		fmt.Println("Activated virtualenv for " + j.file + ".venv")
+
+		_, err = j.runInstallCmd()
+
+		if err != nil {
+			j.err = err
+			return
+		}
+
+		fmt.Println("Installed requirements in virtualenv for " + j.file + ".venv")
+		// TODO if unable to install (many possible issues)
+		// then we should parse and let the user know what went wrong on installation
+
+	}
+
+	catCmdOutput, err := j.runCatCmd()
+
+	if err != nil {
+		return
+	}
+
 	listCmdOutput, err := j.runListCmd()
 
 	if err != nil {
@@ -49,6 +101,7 @@ func (j *Job) Run() {
 	}
 
 	installedPackages, err := j.parsePipList(string(listCmdOutput))
+
 	if err != nil {
 		return
 	}
@@ -56,27 +109,7 @@ func (j *Job) Run() {
 	ShowCmdOutput, err := j.runShowCmd(installedPackages)
 
 	if err != nil {
-		fmt.Println(err)
 		return
-	}
-
-	requiredPackages, err := j.parseRequirements()
-
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	nodes, edges, missed, err := j.parseGraph(requiredPackages, string(ShowCmdOutput))
-
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	if missed != nil {
-		fmt.Println("Missed dependency nodes:")
-		fmt.Println(missed)
 	}
 
 	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.file, fileName))
@@ -88,15 +121,33 @@ func (j *Job) Run() {
 	defer closeFile(j, lockFile)
 
 	var fileContents []string
-	fileContents = append(fileContents, "Nodes")
-	fileContents = append(fileContents, nodes...)
+	fileContents = append(fileContents, string(catCmdOutput))
 	fileContents = append(fileContents, "***")
-	fileContents = append(fileContents, "Edges")
-	fileContents = append(fileContents, edges...)
+	fileContents = append(fileContents, string(listCmdOutput))
+	fileContents = append(fileContents, "***")
+	fileContents = append(fileContents, string(ShowCmdOutput))
 
 	res := []byte(strings.Join(fileContents, "\n"))
 
 	j.err = j.fileWriter.Write(lockFile, res)
+}
+
+func (j *Job) runCatCmd() ([]byte, error) {
+	listCmd, err := j.cmdFactory.MakeCatCmd(j.file)
+	if err != nil {
+		j.err = err
+
+		return nil, err
+	}
+
+	listCmdOutput, err := listCmd.Output()
+	if err != nil {
+		j.err = err
+
+		return nil, err
+	}
+
+	return listCmdOutput, nil
 }
 
 func (j *Job) runListCmd() ([]byte, error) {
@@ -115,6 +166,60 @@ func (j *Job) runListCmd() ([]byte, error) {
 	}
 
 	return listCmdOutput, nil
+}
+
+func (j *Job) runInstallCmd() ([]byte, error) {
+	installCmd, err := j.cmdFactory.MakeInstallCmd(j.file)
+	if err != nil {
+		j.err = err
+
+		return nil, err
+	}
+
+	installCmdOutput, err := installCmd.Output()
+	if err != nil {
+		j.err = err
+
+		return nil, err
+	}
+
+	return installCmdOutput, nil
+}
+
+func (j *Job) runCreateVenvCmd() ([]byte, error) {
+	createVenvCmd, err := j.cmdFactory.MakeCreateVenvCmd(j.file)
+	if err != nil {
+		j.err = err
+
+		return nil, err
+	}
+
+	createVenvCmdOutput, err := createVenvCmd.Output()
+	if err != nil {
+		j.err = err
+
+		return nil, err
+	}
+
+	return createVenvCmdOutput, nil
+}
+
+func (j *Job) runActivateVenvCmd() ([]byte, error) {
+	activateVenvCmd, err := j.cmdFactory.MakeActivateVenvCmd(j.file)
+	if err != nil {
+		j.err = err
+
+		return nil, err
+	}
+
+	activateVenvCmdOutput, err := activateVenvCmd.Output()
+	if err != nil {
+		j.err = err
+
+		return nil, err
+	}
+
+	return activateVenvCmdOutput, nil
 }
 
 func (j *Job) runShowCmd(packages []string) ([]byte, error) {
