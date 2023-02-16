@@ -9,7 +9,7 @@ import (
 )
 
 func TestParsePipList(t *testing.T) {
-	job := NewJob("file", CmdFactory{}, writer.FileWriter{})
+	job := NewJob("file", false, CmdFactory{}, writer.FileWriter{})
 	file, err := os.ReadFile("testdata/list.txt")
 	assert.Nil(t, err)
 	pipData := string(file)
@@ -21,7 +21,7 @@ func TestParsePipList(t *testing.T) {
 }
 
 func TestParseRequirements(t *testing.T) {
-	job := NewJob("testdata/requirements.txt", CmdFactory{}, writer.FileWriter{})
+	job := NewJob("testdata/requirements.txt", false, CmdFactory{}, writer.FileWriter{})
 	packages, err := job.parseRequirements()
 	assert.Nil(t, err)
 
@@ -38,7 +38,7 @@ func TestParseRequirements(t *testing.T) {
 }
 
 func TestParseGraph(t *testing.T) {
-	job := NewJob("file", CmdFactory{}, writer.FileWriter{})
+	job := NewJob("file", false, CmdFactory{}, writer.FileWriter{})
 	output, err := os.ReadFile("testdata/show.txt")
 	assert.Nil(t, err)
 	metadata := string(output)
@@ -71,7 +71,7 @@ func TestParseGraph(t *testing.T) {
 }
 
 func TestParsePackageMetadata(t *testing.T) {
-	job := NewJob("file", CmdFactory{}, writer.FileWriter{})
+	job := NewJob("file", false, CmdFactory{}, writer.FileWriter{})
 	output, err := os.ReadFile("testdata/show.txt")
 	assert.Nil(t, err)
 	showMetadata := string(output)
