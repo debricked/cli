@@ -78,6 +78,12 @@ Once you've installed the CLI, you're ready to scan your project. You can scan a
 
 When the scan is complete, you will see the total number of vulnerabilities found and a list of automation rules that have been evaluated. Read more about automations [here](https://debricked.com/docs/automation/automation-overview.html#automation-overview).
 
+### Docker
+To make a scan directly through Docker based on your current working directory, you can use the following command:
+```sh
+docker run -v $(pwd):/root  debricked/scan -t <access-token>
+```
+
 ### CI/CD integration
 If you would rather use `debricked` in your CI/CD pipelines, check out the [templates](examples/templates).
 
