@@ -90,13 +90,7 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 		return err
 	}
 
-	fileGroups, err := dScanner.finder.GetGroups(dOptions.Path, dOptions.Exclusions, false, file.StrictAll)
-	if err != nil {
-		return err
-	}
-
-	uploaderOptions := upload.DebrickedOptions{FileGroups: fileGroups, GitMetaObject: *gitMetaObject, IntegrationsName: dOptions.IntegrationName}
-	result, err := (*dScanner.uploader).Upload(uploaderOptions)
+	result, err := dScanner.scan(dOptions, *gitMetaObject)
 	if err != nil {
 		return err
 	}
@@ -120,6 +114,21 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 	}
 
 	return nil
+}
+
+func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject git.MetaObject) (*upload.UploadResult, error) {
+	fileGroups, err := dScanner.finder.GetGroups(options.Path, options.Exclusions, false, file.StrictAll)
+	if err != nil {
+		return nil, err
+	}
+
+	uploaderOptions := upload.DebrickedOptions{FileGroups: fileGroups, GitMetaObject: gitMetaObject, IntegrationsName: options.IntegrationName}
+	result, err := (*dScanner.uploader).Upload(uploaderOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // SetWorkingDirectory sets working directory in accordance with the path option
