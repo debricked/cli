@@ -48,20 +48,20 @@ Check out the [releases](https://github.com/debricked/cli/releases/latest) page.
 Below follow some common ways to install the CLI.
 ### Linux
 ```sh
-curl -L https://github.com/debricked/cli/releases/download/v0.0.12/cli_0.0.12_linux_x86_64.tar.gz | tar -xz debricked
+curl -L https://github.com/debricked/cli/releases/latest/download/cli_linux_x86_64.tar.gz | tar -xz debricked
 ```
 ```sh
 ./debricked
 ```
 ### Mac
 ```sh
-curl -L https://github.com/debricked/cli/releases/download/v0.0.12/cli_0.0.12_macOS_arm64.tar.gz | tar -xz debricked
+curl -L https://github.com/debricked/cli/releases/latest/download/cli_macOS_arm64.tar.gz | tar -xz debricked
 ```
 ```sh
 ./debricked
 ```
 ### Windows
-1. [Download zip](https://github.com/debricked/cli/releases/download/v0.0.12/cli_0.0.12_windows_x86_64.tar.gz)
+1. [Download zip](https://github.com/debricked/cli/releases/latest/download/cli_windows_x86_64.tar.gz)
 2. Unpack zip
 ```sh
 .\debricked
