@@ -37,7 +37,6 @@ jobs:
       - name: Test
         run: bash scripts/test_cli.sh
         env:
-          DEBRICKED_TOKEN: ${{ secrets.DEBRICKED_TOKEN }}
           TEST_COVERAGE_THRESHOLD: 90
 
       - name: Upload coverage report
