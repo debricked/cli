@@ -111,7 +111,6 @@ func (uploadBatch *uploadBatch) uploadFile(filePath string) error {
 	_ = writer.WriteField("commitName", uploadBatch.gitMetaObject.CommitName)
 	_ = writer.WriteField("repositoryUrl", uploadBatch.gitMetaObject.RepositoryUrl)
 	_ = writer.WriteField("branchName", uploadBatch.gitMetaObject.BranchName)
-	_ = writer.WriteField("defaultBranchName", uploadBatch.gitMetaObject.DefaultBranchName)
 	if uploadBatch.initialized() {
 		_ = writer.WriteField("ciUploadId", strconv.Itoa(uploadBatch.ciUploadId))
 	}
