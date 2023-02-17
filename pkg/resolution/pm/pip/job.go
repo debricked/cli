@@ -1,7 +1,6 @@
 package pip
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
@@ -62,6 +61,12 @@ func (j *Job) Run() {
 		// TODO install in a virtualenv
 	}
 
+	catCmdOutput, err := j.runCatCmd()
+
+	if err != nil {
+		return
+	}
+
 	listCmdOutput, err := j.runListCmd()
 
 	if err != nil {
@@ -69,6 +74,7 @@ func (j *Job) Run() {
 	}
 
 	installedPackages, err := j.parsePipList(string(listCmdOutput))
+
 	if err != nil {
 		return
 	}
@@ -76,27 +82,7 @@ func (j *Job) Run() {
 	ShowCmdOutput, err := j.runShowCmd(installedPackages)
 
 	if err != nil {
-		fmt.Println(err)
 		return
-	}
-
-	requiredPackages, err := j.parseRequirements()
-
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	nodes, edges, missed, err := j.parseGraph(requiredPackages, string(ShowCmdOutput))
-
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	if missed != nil {
-		fmt.Println("Missed dependency nodes:")
-		fmt.Println(missed)
 	}
 
 	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.file, fileName))
@@ -108,15 +94,33 @@ func (j *Job) Run() {
 	defer closeFile(j, lockFile)
 
 	var fileContents []string
-	fileContents = append(fileContents, "Nodes")
-	fileContents = append(fileContents, nodes...)
+	fileContents = append(fileContents, string(catCmdOutput))
 	fileContents = append(fileContents, "***")
-	fileContents = append(fileContents, "Edges")
-	fileContents = append(fileContents, edges...)
+	fileContents = append(fileContents, string(listCmdOutput))
+	fileContents = append(fileContents, "***")
+	fileContents = append(fileContents, string(ShowCmdOutput))
 
 	res := []byte(strings.Join(fileContents, "\n"))
 
 	j.err = j.fileWriter.Write(lockFile, res)
+}
+
+func (j *Job) runCatCmd() ([]byte, error) {
+	listCmd, err := j.cmdFactory.MakeCatCmd(j.file)
+	if err != nil {
+		j.err = err
+
+		return nil, err
+	}
+
+	listCmdOutput, err := listCmd.Output()
+	if err != nil {
+		j.err = err
+
+		return nil, err
+	}
+
+	return listCmdOutput, nil
 }
 
 func (j *Job) runListCmd() ([]byte, error) {

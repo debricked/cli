@@ -9,7 +9,7 @@ import (
 )
 
 func TestNewJob(t *testing.T) {
-	job := NewJob("file", CmdFactory{}, writer.FileWriter{})
+	job := NewJob("file", false, CmdFactory{}, writer.FileWriter{})
 	assert.Equal(t, "file", job.file)
 	assert.Nil(t, job.err)
 }
