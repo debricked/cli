@@ -106,21 +106,21 @@ func (j *Job) Run() {
 }
 
 func (j *Job) runCatCmd() ([]byte, error) {
-	listCmd, err := j.cmdFactory.MakeCatCmd(j.file)
+	catCmd, err := j.cmdFactory.MakeCatCmd(j.file)
 	if err != nil {
 		j.err = err
 
 		return nil, err
 	}
 
-	listCmdOutput, err := listCmd.Output()
+	catCmdOutput, err := catCmd.Output()
 	if err != nil {
 		j.err = err
 
 		return nil, err
 	}
 
-	return listCmdOutput, nil
+	return catCmdOutput, nil
 }
 
 func (j *Job) runListCmd() ([]byte, error) {

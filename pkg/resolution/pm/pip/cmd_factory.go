@@ -13,6 +13,15 @@ type ICmdFactory interface {
 
 type CmdFactory struct{}
 
+func (_ CmdFactory) MakeInstallCmd(file string) (*exec.Cmd, error) {
+	path, err := exec.LookPath("pip")
+
+	return &exec.Cmd{
+		Path: path,
+		Args: []string{"pip", "install", "-r", file},
+	}, err
+}
+
 func (_ CmdFactory) MakeCatCmd(file string) (*exec.Cmd, error) {
 	path, err := exec.LookPath("cat")
 
@@ -40,14 +49,5 @@ func (_ CmdFactory) MakeShowCmd(list []string) (*exec.Cmd, error) {
 	return &exec.Cmd{
 		Path: path,
 		Args: args,
-	}, err
-}
-
-func (_ CmdFactory) MakeInstallCmd(file string) (*exec.Cmd, error) {
-	path, err := exec.LookPath("pip")
-
-	return &exec.Cmd{
-		Path: path,
-		Args: []string{"pip", "install", "-r", file},
 	}, err
 }
