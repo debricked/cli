@@ -62,31 +62,26 @@ func (j *Job) Run() {
 	}
 
 	catCmdOutput, err := j.runCatCmd()
-
 	if err != nil {
 		return
 	}
 
 	listCmdOutput, err := j.runListCmd()
-
 	if err != nil {
 		return
 	}
 
 	installedPackages, err := j.parsePipList(string(listCmdOutput))
-
 	if err != nil {
 		return
 	}
 
 	ShowCmdOutput, err := j.runShowCmd(installedPackages)
-
 	if err != nil {
 		return
 	}
 
 	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.file, fileName))
-
 	if err != nil {
 		j.err = err
 		return
