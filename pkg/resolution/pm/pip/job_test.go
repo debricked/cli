@@ -24,6 +24,14 @@ func TestFile(t *testing.T) {
 	assert.Equal(t, "file", job.File())
 }
 
+func TestInstall(t *testing.T) {
+	job := Job{install: true}
+	assert.Equal(t, true, job.Install())
+
+	job = Job{install: false}
+	assert.Equal(t, false, job.Install())
+}
+
 func TestError(t *testing.T) {
 	jobErr := errors.New("error")
 	job := Job{file: "file", err: jobErr}
@@ -31,6 +39,125 @@ func TestError(t *testing.T) {
 }
 
 // TODO add more tests a la maven / golang
+func TestRunCreateVenvCmdErr(T *testing.T) {
+	cmdErr := errors.New("cmd-error")
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	cmdFactoryMock.MakeCreateVenvErr = cmdErr
+	fileWriterMock := &writerTestdata.FileWriterMock{}
+	job := NewJob("file", true, cmdFactoryMock, fileWriterMock)
+
+	job.Run()
+
+	assert.ErrorIs(T, cmdErr, job.Error())
+}
+
+func TestRunCreateVenvCmdOutputErr(T *testing.T) {
+	cmdMock := testdata.NewEchoCmdFactory()
+	cmdMock.CreateVenvCmdName = "bad-name"
+	job := NewJob("file", true, cmdMock, nil)
+	job.Run()
+	assert.ErrorContains(T, job.err, "executable file not found in $PATH")
+}
+
+func TestRunActivateVenvCmdErr(T *testing.T) {
+	cmdErr := errors.New("cmd-error")
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	cmdFactoryMock.MakeActivateVenvErr = cmdErr
+	fileWriterMock := &writerTestdata.FileWriterMock{}
+	job := NewJob("file", true, cmdFactoryMock, fileWriterMock)
+
+	job.Run()
+
+	assert.ErrorIs(T, cmdErr, job.Error())
+}
+
+func TestRunActivateVenvCmdOutputErr(T *testing.T) {
+	cmdMock := testdata.NewEchoCmdFactory()
+	cmdMock.ActivateVenvCmdName = "bad-name"
+	job := NewJob("file", true, cmdMock, nil)
+	job.Run()
+	assert.ErrorContains(T, job.err, "executable file not found in $PATH")
+}
+
+func TestRunInstallCmdErr(T *testing.T) {
+	cmdErr := errors.New("cmd-error")
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	cmdFactoryMock.MakeInstallErr = cmdErr
+	fileWriterMock := &writerTestdata.FileWriterMock{}
+	job := NewJob("file", true, cmdFactoryMock, fileWriterMock)
+
+	job.Run()
+
+	assert.ErrorIs(T, cmdErr, job.Error())
+}
+
+func TestRunInstallCmdOutputErr(T *testing.T) {
+	cmdMock := testdata.NewEchoCmdFactory()
+	cmdMock.InstallCmdName = "bad-name"
+	job := NewJob("file", true, cmdMock, nil)
+	job.Run()
+	assert.ErrorContains(T, job.err, "executable file not found in $PATH")
+}
+
+func TestRunCatCmdErr(T *testing.T) {
+	cmdErr := errors.New("cmd-error")
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	cmdFactoryMock.MakeCatErr = cmdErr
+	fileWriterMock := &writerTestdata.FileWriterMock{}
+	job := NewJob("file", true, cmdFactoryMock, fileWriterMock)
+
+	job.Run()
+
+	assert.ErrorIs(T, cmdErr, job.Error())
+}
+
+func TestRunCatCmdOutputErr(T *testing.T) {
+	cmdMock := testdata.NewEchoCmdFactory()
+	cmdMock.CatCmdName = "bad-name"
+	job := NewJob("file", false, cmdMock, nil)
+	job.Run()
+	assert.ErrorContains(T, job.err, "executable file not found in $PATH")
+}
+
+func TestRunListCmdErr(T *testing.T) {
+	cmdErr := errors.New("cmd-error")
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	cmdFactoryMock.MakeListErr = cmdErr
+	fileWriterMock := &writerTestdata.FileWriterMock{}
+	job := NewJob("file", true, cmdFactoryMock, fileWriterMock)
+
+	job.Run()
+
+	assert.ErrorIs(T, cmdErr, job.Error())
+}
+
+func TestRunListCmdOutputErr(T *testing.T) {
+	cmdMock := testdata.NewEchoCmdFactory()
+	cmdMock.ListCmdName = "bad-name"
+	job := NewJob("file", false, cmdMock, nil)
+	job.Run()
+	assert.ErrorContains(T, job.err, "executable file not found in $PATH")
+}
+
+func TestRunShowCmdErr(T *testing.T) {
+	cmdErr := errors.New("cmd-error")
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	cmdFactoryMock.MakeShowErr = cmdErr
+	fileWriterMock := &writerTestdata.FileWriterMock{}
+	job := NewJob("file", true, cmdFactoryMock, fileWriterMock)
+
+	job.Run()
+
+	assert.ErrorIs(T, cmdErr, job.Error())
+}
+
+func TestRunShowCmdOutputErr(T *testing.T) {
+	cmdMock := testdata.NewEchoCmdFactory()
+	cmdMock.ShowCmdName = "bad-name"
+	job := NewJob("file", false, cmdMock, nil)
+	job.Run()
+	assert.ErrorContains(T, job.err, "executable file not found in $PATH")
+}
 
 func TestRun(t *testing.T) {
 	// Load gt-data
@@ -51,8 +178,8 @@ func TestRun(t *testing.T) {
 	res := []byte(strings.Join(fileContents, "\n"))
 
 	fileWriterMock := &writerTestdata.FileWriterMock{}
-	cmdFactoryMock := testdata.CmdFactoryMock{InstallCmdName: "echo", ListCmdName: "echo", CatCmdName: "echo", ShowCmdName: "echo"}
-	job := NewJob("file", false, cmdFactoryMock, fileWriterMock)
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	job := NewJob("file", true, cmdFactoryMock, fileWriterMock)
 
 	job.Run()
 
@@ -66,9 +193,38 @@ func TestParsePipList(t *testing.T) {
 	file, err := os.ReadFile("testdata/list.txt")
 	assert.Nil(t, err)
 	pipData := string(file)
-	packages, err := job.parsePipList(pipData)
-	assert.Nil(t, err)
+	packages := job.parsePipList(pipData)
 	gt := []string{"aiohttp", "cryptography", "numpy", "Flask", "open-source-health", "pandas", "tqdm"}
 	assert.Equal(t, gt, packages)
 	assert.Nil(t, job.err)
+}
+
+func TestRunCreateErr(T *testing.T) {
+	createErr := errors.New("create-error")
+	fileWriterMock := &writerTestdata.FileWriterMock{CreateErr: createErr}
+	cmdMock := testdata.NewEchoCmdFactory()
+	job := NewJob("file", true, cmdMock, fileWriterMock)
+	job.Run()
+
+	assert.ErrorIs(T, job.Error(), createErr)
+}
+
+func TestRunWriteErr(T *testing.T) {
+	writeErr := errors.New("write-error")
+	fileWriterMock := &writerTestdata.FileWriterMock{WriteErr: writeErr}
+	cmdMock := testdata.NewEchoCmdFactory()
+	job := NewJob("file", true, cmdMock, fileWriterMock)
+	job.Run()
+
+	assert.ErrorIs(T, job.Error(), writeErr)
+}
+
+func TestRunCloseErr(T *testing.T) {
+	closeErr := errors.New("close-error")
+	fileWriterMock := &writerTestdata.FileWriterMock{CloseErr: closeErr}
+	cmdMock := testdata.NewEchoCmdFactory()
+	job := NewJob("file", true, cmdMock, fileWriterMock)
+	job.Run()
+
+	assert.ErrorIs(T, job.Error(), closeErr)
 }
