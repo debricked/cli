@@ -20,6 +20,17 @@ type CmdFactoryMock struct {
 	MakeShowErr         error
 }
 
+func NewEchoCmdFactory() CmdFactoryMock {
+	return CmdFactoryMock{
+		CreateVenvCmdName:   "echo",
+		ActivateVenvCmdName: "echo",
+		InstallCmdName:      "echo",
+		CatCmdName:          "echo",
+		ListCmdName:         "echo",
+		ShowCmdName:         "echo",
+	}
+}
+
 func (f CmdFactoryMock) MakeCreateVenvCmd(file string) (*exec.Cmd, error) {
 	return exec.Command(f.CreateVenvCmdName, file), f.MakeCreateVenvErr
 }
@@ -29,7 +40,7 @@ func (f CmdFactoryMock) MakeActivateVenvCmd(file string) (*exec.Cmd, error) {
 }
 
 func (f CmdFactoryMock) MakeInstallCmd(file string) (*exec.Cmd, error) {
-	return exec.Command(f.InstallCmdName, file), f.MakeListErr
+	return exec.Command(f.InstallCmdName, file), f.MakeInstallErr
 }
 
 func (f CmdFactoryMock) MakeListCmd() (*exec.Cmd, error) {
