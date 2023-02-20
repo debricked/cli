@@ -1,9 +1,10 @@
 package gomod
 
 import (
+	"os"
+
 	"github.com/debricked/cli/pkg/resolution/pm/util"
 	"github.com/debricked/cli/pkg/resolution/pm/writer"
-	"os"
 )
 
 const (
