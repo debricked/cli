@@ -6,6 +6,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestCreateVenvCmd(t *testing.T) {
+	fileName := "test-file"
+	cmd, _ := CmdFactory{}.MakeCreateVenvCmd(fileName)
+	assert.NotNil(t, cmd)
+	args := cmd.Args
+	assert.Contains(t, args, "python")
+	assert.Contains(t, args, "-m")
+	assert.Contains(t, args, "venv")
+	assert.Contains(t, args, fileName+".venv")
+	assert.Contains(t, args, "--clear")
+}
+
+func TestActivateVenvCmd(t *testing.T) {
+	fileName := "test-file"
+	cmd, _ := CmdFactory{}.MakeActivateVenvCmd(fileName)
+	assert.NotNil(t, cmd)
+	args := cmd.Args
+	assert.Contains(t, args, "bash")
+	assert.Contains(t, args, "-c")
+	assert.Contains(t, args, "source "+fileName+".venv/bin/activate")
+}
+
 func TestMakeInstallCmd(t *testing.T) {
 	fileName := "test-file"
 	cmd, _ := CmdFactory{}.MakeInstallCmd(fileName)

@@ -6,14 +6,26 @@ import (
 )
 
 type CmdFactoryMock struct {
-	InstallCmdName string
-	MakeInstallErr error
-	CatCmdName     string
-	MakeCatErr     error
-	ListCmdName    string
-	MakeListErr    error
-	ShowCmdName    string
-	MakeShowErr    error
+	CreateVenvCmdName   string
+	MakeCreateVenvErr   error
+	ActivateVenvCmdName string
+	MakeActivateVenvErr error
+	InstallCmdName      string
+	MakeInstallErr      error
+	CatCmdName          string
+	MakeCatErr          error
+	ListCmdName         string
+	MakeListErr         error
+	ShowCmdName         string
+	MakeShowErr         error
+}
+
+func (f CmdFactoryMock) MakeCreateVenvCmd(file string) (*exec.Cmd, error) {
+	return exec.Command(f.CreateVenvCmdName, file), f.MakeCreateVenvErr
+}
+
+func (f CmdFactoryMock) MakeActivateVenvCmd(file string) (*exec.Cmd, error) {
+	return exec.Command(f.ActivateVenvCmdName, file), f.MakeActivateVenvErr
 }
 
 func (f CmdFactoryMock) MakeInstallCmd(file string) (*exec.Cmd, error) {
