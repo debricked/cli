@@ -246,3 +246,15 @@ func closeFile(job *Job, file *os.File) {
 		job.err = err
 	}
 }
+
+func (j *Job) parsePipList(pipListOutput string) ([]string, error) {
+	lines := strings.Split(pipListOutput, "\n")
+	packages := []string{}
+	for _, line := range lines[2:] {
+		fields := strings.Split(line, " ")
+		if len(fields) > 0 {
+			packages = append(packages, fields[0])
+		}
+	}
+	return packages, nil
+}
