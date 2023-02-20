@@ -1,6 +1,7 @@
 package pip
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -49,39 +50,70 @@ func (j *Job) Error() error {
 func (j *Job) Run() {
 
 	if j.install {
-		_, err := j.runInstallCmd()
+
+		// TODO create virtualenv
+		// TODO activate virtualenv
+		// TODO install in virtualenv
+		// TODO deactivate virtualenv
+
+		_, err := j.runCreateVenvCmd()
+
 		if err != nil {
 			j.err = err
 			return
 		}
+
+		fmt.Println("Created virtualenv for " + j.file + ".venv")
+
+		_, err = j.runActivateVenvCmd()
+
+		if err != nil {
+			j.err = err
+			fmt.Println(err)
+			return
+		}
+
+		fmt.Println("Activated virtualenv for " + j.file + ".venv")
+
+		_, err = j.runInstallCmd()
+
+		if err != nil {
+			j.err = err
+			return
+		}
+
+		fmt.Println("Installed requirements in virtualenv for " + j.file + ".venv")
 		// TODO if unable to install (many possible issues)
 		// then we should parse and let the user know what went wrong on installation
 
-		// TODO create separate env for installation as to not collide with other installed packages
-		// TODO install in a virtualenv
 	}
 
 	catCmdOutput, err := j.runCatCmd()
+
 	if err != nil {
 		return
 	}
 
 	listCmdOutput, err := j.runListCmd()
+
 	if err != nil {
 		return
 	}
 
 	installedPackages, err := j.parsePipList(string(listCmdOutput))
+
 	if err != nil {
 		return
 	}
 
 	ShowCmdOutput, err := j.runShowCmd(installedPackages)
+
 	if err != nil {
 		return
 	}
 
 	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.file, fileName))
+
 	if err != nil {
 		j.err = err
 		return
@@ -101,21 +133,21 @@ func (j *Job) Run() {
 }
 
 func (j *Job) runCatCmd() ([]byte, error) {
-	catCmd, err := j.cmdFactory.MakeCatCmd(j.file)
+	listCmd, err := j.cmdFactory.MakeCatCmd(j.file)
 	if err != nil {
 		j.err = err
 
 		return nil, err
 	}
 
-	catCmdOutput, err := catCmd.Output()
+	listCmdOutput, err := listCmd.Output()
 	if err != nil {
 		j.err = err
 
 		return nil, err
 	}
 
-	return catCmdOutput, nil
+	return listCmdOutput, nil
 }
 
 func (j *Job) runListCmd() ([]byte, error) {
@@ -152,6 +184,42 @@ func (j *Job) runInstallCmd() ([]byte, error) {
 	}
 
 	return installCmdOutput, nil
+}
+
+func (j *Job) runCreateVenvCmd() ([]byte, error) {
+	createVenvCmd, err := j.cmdFactory.MakeCreateVenvCmd(j.file)
+	if err != nil {
+		j.err = err
+
+		return nil, err
+	}
+
+	createVenvCmdOutput, err := createVenvCmd.Output()
+	if err != nil {
+		j.err = err
+
+		return nil, err
+	}
+
+	return createVenvCmdOutput, nil
+}
+
+func (j *Job) runActivateVenvCmd() ([]byte, error) {
+	activateVenvCmd, err := j.cmdFactory.MakeActivateVenvCmd(j.file)
+	if err != nil {
+		j.err = err
+
+		return nil, err
+	}
+
+	activateVenvCmdOutput, err := activateVenvCmd.Output()
+	if err != nil {
+		j.err = err
+
+		return nil, err
+	}
+
+	return activateVenvCmdOutput, nil
 }
 
 func (j *Job) runShowCmd(packages []string) ([]byte, error) {
