@@ -25,7 +25,7 @@ func (f CmdFactoryMock) MakeListCmd() (*exec.Cmd, error) {
 	if err != nil {
 		return nil, err
 	}
-	pipData := `"` + string(fileContent) + `"`
+	pipData := string(fileContent)
 	return exec.Command(f.ListCmdName, pipData), f.MakeListErr
 }
 
@@ -34,7 +34,7 @@ func (f CmdFactoryMock) MakeCatCmd(file string) (*exec.Cmd, error) {
 	if err != nil {
 		return nil, err
 	}
-	requirements := `"` + string(fileContent) + `"`
+	requirements := string(fileContent)
 	return exec.Command(f.CatCmdName, requirements), f.MakeCatErr
 }
 
@@ -43,6 +43,6 @@ func (f CmdFactoryMock) MakeShowCmd(list []string) (*exec.Cmd, error) {
 	if err != nil {
 		return nil, err
 	}
-	show := `"` + string(fileContent) + `"`
+	show := string(fileContent)
 	return exec.Command(f.ShowCmdName, show), f.MakeShowErr
 }

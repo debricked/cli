@@ -2,6 +2,7 @@ package pip
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -42,11 +43,11 @@ func TestRun(t *testing.T) {
 
 	delimeter := "***"
 	var fileContents []string
-	fileContents = append(fileContents, string(req))
+	fileContents = append(fileContents, string(req)+"\n")
 	fileContents = append(fileContents, delimeter)
-	fileContents = append(fileContents, string(list))
+	fileContents = append(fileContents, string(list)+"\n")
 	fileContents = append(fileContents, delimeter)
-	fileContents = append(fileContents, string(show))
+	fileContents = append(fileContents, string(show)+"\n")
 	res := []byte(strings.Join(fileContents, "\n"))
 
 	fileWriterMock := &writerTestdata.FileWriterMock{}
@@ -56,5 +57,6 @@ func TestRun(t *testing.T) {
 	job.Run()
 
 	assert.NoError(t, job.Error())
-	assert.Equal(t, res, fileWriterMock.Contents)
+	fmt.Println(string(fileWriterMock.Contents))
+	assert.Equal(t, string(res), string(fileWriterMock.Contents))
 }
