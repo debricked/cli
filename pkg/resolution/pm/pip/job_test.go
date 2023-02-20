@@ -31,6 +31,77 @@ func TestError(t *testing.T) {
 }
 
 // TODO add more tests a la maven / golang
+func TestRunCreateVenvCmdErr(T *testing.T) {
+	cmdErr := errors.New("cmd-error")
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	cmdFactoryMock.MakeCreateVenvErr = cmdErr
+	fileWriterMock := &writerTestdata.FileWriterMock{}
+	job := NewJob("file", true, cmdFactoryMock, fileWriterMock)
+
+	job.Run()
+
+	assert.ErrorIs(T, cmdErr, job.Error())
+}
+
+func TestRunActivateVenvCmdErr(T *testing.T) {
+	cmdErr := errors.New("cmd-error")
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	cmdFactoryMock.MakeActivateVenvErr = cmdErr
+	fileWriterMock := &writerTestdata.FileWriterMock{}
+	job := NewJob("file", true, cmdFactoryMock, fileWriterMock)
+
+	job.Run()
+
+	assert.ErrorIs(T, cmdErr, job.Error())
+}
+
+func TestRunInstallCmdErr(T *testing.T) {
+	cmdErr := errors.New("cmd-error")
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	cmdFactoryMock.MakeInstallErr = cmdErr
+	fileWriterMock := &writerTestdata.FileWriterMock{}
+	job := NewJob("file", true, cmdFactoryMock, fileWriterMock)
+
+	job.Run()
+
+	assert.ErrorIs(T, cmdErr, job.Error())
+}
+
+func TestRunCatCmdErr(T *testing.T) {
+	cmdErr := errors.New("cmd-error")
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	cmdFactoryMock.MakeCatErr = cmdErr
+	fileWriterMock := &writerTestdata.FileWriterMock{}
+	job := NewJob("file", true, cmdFactoryMock, fileWriterMock)
+
+	job.Run()
+
+	assert.ErrorIs(T, cmdErr, job.Error())
+}
+
+func TestRunListCmdErr(T *testing.T) {
+	cmdErr := errors.New("cmd-error")
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	cmdFactoryMock.MakeListErr = cmdErr
+	fileWriterMock := &writerTestdata.FileWriterMock{}
+	job := NewJob("file", true, cmdFactoryMock, fileWriterMock)
+
+	job.Run()
+
+	assert.ErrorIs(T, cmdErr, job.Error())
+}
+
+func TestRunShowCmdErr(T *testing.T) {
+	cmdErr := errors.New("cmd-error")
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	cmdFactoryMock.MakeShowErr = cmdErr
+	fileWriterMock := &writerTestdata.FileWriterMock{}
+	job := NewJob("file", true, cmdFactoryMock, fileWriterMock)
+
+	job.Run()
+
+	assert.ErrorIs(T, cmdErr, job.Error())
+}
 
 func TestRun(t *testing.T) {
 	// Load gt-data
@@ -51,8 +122,8 @@ func TestRun(t *testing.T) {
 	res := []byte(strings.Join(fileContents, "\n"))
 
 	fileWriterMock := &writerTestdata.FileWriterMock{}
-	cmdFactoryMock := testdata.CmdFactoryMock{InstallCmdName: "echo", ListCmdName: "echo", CatCmdName: "echo", ShowCmdName: "echo"}
-	job := NewJob("file", false, cmdFactoryMock, fileWriterMock)
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	job := NewJob("file", true, cmdFactoryMock, fileWriterMock)
 
 	job.Run()
 
