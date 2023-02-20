@@ -60,3 +60,15 @@ func TestRun(t *testing.T) {
 	fmt.Println(string(fileWriterMock.Contents))
 	assert.Equal(t, string(res), string(fileWriterMock.Contents))
 }
+
+func TestParsePipList(t *testing.T) {
+	job := NewJob("file", false, CmdFactory{}, writer.FileWriter{})
+	file, err := os.ReadFile("testdata/list.txt")
+	assert.Nil(t, err)
+	pipData := string(file)
+	packages, err := job.parsePipList(pipData)
+	assert.Nil(t, err)
+	gt := []string{"aiohttp", "cryptography", "numpy", "Flask", "open-source-health", "pandas", "tqdm"}
+	assert.Equal(t, gt, packages)
+	assert.Nil(t, job.err)
+}
