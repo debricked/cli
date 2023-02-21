@@ -2,11 +2,12 @@ package gomod
 
 import (
 	"errors"
+	"testing"
+
 	"github.com/debricked/cli/pkg/resolution/pm/gomod/testdata"
 	"github.com/debricked/cli/pkg/resolution/pm/writer"
 	writerTestdata "github.com/debricked/cli/pkg/resolution/pm/writer/testdata"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestNewJob(t *testing.T) {
@@ -40,7 +41,8 @@ func TestRunCmdOutputErr(T *testing.T) {
 
 	job.Run()
 
-	assert.ErrorContains(T, job.err, "executable file not found in $PATH")
+	assert.ErrorContains(T, job.err, "executable file not found in")
+	assert.ErrorContains(T, job.err, "PATH")
 }
 
 func TestRunListCmdErr(T *testing.T) {
@@ -61,7 +63,8 @@ func TestRunListCmdOutputErr(T *testing.T) {
 
 	job.Run()
 
-	assert.ErrorContains(T, job.err, "executable file not found in $PATH")
+	assert.ErrorContains(T, job.err, "executable file not found in")
+	assert.ErrorContains(T, job.err, "PATH")
 }
 
 func TestRunCreateErr(T *testing.T) {
