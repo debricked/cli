@@ -3,12 +3,13 @@ package maven
 import (
 	"errors"
 	"fmt"
+	"runtime"
+	"testing"
+
 	"github.com/debricked/cli/pkg/resolution/job"
 	"github.com/debricked/cli/pkg/resolution/pm/maven/testdata"
-	"runtime"
 
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestNewJob(t *testing.T) {

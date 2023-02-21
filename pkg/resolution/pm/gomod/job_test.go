@@ -3,13 +3,14 @@ package gomod
 import (
 	"errors"
 	"fmt"
+	"runtime"
+	"testing"
+
 	"github.com/debricked/cli/pkg/resolution/job"
 	"github.com/debricked/cli/pkg/resolution/pm/gomod/testdata"
 	"github.com/debricked/cli/pkg/resolution/pm/writer"
 	writerTestdata "github.com/debricked/cli/pkg/resolution/pm/writer/testdata"
 	"github.com/stretchr/testify/assert"
-	"runtime"
-	"testing"
 )
 
 func TestNewJob(t *testing.T) {

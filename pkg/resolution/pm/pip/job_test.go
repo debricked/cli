@@ -56,7 +56,8 @@ func TestRunCreateVenvCmdOutputErr(T *testing.T) {
 	cmdMock.CreateVenvCmdName = "bad-name"
 	job := NewJob("file", true, cmdMock, nil)
 	job.Run()
-	assert.ErrorContains(T, job.err, "executable file not found in $PATH")
+	assert.ErrorContains(T, job.err, "executable file not found in")
+	assert.ErrorContains(T, job.err, "PATH")
 }
 
 func TestRunActivateVenvCmdErr(T *testing.T) {
@@ -76,7 +77,8 @@ func TestRunActivateVenvCmdOutputErr(T *testing.T) {
 	cmdMock.ActivateVenvCmdName = "bad-name"
 	job := NewJob("file", true, cmdMock, nil)
 	job.Run()
-	assert.ErrorContains(T, job.err, "executable file not found in $PATH")
+	assert.ErrorContains(T, job.err, "executable file not found in")
+	assert.ErrorContains(T, job.err, "PATH")
 }
 
 func TestRunInstallCmdErr(T *testing.T) {
@@ -96,7 +98,8 @@ func TestRunInstallCmdOutputErr(T *testing.T) {
 	cmdMock.InstallCmdName = "bad-name"
 	job := NewJob("file", true, cmdMock, nil)
 	job.Run()
-	assert.ErrorContains(T, job.err, "executable file not found in $PATH")
+	assert.ErrorContains(T, job.err, "executable file not found in")
+	assert.ErrorContains(T, job.err, "PATH")
 }
 
 func TestRunCatCmdErr(T *testing.T) {
@@ -116,7 +119,8 @@ func TestRunCatCmdOutputErr(T *testing.T) {
 	cmdMock.CatCmdName = "bad-name"
 	job := NewJob("file", false, cmdMock, nil)
 	job.Run()
-	assert.ErrorContains(T, job.err, "executable file not found in $PATH")
+	assert.ErrorContains(T, job.err, "executable file not found in")
+	assert.ErrorContains(T, job.err, "PATH")
 }
 
 func TestRunListCmdErr(T *testing.T) {
@@ -136,7 +140,8 @@ func TestRunListCmdOutputErr(T *testing.T) {
 	cmdMock.ListCmdName = "bad-name"
 	job := NewJob("file", false, cmdMock, nil)
 	job.Run()
-	assert.ErrorContains(T, job.err, "executable file not found in $PATH")
+	assert.ErrorContains(T, job.err, "executable file not found in")
+	assert.ErrorContains(T, job.err, "PATH")
 }
 
 func TestRunShowCmdErr(T *testing.T) {
@@ -156,7 +161,8 @@ func TestRunShowCmdOutputErr(T *testing.T) {
 	cmdMock.ShowCmdName = "bad-name"
 	job := NewJob("file", false, cmdMock, nil)
 	job.Run()
-	assert.ErrorContains(T, job.err, "executable file not found in $PATH")
+	assert.ErrorContains(T, job.err, "executable file not found in")
+	assert.ErrorContains(T, job.err, "PATH")
 }
 
 func TestRun(t *testing.T) {
