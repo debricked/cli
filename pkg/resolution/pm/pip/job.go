@@ -50,12 +50,6 @@ func (j *Job) Error() error {
 func (j *Job) Run() {
 
 	if j.install {
-
-		// TODO create virtualenv
-		// TODO activate virtualenv
-		// TODO install in virtualenv
-		// TODO deactivate virtualenv
-
 		_, err := j.runCreateVenvCmd()
 
 		if err != nil {
@@ -100,12 +94,7 @@ func (j *Job) Run() {
 		return
 	}
 
-	installedPackages, err := j.parsePipList(string(listCmdOutput))
-
-	if err != nil {
-		return
-	}
-
+	installedPackages := j.parsePipList(string(listCmdOutput))
 	ShowCmdOutput, err := j.runShowCmd(installedPackages)
 
 	if err != nil {
@@ -130,6 +119,54 @@ func (j *Job) Run() {
 	res := []byte(strings.Join(fileContents, "\n"))
 
 	j.err = j.fileWriter.Write(lockFile, res)
+}
+
+func (j *Job) runCreateVenvCmd() ([]byte, error) {
+	createVenvCmd, err := j.cmdFactory.MakeCreateVenvCmd(j.file)
+	if err != nil {
+		j.err = err
+		return nil, err
+	}
+
+	createVenvCmdOutput, err := createVenvCmd.Output()
+	if err != nil {
+		j.err = err
+		return nil, err
+	}
+
+	return createVenvCmdOutput, nil
+}
+
+func (j *Job) runActivateVenvCmd() ([]byte, error) {
+	activateVenvCmd, err := j.cmdFactory.MakeActivateVenvCmd(j.file)
+	if err != nil {
+		j.err = err
+		return nil, err
+	}
+
+	activateVenvCmdOutput, err := activateVenvCmd.Output()
+	if err != nil {
+		j.err = err
+		return nil, err
+	}
+
+	return activateVenvCmdOutput, nil
+}
+
+func (j *Job) runInstallCmd() ([]byte, error) {
+	installCmd, err := j.cmdFactory.MakeInstallCmd(j.file)
+	if err != nil {
+		j.err = err
+		return nil, err
+	}
+
+	installCmdOutput, err := installCmd.Output()
+	if err != nil {
+		j.err = err
+		return nil, err
+	}
+
+	return installCmdOutput, nil
 }
 
 func (j *Job) runCatCmd() ([]byte, error) {
@@ -168,73 +205,16 @@ func (j *Job) runListCmd() ([]byte, error) {
 	return listCmdOutput, nil
 }
 
-func (j *Job) runInstallCmd() ([]byte, error) {
-	installCmd, err := j.cmdFactory.MakeInstallCmd(j.file)
-	if err != nil {
-		j.err = err
-
-		return nil, err
-	}
-
-	installCmdOutput, err := installCmd.Output()
-	if err != nil {
-		j.err = err
-
-		return nil, err
-	}
-
-	return installCmdOutput, nil
-}
-
-func (j *Job) runCreateVenvCmd() ([]byte, error) {
-
-	createVenvCmd, err := j.cmdFactory.MakeCreateVenvCmd(j.file)
-	if err != nil {
-		j.err = err
-
-		return nil, err
-	}
-
-	createVenvCmdOutput, err := createVenvCmd.Output()
-	if err != nil {
-		j.err = err
-
-		return nil, err
-	}
-
-	return createVenvCmdOutput, nil
-}
-
-func (j *Job) runActivateVenvCmd() ([]byte, error) {
-	activateVenvCmd, err := j.cmdFactory.MakeActivateVenvCmd(j.file)
-	if err != nil {
-		j.err = err
-
-		return nil, err
-	}
-
-	activateVenvCmdOutput, err := activateVenvCmd.Output()
-	if err != nil {
-		j.err = err
-
-		return nil, err
-	}
-
-	return activateVenvCmdOutput, nil
-}
-
 func (j *Job) runShowCmd(packages []string) ([]byte, error) {
 	listCmd, err := j.cmdFactory.MakeShowCmd(packages)
 	if err != nil {
 		j.err = err
-
 		return nil, err
 	}
 
 	listCmdOutput, err := listCmd.Output()
 	if err != nil {
 		j.err = err
-
 		return nil, err
 	}
 
@@ -248,7 +228,7 @@ func closeFile(job *Job, file *os.File) {
 	}
 }
 
-func (j *Job) parsePipList(pipListOutput string) ([]string, error) {
+func (j *Job) parsePipList(pipListOutput string) []string {
 	lines := strings.Split(pipListOutput, "\n")
 	packages := []string{}
 	for _, line := range lines[2:] {
@@ -257,5 +237,5 @@ func (j *Job) parsePipList(pipListOutput string) ([]string, error) {
 			packages = append(packages, fields[0])
 		}
 	}
-	return packages, nil
+	return packages
 }
