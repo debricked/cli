@@ -2,6 +2,7 @@ package pip
 
 import (
 	"os/exec"
+	"path/filepath"
 )
 
 type ICmdFactory interface {
@@ -18,18 +19,22 @@ type CmdFactory struct{}
 func (_ CmdFactory) MakeCreateVenvCmd(file string) (*exec.Cmd, error) {
 	path, err := exec.LookPath("python")
 
+	fpath := filepath.Join(filepath.Dir(file), filepath.Base(file)+".venv")
+
 	return &exec.Cmd{
 		Path: path,
-		Args: []string{"python", "-m", "venv", file + ".venv", "--clear"},
+		Args: []string{"python", "-m", "venv", fpath, "--clear"},
 	}, err
 }
 
 func (_ CmdFactory) MakeActivateVenvCmd(file string) (*exec.Cmd, error) {
 	path, err := exec.LookPath("bash")
 
+	fpath := filepath.Join(filepath.Dir(file), filepath.Base(file)+".venv", "bin", "activate")
+
 	return &exec.Cmd{
 		Path: path,
-		Args: []string{"bash", "-c", "source " + file + ".venv/bin/activate"},
+		Args: []string{"bash", "-c", "source " + fpath},
 	}, err
 }
 
