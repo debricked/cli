@@ -3,12 +3,10 @@ package pip
 import (
 	"fmt"
 	"os/exec"
-	"path/filepath"
 )
 
 type ICmdFactory interface {
 	MakeCreateVenvCmd(file string) (*exec.Cmd, error)
-	MakeActivateVenvCmd(file string) (*exec.Cmd, error)
 	MakeInstallCmd(command string, file string) (*exec.Cmd, error)
 	MakeCatCmd(file string) (*exec.Cmd, error)
 	MakeListCmd(command string) (*exec.Cmd, error)
@@ -23,17 +21,6 @@ func (_ CmdFactory) MakeCreateVenvCmd(fpath string) (*exec.Cmd, error) {
 	return &exec.Cmd{
 		Path: path,
 		Args: []string{"python", "-m", "venv", fpath, "--clear"},
-	}, err
-}
-
-func (_ CmdFactory) MakeActivateVenvCmd(file string) (*exec.Cmd, error) {
-	path, err := exec.LookPath("bash")
-
-	fpath := filepath.Join(filepath.Dir(file), filepath.Base(file)+".venv", "bin", "activate")
-
-	return &exec.Cmd{
-		Path: path,
-		Args: []string{"bash", "-c", "source " + fpath},
 	}, err
 }
 
