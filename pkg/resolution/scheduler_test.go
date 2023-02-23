@@ -1,6 +1,7 @@
 package resolution
 
 import (
+	"errors"
 	"github.com/debricked/cli/pkg/resolution/job"
 	"github.com/debricked/cli/pkg/resolution/job/testdata"
 	"github.com/stretchr/testify/assert"
@@ -20,12 +21,12 @@ func (s SchedulerMock) Schedule(jobs []job.IJob) (IResolution, error) {
 }
 
 func TestNewScheduler(t *testing.T) {
-	s := NewScheduler()
+	s := NewScheduler(10)
 	assert.NotNil(t, s)
 }
 
 func TestSchedule(t *testing.T) {
-	s := NewScheduler()
+	s := NewScheduler(10)
 	res, err := s.Schedule([]job.IJob{testdata.NewJobMock("")})
 	assert.NoError(t, err)
 	assert.Len(t, res.Jobs(), 1)
@@ -41,4 +42,18 @@ func TestSchedule(t *testing.T) {
 	res, err = s.Schedule([]job.IJob{testdata.NewJobMock(""), testdata.NewJobMock("")})
 	assert.NoError(t, err)
 	assert.Len(t, res.Jobs(), 2)
+	for _, j := range res.Jobs() {
+		assert.NoError(t, j.Error())
+	}
+}
+
+func TestScheduleJobErr(t *testing.T) {
+	s := NewScheduler(10)
+	jobMock := testdata.NewJobMock("")
+	jobErr := errors.New("job-error")
+	jobMock.SetErr(jobErr)
+	res, err := s.Schedule([]job.IJob{jobMock})
+	assert.NoError(t, err)
+	assert.Len(t, res.Jobs(), 1)
+	assert.ErrorIs(t, jobErr, res.Jobs()[0].Error())
 }

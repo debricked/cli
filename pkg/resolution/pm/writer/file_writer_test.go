@@ -11,18 +11,16 @@ var fw = FileWriter{}
 const fileName = "debricked-test.json"
 
 func TestCreate(t *testing.T) {
-	defer deleteFile(t, fileName)
-
 	testFile, err := fw.Create(fileName)
-
 	assert.NoError(t, err)
 	assert.NotNil(t, testFile)
+	defer deleteFile(t, testFile)
 }
 
 func TestWrite(t *testing.T) {
-	defer deleteFile(t, fileName)
-	testFile, _ := fw.Create(fileName)
 	content := []byte("{}")
+	testFile, _ := fw.Create(fileName)
+	defer deleteFile(t, testFile)
 
 	err := fw.Write(testFile, content)
 
@@ -33,15 +31,16 @@ func TestWrite(t *testing.T) {
 }
 
 func TestClose(t *testing.T) {
-	defer deleteFile(t, fileName)
 	testFile, _ := fw.Create(fileName)
+	defer deleteFile(t, testFile)
 
 	err := fw.Close(testFile)
 
 	assert.NoError(t, err)
 }
 
-func deleteFile(t *testing.T, name string) {
-	err := os.Remove(name)
+func deleteFile(t *testing.T, file *os.File) {
+	_ = file.Close()
+	err := os.Remove(file.Name())
 	assert.NoError(t, err)
 }

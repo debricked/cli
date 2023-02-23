@@ -2,109 +2,145 @@ package gomod
 
 import (
 	"errors"
+	"fmt"
+	"github.com/debricked/cli/pkg/resolution/job"
 	"github.com/debricked/cli/pkg/resolution/pm/gomod/testdata"
 	"github.com/debricked/cli/pkg/resolution/pm/writer"
 	writerTestdata "github.com/debricked/cli/pkg/resolution/pm/writer/testdata"
 	"github.com/stretchr/testify/assert"
+	"runtime"
 	"testing"
 )
 
 func TestNewJob(t *testing.T) {
-	job := NewJob("file", CmdFactory{}, writer.FileWriter{})
-	assert.Equal(t, "file", job.file)
-	assert.Nil(t, job.err)
+	j := NewJob("file", CmdFactory{}, writer.FileWriter{})
+	assert.Equal(t, "file", j.file)
+	assert.Nil(t, j.err)
 }
 
 func TestFile(t *testing.T) {
-	job := Job{file: "file"}
-	assert.Equal(t, "file", job.File())
+	j := Job{file: "file"}
+	assert.Equal(t, "file", j.File())
 }
 
 func TestError(t *testing.T) {
 	jobErr := errors.New("error")
-	job := Job{file: "file", err: jobErr}
-	assert.Equal(t, jobErr, job.Error())
+	j := Job{file: "file", err: jobErr}
+	assert.Equal(t, jobErr, j.Error())
 }
 
-func TestRunGraphCmdErr(T *testing.T) {
+func TestRunGraphCmdErr(t *testing.T) {
 	cmdErr := errors.New("cmd-error")
-	job := NewJob("file", testdata.CmdFactoryMock{MakeGraphCmdErr: cmdErr}, nil)
+	j := NewJob("file", testdata.CmdFactoryMock{MakeGraphCmdErr: cmdErr}, nil)
 
-	job.Run()
+	go waitStatus(j)
 
-	assert.ErrorIs(T, cmdErr, job.Error())
+	j.Run()
+
+	assert.ErrorIs(t, cmdErr, j.Error())
 }
 
-func TestRunCmdOutputErr(T *testing.T) {
-	job := NewJob("file", testdata.CmdFactoryMock{GraphCmdName: "bad-name"}, nil)
+func TestRunCmdOutputErr(t *testing.T) {
+	j := NewJob("file", testdata.CmdFactoryMock{GraphCmdName: "bad-name"}, nil)
 
-	job.Run()
+	go waitStatus(j)
 
-	assert.ErrorContains(T, job.err, "executable file not found in $PATH")
+	j.Run()
+
+	assertPathErr(t, j.Error())
 }
 
-func TestRunListCmdErr(T *testing.T) {
+func TestRunListCmdErr(t *testing.T) {
 	cmdErr := errors.New("cmd-error")
 	cmdFactoryMock := testdata.CmdFactoryMock{
 		GraphCmdName:   "echo",
 		MakeListCmdErr: cmdErr,
 	}
-	job := NewJob("file", cmdFactoryMock, nil)
+	j := NewJob("file", cmdFactoryMock, nil)
 
-	job.Run()
+	go waitStatus(j)
 
-	assert.ErrorIs(T, cmdErr, job.Error())
+	j.Run()
+
+	assert.ErrorIs(t, cmdErr, j.Error())
 }
 
-func TestRunListCmdOutputErr(T *testing.T) {
-	job := NewJob("file", testdata.CmdFactoryMock{GraphCmdName: "echo", ListCmdName: "bad-name"}, nil)
+func TestRunListCmdOutputErr(t *testing.T) {
+	j := NewJob("file", testdata.CmdFactoryMock{GraphCmdName: "echo", ListCmdName: "bad-name"}, nil)
 
-	job.Run()
+	go waitStatus(j)
 
-	assert.ErrorContains(T, job.err, "executable file not found in $PATH")
+	j.Run()
+
+	assertPathErr(t, j.Error())
 }
 
-func TestRunCreateErr(T *testing.T) {
+func TestRunCreateErr(t *testing.T) {
 	createErr := errors.New("create-error")
 	fileWriterMock := &writerTestdata.FileWriterMock{CreateErr: createErr}
 	cmdFactoryMock := testdata.CmdFactoryMock{GraphCmdName: "echo", ListCmdName: "echo"}
-	job := NewJob("file", cmdFactoryMock, fileWriterMock)
+	j := NewJob("file", cmdFactoryMock, fileWriterMock)
 
-	job.Run()
+	go waitStatus(j)
 
-	assert.ErrorIs(T, job.Error(), createErr)
+	j.Run()
+
+	assert.ErrorIs(t, j.Error(), createErr)
 }
 
-func TestRunWriteErr(T *testing.T) {
+func TestRunWriteErr(t *testing.T) {
 	writeErr := errors.New("write-error")
 	fileWriterMock := &writerTestdata.FileWriterMock{WriteErr: writeErr}
 	cmdFactoryMock := testdata.CmdFactoryMock{GraphCmdName: "echo", ListCmdName: "echo"}
-	job := NewJob("file", cmdFactoryMock, fileWriterMock)
+	j := NewJob("file", cmdFactoryMock, fileWriterMock)
 
-	job.Run()
+	go waitStatus(j)
 
-	assert.ErrorIs(T, job.Error(), writeErr)
+	j.Run()
+
+	assert.ErrorIs(t, j.Error(), writeErr)
 }
 
-func TestRunCloseErr(T *testing.T) {
+func TestRunCloseErr(t *testing.T) {
 	closeErr := errors.New("close-error")
 	fileWriterMock := &writerTestdata.FileWriterMock{CloseErr: closeErr}
 	cmdFactoryMock := testdata.CmdFactoryMock{GraphCmdName: "echo", ListCmdName: "echo"}
-	job := NewJob("file", cmdFactoryMock, fileWriterMock)
+	j := NewJob("file", cmdFactoryMock, fileWriterMock)
 
-	job.Run()
+	go waitStatus(j)
 
-	assert.ErrorIs(T, job.Error(), closeErr)
+	j.Run()
+
+	assert.ErrorIs(t, j.Error(), closeErr)
 }
 
-func TestRun(T *testing.T) {
+func TestRun(t *testing.T) {
 	fileContents := []byte("MakeGraphCmd\n\nMakeListCmd\n")
 	fileWriterMock := &writerTestdata.FileWriterMock{}
 	cmdFactoryMock := testdata.CmdFactoryMock{GraphCmdName: "echo", ListCmdName: "echo"}
-	job := NewJob("file", cmdFactoryMock, fileWriterMock)
+	j := NewJob("file", cmdFactoryMock, fileWriterMock)
 
-	job.Run()
+	go waitStatus(j)
 
-	assert.NoError(T, job.Error())
-	assert.Equal(T, fileContents, fileWriterMock.Contents)
+	j.Run()
+
+	assert.NoError(t, j.Error())
+	assert.Equal(t, fileContents, fileWriterMock.Contents)
+}
+
+func waitStatus(j job.IJob) {
+	for {
+		<-j.Status()
+	}
+}
+
+func assertPathErr(t *testing.T, err error) {
+	var path string
+	if runtime.GOOS == "windows" {
+		path = "%PATH%"
+	} else {
+		path = "$PATH"
+	}
+	errMsg := fmt.Sprintf("executable file not found in %s", path)
+	assert.ErrorContains(t, err, errMsg)
 }

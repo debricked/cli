@@ -2,80 +2,117 @@ package gradle
 
 import (
 	"errors"
+	"fmt"
+	"github.com/debricked/cli/pkg/resolution/job"
 	"github.com/debricked/cli/pkg/resolution/pm/gradle/testdata"
 	"github.com/debricked/cli/pkg/resolution/pm/writer"
 	writerTestdata "github.com/debricked/cli/pkg/resolution/pm/writer/testdata"
 	"github.com/stretchr/testify/assert"
+	"runtime"
 	"testing"
 )
 
 func TestNewJob(t *testing.T) {
-	job := NewJob("file", CmdFactory{}, writer.FileWriter{})
-	assert.Equal(t, "file", job.file)
-	assert.Nil(t, job.err)
+	j := NewJob("file", CmdFactory{}, writer.FileWriter{})
+	assert.Equal(t, "file", j.file)
+	assert.Nil(t, j.err)
 }
 
 func TestFile(t *testing.T) {
-	job := Job{file: "file"}
-	assert.Equal(t, "file", job.File())
+	j := Job{file: "file"}
+	assert.Equal(t, "file", j.File())
 }
 
 func TestError(t *testing.T) {
 	jobErr := errors.New("error")
-	job := Job{file: "file", err: jobErr}
-	assert.Equal(t, jobErr, job.Error())
+	j := Job{file: "file", err: jobErr}
+	assert.Equal(t, jobErr, j.Error())
 }
 
-func TestRunCmdErr(T *testing.T) {
+func TestRunCmdErr(t *testing.T) {
 	cmdErr := errors.New("cmd-error")
-	job := NewJob("file", testdata.CmdFactoryMock{Err: cmdErr}, nil)
-	job.Run()
+	j := NewJob("file", testdata.CmdFactoryMock{Err: cmdErr}, nil)
 
-	assert.ErrorIs(T, cmdErr, job.Error())
+	go waitStatus(j)
+
+	j.Run()
+
+	assert.ErrorIs(t, cmdErr, j.Error())
 }
 
-func TestRunCmdOutputErr(T *testing.T) {
-	job := NewJob("file", testdata.CmdFactoryMock{Name: "bad-name"}, nil)
-	job.Run()
+func TestRunCmdOutputErr(t *testing.T) {
+	j := NewJob("file", testdata.CmdFactoryMock{Name: "bad-name"}, nil)
 
-	assert.ErrorContains(T, job.err, "executable file not found in $PATH")
+	go waitStatus(j)
+
+	j.Run()
+
+	assertPathErr(t, j.Error())
 }
 
-func TestRunCreateErr(T *testing.T) {
+func TestRunCreateErr(t *testing.T) {
 	createErr := errors.New("create-error")
 	fileWriterMock := &writerTestdata.FileWriterMock{CreateErr: createErr}
-	job := NewJob("file", testdata.CmdFactoryMock{Name: "echo"}, fileWriterMock)
-	job.Run()
+	j := NewJob("file", testdata.CmdFactoryMock{Name: "echo"}, fileWriterMock)
 
-	assert.ErrorIs(T, job.Error(), createErr)
+	go waitStatus(j)
+
+	j.Run()
+
+	assert.ErrorIs(t, j.Error(), createErr)
 }
 
-func TestRunWriteErr(T *testing.T) {
+func TestRunWriteErr(t *testing.T) {
 	writeErr := errors.New("write-error")
 	fileWriterMock := &writerTestdata.FileWriterMock{WriteErr: writeErr}
-	job := NewJob("file", testdata.CmdFactoryMock{Name: "echo"}, fileWriterMock)
-	job.Run()
+	j := NewJob("file", testdata.CmdFactoryMock{Name: "echo"}, fileWriterMock)
 
-	assert.ErrorIs(T, job.Error(), writeErr)
+	go waitStatus(j)
+
+	j.Run()
+
+	assert.ErrorIs(t, j.Error(), writeErr)
 }
 
-func TestRunCloseErr(T *testing.T) {
+func TestRunCloseErr(t *testing.T) {
 	closeErr := errors.New("close-error")
 	fileWriterMock := &writerTestdata.FileWriterMock{CloseErr: closeErr}
-	job := NewJob("file", testdata.CmdFactoryMock{Name: "echo"}, fileWriterMock)
-	job.Run()
+	j := NewJob("file", testdata.CmdFactoryMock{Name: "echo"}, fileWriterMock)
 
-	assert.ErrorIs(T, job.Error(), closeErr)
+	go waitStatus(j)
+
+	j.Run()
+
+	assert.ErrorIs(t, j.Error(), closeErr)
 }
 
-func TestRun(T *testing.T) {
+func TestRun(t *testing.T) {
 	fileContents := []byte("MakeDependenciesCmd\n")
 	fileWriterMock := &writerTestdata.FileWriterMock{}
 	cmdFactoryMock := testdata.CmdFactoryMock{Name: "echo"}
-	job := NewJob("file", cmdFactoryMock, fileWriterMock)
+	j := NewJob("file", cmdFactoryMock, fileWriterMock)
 
-	job.Run()
+	go waitStatus(j)
 
-	assert.NoError(T, job.Error())
-	assert.Equal(T, fileContents, fileWriterMock.Contents)
+	j.Run()
+
+	assert.NoError(t, j.Error())
+	assert.Equal(t, fileContents, fileWriterMock.Contents)
+}
+
+func waitStatus(j job.IJob) {
+	for {
+		<-j.Status()
+	}
+}
+
+func assertPathErr(t *testing.T, err error) {
+	var path string
+	if runtime.GOOS == "windows" {
+		path = "%PATH%"
+	} else {
+		path = "$PATH"
+	}
+	errMsg := fmt.Sprintf("executable file not found in %s", path)
+	assert.ErrorContains(t, err, errMsg)
 }

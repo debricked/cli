@@ -1,17 +1,24 @@
 package util
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
 func TestMakePathFromManifestFile(t *testing.T) {
-	path := MakePathFromManifestFile("pkg/resolution/pm/util/file.json", "file.lock")
-	assert.Equal(t, "pkg/resolution/pm/util/file.lock", path)
+	manifestFile := filepath.Join("pkg", "resolution", "pm", "util", "file.json")
+	path := MakePathFromManifestFile(manifestFile, "file.lock")
+	lockFile := filepath.Join("pkg", "resolution", "pm", "util", "file.lock")
+
+	assert.Equal(t, lockFile, path)
 
 	path = MakePathFromManifestFile("file.json", "file.lock")
-	assert.Equal(t, "./file.lock", path)
+	lockFile = fmt.Sprintf(".%s%s", string(os.PathSeparator), "file.lock")
+	assert.Equal(t, lockFile, path)
 
-	path = MakePathFromManifestFile("/", "file.lock")
-	assert.Equal(t, "/file.lock", path)
+	path = MakePathFromManifestFile(string(os.PathSeparator), "file.lock")
+	assert.Equal(t, fmt.Sprintf("%s%s", string(os.PathSeparator), "file.lock"), path)
 }
