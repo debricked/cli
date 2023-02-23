@@ -39,11 +39,11 @@ func (f CmdFactoryMock) MakeActivateVenvCmd(file string) (*exec.Cmd, error) {
 	return exec.Command(f.ActivateVenvCmdName, file), f.MakeActivateVenvErr
 }
 
-func (f CmdFactoryMock) MakeInstallCmd(file string) (*exec.Cmd, error) {
+func (f CmdFactoryMock) MakeInstallCmd(command string, file string) (*exec.Cmd, error) {
 	return exec.Command(f.InstallCmdName, file), f.MakeInstallErr
 }
 
-func (f CmdFactoryMock) MakeListCmd() (*exec.Cmd, error) {
+func (f CmdFactoryMock) MakeListCmd(command string) (*exec.Cmd, error) {
 	fileContent, err := os.ReadFile("testdata/list.txt")
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func (f CmdFactoryMock) MakeCatCmd(file string) (*exec.Cmd, error) {
 	return exec.Command(f.CatCmdName, requirements), f.MakeCatErr
 }
 
-func (f CmdFactoryMock) MakeShowCmd(list []string) (*exec.Cmd, error) {
+func (f CmdFactoryMock) MakeShowCmd(command string, list []string) (*exec.Cmd, error) {
 	fileContent, err := os.ReadFile("testdata/show.txt")
 	if err != nil {
 		return nil, err
