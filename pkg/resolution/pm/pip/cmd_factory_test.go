@@ -7,14 +7,14 @@ import (
 )
 
 func TestCreateVenvCmd(t *testing.T) {
-	fileName := "test-file"
-	cmd, _ := CmdFactory{}.MakeCreateVenvCmd(fileName)
+	venvName := "test-file.venv"
+	cmd, _ := CmdFactory{}.MakeCreateVenvCmd(venvName)
 	assert.NotNil(t, cmd)
 	args := cmd.Args
 	assert.Contains(t, args, "python")
 	assert.Contains(t, args, "-m")
 	assert.Contains(t, args, "venv")
-	assert.Contains(t, args, fileName+".venv")
+	assert.Contains(t, args, venvName)
 	assert.Contains(t, args, "--clear")
 }
 
@@ -30,7 +30,8 @@ func TestActivateVenvCmd(t *testing.T) {
 
 func TestMakeInstallCmd(t *testing.T) {
 	fileName := "test-file"
-	cmd, _ := CmdFactory{}.MakeInstallCmd(fileName)
+	pipCommand := "pip"
+	cmd, _ := CmdFactory{}.MakeInstallCmd(pipCommand, fileName)
 	assert.NotNil(t, cmd)
 	args := cmd.Args
 	assert.Contains(t, args, "pip")
@@ -48,7 +49,8 @@ func TestMakeCatCmd(t *testing.T) {
 	assert.Contains(t, args, fileName)
 }
 func TestMakeListCmd(t *testing.T) {
-	cmd, _ := CmdFactory{}.MakeListCmd()
+	mockCommand := "mock-cmd"
+	cmd, _ := CmdFactory{}.MakeListCmd(mockCommand)
 	assert.NotNil(t, cmd)
 	args := cmd.Args
 	assert.Contains(t, args, "pip")
@@ -57,7 +59,8 @@ func TestMakeListCmd(t *testing.T) {
 
 func TestMakeShowCmd(t *testing.T) {
 	input := []string{"package1", "package2"}
-	cmd, _ := CmdFactory{}.MakeShowCmd(input)
+	mockCommand := "pip"
+	cmd, _ := CmdFactory{}.MakeShowCmd(mockCommand, input)
 	assert.NotNil(t, cmd)
 	args := cmd.Args
 	assert.Contains(t, args, "pip")
