@@ -38,7 +38,6 @@ func TestError(t *testing.T) {
 	assert.Equal(t, jobErr, job.Error())
 }
 
-// TODO add more tests a la maven / golang
 func TestRunCreateVenvCmdErr(T *testing.T) {
 	cmdErr := errors.New("cmd-error")
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
@@ -192,6 +191,16 @@ func TestRun(t *testing.T) {
 	assert.NoError(t, job.Error())
 	fmt.Println(string(fileWriterMock.Contents))
 	assert.Equal(t, string(res), string(fileWriterMock.Contents))
+}
+
+func TestRunInstall(t *testing.T) {
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	fileWriterMock := &writerTestdata.FileWriterMock{}
+	job := NewJob("file", false, cmdFactoryMock, fileWriterMock)
+
+	job.runInstallCmd()
+
+	assert.NoError(t, job.Error())
 }
 
 func TestParsePipList(t *testing.T) {
