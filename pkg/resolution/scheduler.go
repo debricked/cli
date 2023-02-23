@@ -1,10 +1,11 @@
 package resolution
 
 import (
+	"sync"
+
 	"github.com/chelnak/ysmrr"
 	"github.com/debricked/cli/pkg/resolution/job"
 	"github.com/debricked/cli/pkg/tui"
-	"sync"
 )
 
 type IScheduler interface {
