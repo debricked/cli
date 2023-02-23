@@ -2,10 +2,13 @@ package util
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMakePathFromManifestFile(t *testing.T) {
@@ -21,4 +24,5 @@ func TestMakePathFromManifestFile(t *testing.T) {
 
 	path = MakePathFromManifestFile(string(os.PathSeparator), "file.lock")
 	assert.Equal(t, fmt.Sprintf("%s%s", string(os.PathSeparator), "file.lock"), path)
+	assert.Equal(t, "file.lock", path)
 }
