@@ -3,8 +3,13 @@ package testdata
 import "fmt"
 
 type JobMock struct {
-	file string
-	err  error
+	file   string
+	err    error
+	status chan string
+}
+
+func (j *JobMock) Status() chan string {
+	return j.status
 }
 
 func (j *JobMock) File() string {
@@ -20,7 +25,7 @@ func (j *JobMock) Run() {
 }
 
 func NewJobMock(file string) *JobMock {
-	return &JobMock{file: file}
+	return &JobMock{file: file, status: make(chan string)}
 }
 
 func (j *JobMock) SetErr(err error) {
