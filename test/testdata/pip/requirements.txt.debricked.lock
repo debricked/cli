@@ -1,0 +1,91 @@
+pandas==1.5.1
+# comment
+
+***
+Package         Version
+--------------- --------
+numpy           1.24.2
+pandas          1.5.1
+pip             22.0.4
+python-dateutil 2.8.2
+pytz            2022.7.1
+setuptools      58.1.0
+six             1.16.0
+
+***
+Name: numpy
+Version: 1.24.2
+Summary: Fundamental package for array computing in Python
+Home-page: https://www.numpy.org
+Author: Travis E. Oliphant et al.
+Author-email: 
+License: BSD-3-Clause
+Location: /home/nilszeilon/Programming/cli/test/testdata/pip/requirements.txt.venv/lib/python3.9/site-packages
+Requires: 
+Required-by: pandas
+---
+Name: pandas
+Version: 1.5.1
+Summary: Powerful data structures for data analysis, time series, and statistics
+Home-page: https://pandas.pydata.org
+Author: The Pandas Development Team
+Author-email: pandas-dev@python.org
+License: BSD-3-Clause
+Location: /home/nilszeilon/Programming/cli/test/testdata/pip/requirements.txt.venv/lib/python3.9/site-packages
+Requires: numpy, python-dateutil, pytz
+Required-by: 
+---
+Name: pip
+Version: 22.0.4
+Summary: The PyPA recommended tool for installing Python packages.
+Home-page: https://pip.pypa.io/
+Author: The pip developers
+Author-email: distutils-sig@python.org
+License: MIT
+Location: /home/nilszeilon/Programming/cli/test/testdata/pip/requirements.txt.venv/lib/python3.9/site-packages
+Requires: 
+Required-by: 
+---
+Name: python-dateutil
+Version: 2.8.2
+Summary: Extensions to the standard Python datetime module
+Home-page: https://github.com/dateutil/dateutil
+Author: Gustavo Niemeyer
+Author-email: gustavo@niemeyer.net
+License: Dual License
+Location: /home/nilszeilon/Programming/cli/test/testdata/pip/requirements.txt.venv/lib/python3.9/site-packages
+Requires: six
+Required-by: pandas
+---
+Name: pytz
+Version: 2022.7.1
+Summary: World timezone definitions, modern and historical
+Home-page: http://pythonhosted.org/pytz
+Author: Stuart Bishop
+Author-email: stuart@stuartbishop.net
+License: MIT
+Location: /home/nilszeilon/Programming/cli/test/testdata/pip/requirements.txt.venv/lib/python3.9/site-packages
+Requires: 
+Required-by: pandas
+---
+Name: setuptools
+Version: 58.1.0
+Summary: Easily download, build, install, upgrade, and uninstall Python packages
+Home-page: https://github.com/pypa/setuptools
+Author: Python Packaging Authority
+Author-email: distutils-sig@python.org
+License: UNKNOWN
+Location: /home/nilszeilon/Programming/cli/test/testdata/pip/requirements.txt.venv/lib/python3.9/site-packages
+Requires: 
+Required-by: 
+---
+Name: six
+Version: 1.16.0
+Summary: Python 2 and 3 compatibility utilities
+Home-page: https://github.com/benjaminp/six
+Author: Benjamin Peterson
+Author-email: benjamin@python.org
+License: MIT
+Location: /home/nilszeilon/Programming/cli/test/testdata/pip/requirements.txt.venv/lib/python3.9/site-packages
+Requires: 
+Required-by: python-dateutil
