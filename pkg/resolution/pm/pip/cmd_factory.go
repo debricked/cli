@@ -15,10 +15,7 @@ type ICmdFactory interface {
 	MakeShowCmd(command string, list []string) (*exec.Cmd, error)
 }
 
-type CmdFactory struct {
-	venvPath   string
-	pipCommand string
-}
+type CmdFactory struct{}
 
 func (_ CmdFactory) MakeCreateVenvCmd(fpath string) (*exec.Cmd, error) {
 	path, err := exec.LookPath("python")
