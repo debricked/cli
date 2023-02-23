@@ -2,15 +2,16 @@ package util
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 )
 
 func MakePathFromManifestFile(siblingFile string, fileName string) string {
 	dir := filepath.Dir(siblingFile)
-	if strings.EqualFold("/", dir) {
-		return fmt.Sprintf("/%s", fileName)
+	if strings.EqualFold(string(os.PathSeparator), dir) {
+		return fmt.Sprintf("%s%s", string(os.PathSeparator), fileName)
 	}
 
-	return fmt.Sprintf("%s/%s", dir, fileName)
+	return fmt.Sprintf("%s%s%s", dir, string(os.PathSeparator), fileName)
 }
