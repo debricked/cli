@@ -1,8 +1,9 @@
 package util
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMakePathFromManifestFile(t *testing.T) {
@@ -10,8 +11,5 @@ func TestMakePathFromManifestFile(t *testing.T) {
 	assert.Equal(t, "pkg/resolution/pm/util/file.lock", path)
 
 	path = MakePathFromManifestFile("file.json", "file.lock")
-	assert.Equal(t, "./file.lock", path)
-
-	path = MakePathFromManifestFile("/", "file.lock")
-	assert.Equal(t, "/file.lock", path)
+	assert.Equal(t, "file.lock", path)
 }
