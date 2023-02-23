@@ -8,6 +8,8 @@ test:
 	bash scripts/test_cli.sh
 test-docker:
 	bash scripts/test_docker.sh cli
+test-e2e:
+	bash scripts/test_e2e.sh
 
 docker-build-dev:
 	docker build -f build/docker/Dockerfile -t debricked/cli-dev:latest --target dev .
