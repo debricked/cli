@@ -7,3 +7,4 @@ debricked
 dist/
 /.debricked-go-dependencies.txt
 /.env
+test/testdata/pip/requirements.txt.venv/
