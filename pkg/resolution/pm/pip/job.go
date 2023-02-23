@@ -62,16 +62,6 @@ func (j *Job) Run() {
 
 		fmt.Println("Created virtualenv for " + j.file + ".venv")
 
-		_, err = j.runActivateVenvCmd()
-
-		if err != nil {
-			j.err = err
-			fmt.Println(err)
-			return
-		}
-
-		fmt.Println("Activated virtualenv for " + j.file + ".venv")
-
 		_, err = j.runInstallCmd()
 
 		if err != nil {
@@ -147,22 +137,6 @@ func (j *Job) runCreateVenvCmd() ([]byte, error) {
 	}
 
 	return createVenvCmdOutput, nil
-}
-
-func (j *Job) runActivateVenvCmd() ([]byte, error) {
-	activateVenvCmd, err := j.cmdFactory.MakeActivateVenvCmd(j.file)
-	if err != nil {
-		j.err = err
-		return nil, err
-	}
-
-	activateVenvCmdOutput, err := activateVenvCmd.Output()
-	if err != nil {
-		j.err = err
-		return nil, err
-	}
-
-	return activateVenvCmdOutput, nil
 }
 
 func (j *Job) runInstallCmd() ([]byte, error) {

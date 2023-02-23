@@ -59,27 +59,6 @@ func TestRunCreateVenvCmdOutputErr(T *testing.T) {
 	assert.ErrorContains(T, job.err, "PATH")
 }
 
-func TestRunActivateVenvCmdErr(T *testing.T) {
-	cmdErr := errors.New("cmd-error")
-	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	cmdFactoryMock.MakeActivateVenvErr = cmdErr
-	fileWriterMock := &writerTestdata.FileWriterMock{}
-	job := NewJob("file", true, cmdFactoryMock, fileWriterMock)
-
-	job.Run()
-
-	assert.ErrorIs(T, cmdErr, job.Error())
-}
-
-func TestRunActivateVenvCmdOutputErr(T *testing.T) {
-	cmdMock := testdata.NewEchoCmdFactory()
-	cmdMock.ActivateVenvCmdName = "bad-name"
-	job := NewJob("file", true, cmdMock, nil)
-	job.Run()
-	assert.ErrorContains(T, job.err, "executable file not found in")
-	assert.ErrorContains(T, job.err, "PATH")
-}
-
 func TestRunInstallCmdErr(T *testing.T) {
 	cmdErr := errors.New("cmd-error")
 	cmdFactoryMock := testdata.NewEchoCmdFactory()

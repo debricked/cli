@@ -18,16 +18,6 @@ func TestCreateVenvCmd(t *testing.T) {
 	assert.Contains(t, args, "--clear")
 }
 
-func TestActivateVenvCmd(t *testing.T) {
-	fileName := "test-file"
-	cmd, _ := CmdFactory{}.MakeActivateVenvCmd(fileName)
-	assert.NotNil(t, cmd)
-	args := cmd.Args
-	assert.Contains(t, args, "bash")
-	assert.Contains(t, args, "-c")
-	assert.Contains(t, args, "source "+fileName+".venv/bin/activate")
-}
-
 func TestMakeInstallCmd(t *testing.T) {
 	fileName := "test-file"
 	pipCommand := "pip"
