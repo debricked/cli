@@ -6,37 +6,30 @@ import (
 )
 
 type CmdFactoryMock struct {
-	CreateVenvCmdName   string
-	MakeCreateVenvErr   error
-	ActivateVenvCmdName string
-	MakeActivateVenvErr error
-	InstallCmdName      string
-	MakeInstallErr      error
-	CatCmdName          string
-	MakeCatErr          error
-	ListCmdName         string
-	MakeListErr         error
-	ShowCmdName         string
-	MakeShowErr         error
+	CreateVenvCmdName string
+	MakeCreateVenvErr error
+	InstallCmdName    string
+	MakeInstallErr    error
+	CatCmdName        string
+	MakeCatErr        error
+	ListCmdName       string
+	MakeListErr       error
+	ShowCmdName       string
+	MakeShowErr       error
 }
 
 func NewEchoCmdFactory() CmdFactoryMock {
 	return CmdFactoryMock{
-		CreateVenvCmdName:   "echo",
-		ActivateVenvCmdName: "echo",
-		InstallCmdName:      "echo",
-		CatCmdName:          "echo",
-		ListCmdName:         "echo",
-		ShowCmdName:         "echo",
+		CreateVenvCmdName: "echo",
+		InstallCmdName:    "echo",
+		CatCmdName:        "echo",
+		ListCmdName:       "echo",
+		ShowCmdName:       "echo",
 	}
 }
 
 func (f CmdFactoryMock) MakeCreateVenvCmd(file string) (*exec.Cmd, error) {
 	return exec.Command(f.CreateVenvCmdName, file), f.MakeCreateVenvErr
-}
-
-func (f CmdFactoryMock) MakeActivateVenvCmd(file string) (*exec.Cmd, error) {
-	return exec.Command(f.ActivateVenvCmdName, file), f.MakeActivateVenvErr
 }
 
 func (f CmdFactoryMock) MakeInstallCmd(command string, file string) (*exec.Cmd, error) {
