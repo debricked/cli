@@ -14,7 +14,7 @@ func TestNewResolver(t *testing.T) {
 	r := NewResolver(
 		file.NewBatchFactory(),
 		strategyTestdata.NewStrategyFactoryMock(),
-		NewScheduler(),
+		NewScheduler(10),
 	)
 	assert.NotNil(t, r)
 }
@@ -23,7 +23,7 @@ func TestResolve(t *testing.T) {
 	r := NewResolver(
 		file.NewBatchFactory(),
 		strategyTestdata.NewStrategyFactoryMock(),
-		NewScheduler(),
+		NewScheduler(10),
 	)
 
 	res, err := r.Resolve([]string{"go.mod"})
@@ -35,7 +35,7 @@ func TestResolveStrategyError(t *testing.T) {
 	r := NewResolver(
 		fileTestdata.NewBatchFactoryMock(),
 		strategy.NewStrategyFactory(),
-		NewScheduler(),
+		NewScheduler(10),
 	)
 
 	res, err := r.Resolve([]string{"go.mod"})

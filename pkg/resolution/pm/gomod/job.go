@@ -15,6 +15,7 @@ type Job struct {
 	cmdFactory ICmdFactory
 	fileWriter writer.IFileWriter
 	err        error
+	status     chan string
 }
 
 func NewJob(
@@ -26,6 +27,7 @@ func NewJob(
 		file:       file,
 		cmdFactory: cmdFactory,
 		fileWriter: fileWriter,
+		status:     make(chan string),
 	}
 }
 
@@ -37,16 +39,24 @@ func (j *Job) Error() error {
 	return j.err
 }
 
+func (j *Job) Status() chan string {
+	return j.status
+}
+
 func (j *Job) Run() {
+	j.status <- "creating dependency graph"
 	graphCmdOutput, err := j.runGraphCmd()
 	if err != nil {
 		return
 	}
 
+	j.status <- "creating dependency version list"
 	listCmdOutput, err := j.runListCmd()
 	if err != nil {
 		return
 	}
+
+	j.status <- "creating lock file"
 	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.file, fileName))
 	if err != nil {
 		j.err = err
