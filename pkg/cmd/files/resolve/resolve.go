@@ -27,7 +27,7 @@ func RunE() func(_ *cobra.Command, args []string) error {
 		resolver := resolution.NewResolver(
 			file.NewBatchFactory(),
 			strategy.NewStrategyFactory(),
-			resolution.NewScheduler(),
+			resolution.NewScheduler(10),
 		)
 
 		_, err := resolver.Resolve(args)

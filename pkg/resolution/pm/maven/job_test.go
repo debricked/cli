@@ -2,49 +2,76 @@ package maven
 
 import (
 	"errors"
+	"fmt"
+	"github.com/debricked/cli/pkg/resolution/job"
 	"github.com/debricked/cli/pkg/resolution/pm/maven/testdata"
+	"runtime"
+
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestNewJob(t *testing.T) {
-	job := NewJob("file", CmdFactory{})
-	assert.Equal(t, "file", job.file)
-	assert.Nil(t, job.err)
+	j := NewJob("file", CmdFactory{})
+	assert.Equal(t, "file", j.file)
+	assert.Nil(t, j.err)
 }
 
 func TestFile(t *testing.T) {
-	job := Job{file: "file"}
-	assert.Equal(t, "file", job.File())
+	j := Job{file: "file"}
+	assert.Equal(t, "file", j.File())
 }
 
 func TestError(t *testing.T) {
 	jobErr := errors.New("error")
-	job := Job{file: "file", err: jobErr}
-	assert.Equal(t, jobErr, job.Error())
+	j := Job{file: "file", err: jobErr}
+	assert.Equal(t, jobErr, j.Error())
 }
 
-func TestRunCmdErr(T *testing.T) {
+func TestRunCmdErr(t *testing.T) {
 	cmdErr := errors.New("cmd-error")
-	job := NewJob("file", testdata.CmdFactoryMock{Err: cmdErr})
+	j := NewJob("file", testdata.CmdFactoryMock{Err: cmdErr})
 
-	job.Run()
+	go waitStatus(j)
 
-	assert.ErrorIs(T, cmdErr, job.Error())
+	j.Run()
+
+	assert.ErrorIs(t, cmdErr, j.Error())
 }
 
-func TestRunCmdOutputErr(T *testing.T) {
-	job := NewJob("file", testdata.CmdFactoryMock{Name: "bad-name"})
+func TestRunCmdOutputErr(t *testing.T) {
+	j := NewJob("file", testdata.CmdFactoryMock{Name: "bad-name"})
 
-	job.Run()
+	go waitStatus(j)
 
-	assert.ErrorContains(T, job.err, "executable file not found in $PATH")
+	j.Run()
+
+	assertPathErr(t, j.Error())
 }
 
-func TestRun(T *testing.T) {
-	job := NewJob("file", testdata.CmdFactoryMock{Name: "echo"})
+func TestRun(t *testing.T) {
+	j := NewJob("file", testdata.CmdFactoryMock{Name: "echo"})
 
-	job.Run()
+	go waitStatus(j)
 
-	assert.NoError(T, job.err)
+	j.Run()
+
+	assert.NoError(t, j.err)
+}
+
+func waitStatus(j job.IJob) {
+	for {
+		<-j.Status()
+	}
+}
+
+func assertPathErr(t *testing.T, err error) {
+	var path string
+	if runtime.GOOS == "windows" {
+		path = "%PATH%"
+	} else {
+		path = "$PATH"
+	}
+	errMsg := fmt.Sprintf("executable file not found in %s", path)
+	assert.ErrorContains(t, err, errMsg)
 }
