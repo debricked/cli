@@ -1,6 +1,7 @@
 package pip
 
 import (
+	"fmt"
 	"os/exec"
 	"path/filepath"
 )
@@ -8,18 +9,19 @@ import (
 type ICmdFactory interface {
 	MakeCreateVenvCmd(file string) (*exec.Cmd, error)
 	MakeActivateVenvCmd(file string) (*exec.Cmd, error)
-	MakeInstallCmd(file string) (*exec.Cmd, error)
+	MakeInstallCmd(command string, file string) (*exec.Cmd, error)
 	MakeCatCmd(file string) (*exec.Cmd, error)
-	MakeListCmd() (*exec.Cmd, error)
-	MakeShowCmd(list []string) (*exec.Cmd, error)
+	MakeListCmd(command string) (*exec.Cmd, error)
+	MakeShowCmd(command string, list []string) (*exec.Cmd, error)
 }
 
-type CmdFactory struct{}
+type CmdFactory struct {
+	venvPath   string
+	pipCommand string
+}
 
-func (_ CmdFactory) MakeCreateVenvCmd(file string) (*exec.Cmd, error) {
+func (_ CmdFactory) MakeCreateVenvCmd(fpath string) (*exec.Cmd, error) {
 	path, err := exec.LookPath("python")
-
-	fpath := filepath.Join(filepath.Dir(file), filepath.Base(file)+".venv")
 
 	return &exec.Cmd{
 		Path: path,
@@ -38,12 +40,12 @@ func (_ CmdFactory) MakeActivateVenvCmd(file string) (*exec.Cmd, error) {
 	}, err
 }
 
-func (_ CmdFactory) MakeInstallCmd(file string) (*exec.Cmd, error) {
-	path, err := exec.LookPath("pip")
+func (_ CmdFactory) MakeInstallCmd(command string, file string) (*exec.Cmd, error) {
+	path, err := exec.LookPath(command)
 
 	return &exec.Cmd{
 		Path: path,
-		Args: []string{"pip", "install", "-r", file},
+		Args: []string{command, "install", "-r", file},
 	}, err
 }
 
@@ -56,8 +58,9 @@ func (_ CmdFactory) MakeCatCmd(file string) (*exec.Cmd, error) {
 	}, err
 }
 
-func (_ CmdFactory) MakeListCmd() (*exec.Cmd, error) {
-	path, err := exec.LookPath("pip")
+func (_ CmdFactory) MakeListCmd(command string) (*exec.Cmd, error) {
+	path, err := exec.LookPath(command)
+	fmt.Println("MakeListCmd", command)
 
 	return &exec.Cmd{
 		Path: path,
@@ -65,10 +68,11 @@ func (_ CmdFactory) MakeListCmd() (*exec.Cmd, error) {
 	}, err
 }
 
-func (_ CmdFactory) MakeShowCmd(list []string) (*exec.Cmd, error) {
-	path, err := exec.LookPath("pip")
+func (_ CmdFactory) MakeShowCmd(command string, list []string) (*exec.Cmd, error) {
+	path, err := exec.LookPath(command)
+	fmt.Println("MakeShowCmd", command)
 
-	args := []string{"pip", "show"}
+	args := []string{command, "show"}
 	args = append(args, list...)
 
 	return &exec.Cmd{
