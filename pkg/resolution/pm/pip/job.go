@@ -55,7 +55,6 @@ func (j *Job) Run() {
 	if j.install {
 		_, err := j.runCreateVenvCmd()
 
-		fmt.Println(err)
 		if err != nil {
 			j.err = err
 			return
