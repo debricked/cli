@@ -44,7 +44,7 @@ func TestError(t *testing.T) {
 	assert.Equal(t, jobErr, job.Error())
 }
 
-func TestRunCreateVenvCmdErr(T *testing.T) {
+func TestRunCreateVenvCmdErr(t *testing.T) {
 	cmdErr := errors.New("cmd-error")
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	cmdFactoryMock.MakeCreateVenvErr = cmdErr
@@ -53,19 +53,19 @@ func TestRunCreateVenvCmdErr(T *testing.T) {
 
 	job.Run()
 
-	assert.ErrorIs(T, cmdErr, job.Error())
+	assert.ErrorIs(t, cmdErr, job.Error())
 }
 
-func TestRunCreateVenvCmdOutputErr(T *testing.T) {
+func TestRunCreateVenvCmdOutputErr(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	cmdMock.CreateVenvCmdName = badName
 	job := NewJob("file", true, cmdMock, nil)
 	job.Run()
-	assert.ErrorContains(T, job.err, "executable file not found in")
-	assert.ErrorContains(T, job.err, "PATH")
+	assert.ErrorContains(t, job.err, "executable file not found in")
+	assert.ErrorContains(t, job.err, "PATH")
 }
 
-func TestRunInstallCmdErr(T *testing.T) {
+func TestRunInstallCmdErr(t *testing.T) {
 	cmdErr := errors.New("cmd-error")
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	cmdFactoryMock.MakeInstallErr = cmdErr
@@ -74,19 +74,19 @@ func TestRunInstallCmdErr(T *testing.T) {
 
 	job.Run()
 
-	assert.ErrorIs(T, cmdErr, job.Error())
+	assert.ErrorIs(t, cmdErr, job.Error())
 }
 
-func TestRunInstallCmdOutputErr(T *testing.T) {
+func TestRunInstallCmdOutputErr(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	cmdMock.InstallCmdName = badName
 	job := NewJob("file", true, cmdMock, nil)
 	job.Run()
-	assert.ErrorContains(T, job.err, "executable file not found in")
-	assert.ErrorContains(T, job.err, "PATH")
+	assert.ErrorContains(t, job.err, "executable file not found in")
+	assert.ErrorContains(t, job.err, "PATH")
 }
 
-func TestRunCatCmdErr(T *testing.T) {
+func TestRunCatCmdErr(t *testing.T) {
 	cmdErr := errors.New("cmd-error")
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	cmdFactoryMock.MakeCatErr = cmdErr
@@ -95,19 +95,19 @@ func TestRunCatCmdErr(T *testing.T) {
 
 	job.Run()
 
-	assert.ErrorIs(T, cmdErr, job.Error())
+	assert.ErrorIs(t, cmdErr, job.Error())
 }
 
-func TestRunCatCmdOutputErr(T *testing.T) {
+func TestRunCatCmdOutputErr(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	cmdMock.CatCmdName = badName
 	job := NewJob("file", false, cmdMock, nil)
 	job.Run()
-	assert.ErrorContains(T, job.err, "executable file not found in")
-	assert.ErrorContains(T, job.err, "PATH")
+	assert.ErrorContains(t, job.err, "executable file not found in")
+	assert.ErrorContains(t, job.err, "PATH")
 }
 
-func TestRunListCmdErr(T *testing.T) {
+func TestRunListCmdErr(t *testing.T) {
 	cmdErr := errors.New("cmd-error")
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	cmdFactoryMock.MakeListErr = cmdErr
@@ -116,19 +116,19 @@ func TestRunListCmdErr(T *testing.T) {
 
 	job.Run()
 
-	assert.ErrorIs(T, cmdErr, job.Error())
+	assert.ErrorIs(t, cmdErr, job.Error())
 }
 
-func TestRunListCmdOutputErr(T *testing.T) {
+func TestRunListCmdOutputErr(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	cmdMock.ListCmdName = badName
 	job := NewJob("file", false, cmdMock, nil)
 	job.Run()
-	assert.ErrorContains(T, job.err, "executable file not found in")
-	assert.ErrorContains(T, job.err, "PATH")
+	assert.ErrorContains(t, job.err, "executable file not found in")
+	assert.ErrorContains(t, job.err, "PATH")
 }
 
-func TestRunShowCmdErr(T *testing.T) {
+func TestRunShowCmdErr(t *testing.T) {
 	cmdErr := errors.New("cmd-error")
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	cmdFactoryMock.MakeShowErr = cmdErr
@@ -137,16 +137,16 @@ func TestRunShowCmdErr(T *testing.T) {
 
 	job.Run()
 
-	assert.ErrorIs(T, cmdErr, job.Error())
+	assert.ErrorIs(t, cmdErr, job.Error())
 }
 
-func TestRunShowCmdOutputErr(T *testing.T) {
+func TestRunShowCmdOutputErr(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	cmdMock.ShowCmdName = badName
 	job := NewJob("file", false, cmdMock, nil)
 	job.Run()
-	assert.ErrorContains(T, job.err, "executable file not found in")
-	assert.ErrorContains(T, job.err, "PATH")
+	assert.ErrorContains(t, job.err, "executable file not found in")
+	assert.ErrorContains(t, job.err, "PATH")
 }
 
 func TestRun(t *testing.T) {
@@ -202,32 +202,32 @@ func TestParsePipList(t *testing.T) {
 	assert.Nil(t, job.err)
 }
 
-func TestRunCreateErr(T *testing.T) {
+func TestRunCreateErr(t *testing.T) {
 	createErr := errors.New("create-error")
 	fileWriterMock := &writerTestdata.FileWriterMock{CreateErr: createErr}
 	cmdMock := testdata.NewEchoCmdFactory()
 	job := NewJob("file", true, cmdMock, fileWriterMock)
 	job.Run()
 
-	assert.ErrorIs(T, job.Error(), createErr)
+	assert.ErrorIs(t, job.Error(), createErr)
 }
 
-func TestRunWriteErr(T *testing.T) {
+func TestRunWriteErr(t *testing.T) {
 	writeErr := errors.New("write-error")
 	fileWriterMock := &writerTestdata.FileWriterMock{WriteErr: writeErr}
 	cmdMock := testdata.NewEchoCmdFactory()
 	job := NewJob("file", true, cmdMock, fileWriterMock)
 	job.Run()
 
-	assert.ErrorIs(T, job.Error(), writeErr)
+	assert.ErrorIs(t, job.Error(), writeErr)
 }
 
-func TestRunCloseErr(T *testing.T) {
+func TestRunCloseErr(t *testing.T) {
 	closeErr := errors.New("close-error")
 	fileWriterMock := &writerTestdata.FileWriterMock{CloseErr: closeErr}
 	cmdMock := testdata.NewEchoCmdFactory()
 	job := NewJob("file", true, cmdMock, fileWriterMock)
 	job.Run()
 
-	assert.ErrorIs(T, job.Error(), closeErr)
+	assert.ErrorIs(t, job.Error(), closeErr)
 }
