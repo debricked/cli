@@ -15,3 +15,10 @@ func MakePathFromManifestFile(siblingFile string, fileName string) string {
 
 	return fmt.Sprintf("%s%s%s", dir, string(os.PathSeparator), fileName)
 }
+
+func MakePathFromManifestFileExtension(siblingFile string, fileName string) string {
+	dir := filepath.Dir(siblingFile)
+	name := filepath.Base(fileName)
+
+	return filepath.Join(dir, name)
+}
