@@ -8,3 +8,4 @@ dist/
 /.debricked-go-dependencies.txt
 /.env
 test/testdata/pip/requirements.txt.venv/
+test/testdata/pip/requirements.txt.debricked.lock

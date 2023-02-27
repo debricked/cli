@@ -12,6 +12,8 @@ import (
 
 const (
 	lockFileExtension = ".debricked.lock"
+	fileName          = ".debricked.lock"
+	pip               = "pip"
 )
 
 type Job struct {
@@ -57,6 +59,7 @@ func (j *Job) Run() {
 
 		if err != nil {
 			j.err = err
+
 			return
 		}
 
@@ -66,12 +69,11 @@ func (j *Job) Run() {
 
 		if err != nil {
 			j.err = err
+
 			return
 		}
 
 		fmt.Println("Installed requirements in virtualenv for " + j.file + ".venv")
-		// TODO if unable to install (many possible issues)
-		// then we should parse and let the user know what went wrong on installation
 
 	}
 
@@ -103,6 +105,7 @@ func (j *Job) Run() {
 
 	if err != nil {
 		j.err = err
+
 		return
 	}
 	defer closeFile(j, lockFile)
@@ -128,12 +131,14 @@ func (j *Job) runCreateVenvCmd() ([]byte, error) {
 	createVenvCmd, err := j.cmdFactory.MakeCreateVenvCmd(j.venvPath)
 	if err != nil {
 		j.err = err
+
 		return nil, err
 	}
 
 	createVenvCmdOutput, err := createVenvCmd.Output()
 	if err != nil {
 		j.err = err
+
 		return nil, err
 	}
 
@@ -143,21 +148,23 @@ func (j *Job) runCreateVenvCmd() ([]byte, error) {
 func (j *Job) runInstallCmd() ([]byte, error) {
 	var command string
 	if j.venvPath != "" {
-		command = filepath.Join(j.venvPath, "bin", "pip")
+		command = filepath.Join(j.venvPath, "bin", pip)
 	} else {
-		command = "pip"
+		command = pip
 	}
 	fmt.Println("MakeInstallCmd", command, j.venvPath)
 	j.pipCommand = command
 	installCmd, err := j.cmdFactory.MakeInstallCmd(j.pipCommand, j.file)
 	if err != nil {
 		j.err = err
+
 		return nil, err
 	}
 
 	installCmdOutput, err := installCmd.Output()
 	if err != nil {
 		j.err = err
+
 		return nil, err
 	}
 
@@ -204,12 +211,14 @@ func (j *Job) runShowCmd(packages []string) ([]byte, error) {
 	listCmd, err := j.cmdFactory.MakeShowCmd(j.pipCommand, packages)
 	if err != nil {
 		j.err = err
+
 		return nil, err
 	}
 
 	listCmdOutput, err := listCmd.Output()
 	if err != nil {
 		j.err = err
+
 		return nil, err
 	}
 
@@ -232,5 +241,6 @@ func (j *Job) parsePipList(pipListOutput string) []string {
 			packages = append(packages, fields[0])
 		}
 	}
+
 	return packages
 }
