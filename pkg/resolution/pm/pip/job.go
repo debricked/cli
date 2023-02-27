@@ -24,6 +24,7 @@ type Job struct {
 	cmdFactory ICmdFactory
 	fileWriter writer.IFileWriter
 	err        error
+	status     chan string
 }
 
 func NewJob(
@@ -37,6 +38,7 @@ func NewJob(
 		install:    install,
 		cmdFactory: cmdFactory,
 		fileWriter: fileWriter,
+		status:     make(chan string),
 	}
 }
 
@@ -52,6 +54,10 @@ func (j *Job) Error() error {
 	return j.err
 }
 
+func (j *Job) Status() chan string {
+	return j.status
+}
+
 func (j *Job) Run() {
 
 	if j.install {
@@ -63,7 +69,7 @@ func (j *Job) Run() {
 			return
 		}
 
-		fmt.Println("Created virtualenv for " + j.file + ".venv")
+		j.status <- ("created virtualenv for " + j.file + ".venv")
 
 		_, err = j.runInstallCmd()
 
@@ -73,25 +79,25 @@ func (j *Job) Run() {
 			return
 		}
 
-		fmt.Println("Installed requirements in virtualenv for " + j.file + ".venv")
+		j.status <- ("installed requirements in virtualenv for " + j.file + ".venv")
 
 	}
 
-	fmt.Println("Running cat command")
+	j.status <- "running cat command"
 	catCmdOutput, err := j.runCatCmd()
 
 	if err != nil {
 		return
 	}
 
-	fmt.Println("Running list command")
+	j.status <- "running list command"
 	listCmdOutput, err := j.runListCmd()
 
 	if err != nil {
 		return
 	}
 
-	fmt.Println("Running show command")
+	j.status <- "running show command"
 	installedPackages := j.parsePipList(string(listCmdOutput))
 	ShowCmdOutput, err := j.runShowCmd(installedPackages)
 
@@ -99,7 +105,7 @@ func (j *Job) Run() {
 		return
 	}
 
-	fmt.Println("Setting up data...")
+	j.status <- ("setting up data...")
 	lockFileName := "." + filepath.Base(j.file) + lockFileExtension
 	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.file, lockFileName))
 
@@ -118,7 +124,7 @@ func (j *Job) Run() {
 	fileContents = append(fileContents, string(ShowCmdOutput))
 
 	res := []byte(strings.Join(fileContents, "\n"))
-	fmt.Println("Writing data...")
+	j.status <- "writing data..."
 
 	j.err = j.fileWriter.Write(lockFile, res)
 }
