@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	fileName = ".debricked.lock"
+	lockFileExtension = ".debricked.lock"
 )
 
 type Job struct {
@@ -98,9 +98,8 @@ func (j *Job) Run() {
 	}
 
 	fmt.Println("Setting up data...")
-	lockFileName := j.file + string(fileName)
-
-	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFileExtension(j.file, lockFileName))
+	lockFileName := "." + filepath.Base(j.file) + lockFileExtension
+	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.file, lockFileName))
 
 	if err != nil {
 		j.err = err
