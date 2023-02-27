@@ -15,6 +15,7 @@ func (_ ExecPathMock) LookPath(file string) (string, error) {
 	if file == "python3" {
 		return "", errors.New("executable file not found in $PATH")
 	}
+
 	return "python", nil
 }
 

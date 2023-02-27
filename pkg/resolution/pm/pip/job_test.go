@@ -13,6 +13,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	badName = "bad-name"
+)
+
 func TestNewJob(t *testing.T) {
 	job := NewJob("file", false, CmdFactory{
 		execPath: ExecPath{},
@@ -54,7 +58,7 @@ func TestRunCreateVenvCmdErr(T *testing.T) {
 
 func TestRunCreateVenvCmdOutputErr(T *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
-	cmdMock.CreateVenvCmdName = "bad-name"
+	cmdMock.CreateVenvCmdName = badName
 	job := NewJob("file", true, cmdMock, nil)
 	job.Run()
 	assert.ErrorContains(T, job.err, "executable file not found in")
@@ -75,7 +79,7 @@ func TestRunInstallCmdErr(T *testing.T) {
 
 func TestRunInstallCmdOutputErr(T *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
-	cmdMock.InstallCmdName = "bad-name"
+	cmdMock.InstallCmdName = badName
 	job := NewJob("file", true, cmdMock, nil)
 	job.Run()
 	assert.ErrorContains(T, job.err, "executable file not found in")
@@ -96,7 +100,7 @@ func TestRunCatCmdErr(T *testing.T) {
 
 func TestRunCatCmdOutputErr(T *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
-	cmdMock.CatCmdName = "bad-name"
+	cmdMock.CatCmdName = badName
 	job := NewJob("file", false, cmdMock, nil)
 	job.Run()
 	assert.ErrorContains(T, job.err, "executable file not found in")
@@ -117,7 +121,7 @@ func TestRunListCmdErr(T *testing.T) {
 
 func TestRunListCmdOutputErr(T *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
-	cmdMock.ListCmdName = "bad-name"
+	cmdMock.ListCmdName = badName
 	job := NewJob("file", false, cmdMock, nil)
 	job.Run()
 	assert.ErrorContains(T, job.err, "executable file not found in")
@@ -138,7 +142,7 @@ func TestRunShowCmdErr(T *testing.T) {
 
 func TestRunShowCmdOutputErr(T *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
-	cmdMock.ShowCmdName = "bad-name"
+	cmdMock.ShowCmdName = badName
 	job := NewJob("file", false, cmdMock, nil)
 	job.Run()
 	assert.ErrorContains(T, job.err, "executable file not found in")
@@ -179,7 +183,8 @@ func TestRunInstall(t *testing.T) {
 	fileWriterMock := &writerTestdata.FileWriterMock{}
 	job := NewJob("file", false, cmdFactoryMock, fileWriterMock)
 
-	job.runInstallCmd()
+	_, err := job.runInstallCmd()
+	assert.NoError(t, err)
 
 	assert.NoError(t, job.Error())
 }
