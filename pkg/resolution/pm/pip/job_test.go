@@ -4,9 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 
+	"github.com/debricked/cli/pkg/resolution/job"
 	"github.com/debricked/cli/pkg/resolution/pm/pip/testdata"
 	"github.com/debricked/cli/pkg/resolution/pm/writer"
 	writerTestdata "github.com/debricked/cli/pkg/resolution/pm/writer/testdata"
@@ -44,6 +46,11 @@ func TestError(t *testing.T) {
 	assert.Equal(t, jobErr, job.Error())
 }
 
+func TestStatus(t *testing.T) {
+	job := Job{file: "file"}
+	assert.Equal(t, "file", job.File())
+}
+
 func TestRunCreateVenvCmdErr(t *testing.T) {
 	cmdErr := errors.New("cmd-error")
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
@@ -51,6 +58,7 @@ func TestRunCreateVenvCmdErr(t *testing.T) {
 	fileWriterMock := &writerTestdata.FileWriterMock{}
 	job := NewJob("file", true, cmdFactoryMock, fileWriterMock)
 
+	go waitStatus(job)
 	job.Run()
 
 	assert.ErrorIs(t, cmdErr, job.Error())
@@ -60,9 +68,11 @@ func TestRunCreateVenvCmdOutputErr(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	cmdMock.CreateVenvCmdName = badName
 	job := NewJob("file", true, cmdMock, nil)
+
+	go waitStatus(job)
 	job.Run()
-	assert.ErrorContains(t, job.err, "executable file not found in")
-	assert.ErrorContains(t, job.err, "PATH")
+
+	assertPathErr(t, job.Error())
 }
 
 func TestRunInstallCmdErr(t *testing.T) {
@@ -72,6 +82,7 @@ func TestRunInstallCmdErr(t *testing.T) {
 	fileWriterMock := &writerTestdata.FileWriterMock{}
 	job := NewJob("file", true, cmdFactoryMock, fileWriterMock)
 
+	go waitStatus(job)
 	job.Run()
 
 	assert.ErrorIs(t, cmdErr, job.Error())
@@ -81,9 +92,11 @@ func TestRunInstallCmdOutputErr(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	cmdMock.InstallCmdName = badName
 	job := NewJob("file", true, cmdMock, nil)
+
+	go waitStatus(job)
 	job.Run()
-	assert.ErrorContains(t, job.err, "executable file not found in")
-	assert.ErrorContains(t, job.err, "PATH")
+
+	assertPathErr(t, job.Error())
 }
 
 func TestRunCatCmdErr(t *testing.T) {
@@ -93,6 +106,7 @@ func TestRunCatCmdErr(t *testing.T) {
 	fileWriterMock := &writerTestdata.FileWriterMock{}
 	job := NewJob("file", true, cmdFactoryMock, fileWriterMock)
 
+	go waitStatus(job)
 	job.Run()
 
 	assert.ErrorIs(t, cmdErr, job.Error())
@@ -102,9 +116,11 @@ func TestRunCatCmdOutputErr(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	cmdMock.CatCmdName = badName
 	job := NewJob("file", false, cmdMock, nil)
+
+	go waitStatus(job)
 	job.Run()
-	assert.ErrorContains(t, job.err, "executable file not found in")
-	assert.ErrorContains(t, job.err, "PATH")
+
+	assertPathErr(t, job.Error())
 }
 
 func TestRunListCmdErr(t *testing.T) {
@@ -114,6 +130,7 @@ func TestRunListCmdErr(t *testing.T) {
 	fileWriterMock := &writerTestdata.FileWriterMock{}
 	job := NewJob("file", true, cmdFactoryMock, fileWriterMock)
 
+	go waitStatus(job)
 	job.Run()
 
 	assert.ErrorIs(t, cmdErr, job.Error())
@@ -123,9 +140,11 @@ func TestRunListCmdOutputErr(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	cmdMock.ListCmdName = badName
 	job := NewJob("file", false, cmdMock, nil)
+
+	go waitStatus(job)
 	job.Run()
-	assert.ErrorContains(t, job.err, "executable file not found in")
-	assert.ErrorContains(t, job.err, "PATH")
+
+	assertPathErr(t, job.Error())
 }
 
 func TestRunShowCmdErr(t *testing.T) {
@@ -135,6 +154,7 @@ func TestRunShowCmdErr(t *testing.T) {
 	fileWriterMock := &writerTestdata.FileWriterMock{}
 	job := NewJob("file", true, cmdFactoryMock, fileWriterMock)
 
+	go waitStatus(job)
 	job.Run()
 
 	assert.ErrorIs(t, cmdErr, job.Error())
@@ -144,9 +164,11 @@ func TestRunShowCmdOutputErr(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	cmdMock.ShowCmdName = badName
 	job := NewJob("file", false, cmdMock, nil)
+
+	go waitStatus(job)
 	job.Run()
-	assert.ErrorContains(t, job.err, "executable file not found in")
-	assert.ErrorContains(t, job.err, "PATH")
+
+	assertPathErr(t, job.Error())
 }
 
 func TestRun(t *testing.T) {
@@ -171,6 +193,7 @@ func TestRun(t *testing.T) {
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	job := NewJob("file", true, cmdFactoryMock, fileWriterMock)
 
+	go waitStatus(job)
 	job.Run()
 
 	assert.NoError(t, job.Error())
@@ -207,6 +230,8 @@ func TestRunCreateErr(t *testing.T) {
 	fileWriterMock := &writerTestdata.FileWriterMock{CreateErr: createErr}
 	cmdMock := testdata.NewEchoCmdFactory()
 	job := NewJob("file", true, cmdMock, fileWriterMock)
+
+	go waitStatus(job)
 	job.Run()
 
 	assert.ErrorIs(t, job.Error(), createErr)
@@ -217,6 +242,8 @@ func TestRunWriteErr(t *testing.T) {
 	fileWriterMock := &writerTestdata.FileWriterMock{WriteErr: writeErr}
 	cmdMock := testdata.NewEchoCmdFactory()
 	job := NewJob("file", true, cmdMock, fileWriterMock)
+
+	go waitStatus(job)
 	job.Run()
 
 	assert.ErrorIs(t, job.Error(), writeErr)
@@ -227,7 +254,26 @@ func TestRunCloseErr(t *testing.T) {
 	fileWriterMock := &writerTestdata.FileWriterMock{CloseErr: closeErr}
 	cmdMock := testdata.NewEchoCmdFactory()
 	job := NewJob("file", true, cmdMock, fileWriterMock)
+
+	go waitStatus(job)
 	job.Run()
 
 	assert.ErrorIs(t, job.Error(), closeErr)
+}
+
+func waitStatus(j job.IJob) {
+	for {
+		<-j.Status()
+	}
+}
+
+func assertPathErr(t *testing.T, err error) {
+	var path string
+	if runtime.GOOS == "windows" {
+		path = "%PATH%"
+	} else {
+		path = "$PATH"
+	}
+	errMsg := fmt.Sprintf("executable file not found in %s", path)
+	assert.ErrorContains(t, err, errMsg)
 }
