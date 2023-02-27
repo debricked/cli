@@ -30,26 +30,19 @@ type CmdFactory struct {
 }
 
 func (cmdf CmdFactory) MakeCreateVenvCmd(fpath string) (*exec.Cmd, error) {
-	python3, err := cmdf.execPath.LookPath("python3")
-	var python string
+	python, err := cmdf.execPath.LookPath("python3")
 	pythonCommand := "python3"
 	if err != nil {
-		if strings.Contains(err.Error(), "executable file not found in $PATH") {
+		if strings.Contains(err.Error(), "executable file not found in ") {
 			// Python 3 not found, try Python
-			python2, err := exec.LookPath("python")
-
-			if err != nil {
-				// Python not found either, handle error
-				return nil, err
-			}
-			// Use Python
-			python = python2
+			python, err = cmdf.execPath.LookPath("python")
 			pythonCommand = "python"
-		} else {
-			return nil, err
 		}
-	} else {
-		python = python3
+	}
+
+	// If error still is != nil, return
+	if err != nil {
+		return nil, err
 	}
 
 	return &exec.Cmd{
@@ -68,7 +61,7 @@ func (cmdf CmdFactory) MakeInstallCmd(command string, file string) (*exec.Cmd, e
 }
 
 func (cmdf CmdFactory) MakeCatCmd(file string) (*exec.Cmd, error) {
-	path, err := exec.LookPath("cat")
+	path, err := cmdf.execPath.LookPath("cat")
 
 	return &exec.Cmd{
 		Path: path,
