@@ -14,7 +14,9 @@ import (
 )
 
 func TestNewJob(t *testing.T) {
-	job := NewJob("file", false, CmdFactory{}, writer.FileWriter{})
+	job := NewJob("file", false, CmdFactory{
+		execPath: ExecPath{},
+	}, writer.FileWriter{})
 	assert.Equal(t, "file", job.file)
 	assert.Nil(t, job.err)
 }
@@ -183,7 +185,9 @@ func TestRunInstall(t *testing.T) {
 }
 
 func TestParsePipList(t *testing.T) {
-	job := NewJob("file", false, CmdFactory{}, writer.FileWriter{})
+	job := NewJob("file", false, CmdFactory{
+		execPath: ExecPath{},
+	}, writer.FileWriter{})
 	file, err := os.ReadFile("testdata/list.txt")
 	assert.Nil(t, err)
 	pipData := string(file)

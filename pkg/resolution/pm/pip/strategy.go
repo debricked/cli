@@ -12,7 +12,9 @@ type Strategy struct {
 func (s Strategy) Invoke() []job.IJob {
 	var jobs []job.IJob
 	for _, file := range s.files {
-		jobs = append(jobs, NewJob(file, true, CmdFactory{}, writer.FileWriter{}))
+		jobs = append(jobs, NewJob(file, true, CmdFactory{
+			execPath: ExecPath{},
+		}, writer.FileWriter{}))
 	}
 
 	return jobs
