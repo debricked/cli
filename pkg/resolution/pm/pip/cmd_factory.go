@@ -38,11 +38,11 @@ func (cmdf CmdFactory) MakeCreateVenvCmd(fpath string) (*exec.Cmd, error) {
 			python, err = cmdf.execPath.LookPath("python")
 			pythonCommand = "python"
 		}
-	}
 
-	// If error still is != nil, return
-	if err != nil {
-		return nil, err
+		// If error still is != nil, return
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &exec.Cmd{
