@@ -1,4 +1,12 @@
 #!/bin/bash/env
 
-# run pip resolution e2e test
-bash test/test_e2e_pip.sh
+type="$1"
+
+case $type in
+  "pip")
+    go test ./test/resolve/pip_test.go
+    ;;
+  *)
+    go test ./test/...
+    ;;
+esac
