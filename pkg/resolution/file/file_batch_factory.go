@@ -1,8 +1,10 @@
 package file
 
 import (
-	"github.com/debricked/cli/pkg/resolution/pm"
 	"path"
+	"regexp"
+
+	"github.com/debricked/cli/pkg/resolution/pm"
 )
 
 type IBatchFactory interface {
@@ -24,7 +26,8 @@ func (bf BatchFactory) Make(files []string) []IBatch {
 	for _, file := range files {
 		for _, p := range bf.pms {
 			for _, manifest := range p.Manifests() {
-				if path.Base(file) == manifest {
+				compiledRegex, _ := regexp.Compile(manifest)
+				if compiledRegex.MatchString(path.Base(file)) {
 					batch, ok := batchMap[p.Name()]
 					if !ok {
 						batch = NewBatch(p)
