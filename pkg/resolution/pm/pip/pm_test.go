@@ -1,6 +1,7 @@
 package pip
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -22,4 +23,6 @@ func TestManifests(t *testing.T) {
 	assert.Len(t, manifests, 1)
 	manifest := manifests[0]
 	assert.Equal(t, "requirements.*(?:\\.txt)", manifest)
+	_, err := regexp.Compile(manifest)
+	assert.NoError(t, err)
 }
