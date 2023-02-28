@@ -1,7 +1,6 @@
 package pip
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -132,7 +131,6 @@ func (j *Job) Run() {
 func (j *Job) runCreateVenvCmd() ([]byte, error) {
 	fpath := filepath.Join(filepath.Dir(j.file), filepath.Base(j.file)+".venv")
 	j.venvPath = fpath
-	fmt.Println("MakeCreateVenvCmd", j.venvPath)
 
 	createVenvCmd, err := j.cmdFactory.MakeCreateVenvCmd(j.venvPath)
 	if err != nil {
@@ -158,7 +156,6 @@ func (j *Job) runInstallCmd() ([]byte, error) {
 	} else {
 		command = pip
 	}
-	fmt.Println("MakeInstallCmd", command, j.venvPath)
 	j.pipCommand = command
 	installCmd, err := j.cmdFactory.MakeInstallCmd(j.pipCommand, j.file)
 	if err != nil {
