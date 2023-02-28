@@ -1,6 +1,7 @@
 package pip
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,8 +12,8 @@ import (
 
 const (
 	lockFileExtension = ".debricked.lock"
-	fileName          = ".debricked.lock"
 	pip               = "pip"
+	lockFileDelimiter = "***"
 )
 
 type Job struct {
@@ -58,40 +59,32 @@ func (j *Job) Status() chan string {
 }
 
 func (j *Job) Run() {
-
 	if j.install {
+		j.status <- fmt.Sprintf("creating virtualenv for %s.venv", j.file)
 		_, err := j.runCreateVenvCmd()
-
 		if err != nil {
 			j.err = err
 
 			return
 		}
 
-		j.status <- ("created virtualenv for " + j.file + ".venv")
-
+		j.status <- fmt.Sprintf("installing requirements in virtualenv for %s.venv", j.file)
 		_, err = j.runInstallCmd()
-
 		if err != nil {
 			j.err = err
 
 			return
 		}
-
-		j.status <- ("installed requirements in virtualenv for " + j.file + ".venv")
-
 	}
 
 	j.status <- "running cat command"
 	catCmdOutput, err := j.runCatCmd()
-
 	if err != nil {
 		return
 	}
 
 	j.status <- "running list command"
 	listCmdOutput, err := j.runListCmd()
-
 	if err != nil {
 		return
 	}
@@ -99,15 +92,13 @@ func (j *Job) Run() {
 	j.status <- "running show command"
 	installedPackages := j.parsePipList(string(listCmdOutput))
 	ShowCmdOutput, err := j.runShowCmd(installedPackages)
-
 	if err != nil {
 		return
 	}
 
-	j.status <- ("setting up data...")
-	lockFileName := "." + filepath.Base(j.file) + lockFileExtension
+	j.status <- "setting up data..."
+	lockFileName := fmt.Sprintf(".%s%s", filepath.Base(j.file), lockFileExtension)
 	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.file, lockFileName))
-
 	if err != nil {
 		j.err = err
 
@@ -117,9 +108,9 @@ func (j *Job) Run() {
 
 	var fileContents []string
 	fileContents = append(fileContents, string(catCmdOutput))
-	fileContents = append(fileContents, "***")
+	fileContents = append(fileContents, lockFileDelimiter)
 	fileContents = append(fileContents, string(listCmdOutput))
-	fileContents = append(fileContents, "***")
+	fileContents = append(fileContents, lockFileDelimiter)
 	fileContents = append(fileContents, string(ShowCmdOutput))
 
 	res := []byte(strings.Join(fileContents, "\n"))
@@ -129,7 +120,8 @@ func (j *Job) Run() {
 }
 
 func (j *Job) runCreateVenvCmd() ([]byte, error) {
-	fpath := filepath.Join(filepath.Dir(j.file), filepath.Base(j.file)+".venv")
+	venvName := fmt.Sprintf("%s.venv", filepath.Base(j.file))
+	fpath := filepath.Join(filepath.Dir(j.file), venvName)
 	j.venvPath = fpath
 
 	createVenvCmd, err := j.cmdFactory.MakeCreateVenvCmd(j.venvPath)
@@ -237,7 +229,7 @@ func closeFile(job *Job, file *os.File) {
 
 func (j *Job) parsePipList(pipListOutput string) []string {
 	lines := strings.Split(pipListOutput, "\n")
-	packages := []string{}
+	var packages []string
 	for _, line := range lines[2:] {
 		fields := strings.Split(line, " ")
 		if len(fields) > 0 {
