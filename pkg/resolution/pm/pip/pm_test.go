@@ -21,5 +21,5 @@ func TestManifests(t *testing.T) {
 	manifests := pm.Manifests()
 	assert.Len(t, manifests, 1)
 	manifest := manifests[0]
-	assert.Equal(t, "requirements.txt", manifest)
+	assert.Equal(t, "requirements.*(?:\\.txt)", manifest)
 }

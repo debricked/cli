@@ -1,7 +1,6 @@
 package pip
 
 import (
-	"fmt"
 	"os/exec"
 	"strings"
 )
@@ -71,7 +70,6 @@ func (cmdf CmdFactory) MakeCatCmd(file string) (*exec.Cmd, error) {
 
 func (cmdf CmdFactory) MakeListCmd(command string) (*exec.Cmd, error) {
 	path, err := cmdf.execPath.LookPath(command)
-	fmt.Println("MakeListCmd", command)
 
 	return &exec.Cmd{
 		Path: path,
@@ -81,7 +79,6 @@ func (cmdf CmdFactory) MakeListCmd(command string) (*exec.Cmd, error) {
 
 func (cmdf CmdFactory) MakeShowCmd(command string, list []string) (*exec.Cmd, error) {
 	path, err := cmdf.execPath.LookPath(command)
-	fmt.Println("MakeShowCmd", command)
 
 	args := []string{command, "show"}
 	args = append(args, list...)
