@@ -1,14 +1,15 @@
 package files
 
 import (
-	"github.com/debricked/cli/internal/client"
-	"github.com/debricked/cli/internal/cmd/files/find"
-	"github.com/debricked/cli/internal/file"
+	"github.com/debricked/cli/pkg/cmd/files/find"
+	"github.com/debricked/cli/pkg/cmd/files/resolve"
+	"github.com/debricked/cli/pkg/file"
+	"github.com/debricked/cli/pkg/resolution"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-func NewFilesCmd(debClient *client.IDebClient) *cobra.Command {
+func NewFilesCmd(finder file.IFinder, resolver resolution.IResolver) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "files",
 		Short: "Analyze files",
@@ -18,10 +19,8 @@ func NewFilesCmd(debClient *client.IDebClient) *cobra.Command {
 		},
 	}
 
-	f, _ := file.NewFinder(*debClient)
-	cmd.AddCommand(find.NewFindCmd(f))
-
-	cmd.AddCommand(resolve.NewResolveCmd())
+	cmd.AddCommand(find.NewFindCmd(finder))
+	cmd.AddCommand(resolve.NewResolveCmd(resolver))
 
 	return cmd
 }

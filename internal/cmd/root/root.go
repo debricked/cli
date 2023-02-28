@@ -1,10 +1,10 @@
 package root
 
 import (
-	"github.com/debricked/cli/internal/client"
-	"github.com/debricked/cli/internal/cmd/files"
-	"github.com/debricked/cli/internal/cmd/report"
-	"github.com/debricked/cli/internal/cmd/scan"
+	"github.com/debricked/cli/pkg/cmd/files"
+	"github.com/debricked/cli/pkg/cmd/report"
+	"github.com/debricked/cli/pkg/cmd/scan"
+	"github.com/debricked/cli/pkg/wire"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -13,7 +13,7 @@ var accessToken string
 
 const AccessTokenFlag = "access-token"
 
-func NewRootCmd(version string) *cobra.Command {
+func NewRootCmd(version string, container *wire.CliContainer) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "debricked",
 		Short: "Debricked CLI - Keep track of your dependencies!",
@@ -35,10 +35,12 @@ Complete documentation is available at https://debricked.com/docs/integrations/c
 Read more: https://debricked.com/docs/administration/access-tokens.html`,
 	)
 
-	var debClient client.IDebClient = client.NewDebClient(&accessToken, client.NewRetryClient())
-	rootCmd.AddCommand(report.NewReportCmd(&debClient))
-	rootCmd.AddCommand(files.NewFilesCmd(&debClient))
-	rootCmd.AddCommand(scan.NewScanCmd(&debClient))
+	var debClient = container.DebClient()
+	debClient.SetAccessToken(&accessToken)
+
+	rootCmd.AddCommand(report.NewReportCmd(container.LicenseReporter(), container.VulnerabilityReporter()))
+	rootCmd.AddCommand(files.NewFilesCmd(container.Finder(), container.Resolver()))
+	rootCmd.AddCommand(scan.NewScanCmd(container.Scanner()))
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 

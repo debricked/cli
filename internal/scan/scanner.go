@@ -29,7 +29,7 @@ type IOptions interface{}
 
 type DebrickedScanner struct {
 	client    *client.IDebClient
-	finder    *file.Finder
+	finder    file.IFinder
 	uploader  *upload.IUploader
 	ciService ci.IService
 }
@@ -46,22 +46,16 @@ type DebrickedOptions struct {
 	PassOnTimeOut   bool
 }
 
-func NewDebrickedScanner(c *client.IDebClient, ciService ci.IService) (*DebrickedScanner, error) {
-	finder, err := file.NewFinder(*c)
-	if err != nil {
-		return nil, newInitError(err)
-	}
-	var u upload.IUploader
-	u, err = upload.NewUploader(*c)
-
-	if err != nil {
-		return nil, newInitError(err)
-	}
-
+func NewDebrickedScanner(
+	c *client.IDebClient,
+	finder file.IFinder,
+	uploader upload.IUploader,
+	ciService ci.IService,
+) (*DebrickedScanner, error) {
 	return &DebrickedScanner{
 		c,
 		finder,
-		&u,
+		&uploader,
 		ciService,
 	}, nil
 }
@@ -180,8 +174,4 @@ func MapEnvToOptions(o *DebrickedOptions, env env.Env) {
 	if len(o.Path) == 0 && len(env.Filepath) > 0 {
 		o.Path = env.Filepath
 	}
-}
-
-func newInitError(err error) error {
-	return errors.New("failed to initialize the uploader due to: " + err.Error())
 }

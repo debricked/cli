@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	testdataClient "github.com/debricked/cli/internal/client/testdata/client"
 )
 
@@ -162,4 +163,14 @@ func TestAuthenticate(t *testing.T) {
 	if !strings.EqualFold(jwtTkn, client.jwtToken) {
 		t.Errorf("failed to assert that the jwt token was properly set to %s. Got %s", jwtTkn, client.jwtToken)
 	}
+}
+
+func TestSetAccessToken(t *testing.T) {
+	debClient := NewDebClient(nil, testdataClient.NewMock())
+	debClient.accessToken = nil
+	testTkn := "0501ac404fd1823d0d4c047f957637a912d3b94713ee32a6"
+
+	debClient.SetAccessToken(&testTkn)
+
+	assert.Equal(t, &testTkn, debClient.accessToken)
 }

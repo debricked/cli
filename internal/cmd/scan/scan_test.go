@@ -3,17 +3,14 @@ package scan
 import (
 	"testing"
 
-	"github.com/debricked/cli/internal/client"
-	"github.com/debricked/cli/internal/client/testdata"
-	"github.com/debricked/cli/internal/scan"
+	"github.com/debricked/cli/pkg/scan"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewScanCmd(t *testing.T) {
-	var c client.IDebClient = testdata.NewDebClientMock()
-	cmd := NewScanCmd(&c)
+	cmd := NewScanCmd(&scannerMock{})
 
 	viperKeys := viper.AllKeys()
 	flags := cmd.Flags()

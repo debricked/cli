@@ -52,6 +52,10 @@ func (mock *DebClientMock) Post(uri string, format string, body *bytes.Buffer) (
 	return mock.realDebClient.Post(uri, format, body)
 }
 
+func (mock *DebClientMock) SetAccessToken(_ *string) {
+
+}
+
 type MockResponse struct {
 	StatusCode   int
 	ResponseBody io.ReadCloser

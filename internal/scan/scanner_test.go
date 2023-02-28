@@ -44,40 +44,27 @@ var ciService ci.IService = ci.NewService([]ci.ICi{
 })
 
 func TestNewDebrickedScanner(t *testing.T) {
-	var debClient client.IDebClient = testdata.NewDebClientMock()
-	var ciService ci.IService
-	s, err := NewDebrickedScanner(&debClient, ciService)
+	var debClient client.IDebClient
+	var cis ci.IService
+	var finder file.IFinder
+	var uploader upload.IUploader
+	s, err := NewDebrickedScanner(&debClient, finder, uploader, cis)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, s)
-}
-
-func TestNewDebrickedScannerWithError(t *testing.T) {
-	var debClient client.IDebClient
-	var ciService ci.IService
-	s, err := NewDebrickedScanner(&debClient, ciService)
-
-	assert.Error(t, err)
-	assert.Nil(t, s)
-	assert.ErrorContains(t, err, "failed to initialize the uploader")
 }
 
 func TestScan(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skipf("TestScan is skipped due to Windows env")
 	}
-	var debClient client.IDebClient
 	clientMock := testdata.NewDebClientMock()
 	addMockedFormatsResponse(clientMock)
 	addMockedFileUploadResponse(clientMock)
 	addMockedFinishResponse(clientMock, http.StatusNoContent)
 	addMockedStatusResponse(clientMock, http.StatusOK, 50)
 	addMockedStatusResponse(clientMock, http.StatusOK, 100)
-	debClient = clientMock
-
-	var ciService ci.IService = ci.NewService(nil)
-
-	scanner, _ := NewDebrickedScanner(&debClient, ciService)
+	scanner, _ := makeScanner(clientMock)
 
 	path := testdataYarn
 	repositoryName := path
@@ -130,7 +117,7 @@ func TestScan(t *testing.T) {
 
 func TestScanFailingMetaObject(t *testing.T) {
 	var debClient client.IDebClient = testdata.NewDebClientMock()
-	scanner, _ := NewDebrickedScanner(&debClient, ciService)
+	scanner, _ := NewDebrickedScanner(&debClient, nil, nil, ciService)
 	cwd, _ := os.Getwd()
 	path := testdataYarn
 	opts := DebrickedOptions{
@@ -157,11 +144,9 @@ func TestScanFailingMetaObject(t *testing.T) {
 }
 
 func TestScanFailingNoFiles(t *testing.T) {
-	var debClient client.IDebClient
 	clientMock := testdata.NewDebClientMock()
 	addMockedFormatsResponse(clientMock)
-	debClient = clientMock
-	scanner, _ := NewDebrickedScanner(&debClient, ciService)
+	scanner, _ := makeScanner(clientMock)
 	opts := DebrickedOptions{
 		Path:            "",
 		Exclusions:      []string{"testdata/**"},
@@ -179,7 +164,7 @@ func TestScanFailingNoFiles(t *testing.T) {
 
 func TestScanBadOpts(t *testing.T) {
 	var c client.IDebClient
-	scanner, _ := NewDebrickedScanner(&c, nil)
+	scanner, _ := NewDebrickedScanner(&c, nil, nil, nil)
 	var opts IOptions
 
 	err := scanner.Scan(opts)
@@ -191,7 +176,6 @@ func TestScanEmptyResult(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skipf("TestScan is skipped due to Windows env")
 	}
-	var debClient client.IDebClient
 	clientMock := testdata.NewDebClientMock()
 	addMockedFormatsResponse(clientMock)
 	addMockedFileUploadResponse(clientMock)
@@ -200,10 +184,7 @@ func TestScanEmptyResult(t *testing.T) {
 	// Create mocked scan result response, 201 is returned when the queue time are too long
 	addMockedStatusResponse(clientMock, http.StatusCreated, 0)
 
-	debClient = clientMock
-
-	var ciService ci.IService = ci.NewService(nil)
-	scanner, _ := NewDebrickedScanner(&debClient, ciService)
+	scanner, _ := makeScanner(clientMock)
 	path := testdataYarn
 	repositoryName := path
 	commitName := "testdata/yarn-commit"
@@ -242,7 +223,7 @@ func TestScanEmptyResult(t *testing.T) {
 
 func TestScanInCiWithPathSet(t *testing.T) {
 	var debClient client.IDebClient = testdata.NewDebClientMock()
-	scanner, _ := NewDebrickedScanner(&debClient, ciService)
+	scanner, _ := NewDebrickedScanner(&debClient, nil, nil, ciService)
 	cwd, _ := os.Getwd()
 	defer resetWd(t, cwd)
 	path := testdataYarn
@@ -549,4 +530,20 @@ func resetWd(t *testing.T, wd string) {
 	if err != nil {
 		t.Fatal("Can not read the directory: ", wd)
 	}
+}
+
+func makeScanner(clientMock *testdata.DebClientMock) (*DebrickedScanner, *DebrickedScanner) {
+	var debClient client.IDebClient = clientMock
+
+	var finder file.IFinder
+	finder, _ = file.NewFinder(debClient)
+
+	var uploader upload.IUploader
+	uploader, _ = upload.NewUploader(debClient)
+
+	var cis ci.IService = ci.NewService(nil)
+
+	scanner, _ := NewDebrickedScanner(&debClient, finder, uploader, cis)
+
+	return scanner, nil
 }

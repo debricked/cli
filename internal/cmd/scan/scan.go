@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/debricked/cli/internal/ci"
-	"github.com/debricked/cli/internal/client"
-	"github.com/debricked/cli/internal/file"
-	"github.com/debricked/cli/internal/scan"
+	"github.com/debricked/cli/pkg/file"
+	"github.com/debricked/cli/pkg/scan"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -36,12 +34,7 @@ const (
 
 var scanCmdError error
 
-func NewScanCmd(c *client.IDebClient) *cobra.Command {
-	var ciService ci.IService = ci.NewService(nil)
-
-	var s scan.IScanner
-	s, scanCmdError = scan.NewDebrickedScanner(c, ciService)
-
+func NewScanCmd(scanner scan.IScanner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "scan [path]",
 		Short: "Start a Debricked dependency scan",
@@ -50,7 +43,7 @@ If the given path contains a git repository all flags but "integration" will be 
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			_ = viper.BindPFlags(cmd.Flags())
 		},
-		RunE: RunE(&s),
+		RunE: RunE(&scanner),
 	}
 	cmd.Flags().StringVarP(&repositoryName, RepositoryFlag, "r", "", "repository name")
 	cmd.Flags().StringVarP(&commitName, CommitFlag, "c", "", "commit hash")
