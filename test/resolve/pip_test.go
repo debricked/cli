@@ -2,6 +2,7 @@ package resolve
 
 import (
 	"github.com/debricked/cli/pkg/cmd/files/resolve"
+	"github.com/debricked/cli/pkg/wire"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
@@ -23,7 +24,7 @@ func TestResolvePip(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			resolveCmd := resolve.NewResolveCmd()
+			resolveCmd := resolve.NewResolveCmd(wire.GetCliContainer().Resolver())
 			err := resolveCmd.RunE(resolveCmd, []string{c.requirementsFile})
 			assert.NoError(t, err)
 

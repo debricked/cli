@@ -1,13 +1,14 @@
 package root
 
 import (
+	"github.com/debricked/cli/pkg/wire"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestNewRootCmd(t *testing.T) {
-	cmd := NewRootCmd("v0.0.0")
+	cmd := NewRootCmd("v0.0.0", wire.GetCliContainer())
 	commands := cmd.Commands()
 	nbrOfCommands := 3
 	if len(commands) != nbrOfCommands {
