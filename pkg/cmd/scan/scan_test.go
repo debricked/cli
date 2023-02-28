@@ -3,8 +3,6 @@ package scan
 import (
 	"testing"
 
-	"github.com/debricked/cli/pkg/client"
-	"github.com/debricked/cli/pkg/client/testdata"
 	"github.com/debricked/cli/pkg/scan"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -12,8 +10,7 @@ import (
 )
 
 func TestNewScanCmd(t *testing.T) {
-	var c client.IDebClient = testdata.NewDebClientMock()
-	cmd := NewScanCmd(&c)
+	cmd := NewScanCmd(&scannerMock{})
 
 	viperKeys := viper.AllKeys()
 	flags := cmd.Flags()

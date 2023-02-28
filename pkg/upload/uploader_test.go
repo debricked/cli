@@ -149,3 +149,5 @@ func (mock *debClientMock) Get(_ string, _ string) (*http.Response, error) {
 
 	return res, nil
 }
+
+func (mock *debClientMock) SetAccessToken(_ *string) {}
