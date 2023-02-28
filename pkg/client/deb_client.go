@@ -13,6 +13,7 @@ type IDebClient interface {
 	Post(uri string, contentType string, body *bytes.Buffer) (*http.Response, error)
 	// Get makes a GET request to one of Debricked's API endpoints
 	Get(uri string, format string) (*http.Response, error)
+	SetAccessToken(accessToken *string)
 }
 
 type DebClient struct {
@@ -23,12 +24,6 @@ type DebClient struct {
 }
 
 func NewDebClient(accessToken *string, httpClient IClient) *DebClient {
-	if accessToken == nil {
-		accessToken = new(string)
-	}
-	if len(*accessToken) == 0 {
-		*accessToken = os.Getenv("DEBRICKED_TOKEN")
-	}
 	host := os.Getenv("DEBRICKED_URI")
 	if len(host) == 0 {
 		host = DefaultDebrickedUri
@@ -37,7 +32,7 @@ func NewDebClient(accessToken *string, httpClient IClient) *DebClient {
 	return &DebClient{
 		host:        &host,
 		httpClient:  httpClient,
-		accessToken: accessToken,
+		accessToken: initAccessToken(accessToken),
 		jwtToken:    "",
 	}
 }
@@ -48,4 +43,19 @@ func (debClient *DebClient) Post(uri string, contentType string, body *bytes.Buf
 
 func (debClient *DebClient) Get(uri string, format string) (*http.Response, error) {
 	return get(uri, debClient, true, format)
+}
+
+func (debClient *DebClient) SetAccessToken(accessToken *string) {
+	debClient.accessToken = initAccessToken(accessToken)
+}
+
+func initAccessToken(accessToken *string) *string {
+	if accessToken == nil {
+		accessToken = new(string)
+	}
+	if len(*accessToken) == 0 {
+		*accessToken = os.Getenv("DEBRICKED_TOKEN")
+	}
+
+	return accessToken
 }

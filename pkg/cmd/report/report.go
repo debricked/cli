@@ -1,7 +1,6 @@
 package report
 
 import (
-	"github.com/debricked/cli/pkg/client"
 	"github.com/debricked/cli/pkg/cmd/report/license"
 	"github.com/debricked/cli/pkg/cmd/report/vulnerability"
 	licenseReport "github.com/debricked/cli/pkg/report/license"
@@ -10,7 +9,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-func NewReportCmd(debClient *client.IDebClient) *cobra.Command {
+func NewReportCmd(
+	licenseReporter licenseReport.Reporter,
+	vulnerabilityReporter vulnerabilityReport.Reporter,
+) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "report",
 		Short: "Generate reports",
@@ -21,11 +23,8 @@ This is a premium feature. Please visit https://debricked.com/pricing/ for more 
 		},
 	}
 
-	lReporter := licenseReport.Reporter{DebClient: *debClient}
-	cmd.AddCommand(license.NewLicenseCmd(lReporter))
-
-	vReporter := vulnerabilityReport.Reporter{DebClient: *debClient}
-	cmd.AddCommand(vulnerability.NewVulnerabilityCmd(vReporter))
+	cmd.AddCommand(license.NewLicenseCmd(licenseReporter))
+	cmd.AddCommand(vulnerability.NewVulnerabilityCmd(vulnerabilityReporter))
 
 	return cmd
 }
