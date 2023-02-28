@@ -7,5 +7,5 @@ debricked
 dist/
 /.debricked-go-dependencies.txt
 /.env
-test/testdata/pip/requirements.txt.venv/
-test/testdata/pip/requirements.txt.debricked.lock
+test/resolve/testdata/pip/requirements.txt.venv/
+test/resolve/testdata/pip/.requirements.txt.debricked.lock
