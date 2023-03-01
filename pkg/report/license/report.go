@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/debricked/cli/pkg/client"
-	"github.com/debricked/cli/pkg/report"
 	"io"
 	"net/http"
+
+	"github.com/debricked/cli/pkg/client"
+	"github.com/debricked/cli/pkg/report"
 )
 
 var (

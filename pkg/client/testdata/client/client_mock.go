@@ -2,9 +2,10 @@ package client
 
 import (
 	"bytes"
-	"github.com/hashicorp/go-retryablehttp"
 	"io"
 	"net/http"
+
+	"github.com/hashicorp/go-retryablehttp"
 )
 
 type Mock struct {

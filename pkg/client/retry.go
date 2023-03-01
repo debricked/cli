@@ -1,8 +1,9 @@
 package client
 
 import (
-	"github.com/hashicorp/go-retryablehttp"
 	"time"
+
+	"github.com/hashicorp/go-retryablehttp"
 )
 
 func NewRetryClient() *retryablehttp.Client {

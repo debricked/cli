@@ -1,9 +1,10 @@
 package azure
 
 import (
+	"testing"
+
 	"github.com/debricked/cli/pkg/ci/testdata"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 var azureEnv = map[string]string{

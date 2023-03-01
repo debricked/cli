@@ -4,6 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"testing"
+
 	"github.com/debricked/cli/pkg/ci"
 	"github.com/debricked/cli/pkg/ci/argo"
 	"github.com/debricked/cli/pkg/ci/azure"
@@ -20,13 +28,6 @@ import (
 	"github.com/debricked/cli/pkg/git"
 	"github.com/debricked/cli/pkg/upload"
 	"github.com/stretchr/testify/assert"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
-	"runtime"
-	"strings"
-	"testing"
 )
 
 var testdataYarn = filepath.Join("testdata", "yarn")

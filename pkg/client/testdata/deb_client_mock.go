@@ -2,10 +2,11 @@ package testdata
 
 import (
 	"bytes"
-	"github.com/debricked/cli/pkg/client"
 	"io"
 	"net/http"
 	"net/url"
+
+	"github.com/debricked/cli/pkg/client"
 )
 
 type DebClientMock struct {

@@ -3,6 +3,8 @@ package scan
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
+
 	"github.com/debricked/cli/pkg/ci"
 	"github.com/debricked/cli/pkg/client"
 	"github.com/debricked/cli/pkg/file"
@@ -10,7 +12,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"path/filepath"
 )
 
 var repositoryName string

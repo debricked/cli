@@ -1,8 +1,9 @@
 package automation
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFailPipeline(t *testing.T) {

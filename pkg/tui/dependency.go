@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+
 	"github.com/debricked/cli/pkg/automation"
 )
 

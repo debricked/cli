@@ -1,10 +1,11 @@
 package travis
 
 import (
+	"testing"
+
 	"github.com/debricked/cli/pkg/ci/env"
 	"github.com/debricked/cli/pkg/ci/testdata"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 var travisEnv = map[string]string{

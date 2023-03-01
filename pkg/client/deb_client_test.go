@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	testdataClient "github.com/debricked/cli/pkg/client/testdata/client"
 	"io"
 	"net/http"
 	"os"
 	"strings"
 	"testing"
+
+	testdataClient "github.com/debricked/cli/pkg/client/testdata/client"
 )
 
 var client *DebClient

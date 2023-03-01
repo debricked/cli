@@ -2,6 +2,7 @@ linters:
   # Enable specific linter
   # https://golangci-lint.run/usage/linters
   enable:
+    - goimports # Goimports updates imports, removing unused and adding missing ones as well as formating them
     - errcheck #  Errcheck is a program for checking for unchecked errors in go programs. These unchecked errors can be critical bugs in some cases
     - gosimple # Linter for Go source code that specializes in simplifying code
     - govet # Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string

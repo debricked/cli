@@ -1,9 +1,10 @@
 package root
 
 import (
+	"testing"
+
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestNewRootCmd(t *testing.T) {

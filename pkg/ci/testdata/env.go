@@ -1,10 +1,11 @@
 package testdata
 
 import (
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/object"
 	"os"
 	"testing"
+
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
 func SetUpCiEnv(t *testing.T, env map[string]string) {

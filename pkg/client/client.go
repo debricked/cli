@@ -1,8 +1,9 @@
 package client
 
 import (
-	"github.com/hashicorp/go-retryablehttp"
 	"net/http"
+
+	"github.com/hashicorp/go-retryablehttp"
 )
 
 type IClient interface {

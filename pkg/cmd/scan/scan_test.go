@@ -1,13 +1,14 @@
 package scan
 
 import (
+	"testing"
+
 	"github.com/debricked/cli/pkg/client"
 	"github.com/debricked/cli/pkg/client/testdata"
 	"github.com/debricked/cli/pkg/scan"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestNewScanCmd(t *testing.T) {

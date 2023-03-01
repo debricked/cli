@@ -1,9 +1,10 @@
 package testdata
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func AssertIdentify(t *testing.T, identify func() bool, envKey string) {

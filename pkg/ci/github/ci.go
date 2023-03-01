@@ -2,10 +2,11 @@ package github
 
 import (
 	"fmt"
-	"github.com/debricked/cli/pkg/ci/env"
-	"github.com/debricked/cli/pkg/ci/util"
 	"os"
 	"strings"
+
+	"github.com/debricked/cli/pkg/ci/env"
+	"github.com/debricked/cli/pkg/ci/util"
 )
 
 const (

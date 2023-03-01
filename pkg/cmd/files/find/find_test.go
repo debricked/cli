@@ -2,11 +2,12 @@ package find
 
 import (
 	"errors"
+	"testing"
+
 	"github.com/debricked/cli/pkg/file"
 	"github.com/debricked/cli/pkg/file/testdata"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestNewFindCmd(t *testing.T) {

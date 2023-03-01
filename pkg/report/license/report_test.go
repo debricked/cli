@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/debricked/cli/pkg/client/testdata"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"testing"
+
+	"github.com/debricked/cli/pkg/client/testdata"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestOrder(t *testing.T) {

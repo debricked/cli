@@ -3,6 +3,7 @@ package ci
 import (
 	"errors"
 	"fmt"
+
 	"github.com/debricked/cli/pkg/ci/argo"
 	"github.com/debricked/cli/pkg/ci/azure"
 	"github.com/debricked/cli/pkg/ci/bitbucket"

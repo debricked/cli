@@ -3,6 +3,9 @@ package scan
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/debricked/cli/pkg/ci"
 	"github.com/debricked/cli/pkg/ci/env"
 	"github.com/debricked/cli/pkg/client"
@@ -11,8 +14,6 @@ import (
 	"github.com/debricked/cli/pkg/tui"
 	"github.com/debricked/cli/pkg/upload"
 	"github.com/fatih/color"
-	"os"
-	"path/filepath"
 )
 
 var (

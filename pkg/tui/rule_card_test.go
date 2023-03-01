@@ -2,9 +2,10 @@ package tui
 
 import (
 	"bytes"
+	"testing"
+
 	"github.com/debricked/cli/pkg/automation"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func capturePrintOutput(rule automation.Rule) string {

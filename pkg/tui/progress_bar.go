@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+
 	"github.com/fatih/color"
 	"github.com/schollz/progressbar/v3"
 )

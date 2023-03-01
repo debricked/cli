@@ -3,13 +3,14 @@ package file
 import (
 	"encoding/json"
 	"errors"
-	"github.com/bmatcuk/doublestar/v4"
-	"github.com/debricked/cli/pkg/client"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/bmatcuk/doublestar/v4"
+	"github.com/debricked/cli/pkg/client"
 )
 
 type IFinder interface {

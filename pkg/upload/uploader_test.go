@@ -3,15 +3,16 @@ package upload
 import (
 	"bytes"
 	"encoding/json"
+	"io"
+	"net/http"
+	"strings"
+	"testing"
+
 	"github.com/debricked/cli/pkg/client"
 	"github.com/debricked/cli/pkg/client/testdata"
 	"github.com/debricked/cli/pkg/file"
 	"github.com/debricked/cli/pkg/git"
 	"github.com/stretchr/testify/assert"
-	"io"
-	"net/http"
-	"strings"
-	"testing"
 )
 
 func TestNewDebrickedUploader(t *testing.T) {

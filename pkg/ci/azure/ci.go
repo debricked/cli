@@ -2,10 +2,11 @@ package azure
 
 import (
 	"fmt"
-	"github.com/debricked/cli/pkg/ci/env"
-	"github.com/debricked/cli/pkg/ci/util"
 	"os"
 	"path/filepath"
+
+	"github.com/debricked/cli/pkg/ci/env"
+	"github.com/debricked/cli/pkg/ci/util"
 )
 
 const (
