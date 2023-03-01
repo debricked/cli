@@ -2,11 +2,9 @@ package gomod
 
 import (
 	"errors"
-	"fmt"
-	"runtime"
 	"testing"
 
-	"github.com/debricked/cli/pkg/resolution/job"
+	jobTestdata "github.com/debricked/cli/pkg/resolution/job/testdata"
 	"github.com/debricked/cli/pkg/resolution/pm/gomod/testdata"
 	"github.com/debricked/cli/pkg/resolution/pm/writer"
 	writerTestdata "github.com/debricked/cli/pkg/resolution/pm/writer/testdata"
@@ -15,19 +13,8 @@ import (
 
 func TestNewJob(t *testing.T) {
 	j := NewJob("file", CmdFactory{}, writer.FileWriter{})
-	assert.Equal(t, "file", j.file)
-	assert.Nil(t, j.err)
-}
-
-func TestFile(t *testing.T) {
-	j := Job{file: "file"}
-	assert.Equal(t, "file", j.File())
-}
-
-func TestError(t *testing.T) {
-	jobErr := errors.New("error")
-	j := Job{file: "file", err: jobErr}
-	assert.Equal(t, jobErr, j.Error())
+	assert.Equal(t, "file", j.GetFile())
+	assert.Nil(t, j.Error())
 }
 
 func TestRunGraphCmdErr(t *testing.T) {
@@ -36,7 +23,7 @@ func TestRunGraphCmdErr(t *testing.T) {
 	cmdFactoryMock.MakeGraphCmdErr = cmdErr
 	j := NewJob("file", cmdFactoryMock, nil)
 
-	go waitStatus(j)
+	go jobTestdata.WaitStatus(j)
 
 	j.Run()
 
@@ -48,11 +35,11 @@ func TestRunCmdOutputErr(t *testing.T) {
 	cmdFactoryMock.GraphCmdName = "bad-name"
 	j := NewJob("file", cmdFactoryMock, nil)
 
-	go waitStatus(j)
+	go jobTestdata.WaitStatus(j)
 
 	j.Run()
 
-	assertPathErr(t, j.Error())
+	jobTestdata.AssertPathErr(t, j.Error())
 }
 
 func TestRunListCmdErr(t *testing.T) {
@@ -61,7 +48,7 @@ func TestRunListCmdErr(t *testing.T) {
 	cmdFactoryMock.MakeListCmdErr = cmdErr
 	j := NewJob("file", cmdFactoryMock, nil)
 
-	go waitStatus(j)
+	go jobTestdata.WaitStatus(j)
 
 	j.Run()
 
@@ -73,11 +60,11 @@ func TestRunListCmdOutputErr(t *testing.T) {
 	cmdFactoryMock.ListCmdName = "bad-name"
 	j := NewJob("file", cmdFactoryMock, nil)
 
-	go waitStatus(j)
+	go jobTestdata.WaitStatus(j)
 
 	j.Run()
 
-	assertPathErr(t, j.Error())
+	jobTestdata.AssertPathErr(t, j.Error())
 }
 
 func TestRunCreateErr(t *testing.T) {
@@ -86,7 +73,7 @@ func TestRunCreateErr(t *testing.T) {
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	j := NewJob("file", cmdFactoryMock, fileWriterMock)
 
-	go waitStatus(j)
+	go jobTestdata.WaitStatus(j)
 
 	j.Run()
 
@@ -99,7 +86,7 @@ func TestRunWriteErr(t *testing.T) {
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	j := NewJob("file", cmdFactoryMock, fileWriterMock)
 
-	go waitStatus(j)
+	go jobTestdata.WaitStatus(j)
 
 	j.Run()
 
@@ -112,7 +99,7 @@ func TestRunCloseErr(t *testing.T) {
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	j := NewJob("file", cmdFactoryMock, fileWriterMock)
 
-	go waitStatus(j)
+	go jobTestdata.WaitStatus(j)
 
 	j.Run()
 
@@ -125,27 +112,10 @@ func TestRun(t *testing.T) {
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	j := NewJob("file", cmdFactoryMock, fileWriterMock)
 
-	go waitStatus(j)
+	go jobTestdata.WaitStatus(j)
 
 	j.Run()
 
 	assert.NoError(t, j.Error())
 	assert.Equal(t, fileContents, fileWriterMock.Contents)
-}
-
-func waitStatus(j job.IJob) {
-	for {
-		<-j.Status()
-	}
-}
-
-func assertPathErr(t *testing.T, err error) {
-	var path string
-	if runtime.GOOS == "windows" {
-		path = "%PATH%"
-	} else {
-		path = "$PATH"
-	}
-	errMsg := fmt.Sprintf("executable file not found in %s", path)
-	assert.ErrorContains(t, err, errMsg)
 }

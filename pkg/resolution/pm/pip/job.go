@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/debricked/cli/pkg/resolution/job"
 	"github.com/debricked/cli/pkg/resolution/pm/util"
 	"github.com/debricked/cli/pkg/resolution/pm/writer"
 )
@@ -17,14 +18,12 @@ const (
 )
 
 type Job struct {
-	file       string
+	job.BaseJob
 	install    bool
 	venvPath   string
 	pipCommand string
 	cmdFactory ICmdFactory
 	fileWriter writer.IFileWriter
-	err        error
-	status     chan string
 }
 
 func NewJob(
@@ -34,11 +33,10 @@ func NewJob(
 	fileWriter writer.IFileWriter,
 ) *Job {
 	return &Job{
-		file:       file,
+		BaseJob:    job.BaseJob{File: file, Status: make(chan string)},
 		install:    install,
 		cmdFactory: cmdFactory,
 		fileWriter: fileWriter,
-		status:     make(chan string),
 	}
 }
 
@@ -46,61 +44,49 @@ func (j *Job) Install() bool {
 	return j.install
 }
 
-func (j *Job) File() string {
-	return j.file
-}
-
-func (j *Job) Error() error {
-	return j.err
-}
-
-func (j *Job) Status() chan string {
-	return j.status
-}
-
 func (j *Job) Run() {
 	if j.install {
-		j.status <- fmt.Sprintf("creating virtualenv for %s.venv", j.file)
+		j.SendStatus(fmt.Sprintf("creating virtualenv for %s.venv", j.File))
 		_, err := j.runCreateVenvCmd()
 		if err != nil {
-			j.err = err
+			j.Err = err
 
 			return
 		}
 
-		j.status <- fmt.Sprintf("installing requirements in virtualenv for %s.venv", j.file)
+		j.SendStatus(fmt.Sprintf("installing requirements in virtualenv for %s.venv", j.File))
 		_, err = j.runInstallCmd()
 		if err != nil {
-			j.err = err
+			j.Err = err
 
 			return
 		}
 	}
 
-	j.status <- "running cat command"
+	j.SendStatus("running cat command")
 	catCmdOutput, err := j.runCatCmd()
 	if err != nil {
 		return
 	}
 
-	j.status <- "running list command"
+	j.SendStatus("running list command")
 	listCmdOutput, err := j.runListCmd()
 	if err != nil {
 		return
 	}
 
-	j.status <- "running show command"
+	j.SendStatus("running show command")
 	installedPackages := j.parsePipList(string(listCmdOutput))
 	ShowCmdOutput, err := j.runShowCmd(installedPackages)
 	if err != nil {
 		return
 	}
 
-	j.status <- "setting up data..."
-	lockFileName := fmt.Sprintf(".%s%s", filepath.Base(j.file), lockFileExtension)
-	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.file, lockFileName))
+	j.SendStatus("setting up data...")
+	lockFileName := fmt.Sprintf(".%s%s", filepath.Base(j.File), lockFileExtension)
+	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.File, lockFileName))
 	if err != nil {
-		j.err = err
+		j.Err = err
 
 		return
 	}
@@ -114,26 +100,26 @@ func (j *Job) Run() {
 	fileContents = append(fileContents, string(ShowCmdOutput))
 
 	res := []byte(strings.Join(fileContents, "\n"))
-	j.status <- "writing data..."
+	j.SendStatus("writing data...")
 
-	j.err = j.fileWriter.Write(lockFile, res)
+	j.Err = j.fileWriter.Write(lockFile, res)
 }
 
 func (j *Job) runCreateVenvCmd() ([]byte, error) {
-	venvName := fmt.Sprintf("%s.venv", filepath.Base(j.file))
-	fpath := filepath.Join(filepath.Dir(j.file), venvName)
+	venvName := fmt.Sprintf("%s.venv", filepath.Base(j.File))
+	fpath := filepath.Join(filepath.Dir(j.File), venvName)
 	j.venvPath = fpath
 
 	createVenvCmd, err := j.cmdFactory.MakeCreateVenvCmd(j.venvPath)
 	if err != nil {
-		j.err = err
+		j.Err = err
 
 		return nil, err
 	}
 
 	createVenvCmdOutput, err := createVenvCmd.Output()
 	if err != nil {
-		j.err = err
+		j.Err = err
 
 		return nil, err
 	}
@@ -149,16 +135,16 @@ func (j *Job) runInstallCmd() ([]byte, error) {
 		command = pip
 	}
 	j.pipCommand = command
-	installCmd, err := j.cmdFactory.MakeInstallCmd(j.pipCommand, j.file)
+	installCmd, err := j.cmdFactory.MakeInstallCmd(j.pipCommand, j.File)
 	if err != nil {
-		j.err = err
+		j.Err = err
 
 		return nil, err
 	}
 
 	installCmdOutput, err := installCmd.Output()
 	if err != nil {
-		j.err = err
+		j.Err = err
 
 		return nil, err
 	}
@@ -167,16 +153,16 @@ func (j *Job) runInstallCmd() ([]byte, error) {
 }
 
 func (j *Job) runCatCmd() ([]byte, error) {
-	listCmd, err := j.cmdFactory.MakeCatCmd(j.file)
+	listCmd, err := j.cmdFactory.MakeCatCmd(j.File)
 	if err != nil {
-		j.err = err
+		j.Err = err
 
 		return nil, err
 	}
 
 	listCmdOutput, err := listCmd.Output()
 	if err != nil {
-		j.err = err
+		j.Err = err
 
 		return nil, err
 	}
@@ -187,14 +173,14 @@ func (j *Job) runCatCmd() ([]byte, error) {
 func (j *Job) runListCmd() ([]byte, error) {
 	listCmd, err := j.cmdFactory.MakeListCmd(j.pipCommand)
 	if err != nil {
-		j.err = err
+		j.Err = err
 
 		return nil, err
 	}
 
 	listCmdOutput, err := listCmd.Output()
 	if err != nil {
-		j.err = err
+		j.Err = err
 
 		return nil, err
 	}
@@ -205,14 +191,14 @@ func (j *Job) runListCmd() ([]byte, error) {
 func (j *Job) runShowCmd(packages []string) ([]byte, error) {
 	listCmd, err := j.cmdFactory.MakeShowCmd(j.pipCommand, packages)
 	if err != nil {
-		j.err = err
+		j.Err = err
 
 		return nil, err
 	}
 
 	listCmdOutput, err := listCmd.Output()
 	if err != nil {
-		j.err = err
+		j.Err = err
 
 		return nil, err
 	}
@@ -223,7 +209,7 @@ func (j *Job) runShowCmd(packages []string) ([]byte, error) {
 func closeFile(job *Job, file *os.File) {
 	err := job.fileWriter.Close(file)
 	if err != nil {
-		job.err = err
+		job.Err = err
 	}
 }
 
