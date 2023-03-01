@@ -136,7 +136,7 @@ func TestResolveDirWithManifestFiles(t *testing.T) {
 			assert.Len(t, res.Jobs(), 1)
 			job := res.Jobs()[0]
 			assert.NoError(t, job.Error())
-			assert.Equal(t, goMod, job.File())
+			assert.Equal(t, goMod, job.GetFile())
 			assert.NoError(t, err)
 		})
 	}
@@ -161,6 +161,6 @@ func TestResolveDirWithExclusions(t *testing.T) {
 	assert.Len(t, res.Jobs(), 1)
 	job := res.Jobs()[0]
 	assert.NoError(t, job.Error())
-	assert.Equal(t, goMod, job.File())
+	assert.Equal(t, goMod, job.GetFile())
 	assert.NoError(t, err)
 }

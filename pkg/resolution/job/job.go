@@ -1,8 +1,8 @@
 package job
 
 type IJob interface {
-	File() string
-	Error() error
+	GetFile() string
+	Error() IJobError
 	Run()
-	Status() chan string
+	ReceiveStatus() chan string
 }

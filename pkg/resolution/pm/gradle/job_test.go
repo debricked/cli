@@ -2,11 +2,9 @@ package gradle
 
 import (
 	"errors"
-	"fmt"
-	"runtime"
 	"testing"
 
-	"github.com/debricked/cli/pkg/resolution/job"
+	jobTestdata "github.com/debricked/cli/pkg/resolution/job/testdata"
 	"github.com/debricked/cli/pkg/resolution/pm/gradle/testdata"
 	"github.com/debricked/cli/pkg/resolution/pm/writer"
 	writerTestdata "github.com/debricked/cli/pkg/resolution/pm/writer/testdata"
@@ -15,26 +13,15 @@ import (
 
 func TestNewJob(t *testing.T) {
 	j := NewJob("file", CmdFactory{}, writer.FileWriter{})
-	assert.Equal(t, "file", j.file)
-	assert.Nil(t, j.err)
-}
-
-func TestFile(t *testing.T) {
-	j := Job{file: "file"}
-	assert.Equal(t, "file", j.File())
-}
-
-func TestError(t *testing.T) {
-	jobErr := errors.New("error")
-	j := Job{file: "file", err: jobErr}
-	assert.Equal(t, jobErr, j.Error())
+	assert.Equal(t, "file", j.GetFile())
+	assert.Nil(t, j.Error())
 }
 
 func TestRunCmdErr(t *testing.T) {
 	cmdErr := errors.New("cmd-error")
 	j := NewJob("file", testdata.CmdFactoryMock{Err: cmdErr}, nil)
 
-	go waitStatus(j)
+	go jobTestdata.WaitStatus(j)
 
 	j.Run()
 
@@ -44,11 +31,11 @@ func TestRunCmdErr(t *testing.T) {
 func TestRunCmdOutputErr(t *testing.T) {
 	j := NewJob("file", testdata.CmdFactoryMock{Name: "bad-name"}, nil)
 
-	go waitStatus(j)
+	go jobTestdata.WaitStatus(j)
 
 	j.Run()
 
-	assertPathErr(t, j.Error())
+	jobTestdata.AssertPathErr(t, j.Error())
 }
 
 func TestRunCreateErr(t *testing.T) {
@@ -56,7 +43,7 @@ func TestRunCreateErr(t *testing.T) {
 	fileWriterMock := &writerTestdata.FileWriterMock{CreateErr: createErr}
 	j := NewJob("file", testdata.CmdFactoryMock{Name: "echo"}, fileWriterMock)
 
-	go waitStatus(j)
+	go jobTestdata.WaitStatus(j)
 
 	j.Run()
 
@@ -68,7 +55,7 @@ func TestRunWriteErr(t *testing.T) {
 	fileWriterMock := &writerTestdata.FileWriterMock{WriteErr: writeErr}
 	j := NewJob("file", testdata.CmdFactoryMock{Name: "echo"}, fileWriterMock)
 
-	go waitStatus(j)
+	go jobTestdata.WaitStatus(j)
 
 	j.Run()
 
@@ -80,7 +67,7 @@ func TestRunCloseErr(t *testing.T) {
 	fileWriterMock := &writerTestdata.FileWriterMock{CloseErr: closeErr}
 	j := NewJob("file", testdata.CmdFactoryMock{Name: "echo"}, fileWriterMock)
 
-	go waitStatus(j)
+	go jobTestdata.WaitStatus(j)
 
 	j.Run()
 
@@ -93,27 +80,10 @@ func TestRun(t *testing.T) {
 	cmdFactoryMock := testdata.CmdFactoryMock{Name: "echo"}
 	j := NewJob("file", cmdFactoryMock, fileWriterMock)
 
-	go waitStatus(j)
+	go jobTestdata.WaitStatus(j)
 
 	j.Run()
 
 	assert.NoError(t, j.Error())
 	assert.Equal(t, fileContents, fileWriterMock.Contents)
-}
-
-func waitStatus(j job.IJob) {
-	for {
-		<-j.Status()
-	}
-}
-
-func assertPathErr(t *testing.T, err error) {
-	var path string
-	if runtime.GOOS == "windows" {
-		path = "%PATH%"
-	} else {
-		path = "$PATH"
-	}
-	errMsg := fmt.Sprintf("executable file not found in %s", path)
-	assert.ErrorContains(t, err, errMsg)
 }
