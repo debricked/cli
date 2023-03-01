@@ -1,10 +1,11 @@
 package resolution
 
 import (
+	"testing"
+
 	"github.com/debricked/cli/pkg/resolution/job"
 	"github.com/debricked/cli/pkg/resolution/job/testdata"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestNewResolution(t *testing.T) {

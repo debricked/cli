@@ -19,6 +19,7 @@ import (
 	"github.com/debricked/cli/pkg/file"
 	"github.com/debricked/cli/pkg/git"
 	"github.com/debricked/cli/pkg/tui"
+	"github.com/fatih/color"
 )
 
 var (
