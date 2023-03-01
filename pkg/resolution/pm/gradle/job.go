@@ -2,6 +2,7 @@ package gradle
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/debricked/cli/pkg/resolution/pm/util"
 	"github.com/debricked/cli/pkg/resolution/pm/writer"
@@ -45,7 +46,9 @@ func (j *Job) Status() chan string {
 }
 
 func (j *Job) Run() {
-	dependenciesCmd, err := j.cmdFactory.MakeDependenciesCmd()
+	workingDirectory := filepath.Dir(filepath.Clean(j.file))
+
+	dependenciesCmd, err := j.cmdFactory.MakeDependenciesCmd(workingDirectory)
 	if err != nil {
 		j.err = err
 

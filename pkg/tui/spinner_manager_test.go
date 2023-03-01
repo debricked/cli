@@ -2,9 +2,10 @@ package tui
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/fatih/color"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestNewSpinnerManager(t *testing.T) {

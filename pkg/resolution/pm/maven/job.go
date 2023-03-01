@@ -1,5 +1,7 @@
 package maven
 
+import "path/filepath"
+
 type Job struct {
 	file       string
 	cmdFactory ICmdFactory
@@ -24,7 +26,8 @@ func (j *Job) Status() chan string {
 }
 
 func (j *Job) Run() {
-	cmd, err := j.cmdFactory.MakeDependencyTreeCmd()
+	workingDirectory := filepath.Dir(filepath.Clean(j.file))
+	cmd, err := j.cmdFactory.MakeDependencyTreeCmd(workingDirectory)
 	if err != nil {
 		j.err = err
 
