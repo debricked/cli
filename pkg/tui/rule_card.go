@@ -3,13 +3,14 @@ package tui
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"strings"
+
 	"github.com/debricked/cli/pkg/automation"
 	"github.com/fatih/color"
 	"github.com/jedib0t/go-pretty/v6/list"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
-	"io"
-	"strings"
 )
 
 const rowLength = 90

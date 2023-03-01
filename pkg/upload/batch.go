@@ -5,10 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/debricked/cli/pkg/client"
-	"github.com/debricked/cli/pkg/file"
-	"github.com/debricked/cli/pkg/git"
-	"github.com/debricked/cli/pkg/tui"
 	"io"
 	"log"
 	"mime/multipart"
@@ -18,6 +14,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/debricked/cli/pkg/client"
+	"github.com/debricked/cli/pkg/file"
+	"github.com/debricked/cli/pkg/git"
+	"github.com/debricked/cli/pkg/tui"
+	"github.com/fatih/color"
 )
 
 var (

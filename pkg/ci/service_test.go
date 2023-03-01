@@ -1,13 +1,14 @@
 package ci
 
 import (
+	"os"
+	"testing"
+
 	"github.com/debricked/cli/pkg/ci/azure"
 	"github.com/debricked/cli/pkg/ci/circleci"
 	"github.com/debricked/cli/pkg/ci/gitlab"
 	"github.com/debricked/cli/pkg/ci/testdata"
 	"github.com/stretchr/testify/assert"
-	"os"
-	"testing"
 )
 
 func TestNewService(t *testing.T) {

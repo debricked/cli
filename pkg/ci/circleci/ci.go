@@ -2,11 +2,12 @@ package circleci
 
 import (
 	"fmt"
+	"os"
+	"regexp"
+
 	"github.com/debricked/cli/pkg/ci/env"
 	"github.com/debricked/cli/pkg/ci/util"
 	"github.com/debricked/cli/pkg/git"
-	"os"
-	"regexp"
 )
 
 const (

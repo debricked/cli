@@ -1,4 +1,4 @@
-package find
+package resolve
 
 import (
 	"errors"
@@ -6,13 +6,15 @@ import (
 
 	"github.com/debricked/cli/pkg/file"
 	"github.com/debricked/cli/pkg/file/testdata"
+	"github.com/debricked/cli/pkg/resolution"
+	resolveTestdata "github.com/debricked/cli/pkg/resolution/testdata"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewFindCmd(t *testing.T) {
-	var f file.IFinder
-	cmd := NewFindCmd(f)
+func TestNewResolveCmd(t *testing.T) {
+	var resolver resolution.IResolver
+	cmd := NewResolveCmd(resolver)
 
 	commands := cmd.Commands()
 	nbrOfCommands := 0
@@ -28,9 +30,6 @@ func TestNewFindCmd(t *testing.T) {
 
 	var flagKeys = []string{
 		ExclusionFlag,
-		JsonFlag,
-		LockfileOnlyFlag,
-		StrictFlag,
 	}
 	viperKeys := viper.AllKeys()
 	for _, flagKey := range flagKeys {
@@ -47,10 +46,11 @@ func TestNewFindCmd(t *testing.T) {
 
 func TestRunE(t *testing.T) {
 	f := testdata.NewFinderMock()
+	r := &resolveTestdata.ResolverMock{}
 	groups := file.Groups{}
 	groups.Add(file.Group{})
 	f.SetGetGroupsReturnMock(groups, nil)
-	runE := RunE(f)
+	runE := RunE(r)
 
 	err := runE(nil, []string{"."})
 
@@ -59,10 +59,11 @@ func TestRunE(t *testing.T) {
 
 func TestRunENoPath(t *testing.T) {
 	f := testdata.NewFinderMock()
+	r := &resolveTestdata.ResolverMock{}
 	groups := file.Groups{}
 	groups.Add(file.Group{})
 	f.SetGetGroupsReturnMock(groups, nil)
-	runE := RunE(f)
+	runE := RunE(r)
 
 	err := runE(nil, []string{})
 
@@ -71,11 +72,12 @@ func TestRunENoPath(t *testing.T) {
 
 func TestRunENoFiles(t *testing.T) {
 	f := testdata.NewFinderMock()
+	r := &resolveTestdata.ResolverMock{}
 	groups := file.Groups{}
 	groups.Add(file.Group{})
 	f.SetGetGroupsReturnMock(groups, nil)
 	exclusions = []string{}
-	runE := RunE(f)
+	runE := RunE(r)
 
 	err := runE(nil, []string{"."})
 
@@ -83,32 +85,11 @@ func TestRunENoFiles(t *testing.T) {
 }
 
 func TestRunEError(t *testing.T) {
-	f := testdata.NewFinderMock()
+	r := &resolveTestdata.ResolverMock{}
 	errorAssertion := errors.New("finder-error")
-	f.SetGetGroupsReturnMock(file.Groups{}, errorAssertion)
-	runE := RunE(f)
+	r.Err = errorAssertion
+	runE := RunE(r)
 	err := runE(nil, []string{"."})
 
 	assert.EqualError(t, err, "finder-error", "error doesn't match expected")
-}
-
-func TestRunEWithInvalidStrictFlag(t *testing.T) {
-	viper.Set(StrictFlag, 123)
-
-	f := testdata.NewFinderMock()
-	runE := RunE(f)
-	err := runE(nil, []string{"."})
-
-	assert.EqualError(t, err, "'strict' supports values within range 0-2", "error doesn't match expected")
-}
-
-func TestRunEWithBothStrictAndLockOnlyFlagsSet(t *testing.T) {
-	viper.Set(StrictFlag, file.StrictLockAndPairs)
-	viper.Set(LockfileOnlyFlag, true)
-
-	f := testdata.NewFinderMock()
-	runE := RunE(f)
-	err := runE(nil, []string{"."})
-
-	assert.EqualError(t, err, "'lockfile' and 'strict' flags are mutually exclusive", "error doesn't match expected")
 }

@@ -2,9 +2,10 @@ package tui
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/debricked/cli/pkg/automation"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestMakeDependenciesFromTriggersNoTriggers(t *testing.T) {

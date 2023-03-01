@@ -1,9 +1,10 @@
 package main
 
 import (
+	"os"
+
 	"github.com/debricked/cli/pkg/cmd/root"
 	"github.com/debricked/cli/pkg/wire"
-	"os"
 )
 
 var version string // Set at compile time

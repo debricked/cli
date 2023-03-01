@@ -7,6 +7,6 @@ type CmdFactoryMock struct {
 	Name string
 }
 
-func (f CmdFactoryMock) MakeDependenciesCmd() (*exec.Cmd, error) {
+func (f CmdFactoryMock) MakeDependenciesCmd(_ string) (*exec.Cmd, error) {
 	return exec.Command(f.Name, `MakeDependenciesCmd`), f.Err
 }

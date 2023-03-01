@@ -3,17 +3,18 @@ package upload
 import (
 	"bytes"
 	"errors"
-	"github.com/debricked/cli/pkg/client"
-	"github.com/debricked/cli/pkg/client/testdata"
-	"github.com/debricked/cli/pkg/file"
-	"github.com/debricked/cli/pkg/git"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/debricked/cli/pkg/client"
+	"github.com/debricked/cli/pkg/client/testdata"
+	"github.com/debricked/cli/pkg/file"
+	"github.com/debricked/cli/pkg/git"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestUploadWithBadFiles(t *testing.T) {

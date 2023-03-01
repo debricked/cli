@@ -2,9 +2,10 @@ package upload
 
 import (
 	"encoding/json"
-	"github.com/debricked/cli/pkg/automation"
 	"io"
 	"net/http"
+
+	"github.com/debricked/cli/pkg/automation"
 )
 
 type uploadStatus struct {

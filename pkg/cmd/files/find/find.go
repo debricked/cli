@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path/filepath"
+
 	"github.com/debricked/cli/pkg/file"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"path/filepath"
 )
 
 var exclusions = file.DefaultExclusions()

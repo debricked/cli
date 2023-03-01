@@ -1,10 +1,11 @@
 package report
 
 import (
+	"testing"
+
 	"github.com/debricked/cli/pkg/report/license"
 	"github.com/debricked/cli/pkg/report/vulnerability"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestNewReportCmd(t *testing.T) {

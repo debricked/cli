@@ -2,10 +2,11 @@ package file
 
 import (
 	"fmt"
-	"github.com/debricked/cli/pkg/file/pcre"
 	"regexp"
 	"regexp/syntax"
 	"strings"
+
+	"github.com/debricked/cli/pkg/file/pcre"
 )
 
 type Format struct {

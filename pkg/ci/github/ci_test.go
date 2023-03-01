@@ -1,11 +1,12 @@
 package github
 
 import (
+	"os"
+	"testing"
+
 	"github.com/debricked/cli/pkg/ci/testdata"
 	"github.com/debricked/cli/pkg/ci/util"
 	"github.com/stretchr/testify/assert"
-	"os"
-	"testing"
 )
 
 var gitHubActionsEnv = map[string]string{

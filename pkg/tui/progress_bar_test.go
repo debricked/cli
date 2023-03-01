@@ -1,8 +1,9 @@
 package tui
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewProgressBar(t *testing.T) {

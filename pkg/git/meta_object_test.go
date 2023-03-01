@@ -1,10 +1,11 @@
 package git
 
 import (
-	"github.com/debricked/cli/pkg/ci/testdata"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/debricked/cli/pkg/ci/testdata"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewMetaObjectWithoutRepositoryName(t *testing.T) {

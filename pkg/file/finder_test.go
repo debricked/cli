@@ -3,14 +3,15 @@ package file
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/debricked/cli/pkg/client/testdata"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/debricked/cli/pkg/client/testdata"
+	"github.com/stretchr/testify/assert"
 )
 
 type debClientMock struct{}

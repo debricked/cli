@@ -1,9 +1,10 @@
 package gitlab
 
 import (
+	"os"
+
 	"github.com/debricked/cli/pkg/ci/env"
 	"github.com/debricked/cli/pkg/ci/util"
-	"os"
 )
 
 const (

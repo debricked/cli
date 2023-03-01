@@ -2,6 +2,7 @@ package license
 
 import (
 	"fmt"
+
 	"github.com/debricked/cli/pkg/report"
 	"github.com/debricked/cli/pkg/report/license"
 	"github.com/fatih/color"

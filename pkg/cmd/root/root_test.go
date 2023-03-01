@@ -1,16 +1,17 @@
 package root
 
 import (
+	"testing"
+
 	"github.com/debricked/cli/pkg/wire"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestNewRootCmd(t *testing.T) {
 	cmd := NewRootCmd("v0.0.0", wire.GetCliContainer())
 	commands := cmd.Commands()
-	nbrOfCommands := 3
+	nbrOfCommands := 4
 	if len(commands) != nbrOfCommands {
 		t.Errorf("failed to assert that there were %d sub commands connected", nbrOfCommands)
 	}

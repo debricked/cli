@@ -2,11 +2,12 @@ package license
 
 import (
 	"errors"
+	"testing"
+
 	"github.com/debricked/cli/pkg/cmd/report/testdata"
 	"github.com/debricked/cli/pkg/report"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestNewLicenseCmd(t *testing.T) {

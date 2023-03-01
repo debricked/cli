@@ -3,12 +3,13 @@ package scan
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
+
 	"github.com/debricked/cli/pkg/file"
 	"github.com/debricked/cli/pkg/scan"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"path/filepath"
 )
 
 var repositoryName string
@@ -18,6 +19,7 @@ var commitAuthor string
 var repositoryUrl string
 var integrationName string
 var exclusions = file.DefaultExclusions()
+var resolve bool
 
 const (
 	RepositoryFlag    = "repository"
@@ -27,6 +29,7 @@ const (
 	RepositoryUrlFlag = "repository-url"
 	IntegrationFlag   = "integration"
 	ExclusionFlag     = "exclusion"
+	ResolveFlag       = "resolve"
 )
 
 var scanCmdError error
@@ -74,6 +77,10 @@ Special Terms | Meaning
 
 Examples: 
 $ debricked scan . `+exampleFlags)
+
+	cmd.Flags().BoolVar(&resolve, ResolveFlag, false, `Resolves manifest files that lack lock files. This enables more accurate dependency scanning since the whole dependency tree will be analysed.
+For example, if there is a "go.mod" in the target path, its dependencies are going to get resolved onto a lock file, and latter scanned.`)
+
 	viper.MustBindEnv(RepositoryFlag)
 	viper.MustBindEnv(CommitFlag)
 	viper.MustBindEnv(BranchFlag)
@@ -92,6 +99,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 		}
 		options := scan.DebrickedOptions{
 			Path:            path,
+			Resolve:         viper.GetBool(ResolveFlag),
 			Exclusions:      viper.GetStringSlice(ExclusionFlag),
 			RepositoryName:  viper.GetString(RepositoryFlag),
 			CommitName:      viper.GetString(CommitFlag),

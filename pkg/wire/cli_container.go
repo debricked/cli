@@ -2,6 +2,7 @@ package wire
 
 import (
 	"fmt"
+
 	"github.com/debricked/cli/pkg/ci"
 	"github.com/debricked/cli/pkg/client"
 	"github.com/debricked/cli/pkg/file"
@@ -53,28 +54,27 @@ func (cc *CliContainer) wire() error {
 	cc.uploader = uploader
 
 	cc.ciService = ci.NewService(nil)
-	cc.scanner, err = scan.NewDebrickedScanner(
-		&cc.debClient,
-		cc.finder,
-		cc.uploader,
-		cc.ciService,
-	)
-	if err != nil {
-		return wireErr(err)
-	}
 
 	cc.batchFactory = resolutionFile.NewBatchFactory()
 	cc.strategyFactory = strategy.NewStrategyFactory()
 	cc.scheduler = resolution.NewScheduler(10)
-
-	cc.licenseReporter = licenseReport.Reporter{DebClient: cc.debClient}
-	cc.vulnerabilityReporter = vulnerabilityReport.Reporter{DebClient: cc.debClient}
-
 	cc.resolver = resolution.NewResolver(
+		cc.finder,
 		cc.batchFactory,
 		cc.strategyFactory,
 		cc.scheduler,
 	)
+
+	cc.scanner = scan.NewDebrickedScanner(
+		&cc.debClient,
+		cc.finder,
+		cc.uploader,
+		cc.ciService,
+		cc.resolver,
+	)
+
+	cc.licenseReporter = licenseReport.Reporter{DebClient: cc.debClient}
+	cc.vulnerabilityReporter = vulnerabilityReport.Reporter{DebClient: cc.debClient}
 
 	return nil
 }

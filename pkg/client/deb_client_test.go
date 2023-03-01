@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	testdataClient "github.com/debricked/cli/pkg/client/testdata/client"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"os"
 	"strings"
 	"testing"
+
+	testdataClient "github.com/debricked/cli/pkg/client/testdata/client"
+	"github.com/stretchr/testify/assert"
 )
 
 var client *DebClient

@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/hashicorp/go-retryablehttp"
 	"io"
 	"net/http"
+
+	"github.com/fatih/color"
+	"github.com/hashicorp/go-retryablehttp"
 )
 
 func get(uri string, debClient *DebClient, retry bool, format string) (*http.Response, error) {

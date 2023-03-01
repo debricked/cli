@@ -1,9 +1,10 @@
 package gitlab
 
 import (
+	"testing"
+
 	"github.com/debricked/cli/pkg/ci/testdata"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 var gitLabEnv = map[string]string{

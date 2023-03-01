@@ -2,6 +2,7 @@ package upload
 
 import (
 	"errors"
+
 	"github.com/debricked/cli/pkg/client"
 	"github.com/debricked/cli/pkg/file"
 	"github.com/debricked/cli/pkg/git"
