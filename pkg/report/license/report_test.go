@@ -81,7 +81,7 @@ func TestOrderNotOkResponse(t *testing.T) {
 
 	err := reporter.Order(args)
 
-	assert.ErrorContains(t, err, fmt.Sprintf("failed to order report. ReceiveStatus code: %d", http.StatusTeapot))
+	assert.ErrorContains(t, err, fmt.Sprintf("failed to order report. Status code: %d", http.StatusTeapot))
 }
 
 func TestGetCommitId(t *testing.T) {
