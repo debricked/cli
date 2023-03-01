@@ -24,6 +24,4 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - run: |
-          printf "$(go mod graph)\n\n$(go list -mod=readonly -e -m all)" > .debricked-go-dependencies.txt
-      - run: |
-          go run cmd/debricked/main.go scan -t ${{ secrets.DEBRICKED_TOKEN }} -e "pkg/**"
+          go run cmd/debricked/main.go scan -t ${{ secrets.DEBRICKED_TOKEN }} -e "pkg/**" --resolve
