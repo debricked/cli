@@ -22,8 +22,8 @@ func TestNewJob(t *testing.T) {
 	j := NewJob("file", false, CmdFactory{
 		execPath: ExecPath{},
 	}, writer.FileWriter{})
-	assert.Equal(t, "file", j.File)
-	assert.Nil(t, j.Err)
+	assert.Equal(t, "file", j.GetFile())
+	assert.False(t, j.Errors().HasError())
 }
 
 func TestInstall(t *testing.T) {
@@ -44,7 +44,8 @@ func TestRunCreateVenvCmdErr(t *testing.T) {
 	go jobTestdata.WaitStatus(j)
 	j.Run()
 
-	assert.ErrorIs(t, cmdErr, j.Error())
+	assert.Len(t, j.Errors().GetAll(), 1)
+	assert.Contains(t, j.Errors().GetAll(), cmdErr)
 }
 
 func TestRunCreateVenvCmdOutputErr(t *testing.T) {
@@ -55,7 +56,7 @@ func TestRunCreateVenvCmdOutputErr(t *testing.T) {
 	go jobTestdata.WaitStatus(j)
 	j.Run()
 
-	jobTestdata.AssertPathErr(t, j.Error())
+	jobTestdata.AssertPathErr(t, j.Errors())
 }
 
 func TestRunInstallCmdErr(t *testing.T) {
@@ -68,7 +69,8 @@ func TestRunInstallCmdErr(t *testing.T) {
 	go jobTestdata.WaitStatus(j)
 	j.Run()
 
-	assert.ErrorIs(t, cmdErr, j.Error())
+	assert.Len(t, j.Errors().GetAll(), 1)
+	assert.Contains(t, j.Errors().GetAll(), cmdErr)
 }
 
 func TestRunInstallCmdOutputErr(t *testing.T) {
@@ -79,7 +81,7 @@ func TestRunInstallCmdOutputErr(t *testing.T) {
 	go jobTestdata.WaitStatus(j)
 	j.Run()
 
-	jobTestdata.AssertPathErr(t, j.Error())
+	jobTestdata.AssertPathErr(t, j.Errors())
 }
 
 func TestRunCatCmdErr(t *testing.T) {
@@ -92,7 +94,8 @@ func TestRunCatCmdErr(t *testing.T) {
 	go jobTestdata.WaitStatus(j)
 	j.Run()
 
-	assert.ErrorIs(t, cmdErr, j.Error())
+	assert.Len(t, j.Errors().GetAll(), 1)
+	assert.Contains(t, j.Errors().GetAll(), cmdErr)
 }
 
 func TestRunCatCmdOutputErr(t *testing.T) {
@@ -103,7 +106,7 @@ func TestRunCatCmdOutputErr(t *testing.T) {
 	go jobTestdata.WaitStatus(j)
 	j.Run()
 
-	jobTestdata.AssertPathErr(t, j.Error())
+	jobTestdata.AssertPathErr(t, j.Errors())
 }
 
 func TestRunListCmdErr(t *testing.T) {
@@ -116,7 +119,8 @@ func TestRunListCmdErr(t *testing.T) {
 	go jobTestdata.WaitStatus(j)
 	j.Run()
 
-	assert.ErrorIs(t, cmdErr, j.Error())
+	assert.Len(t, j.Errors().GetAll(), 1)
+	assert.Contains(t, j.Errors().GetAll(), cmdErr)
 }
 
 func TestRunListCmdOutputErr(t *testing.T) {
@@ -127,7 +131,7 @@ func TestRunListCmdOutputErr(t *testing.T) {
 	go jobTestdata.WaitStatus(j)
 	j.Run()
 
-	jobTestdata.AssertPathErr(t, j.Error())
+	jobTestdata.AssertPathErr(t, j.Errors())
 }
 
 func TestRunShowCmdErr(t *testing.T) {
@@ -140,7 +144,8 @@ func TestRunShowCmdErr(t *testing.T) {
 	go jobTestdata.WaitStatus(j)
 	j.Run()
 
-	assert.ErrorIs(t, cmdErr, j.Error())
+	assert.Len(t, j.Errors().GetAll(), 1)
+	assert.Contains(t, j.Errors().GetAll(), cmdErr)
 }
 
 func TestRunShowCmdOutputErr(t *testing.T) {
@@ -151,7 +156,7 @@ func TestRunShowCmdOutputErr(t *testing.T) {
 	go jobTestdata.WaitStatus(j)
 	j.Run()
 
-	jobTestdata.AssertPathErr(t, j.Error())
+	jobTestdata.AssertPathErr(t, j.Errors())
 }
 
 func TestRun(t *testing.T) {
@@ -178,7 +183,7 @@ func TestRun(t *testing.T) {
 	go jobTestdata.WaitStatus(j)
 	j.Run()
 
-	assert.NoError(t, j.Error())
+	assert.False(t, j.Errors().HasError())
 	fmt.Println(string(fileWriterMock.Contents))
 	assert.Equal(t, string(res), string(fileWriterMock.Contents))
 }
@@ -191,7 +196,7 @@ func TestRunInstall(t *testing.T) {
 	_, err := j.runInstallCmd()
 	assert.NoError(t, err)
 
-	assert.NoError(t, j.Error())
+	assert.False(t, j.Errors().HasError())
 }
 
 func TestParsePipList(t *testing.T) {
@@ -204,7 +209,7 @@ func TestParsePipList(t *testing.T) {
 	packages := j.parsePipList(pipData)
 	gt := []string{"aiohttp", "cryptography", "numpy", "Flask", "open-source-health", "pandas", "tqdm"}
 	assert.Equal(t, gt, packages)
-	assert.Nil(t, j.Err)
+	assert.False(t, j.Errors().HasError())
 }
 
 func TestRunCreateErr(t *testing.T) {
@@ -216,7 +221,8 @@ func TestRunCreateErr(t *testing.T) {
 	go jobTestdata.WaitStatus(j)
 	j.Run()
 
-	assert.ErrorIs(t, j.Error(), createErr)
+	assert.Len(t, j.Errors().GetAll(), 1)
+	assert.Contains(t, j.Errors().GetAll(), createErr)
 }
 
 func TestRunWriteErr(t *testing.T) {
@@ -228,7 +234,8 @@ func TestRunWriteErr(t *testing.T) {
 	go jobTestdata.WaitStatus(j)
 	j.Run()
 
-	assert.ErrorIs(t, j.Error(), writeErr)
+	assert.Len(t, j.Errors().GetAll(), 1)
+	assert.Contains(t, j.Errors().GetAll(), writeErr)
 }
 
 func TestRunCloseErr(t *testing.T) {
@@ -240,5 +247,6 @@ func TestRunCloseErr(t *testing.T) {
 	go jobTestdata.WaitStatus(j)
 	j.Run()
 
-	assert.ErrorIs(t, j.Error(), closeErr)
+	assert.Len(t, j.Errors().GetAll(), 1)
+	assert.Contains(t, j.Errors().GetAll(), closeErr)
 }

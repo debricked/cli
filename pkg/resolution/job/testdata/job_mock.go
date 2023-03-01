@@ -8,7 +8,7 @@ import (
 
 type JobMock struct {
 	file   string
-	err    error
+	errs   job.IErrors
 	status chan string
 }
 
@@ -20,8 +20,8 @@ func (j *JobMock) GetFile() string {
 	return j.file
 }
 
-func (j *JobMock) Error() job.IJobError {
-	return j.err
+func (j *JobMock) Errors() job.IErrors {
+	return j.errs
 }
 
 func (j *JobMock) Run() {
@@ -29,9 +29,13 @@ func (j *JobMock) Run() {
 }
 
 func NewJobMock(file string) *JobMock {
-	return &JobMock{file: file, status: make(chan string)}
+	return &JobMock{
+		file:   file,
+		status: make(chan string),
+		errs:   job.NewErrors(file),
+	}
 }
 
-func (j *JobMock) SetErr(err error) {
-	j.err = err
+func (j *JobMock) SetErr(err job.IError) {
+	j.errs.Critical(err)
 }

@@ -8,6 +8,7 @@ import (
 	resolutionFile "github.com/debricked/cli/pkg/resolution/file"
 	"github.com/debricked/cli/pkg/resolution/job"
 	"github.com/debricked/cli/pkg/resolution/strategy"
+	"github.com/debricked/cli/pkg/tui"
 )
 
 type IResolver interface {
@@ -52,6 +53,11 @@ func (r Resolver) Resolve(paths []string, exclusions []string) (IResolution, err
 	}
 
 	resolution, err := r.scheduler.Schedule(jobs)
+
+	if resolution.HasErr() {
+		jobErrList := tui.NewJobsErrorList(os.Stdout, resolution.Jobs())
+		err = jobErrList.Render()
+	}
 
 	return resolution, err
 }

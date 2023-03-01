@@ -5,6 +5,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/debricked/cli/pkg/resolution/job"
+	"github.com/debricked/cli/pkg/resolution/pm/writer"
 )
 
 func MakePathFromManifestFile(siblingFile string, fileName string) string {
@@ -14,4 +17,11 @@ func MakePathFromManifestFile(siblingFile string, fileName string) string {
 	}
 
 	return fmt.Sprintf("%s%s%s", dir, string(os.PathSeparator), fileName)
+}
+
+func CloseFile(job job.IJob, fileWriter writer.IFileWriter, file *os.File) {
+	err := fileWriter.Close(file)
+	if err != nil {
+		job.Errors().Critical(err)
+	}
 }

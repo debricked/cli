@@ -77,11 +77,11 @@ func (scheduler *Scheduler) updateStatus(item queueItem) {
 }
 
 func (scheduler *Scheduler) finish(item queueItem) {
-	if item.job.Error() == nil {
-		tui.SetSpinnerMessage(item.spinner, item.job.GetFile(), "done")
-		item.spinner.Complete()
-	} else {
+	if item.job.Errors().HasError() {
 		tui.SetSpinnerMessage(item.spinner, item.job.GetFile(), "failed")
 		item.spinner.Error()
+	} else {
+		tui.SetSpinnerMessage(item.spinner, item.job.GetFile(), "done")
+		item.spinner.Complete()
 	}
 }
