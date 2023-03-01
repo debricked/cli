@@ -44,7 +44,7 @@ func TestSchedule(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, res.Jobs(), 2)
 	for _, j := range res.Jobs() {
-		assert.NoError(t, j.Error())
+		assert.False(t, j.Errors().HasError())
 	}
 }
 
@@ -56,5 +56,7 @@ func TestScheduleJobErr(t *testing.T) {
 	res, err := s.Schedule([]job.IJob{jobMock})
 	assert.NoError(t, err)
 	assert.Len(t, res.Jobs(), 1)
-	assert.ErrorIs(t, jobErr, res.Jobs()[0].Error())
+	j := res.Jobs()[0]
+	assert.Len(t, j.Errors().GetAll(), 1)
+	assert.Contains(t, j.Errors().GetAll(), jobErr)
 }

@@ -14,7 +14,7 @@ import (
 func TestNewJob(t *testing.T) {
 	j := NewJob("file", CmdFactory{}, writer.FileWriter{})
 	assert.Equal(t, "file", j.GetFile())
-	assert.Nil(t, j.Error())
+	assert.False(t, j.Errors().HasError())
 }
 
 func TestRunCmdErr(t *testing.T) {
@@ -25,7 +25,8 @@ func TestRunCmdErr(t *testing.T) {
 
 	j.Run()
 
-	assert.ErrorIs(t, cmdErr, j.Error())
+	assert.Len(t, j.Errors().GetAll(), 1)
+	assert.Contains(t, j.Errors().GetAll(), cmdErr)
 }
 
 func TestRunCmdOutputErr(t *testing.T) {
@@ -35,7 +36,7 @@ func TestRunCmdOutputErr(t *testing.T) {
 
 	j.Run()
 
-	jobTestdata.AssertPathErr(t, j.Error())
+	jobTestdata.AssertPathErr(t, j.Errors())
 }
 
 func TestRunCreateErr(t *testing.T) {
@@ -47,7 +48,8 @@ func TestRunCreateErr(t *testing.T) {
 
 	j.Run()
 
-	assert.ErrorIs(t, j.Error(), createErr)
+	assert.Len(t, j.Errors().GetAll(), 1)
+	assert.Contains(t, j.Errors().GetAll(), createErr)
 }
 
 func TestRunWriteErr(t *testing.T) {
@@ -59,7 +61,8 @@ func TestRunWriteErr(t *testing.T) {
 
 	j.Run()
 
-	assert.ErrorIs(t, j.Error(), writeErr)
+	assert.Len(t, j.Errors().GetAll(), 1)
+	assert.Contains(t, j.Errors().GetAll(), writeErr)
 }
 
 func TestRunCloseErr(t *testing.T) {
@@ -71,7 +74,8 @@ func TestRunCloseErr(t *testing.T) {
 
 	j.Run()
 
-	assert.ErrorIs(t, j.Error(), closeErr)
+	assert.Len(t, j.Errors().GetAll(), 1)
+	assert.Contains(t, j.Errors().GetAll(), closeErr)
 }
 
 func TestRun(t *testing.T) {
@@ -84,6 +88,6 @@ func TestRun(t *testing.T) {
 
 	j.Run()
 
-	assert.NoError(t, j.Error())
+	assert.False(t, j.Errors().HasError())
 	assert.Equal(t, fileContents, fileWriterMock.Contents)
 }
