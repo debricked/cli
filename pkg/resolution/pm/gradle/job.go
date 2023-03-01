@@ -4,7 +4,6 @@ import (
 	"path/filepath"
 
 	"github.com/debricked/cli/pkg/resolution/job"
-	jobTestdata "github.com/debricked/cli/pkg/resolution/job/testdata"
 	"github.com/debricked/cli/pkg/resolution/pm/util"
 	"github.com/debricked/cli/pkg/resolution/pm/writer"
 )
@@ -25,10 +24,7 @@ func NewJob(
 	fileWriter writer.IFileWriter,
 ) *Job {
 	return &Job{
-		BaseJob: job.BaseJob{
-			File:   file,
-			Status: make(chan string),
-		},
+		BaseJob:    job.NewBaseJob(file),
 		cmdFactory: cmdFactory,
 		fileWriter: fileWriter,
 	}
@@ -39,7 +35,7 @@ func (j *Job) Run() {
 
 	dependenciesCmd, err := j.cmdFactory.MakeDependenciesCmd(workingDirectory)
 	if err != nil {
-		j.Err = err
+		j.Errors().Critical(err)
 
 		return
 	}
@@ -47,7 +43,7 @@ func (j *Job) Run() {
 	j.SendStatus("creating dependency graph")
 	output, err := dependenciesCmd.Output()
 	if err != nil {
-		j.Err = err
+		j.Errors().Critical(err)
 
 		return
 	}
@@ -55,11 +51,14 @@ func (j *Job) Run() {
 	j.SendStatus("creating lock file")
 	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.GetFile(), fileName))
 	if err != nil {
-		j.Err = err
+		j.Errors().Critical(err)
 
 		return
 	}
-	defer jobTestdata.CloseFile(&j.BaseJob, j.fileWriter, lockFile)
+	defer util.CloseFile(j, j.fileWriter, lockFile)
 
-	j.Err = j.fileWriter.Write(lockFile, output)
+	err = j.fileWriter.Write(lockFile, output)
+	if err != nil {
+		j.Errors().Critical(err)
+	}
 }

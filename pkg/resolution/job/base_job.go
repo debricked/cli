@@ -1,23 +1,31 @@
 package job
 
 type BaseJob struct {
-	File   string
-	Err    IJobError
-	Status chan string
+	file   string
+	errs   IErrors
+	status chan string
+}
+
+func NewBaseJob(file string) BaseJob {
+	return BaseJob{
+		file:   "file",
+		errs:   NewErrors(file),
+		status: make(chan string),
+	}
 }
 
 func (j *BaseJob) GetFile() string {
-	return j.File
+	return j.file
 }
 
-func (j *BaseJob) Error() IJobError {
-	return j.Err
+func (j *BaseJob) Errors() IErrors {
+	return j.errs
 }
 
 func (j *BaseJob) ReceiveStatus() chan string {
-	return j.Status
+	return j.status
 }
 
 func (j *BaseJob) SendStatus(status string) {
-	j.Status <- status
+	j.status <- status
 }

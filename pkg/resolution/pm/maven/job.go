@@ -13,27 +13,22 @@ type Job struct {
 
 func NewJob(file string, cmdFactory ICmdFactory) *Job {
 	return &Job{
-		BaseJob: job.BaseJob{
-			File:   file,
-			Status: make(chan string),
-		},
+		BaseJob:    job.NewBaseJob(file),
 		cmdFactory: cmdFactory,
 	}
 }
 
 func (j *Job) Run() {
-	workingDirectory := filepath.Dir(filepath.Clean(j.File))
+	workingDirectory := filepath.Dir(filepath.Clean(j.GetFile()))
 	cmd, err := j.cmdFactory.MakeDependencyTreeCmd(workingDirectory)
 	if err != nil {
-		j.Err = err
+		j.Errors().Critical(err)
 
 		return
 	}
 	j.SendStatus("creating dependency graph")
 	_, err = cmd.Output()
 	if err != nil {
-		j.Err = err
-
-		return
+		j.Errors().Critical(err)
 	}
 }

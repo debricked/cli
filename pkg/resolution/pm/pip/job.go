@@ -33,7 +33,7 @@ func NewJob(
 	fileWriter writer.IFileWriter,
 ) *Job {
 	return &Job{
-		BaseJob:    job.BaseJob{File: file, Status: make(chan string)},
+		BaseJob:    job.NewBaseJob(file),
 		install:    install,
 		cmdFactory: cmdFactory,
 		fileWriter: fileWriter,
@@ -46,18 +46,18 @@ func (j *Job) Install() bool {
 
 func (j *Job) Run() {
 	if j.install {
-		j.SendStatus(fmt.Sprintf("creating virtualenv for %s.venv", j.File))
+		j.SendStatus(fmt.Sprintf("creating virtualenv for %s.venv", j.GetFile()))
 		_, err := j.runCreateVenvCmd()
 		if err != nil {
-			j.Err = err
+			j.Errors().Critical(err)
 
 			return
 		}
 
-		j.SendStatus(fmt.Sprintf("installing requirements in virtualenv for %s.venv", j.File))
+		j.SendStatus(fmt.Sprintf("installing requirements in virtualenv for %s.venv", j.GetFile()))
 		_, err = j.runInstallCmd()
 		if err != nil {
-			j.Err = err
+			j.Errors().Critical(err)
 
 			return
 		}
@@ -83,10 +83,10 @@ func (j *Job) Run() {
 	}
 
 	j.SendStatus("setting up data...")
-	lockFileName := fmt.Sprintf(".%s%s", filepath.Base(j.File), lockFileExtension)
-	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.File, lockFileName))
+	lockFileName := fmt.Sprintf(".%s%s", filepath.Base(j.GetFile()), lockFileExtension)
+	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.GetFile(), lockFileName))
 	if err != nil {
-		j.Err = err
+		j.Errors().Critical(err)
 
 		return
 	}
@@ -102,25 +102,24 @@ func (j *Job) Run() {
 	res := []byte(strings.Join(fileContents, "\n"))
 	j.SendStatus("writing data...")
 
-	j.Err = j.fileWriter.Write(lockFile, res)
+	err = j.fileWriter.Write(lockFile, res)
+	if err != nil {
+		j.Errors().Critical(err)
+	}
 }
 
 func (j *Job) runCreateVenvCmd() ([]byte, error) {
-	venvName := fmt.Sprintf("%s.venv", filepath.Base(j.File))
-	fpath := filepath.Join(filepath.Dir(j.File), venvName)
+	venvName := fmt.Sprintf("%s.venv", filepath.Base(j.GetFile()))
+	fpath := filepath.Join(filepath.Dir(j.GetFile()), venvName)
 	j.venvPath = fpath
 
 	createVenvCmd, err := j.cmdFactory.MakeCreateVenvCmd(j.venvPath)
 	if err != nil {
-		j.Err = err
-
 		return nil, err
 	}
 
 	createVenvCmdOutput, err := createVenvCmd.Output()
 	if err != nil {
-		j.Err = err
-
 		return nil, err
 	}
 
@@ -135,17 +134,13 @@ func (j *Job) runInstallCmd() ([]byte, error) {
 		command = pip
 	}
 	j.pipCommand = command
-	installCmd, err := j.cmdFactory.MakeInstallCmd(j.pipCommand, j.File)
+	installCmd, err := j.cmdFactory.MakeInstallCmd(j.pipCommand, j.GetFile())
 	if err != nil {
-		j.Err = err
-
 		return nil, err
 	}
 
 	installCmdOutput, err := installCmd.Output()
 	if err != nil {
-		j.Err = err
-
 		return nil, err
 	}
 
@@ -153,16 +148,16 @@ func (j *Job) runInstallCmd() ([]byte, error) {
 }
 
 func (j *Job) runCatCmd() ([]byte, error) {
-	listCmd, err := j.cmdFactory.MakeCatCmd(j.File)
+	listCmd, err := j.cmdFactory.MakeCatCmd(j.GetFile())
 	if err != nil {
-		j.Err = err
+		j.Errors().Critical(err)
 
 		return nil, err
 	}
 
 	listCmdOutput, err := listCmd.Output()
 	if err != nil {
-		j.Err = err
+		j.Errors().Critical(err)
 
 		return nil, err
 	}
@@ -173,14 +168,14 @@ func (j *Job) runCatCmd() ([]byte, error) {
 func (j *Job) runListCmd() ([]byte, error) {
 	listCmd, err := j.cmdFactory.MakeListCmd(j.pipCommand)
 	if err != nil {
-		j.Err = err
+		j.Errors().Critical(err)
 
 		return nil, err
 	}
 
 	listCmdOutput, err := listCmd.Output()
 	if err != nil {
-		j.Err = err
+		j.Errors().Critical(err)
 
 		return nil, err
 	}
@@ -191,14 +186,14 @@ func (j *Job) runListCmd() ([]byte, error) {
 func (j *Job) runShowCmd(packages []string) ([]byte, error) {
 	listCmd, err := j.cmdFactory.MakeShowCmd(j.pipCommand, packages)
 	if err != nil {
-		j.Err = err
+		j.Errors().Critical(err)
 
 		return nil, err
 	}
 
 	listCmdOutput, err := listCmd.Output()
 	if err != nil {
-		j.Err = err
+		j.Errors().Critical(err)
 
 		return nil, err
 	}
@@ -209,7 +204,7 @@ func (j *Job) runShowCmd(packages []string) ([]byte, error) {
 func closeFile(job *Job, file *os.File) {
 	err := job.fileWriter.Close(file)
 	if err != nil {
-		job.Err = err
+		job.Errors().Critical(err)
 	}
 }
 
