@@ -7,36 +7,48 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const testFile = "file"
+
+func TestNewBaseJob(t *testing.T) {
+	j := NewBaseJob(testFile)
+	assert.Equal(t, testFile, j.GetFile())
+	assert.NotNil(t, j.Errors())
+	assert.NotNil(t, j.status)
+}
+
 func TestGetFile(t *testing.T) {
 	j := BaseJob{}
-	j.File = "file"
-	assert.Equal(t, "file", j.GetFile())
+	j.file = testFile
+	assert.Equal(t, testFile, j.GetFile())
 }
 
 func TestReceiveStatus(t *testing.T) {
 	j := BaseJob{
-		File:   "file",
-		Err:    nil,
-		Status: make(chan string),
+		file:   testFile,
+		errs:   nil,
+		status: make(chan string),
 	}
 
 	statusChan := j.ReceiveStatus()
 	assert.NotNil(t, statusChan)
 }
 
-func TestError(t *testing.T) {
+func TestErrors(t *testing.T) {
 	jobErr := errors.New("error")
 	j := BaseJob{}
-	j.File = "file"
-	j.Err = jobErr
-	assert.Equal(t, jobErr, j.Error())
+	j.file = testFile
+	j.errs = NewErrors(j.file)
+	j.errs.Critical(jobErr)
+
+	assert.Len(t, j.Errors().GetAll(), 1)
+	assert.Contains(t, j.Errors().GetAll(), jobErr)
 }
 
 func TestSendStatus(t *testing.T) {
 	j := BaseJob{
-		File:   "file",
-		Err:    nil,
-		Status: make(chan string),
+		file:   testFile,
+		errs:   nil,
+		status: make(chan string),
 	}
 
 	go func() {

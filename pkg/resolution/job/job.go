@@ -2,7 +2,7 @@ package job
 
 type IJob interface {
 	GetFile() string
-	Error() IJobError
+	Errors() IErrors
 	Run()
 	ReceiveStatus() chan string
 }

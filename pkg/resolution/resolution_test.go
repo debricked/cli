@@ -1,6 +1,7 @@
 package resolution
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/debricked/cli/pkg/resolution/job"
@@ -34,4 +35,17 @@ func TestJobs(t *testing.T) {
 
 	res.jobs = []job.IJob{testdata.NewJobMock(""), testdata.NewJobMock("")}
 	assert.Len(t, res.Jobs(), 2)
+}
+
+func TestHasError(t *testing.T) {
+	res := NewResolution(nil)
+	assert.False(t, res.HasErr())
+
+	res.jobs = []job.IJob{testdata.NewJobMock("")}
+	assert.False(t, res.HasErr())
+
+	jobMock := testdata.NewJobMock("")
+	jobMock.SetErr(errors.New("error"))
+	res.jobs = append(res.jobs, jobMock)
+	assert.True(t, res.HasErr())
 }

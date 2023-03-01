@@ -47,7 +47,7 @@ func (r Reporter) Order(args report.IOrderArgs) error {
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to order report. ReceiveStatus code: %d", res.StatusCode)
+		return fmt.Errorf("failed to order report. Status code: %d", res.StatusCode)
 	}
 
 	return nil
