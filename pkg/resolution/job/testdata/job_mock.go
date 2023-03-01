@@ -1,6 +1,10 @@
 package testdata
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/debricked/cli/pkg/resolution/job"
+)
 
 type JobMock struct {
 	file   string
@@ -8,15 +12,15 @@ type JobMock struct {
 	status chan string
 }
 
-func (j *JobMock) Status() chan string {
+func (j *JobMock) ReceiveStatus() chan string {
 	return j.status
 }
 
-func (j *JobMock) File() string {
+func (j *JobMock) GetFile() string {
 	return j.file
 }
 
-func (j *JobMock) Error() error {
+func (j *JobMock) Error() job.IJobError {
 	return j.err
 }
 

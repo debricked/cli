@@ -1,42 +1,38 @@
 package maven
 
-import "path/filepath"
+import (
+	"path/filepath"
+
+	"github.com/debricked/cli/pkg/resolution/job"
+)
 
 type Job struct {
-	file       string
+	job.BaseJob
 	cmdFactory ICmdFactory
-	err        error
-	status     chan string
 }
 
 func NewJob(file string, cmdFactory ICmdFactory) *Job {
-	return &Job{file: file, cmdFactory: cmdFactory, status: make(chan string)}
-}
-
-func (j *Job) File() string {
-	return j.file
-}
-
-func (j *Job) Error() error {
-	return j.err
-}
-
-func (j *Job) Status() chan string {
-	return j.status
+	return &Job{
+		BaseJob: job.BaseJob{
+			File:   file,
+			Status: make(chan string),
+		},
+		cmdFactory: cmdFactory,
+	}
 }
 
 func (j *Job) Run() {
-	workingDirectory := filepath.Dir(filepath.Clean(j.file))
+	workingDirectory := filepath.Dir(filepath.Clean(j.File))
 	cmd, err := j.cmdFactory.MakeDependencyTreeCmd(workingDirectory)
 	if err != nil {
-		j.err = err
+		j.Err = err
 
 		return
 	}
-	j.status <- "creating dependency graph"
+	j.SendStatus("creating dependency graph")
 	_, err = cmd.Output()
 	if err != nil {
-		j.err = err
+		j.Err = err
 
 		return
 	}

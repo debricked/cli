@@ -71,17 +71,17 @@ func (scheduler *Scheduler) worker() {
 }
 func (scheduler *Scheduler) updateStatus(item queueItem) {
 	for {
-		msg := <-item.job.Status()
-		tui.SetSpinnerMessage(item.spinner, item.job.File(), msg)
+		msg := <-item.job.ReceiveStatus()
+		tui.SetSpinnerMessage(item.spinner, item.job.GetFile(), msg)
 	}
 }
 
 func (scheduler *Scheduler) finish(item queueItem) {
 	if item.job.Error() == nil {
-		tui.SetSpinnerMessage(item.spinner, item.job.File(), "done")
+		tui.SetSpinnerMessage(item.spinner, item.job.GetFile(), "done")
 		item.spinner.Complete()
 	} else {
-		tui.SetSpinnerMessage(item.spinner, item.job.File(), "failed")
+		tui.SetSpinnerMessage(item.spinner, item.job.GetFile(), "failed")
 		item.spinner.Error()
 	}
 }
