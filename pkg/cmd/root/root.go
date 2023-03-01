@@ -3,6 +3,7 @@ package root
 import (
 	"github.com/debricked/cli/pkg/cmd/files"
 	"github.com/debricked/cli/pkg/cmd/report"
+	"github.com/debricked/cli/pkg/cmd/resolve"
 	"github.com/debricked/cli/pkg/cmd/scan"
 	"github.com/debricked/cli/pkg/wire"
 	"github.com/spf13/cobra"
@@ -39,8 +40,9 @@ Read more: https://debricked.com/docs/administration/access-tokens.html`,
 	debClient.SetAccessToken(&accessToken)
 
 	rootCmd.AddCommand(report.NewReportCmd(container.LicenseReporter(), container.VulnerabilityReporter()))
-	rootCmd.AddCommand(files.NewFilesCmd(container.Finder(), container.Resolver()))
+	rootCmd.AddCommand(files.NewFilesCmd(container.Finder()))
 	rootCmd.AddCommand(scan.NewScanCmd(container.Scanner()))
+	rootCmd.AddCommand(resolve.NewResolveCmd(container.Resolver()))
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 

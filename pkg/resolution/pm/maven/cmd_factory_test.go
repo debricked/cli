@@ -1,12 +1,13 @@
 package maven
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMakeDependencyTreeCmd(t *testing.T) {
-	cmd, _ := CmdFactory{}.MakeDependencyTreeCmd()
+	cmd, _ := CmdFactory{}.MakeDependencyTreeCmd(".")
 	assert.NotNil(t, cmd)
 	args := cmd.Args
 	assert.Contains(t, args, "mvn")

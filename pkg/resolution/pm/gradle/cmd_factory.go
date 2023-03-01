@@ -3,16 +3,17 @@ package gradle
 import "os/exec"
 
 type ICmdFactory interface {
-	MakeDependenciesCmd() (*exec.Cmd, error)
+	MakeDependenciesCmd(workingDirectory string) (*exec.Cmd, error)
 }
 
 type CmdFactory struct{}
 
-func (_ CmdFactory) MakeDependenciesCmd() (*exec.Cmd, error) {
+func (_ CmdFactory) MakeDependenciesCmd(workingDirectory string) (*exec.Cmd, error) {
 	path, err := exec.LookPath("gradle")
 
 	return &exec.Cmd{
 		Path: path,
 		Args: []string{"gradle", "dependencies"},
+		Dir:  workingDirectory,
 	}, err
 }

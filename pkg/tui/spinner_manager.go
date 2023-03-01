@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+
 	"github.com/chelnak/ysmrr"
 	"github.com/chelnak/ysmrr/pkg/colors"
 	"github.com/fatih/color"
