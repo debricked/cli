@@ -1,10 +1,11 @@
 package file
 
 import (
+	"testing"
+
 	"github.com/debricked/cli/pkg/resolution/pm"
 	"github.com/debricked/cli/pkg/resolution/pm/testdata"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestNewBatchFactory(t *testing.T) {

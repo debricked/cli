@@ -9,3 +9,4 @@ dist/
 /.env
 test/resolve/testdata/pip/requirements.txt.venv/
 test/resolve/testdata/pip/.requirements.txt.debricked.lock
+pkg/scan/testdata/npm/yarn.lock

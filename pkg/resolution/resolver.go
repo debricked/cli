@@ -1,40 +1,52 @@
 package resolution
 
 import (
-	"github.com/debricked/cli/pkg/resolution/file"
+	"os"
+	"path"
+
+	"github.com/debricked/cli/pkg/file"
+	resolutionFile "github.com/debricked/cli/pkg/resolution/file"
 	"github.com/debricked/cli/pkg/resolution/job"
 	"github.com/debricked/cli/pkg/resolution/strategy"
 )
 
 type IResolver interface {
-	Resolve(files []string) (IResolution, error)
+	Resolve(paths []string, exclusions []string) (IResolution, error)
 }
 
 type Resolver struct {
-	batchFactory    file.IBatchFactory
+	finder          file.IFinder
+	batchFactory    resolutionFile.IBatchFactory
 	strategyFactory strategy.IFactory
 	scheduler       IScheduler
 }
 
 func NewResolver(
-	batchFactory file.IBatchFactory,
+	finder file.IFinder,
+	batchFactory resolutionFile.IBatchFactory,
 	strategyFactory strategy.IFactory,
 	scheduler IScheduler,
 ) Resolver {
 	return Resolver{
+		finder,
 		batchFactory,
 		strategyFactory,
 		scheduler,
 	}
 }
 
-func (r Resolver) Resolve(files []string) (IResolution, error) {
+func (r Resolver) Resolve(paths []string, exclusions []string) (IResolution, error) {
+	files, err := r.refinePaths(paths, exclusions)
+	if err != nil {
+		return nil, err
+	}
+
 	pmBatches := r.batchFactory.Make(files)
 
 	var jobs []job.IJob
 	for _, pmBatch := range pmBatches {
-		s, err := r.strategyFactory.Make(pmBatch)
-		if err == nil {
+		s, strategyErr := r.strategyFactory.Make(pmBatch)
+		if strategyErr == nil {
 			jobs = append(jobs, s.Invoke()...)
 		}
 	}
@@ -42,4 +54,61 @@ func (r Resolver) Resolve(files []string) (IResolution, error) {
 	resolution, err := r.scheduler.Schedule(jobs)
 
 	return resolution, err
+}
+
+func (r Resolver) refinePaths(paths []string, exclusions []string) ([]string, error) {
+	var fileSet = map[string]bool{}
+	var dirs []string
+	for _, arg := range paths {
+		cleanArg := path.Clean(arg)
+		if cleanArg == "." {
+			dirs = append(dirs, cleanArg)
+
+			continue
+		}
+
+		fileInfo, err := os.Stat(arg)
+		if err != nil {
+			return nil, err
+		}
+
+		if fileInfo.IsDir() {
+			dirs = append(dirs, path.Clean(arg))
+		} else {
+			fileSet[path.Clean(arg)] = true
+		}
+	}
+
+	err := r.searchDirs(fileSet, dirs, exclusions)
+	if err != nil {
+		return nil, err
+	}
+
+	var files []string
+	for f := range fileSet {
+		files = append(files, f)
+	}
+
+	return files, nil
+}
+
+func (r Resolver) searchDirs(fileSet map[string]bool, dirs []string, exclusions []string) error {
+	for _, dir := range dirs {
+		fileGroups, err := r.finder.GetGroups(
+			dir,
+			exclusions,
+			false,
+			file.StrictAll,
+		)
+		if err != nil {
+			return err
+		}
+		for _, fileGroup := range fileGroups.ToSlice() {
+			if fileGroup.HasFile() && !fileGroup.HasLockFiles() {
+				fileSet[fileGroup.FilePath] = true
+			}
+		}
+	}
+
+	return nil
 }

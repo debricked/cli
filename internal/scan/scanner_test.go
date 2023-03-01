@@ -3,6 +3,7 @@ package scan
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,21 +13,23 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/debricked/cli/internal/ci"
-	"github.com/debricked/cli/internal/ci/argo"
-	"github.com/debricked/cli/internal/ci/azure"
-	"github.com/debricked/cli/internal/ci/bitbucket"
-	"github.com/debricked/cli/internal/ci/buildkite"
-	"github.com/debricked/cli/internal/ci/circleci"
-	"github.com/debricked/cli/internal/ci/env"
-	"github.com/debricked/cli/internal/ci/github"
-	"github.com/debricked/cli/internal/ci/gitlab"
-	"github.com/debricked/cli/internal/ci/travis"
-	"github.com/debricked/cli/internal/client"
-	"github.com/debricked/cli/internal/client/testdata"
-	"github.com/debricked/cli/internal/file"
-	"github.com/debricked/cli/internal/git"
-	"github.com/debricked/cli/internal/upload"
+	"github.com/debricked/cli/pkg/ci"
+	"github.com/debricked/cli/pkg/ci/argo"
+	"github.com/debricked/cli/pkg/ci/azure"
+	"github.com/debricked/cli/pkg/ci/bitbucket"
+	"github.com/debricked/cli/pkg/ci/buildkite"
+	"github.com/debricked/cli/pkg/ci/circleci"
+	"github.com/debricked/cli/pkg/ci/env"
+	"github.com/debricked/cli/pkg/ci/github"
+	"github.com/debricked/cli/pkg/ci/gitlab"
+	"github.com/debricked/cli/pkg/ci/travis"
+	"github.com/debricked/cli/pkg/client"
+	"github.com/debricked/cli/pkg/client/testdata"
+	"github.com/debricked/cli/pkg/file"
+	"github.com/debricked/cli/pkg/git"
+	"github.com/debricked/cli/pkg/resolution"
+	resolveTestdata "github.com/debricked/cli/pkg/resolution/testdata"
+	"github.com/debricked/cli/pkg/upload"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -48,9 +51,9 @@ func TestNewDebrickedScanner(t *testing.T) {
 	var cis ci.IService
 	var finder file.IFinder
 	var uploader upload.IUploader
-	s, err := NewDebrickedScanner(&debClient, finder, uploader, cis)
+	var resolver resolution.IResolver
+	s := NewDebrickedScanner(&debClient, finder, uploader, cis, resolver)
 
-	assert.NoError(t, err)
 	assert.NotNil(t, s)
 }
 
@@ -59,12 +62,12 @@ func TestScan(t *testing.T) {
 		t.Skipf("TestScan is skipped due to Windows env")
 	}
 	clientMock := testdata.NewDebClientMock()
-	addMockedFormatsResponse(clientMock)
+	addMockedFormatsResponse(clientMock, "yarn\\.lock")
 	addMockedFileUploadResponse(clientMock)
 	addMockedFinishResponse(clientMock, http.StatusNoContent)
 	addMockedStatusResponse(clientMock, http.StatusOK, 50)
 	addMockedStatusResponse(clientMock, http.StatusOK, 100)
-	scanner, _ := makeScanner(clientMock)
+	scanner := makeScanner(clientMock, nil)
 
 	path := testdataYarn
 	repositoryName := path
@@ -117,7 +120,7 @@ func TestScan(t *testing.T) {
 
 func TestScanFailingMetaObject(t *testing.T) {
 	var debClient client.IDebClient = testdata.NewDebClientMock()
-	scanner, _ := NewDebrickedScanner(&debClient, nil, nil, ciService)
+	scanner := NewDebrickedScanner(&debClient, nil, nil, ciService, nil)
 	cwd, _ := os.Getwd()
 	path := testdataYarn
 	opts := DebrickedOptions{
@@ -145,8 +148,8 @@ func TestScanFailingMetaObject(t *testing.T) {
 
 func TestScanFailingNoFiles(t *testing.T) {
 	clientMock := testdata.NewDebClientMock()
-	addMockedFormatsResponse(clientMock)
-	scanner, _ := makeScanner(clientMock)
+	addMockedFormatsResponse(clientMock, "yarn\\.lock")
+	scanner := makeScanner(clientMock, nil)
 	opts := DebrickedOptions{
 		Path:            "",
 		Exclusions:      []string{"testdata/**"},
@@ -164,7 +167,7 @@ func TestScanFailingNoFiles(t *testing.T) {
 
 func TestScanBadOpts(t *testing.T) {
 	var c client.IDebClient
-	scanner, _ := NewDebrickedScanner(&c, nil, nil, nil)
+	scanner := NewDebrickedScanner(&c, nil, nil, nil, nil)
 	var opts IOptions
 
 	err := scanner.Scan(opts)
@@ -177,14 +180,14 @@ func TestScanEmptyResult(t *testing.T) {
 		t.Skipf("TestScan is skipped due to Windows env")
 	}
 	clientMock := testdata.NewDebClientMock()
-	addMockedFormatsResponse(clientMock)
+	addMockedFormatsResponse(clientMock, "yarn\\.lock")
 	addMockedFileUploadResponse(clientMock)
 	addMockedFinishResponse(clientMock, http.StatusNoContent)
 	addMockedStatusResponse(clientMock, http.StatusOK, 50)
 	// Create mocked scan result response, 201 is returned when the queue time are too long
 	addMockedStatusResponse(clientMock, http.StatusCreated, 0)
 
-	scanner, _ := makeScanner(clientMock)
+	scanner := makeScanner(clientMock, nil)
 	path := testdataYarn
 	repositoryName := path
 	commitName := "testdata/yarn-commit"
@@ -223,7 +226,7 @@ func TestScanEmptyResult(t *testing.T) {
 
 func TestScanInCiWithPathSet(t *testing.T) {
 	var debClient client.IDebClient = testdata.NewDebClientMock()
-	scanner, _ := NewDebrickedScanner(&debClient, nil, nil, ciService)
+	scanner := NewDebrickedScanner(&debClient, nil, nil, ciService, nil)
 	cwd, _ := os.Getwd()
 	defer resetWd(t, cwd)
 	path := testdataYarn
@@ -243,6 +246,64 @@ func TestScanInCiWithPathSet(t *testing.T) {
 	assert.ErrorIs(t, git.RepositoryNameError, err)
 	cwd, _ = os.Getwd()
 	assert.Contains(t, cwd, testdataYarn)
+}
+
+func TestScanWithResolve(t *testing.T) {
+	clientMock := testdata.NewDebClientMock()
+	addMockedFormatsResponse(clientMock, "yarn\\.lock")
+	addMockedFileUploadResponse(clientMock)
+	addMockedFinishResponse(clientMock, http.StatusNoContent)
+	addMockedStatusResponse(clientMock, http.StatusOK, 100)
+
+	resolverMock := resolveTestdata.ResolverMock{}
+	resolverMock.SetFiles([]string{"yarn.lock"})
+
+	scanner := makeScanner(clientMock, &resolverMock)
+
+	cwd, _ := os.Getwd()
+	defer resetWd(t, cwd)
+	// Clean up resolution must be done before wd reset, otherwise files cannot be deleted
+	defer cleanUpResolution(t, resolverMock)
+
+	path := filepath.Join("testdata", "npm")
+	repositoryName := path
+	commitName := "testdata/npm-commit"
+	opts := DebrickedOptions{
+		Path:            path,
+		Resolve:         true,
+		Exclusions:      nil,
+		RepositoryName:  repositoryName,
+		CommitName:      commitName,
+		BranchName:      "",
+		CommitAuthor:    "",
+		RepositoryUrl:   "",
+		IntegrationName: "",
+	}
+	err := scanner.Scan(opts)
+	assert.NoError(t, err)
+	cwd, _ = os.Getwd()
+	assert.Contains(t, cwd, path)
+}
+
+func TestScanWithResolveErr(t *testing.T) {
+	clientMock := testdata.NewDebClientMock()
+	resolutionErr := errors.New("resolution-error")
+	scanner := makeScanner(clientMock, &resolveTestdata.ResolverMock{Err: resolutionErr})
+	cwd, _ := os.Getwd()
+	defer resetWd(t, cwd)
+
+	path := filepath.Join("testdata", "npm")
+	repositoryName := path
+	commitName := "testdata/npm-commit"
+	opts := DebrickedOptions{
+		Path:           path,
+		Resolve:        true,
+		Exclusions:     nil,
+		RepositoryName: repositoryName,
+		CommitName:     commitName,
+	}
+	err := scanner.Scan(opts)
+	assert.ErrorIs(t, err, resolutionErr)
 }
 
 func TestMapEnvToOptions(t *testing.T) {
@@ -488,10 +549,10 @@ func TestScanServiceDowntime(t *testing.T) {
 	assert.ErrorIs(t, err, client.NoResErr)
 }
 
-func addMockedFormatsResponse(clientMock *testdata.DebClientMock) {
+func addMockedFormatsResponse(clientMock *testdata.DebClientMock, regex string) {
 	formats := []file.Format{{
 		ManifestFileRegex: "",
-		LockFileRegexes:   []string{"yarn\\.lock"},
+		LockFileRegexes:   []string{regex},
 	}}
 	formatsBytes, _ := json.Marshal(formats)
 	formatsMockRes := testdata.MockResponse{
@@ -532,7 +593,7 @@ func resetWd(t *testing.T, wd string) {
 	}
 }
 
-func makeScanner(clientMock *testdata.DebClientMock) (*DebrickedScanner, *DebrickedScanner) {
+func makeScanner(clientMock *testdata.DebClientMock, resolverMock *resolveTestdata.ResolverMock) *DebrickedScanner {
 	var debClient client.IDebClient = clientMock
 
 	var finder file.IFinder
@@ -543,7 +604,12 @@ func makeScanner(clientMock *testdata.DebClientMock) (*DebrickedScanner, *Debric
 
 	var cis ci.IService = ci.NewService(nil)
 
-	scanner, _ := NewDebrickedScanner(&debClient, finder, uploader, cis)
+	return NewDebrickedScanner(&debClient, finder, uploader, cis, resolverMock)
+}
 
-	return scanner, nil
+func cleanUpResolution(t *testing.T, resolverMock resolveTestdata.ResolverMock) {
+	err := resolverMock.CleanUp()
+	if err != nil {
+		t.Error(err)
+	}
 }

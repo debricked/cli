@@ -1,13 +1,14 @@
 package strategy
 
 import (
+	"testing"
+
 	"github.com/debricked/cli/pkg/resolution/file"
 	"github.com/debricked/cli/pkg/resolution/pm/gomod"
 	"github.com/debricked/cli/pkg/resolution/pm/gradle"
 	"github.com/debricked/cli/pkg/resolution/pm/maven"
 	"github.com/debricked/cli/pkg/resolution/pm/testdata"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestNewStrategyFactory(t *testing.T) {

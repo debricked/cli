@@ -1,12 +1,13 @@
 package resolve
 
 import (
-	"github.com/debricked/cli/pkg/cmd/files/resolve"
-	"github.com/debricked/cli/pkg/wire"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/debricked/cli/pkg/cmd/resolve"
+	"github.com/debricked/cli/pkg/wire"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestResolvePip(t *testing.T) {

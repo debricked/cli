@@ -1,8 +1,9 @@
 package gomod
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMakeGraphCmd(t *testing.T) {

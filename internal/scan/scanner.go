@@ -6,13 +6,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/debricked/cli/internal/ci"
-	"github.com/debricked/cli/internal/ci/env"
-	"github.com/debricked/cli/internal/client"
-	"github.com/debricked/cli/internal/file"
-	"github.com/debricked/cli/internal/git"
-	"github.com/debricked/cli/internal/tui"
-	"github.com/debricked/cli/internal/upload"
+	"github.com/debricked/cli/pkg/ci"
+	"github.com/debricked/cli/pkg/ci/env"
+	"github.com/debricked/cli/pkg/client"
+	"github.com/debricked/cli/pkg/file"
+	"github.com/debricked/cli/pkg/git"
+	"github.com/debricked/cli/pkg/resolution"
+	"github.com/debricked/cli/pkg/tui"
+	"github.com/debricked/cli/pkg/upload"
 	"github.com/fatih/color"
 )
 
@@ -32,10 +33,12 @@ type DebrickedScanner struct {
 	finder    file.IFinder
 	uploader  *upload.IUploader
 	ciService ci.IService
+	resolver  resolution.IResolver
 }
 
 type DebrickedOptions struct {
 	Path            string
+	Resolve         bool
 	Exclusions      []string
 	RepositoryName  string
 	CommitName      string
@@ -51,13 +54,15 @@ func NewDebrickedScanner(
 	finder file.IFinder,
 	uploader upload.IUploader,
 	ciService ci.IService,
-) (*DebrickedScanner, error) {
+	resolver resolution.IResolver,
+) *DebrickedScanner {
 	return &DebrickedScanner{
 		c,
 		finder,
 		&uploader,
 		ciService,
-	}, nil
+		resolver,
+	}
 }
 
 func (dScanner *DebrickedScanner) Scan(o IOptions) error {
@@ -113,6 +118,13 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 }
 
 func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject git.MetaObject) (*upload.UploadResult, error) {
+	if options.Resolve {
+		_, resErr := dScanner.resolver.Resolve([]string{options.Path}, options.Exclusions)
+		if resErr != nil {
+			return nil, resErr
+		}
+	}
+
 	fileGroups, err := dScanner.finder.GetGroups(options.Path, options.Exclusions, false, file.StrictAll)
 	if err != nil {
 		return nil, err
