@@ -266,5 +266,5 @@ func getRelativeFilePath(filePath string) string {
 }
 
 func printSuccessfulUpload(f string) {
-	fmt.Println("Successfully uploaded: ", f)
+	fmt.Printf("Successfully uploaded: %s\n", color.YellowString(f))
 }
