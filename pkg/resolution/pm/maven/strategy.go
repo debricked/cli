@@ -7,6 +7,25 @@ import (
 	"github.com/vifraa/gopom"
 )
 
+type PomParser interface {
+	ParsePom(path string) (*Project, error)
+}
+
+type Project struct {
+	Modules []string
+}
+
+func ParsePom(path string) (*Project, error) {
+
+	pom, err := gopom.Parse(path)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &Project{pom.Modules}, nil
+}
+
 type Strategy struct {
 	files      []string
 	cmdFactory ICmdFactory
@@ -17,8 +36,6 @@ func NewStrategy(files []string) Strategy {
 }
 
 func (s Strategy) Invoke() []job.IJob {
-
-	// todo make use of the gopom as an interface
 
 	var jobs []job.IJob
 
@@ -37,7 +54,7 @@ func (s Strategy) GetRootPomFiles() []string {
 
 	for _, file_path := range s.files {
 
-		pom, _ := gopom.Parse(file_path)
+		pom, _ := ParsePom(file_path)
 
 		if len(pom.Modules) == 0 {
 			continue
