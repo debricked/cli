@@ -9,6 +9,13 @@ type CmdFactoryMock struct {
 	MakeListCmdErr  error
 }
 
+func NewEchoCmdFactory() CmdFactoryMock {
+	return CmdFactoryMock{
+		GraphCmdName: "echo",
+		ListCmdName:  "echo",
+	}
+}
+
 func (f CmdFactoryMock) MakeGraphCmd() (*exec.Cmd, error) {
 	return exec.Command(f.GraphCmdName, "MakeGraphCmd"), f.MakeGraphCmdErr
 }
