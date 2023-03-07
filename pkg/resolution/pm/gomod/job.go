@@ -45,15 +45,26 @@ func (j *Job) Status() chan string {
 }
 
 func (j *Job) Run() {
+	j.status <- "tidy dependency graph"
+	_, err := j.runTidyCmd()
+
+	// TODO Set when failing tidy to be a warning!
+	if err != nil {
+		j.err = err
+		return
+	}
+
 	j.status <- "creating dependency graph"
 	graphCmdOutput, err := j.runGraphCmd()
 	if err != nil {
+		j.err = err
 		return
 	}
 
 	j.status <- "creating dependency version list"
 	listCmdOutput, err := j.runListCmd()
 	if err != nil {
+		j.err = err
 		return
 	}
 
@@ -72,6 +83,24 @@ func (j *Job) Run() {
 	fileContents = append(fileContents, listCmdOutput...)
 
 	j.err = j.fileWriter.Write(lockFile, fileContents)
+}
+
+func (j *Job) runTidyCmd() ([]byte, error) {
+	tidyCmd, err := j.cmdFactory.MakeTidyCmd()
+	if err != nil {
+		j.err = err
+
+		return nil, err
+	}
+
+	tidyCmdOutput, err := tidyCmd.Output()
+	if err != nil {
+		j.err = err
+
+		return nil, err
+	}
+
+	return tidyCmdOutput, nil
 }
 
 func (j *Job) runGraphCmd() ([]byte, error) {

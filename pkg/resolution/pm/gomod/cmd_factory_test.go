@@ -6,6 +6,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestTidyGraphCmd(t *testing.T) {
+	cmd, _ := CmdFactory{}.MakeTidyCmd()
+	assert.NotNil(t, cmd)
+	args := cmd.Args
+	assert.Contains(t, args, "go")
+	assert.Contains(t, args, "mod")
+	assert.Contains(t, args, "tidy")
+}
+
 func TestMakeGraphCmd(t *testing.T) {
 	cmd, _ := CmdFactory{}.MakeGraphCmd()
 	assert.NotNil(t, cmd)

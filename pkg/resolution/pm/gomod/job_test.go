@@ -30,9 +30,36 @@ func TestError(t *testing.T) {
 	assert.Equal(t, jobErr, j.Error())
 }
 
+func TestRunTidyCmdErr(t *testing.T) {
+	cmdErr := errors.New("cmd-error")
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	cmdFactoryMock.MakeTidyCmdErr = cmdErr
+	j := NewJob("file", cmdFactoryMock, nil)
+
+	go waitStatus(j)
+
+	j.Run()
+
+	assert.ErrorIs(t, cmdErr, j.Error())
+}
+
+func TestRunTidyOutputErr(t *testing.T) {
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	cmdFactoryMock.TidyCmdName = "bad-name"
+	j := NewJob("file", cmdFactoryMock, nil)
+
+	go waitStatus(j)
+
+	j.Run()
+
+	assertPathErr(t, j.Error())
+}
+
 func TestRunGraphCmdErr(t *testing.T) {
 	cmdErr := errors.New("cmd-error")
-	j := NewJob("file", testdata.CmdFactoryMock{MakeGraphCmdErr: cmdErr}, nil)
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	cmdFactoryMock.MakeGraphCmdErr = cmdErr
+	j := NewJob("file", cmdFactoryMock, nil)
 
 	go waitStatus(j)
 
@@ -42,7 +69,9 @@ func TestRunGraphCmdErr(t *testing.T) {
 }
 
 func TestRunCmdOutputErr(t *testing.T) {
-	j := NewJob("file", testdata.CmdFactoryMock{GraphCmdName: "bad-name"}, nil)
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	cmdFactoryMock.GraphCmdName = "bad-name"
+	j := NewJob("file", cmdFactoryMock, nil)
 
 	go waitStatus(j)
 
@@ -53,10 +82,8 @@ func TestRunCmdOutputErr(t *testing.T) {
 
 func TestRunListCmdErr(t *testing.T) {
 	cmdErr := errors.New("cmd-error")
-	cmdFactoryMock := testdata.CmdFactoryMock{
-		GraphCmdName:   "echo",
-		MakeListCmdErr: cmdErr,
-	}
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	cmdFactoryMock.MakeListCmdErr = cmdErr
 	j := NewJob("file", cmdFactoryMock, nil)
 
 	go waitStatus(j)
@@ -67,7 +94,9 @@ func TestRunListCmdErr(t *testing.T) {
 }
 
 func TestRunListCmdOutputErr(t *testing.T) {
-	j := NewJob("file", testdata.CmdFactoryMock{GraphCmdName: "echo", ListCmdName: "bad-name"}, nil)
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	cmdFactoryMock.ListCmdName = "bad-name"
+	j := NewJob("file", cmdFactoryMock, nil)
 
 	go waitStatus(j)
 
@@ -79,7 +108,7 @@ func TestRunListCmdOutputErr(t *testing.T) {
 func TestRunCreateErr(t *testing.T) {
 	createErr := errors.New("create-error")
 	fileWriterMock := &writerTestdata.FileWriterMock{CreateErr: createErr}
-	cmdFactoryMock := testdata.CmdFactoryMock{GraphCmdName: "echo", ListCmdName: "echo"}
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	j := NewJob("file", cmdFactoryMock, fileWriterMock)
 
 	go waitStatus(j)
@@ -92,7 +121,7 @@ func TestRunCreateErr(t *testing.T) {
 func TestRunWriteErr(t *testing.T) {
 	writeErr := errors.New("write-error")
 	fileWriterMock := &writerTestdata.FileWriterMock{WriteErr: writeErr}
-	cmdFactoryMock := testdata.CmdFactoryMock{GraphCmdName: "echo", ListCmdName: "echo"}
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	j := NewJob("file", cmdFactoryMock, fileWriterMock)
 
 	go waitStatus(j)
@@ -105,7 +134,7 @@ func TestRunWriteErr(t *testing.T) {
 func TestRunCloseErr(t *testing.T) {
 	closeErr := errors.New("close-error")
 	fileWriterMock := &writerTestdata.FileWriterMock{CloseErr: closeErr}
-	cmdFactoryMock := testdata.CmdFactoryMock{GraphCmdName: "echo", ListCmdName: "echo"}
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	j := NewJob("file", cmdFactoryMock, fileWriterMock)
 
 	go waitStatus(j)
@@ -118,7 +147,7 @@ func TestRunCloseErr(t *testing.T) {
 func TestRun(t *testing.T) {
 	fileContents := []byte("MakeGraphCmd\n\nMakeListCmd\n")
 	fileWriterMock := &writerTestdata.FileWriterMock{}
-	cmdFactoryMock := testdata.CmdFactoryMock{GraphCmdName: "echo", ListCmdName: "echo"}
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	j := NewJob("file", cmdFactoryMock, fileWriterMock)
 
 	go waitStatus(j)
