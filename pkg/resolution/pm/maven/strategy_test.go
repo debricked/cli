@@ -6,6 +6,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type MockPomX struct{}
+
+func (p MockPomX) GetRootPomFiles(files []string) []string {
+	return files
+}
+
+func (p MockPomX) ParsePomModules(path string) ([]string, error) {
+	return []string{}, nil
+}
+
 func TestNewStrategy(t *testing.T) {
 	s := NewStrategy(nil)
 	assert.NotNil(t, s)
@@ -32,12 +42,18 @@ func TestInvokeNoFiles(t *testing.T) {
 
 func TestInvokeOneFile(t *testing.T) {
 	s := NewStrategy([]string{"file"})
+
+	s.pomX = MockPomX{}
+
 	jobs := s.Invoke()
 	assert.Len(t, jobs, 1)
 }
 
 func TestInvokeManyFiles(t *testing.T) {
 	s := NewStrategy([]string{"file-1", "file-2"})
+
+	s.pomX = MockPomX{}
+
 	jobs := s.Invoke()
 	assert.Len(t, jobs, 2)
 }
