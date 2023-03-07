@@ -48,12 +48,16 @@ func (j *Job) Run() {
 	j.status <- "creating dependency graph"
 	graphCmdOutput, err := j.runGraphCmd()
 	if err != nil {
+		j.err = err
+
 		return
 	}
 
 	j.status <- "creating dependency version list"
 	listCmdOutput, err := j.runListCmd()
 	if err != nil {
+		j.err = err
+
 		return
 	}
 
