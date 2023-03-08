@@ -9,7 +9,7 @@ import (
 )
 
 func TestParsePomModules(t *testing.T) {
-	p := PomX{}
+	p := PomService{}
 	modules, err := p.ParsePomModules("testdata/pom.xml")
 	assert.Nil(t, err)
 	assert.Len(t, modules, 5)
@@ -21,7 +21,7 @@ func TestParsePomModules(t *testing.T) {
 }
 
 func TestGetRootPomFiles(t *testing.T) {
-	p := PomX{}
+	p := PomService{}
 	files := p.GetRootPomFiles([]string{"testdata/pom.xml", "testdata/notAPom.xml"})
 	assert.Len(t, files, 2)
 	assert.Equal(t, "testdata/pom.xml", files[0])

@@ -6,14 +6,14 @@ import (
 	"github.com/vifraa/gopom"
 )
 
-type IPomX interface {
+type IPomService interface {
 	GetRootPomFiles(files []string) []string
 	ParsePomModules(path string) ([]string, error)
 }
 
-type PomX struct{}
+type PomService struct{}
 
-func (p PomX) ParsePomModules(path string) ([]string, error) {
+func (p PomService) ParsePomModules(path string) ([]string, error) {
 	pom, err := gopom.Parse(path)
 
 	if err != nil {
@@ -23,7 +23,7 @@ func (p PomX) ParsePomModules(path string) ([]string, error) {
 	return pom.Modules, nil
 }
 
-func (p PomX) GetRootPomFiles(files []string) []string {
+func (p PomService) GetRootPomFiles(files []string) []string {
 	childMap := make(map[string][]string)
 	roots := make([]string, 0)
 
