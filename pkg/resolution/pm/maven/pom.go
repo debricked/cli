@@ -25,10 +25,17 @@ func (p PomService) ParsePomModules(path string) ([]string, error) {
 
 func (p PomService) GetRootPomFiles(files []string) []string {
 	childMap := make(map[string][]string)
+	validFiles := make([]string, 0)
 	roots := make([]string, 0)
 
 	for _, file_path := range files {
-		modules, _ := p.ParsePomModules(file_path)
+		modules, err := p.ParsePomModules(file_path)
+
+		if err != nil {
+			continue
+		}
+
+		validFiles = append(validFiles, file_path)
 
 		if len(modules) == 0 {
 			continue
@@ -40,7 +47,7 @@ func (p PomService) GetRootPomFiles(files []string) []string {
 		}
 	}
 
-	for _, file := range files {
+	for _, file := range validFiles {
 		if _, ok := childMap[file]; !ok {
 			roots = append(roots, file)
 		}

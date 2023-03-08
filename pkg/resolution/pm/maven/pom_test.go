@@ -23,10 +23,12 @@ func TestParsePomModules(t *testing.T) {
 func TestGetRootPomFiles(t *testing.T) {
 	p := PomService{}
 	files := p.GetRootPomFiles([]string{"testdata/pom.xml", "testdata/notAPom.xml"})
-	assert.Len(t, files, 2)
-	assert.Equal(t, "testdata/pom.xml", files[0])
+	assert.Len(t, files, 1)
 
 	files = p.GetRootPomFiles([]string{"testdata/pom.xml", "testdata/guava/pom.xml"})
 	assert.Len(t, files, 1)
 	assert.Equal(t, "testdata/pom.xml", files[0])
+
+	files = p.GetRootPomFiles([]string{"testdata/notAPom.xml"})
+	assert.Len(t, files, 0)
 }
