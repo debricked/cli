@@ -42,7 +42,7 @@ func TestInvokeNoFiles(t *testing.T) {
 
 func TestInvokeOneFile(t *testing.T) {
 	s := NewStrategy([]string{"file"})
-	s.pomX = MockPomX{}
+	s.pomService = MockPomX{}
 
 	jobs := s.Invoke()
 	assert.Len(t, jobs, 1)
@@ -50,7 +50,7 @@ func TestInvokeOneFile(t *testing.T) {
 
 func TestInvokeManyFiles(t *testing.T) {
 	s := NewStrategy([]string{"file-1", "file-2"})
-	s.pomX = MockPomX{}
+	s.pomService = MockPomX{}
 
 	jobs := s.Invoke()
 	assert.Len(t, jobs, 2)
