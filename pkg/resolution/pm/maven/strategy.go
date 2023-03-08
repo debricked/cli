@@ -7,16 +7,16 @@ import (
 type Strategy struct {
 	files      []string
 	cmdFactory ICmdFactory
-	pomX       IPomX
+	pomService IPomService
 }
 
 func NewStrategy(files []string) Strategy {
-	return Strategy{files, CmdFactory{}, PomX{}}
+	return Strategy{files, CmdFactory{}, PomService{}}
 }
 
 func (s Strategy) Invoke() []job.IJob {
 	var jobs []job.IJob
-	s.files = s.pomX.GetRootPomFiles(s.files)
+	s.files = s.pomService.GetRootPomFiles(s.files)
 
 	for _, file := range s.files {
 		jobs = append(jobs, NewJob(file, s.cmdFactory))
