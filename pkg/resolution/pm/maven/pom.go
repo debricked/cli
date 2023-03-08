@@ -14,7 +14,6 @@ type IPomX interface {
 type PomX struct{}
 
 func (p PomX) ParsePomModules(path string) ([]string, error) {
-
 	pom, err := gopom.Parse(path)
 
 	if err != nil {
@@ -25,11 +24,10 @@ func (p PomX) ParsePomModules(path string) ([]string, error) {
 }
 
 func (p PomX) GetRootPomFiles(files []string) []string {
-
 	childMap := make(map[string][]string)
+	roots := make([]string, 0)
 
 	for _, file_path := range files {
-
 		modules, _ := p.ParsePomModules(file_path)
 
 		if len(modules) == 0 {
@@ -37,16 +35,10 @@ func (p PomX) GetRootPomFiles(files []string) []string {
 		}
 
 		for _, module := range modules {
-
-			// path to child pom
 			modulePath := filepath.Join(filepath.Dir(file_path), filepath.Dir(module), filepath.Base(module), "pom.xml")
-
 			childMap[modulePath] = append(childMap[modulePath], file_path)
-
 		}
 	}
-
-	roots := make([]string, 0)
 
 	for _, file := range files {
 		if _, ok := childMap[file]; !ok {
@@ -55,5 +47,4 @@ func (p PomX) GetRootPomFiles(files []string) []string {
 	}
 
 	return roots
-
 }
