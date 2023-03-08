@@ -24,7 +24,7 @@ func (p PomService) ParsePomModules(path string) ([]string, error) {
 }
 
 func (p PomService) GetRootPomFiles(files []string) []string {
-	childMap := make(map[string][]string)
+	childMap := make(map[string]bool)
 	validFiles := make([]string, 0)
 	roots := make([]string, 0)
 
@@ -43,7 +43,7 @@ func (p PomService) GetRootPomFiles(files []string) []string {
 
 		for _, module := range modules {
 			modulePath := filepath.Join(filepath.Dir(file_path), filepath.Dir(module), filepath.Base(module), "pom.xml")
-			childMap[modulePath] = append(childMap[modulePath], file_path)
+			childMap[modulePath] = bool(true)
 		}
 	}
 
