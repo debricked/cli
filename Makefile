@@ -29,3 +29,7 @@ docker-build-cli:
 .PHONY: docker-build-scan
 docker-build-scan:
 	docker build -f build/docker/Dockerfile -t debricked/cli-scan:latest --target scan .
+
+.PHONY: docker-build-cli-resolution
+docker-build-cli-resolution:
+	docker build -f build/docker/Dockerfile -t debricked/cli-resolution:latest --target cli-resolution .
