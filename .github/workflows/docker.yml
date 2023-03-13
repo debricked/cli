@@ -12,7 +12,7 @@ jobs:
     name: 'Push Docker images'
     strategy:
       matrix:
-        stage: [ 'cli', 'scan' ]
+        stage: [ 'cli', 'scan', 'cli-resolution']
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
