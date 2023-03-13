@@ -85,7 +85,7 @@ docker run -v $(pwd):/root  debricked/scan -t <access-token>
 ```
 
 ### CI/CD integration
-If you would rather use `debricked` in your CI/CD pipelines, check out the [templates](examples/templates).
+If you would rather use `debricked` in your CI/CD pipelines, check out the [templates](examples/templates/README.md).
 
 ## Contributing
 Thank you for your interest in making Debricked CLI even better! Read more about contributing to the
