@@ -6,13 +6,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type MockPomX struct{}
+type PomServiceMock struct{}
 
-func (p MockPomX) GetRootPomFiles(files []string) []string {
+func (p PomServiceMock) GetRootPomFiles(files []string) []string {
 	return files
 }
 
-func (p MockPomX) ParsePomModules(path string) ([]string, error) {
+func (p PomServiceMock) ParsePomModules(_ string) ([]string, error) {
 	return []string{}, nil
 }
 
@@ -36,22 +36,26 @@ func TestNewStrategy(t *testing.T) {
 
 func TestInvokeNoFiles(t *testing.T) {
 	s := NewStrategy([]string{})
+
 	jobs := s.Invoke()
+
 	assert.Empty(t, jobs)
 }
 
 func TestInvokeOneFile(t *testing.T) {
 	s := NewStrategy([]string{"file"})
-	s.pomService = MockPomX{}
+	s.pomService = PomServiceMock{}
 
 	jobs := s.Invoke()
+
 	assert.Len(t, jobs, 1)
 }
 
 func TestInvokeManyFiles(t *testing.T) {
 	s := NewStrategy([]string{"file-1", "file-2"})
-	s.pomService = MockPomX{}
+	s.pomService = PomServiceMock{}
 
 	jobs := s.Invoke()
+
 	assert.Len(t, jobs, 2)
 }

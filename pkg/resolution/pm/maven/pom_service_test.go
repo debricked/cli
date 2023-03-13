@@ -1,7 +1,5 @@
 package maven
 
-// test for pkg/resolution/pm/maven/pom.go
-
 import (
 	"path/filepath"
 	"testing"
@@ -18,9 +16,9 @@ func TestParsePomModules(t *testing.T) {
 	assert.Equal(t, correct, modules)
 
 	modules, err = p.ParsePomModules("testdata/notAPom.xml")
+
 	assert.NotNil(t, err)
 	assert.Len(t, modules, 0)
-
 }
 
 func TestGetRootPomFiles(t *testing.T) {
