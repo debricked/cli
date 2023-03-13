@@ -9,8 +9,8 @@ go test -cover -coverprofile=coverage.out ./pkg/...
 echo -e "\nChecking test coverage threshold..."
 regex='[0-9]+\.*[0-9]*'
 if ! [[ $TEST_COVERAGE_THRESHOLD =~ $regex ]]; then
-  echo "Failed to find test coverage threshold. Defaults to 90%"
-  TEST_COVERAGE_THRESHOLD=90
+  echo "Failed to find test coverage threshold. Defaults to 95%"
+  TEST_COVERAGE_THRESHOLD=95
 fi
 echo "Test coverage threshold     : $TEST_COVERAGE_THRESHOLD %"
 if [ ! -f "./coverage.out" ]; then
