@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 )
 
+var NoResErr = errors.New("failed to get response")
+
 func get(uri string, debClient *DebClient, retry bool, format string) (*http.Response, error) {
 	request, err := newRequest("GET", *debClient.host+uri, debClient.jwtToken, format, nil)
 	if err != nil {
@@ -36,7 +38,6 @@ func post(uri string, debClient *DebClient, contentType string, body *bytes.Buff
 		return nil, err
 	}
 	req := func() (*http.Response, error) {
-
 		return post(uri, debClient, contentType, body, false)
 	}
 
@@ -57,7 +58,9 @@ func newRequest(method string, url string, jwtToken string, format string, body 
 
 // interpret a http response
 func interpret(res *http.Response, request func() (*http.Response, error), debClient *DebClient, retry bool) (*http.Response, error) {
-	if res.StatusCode == http.StatusUnauthorized {
+	if res == nil {
+		return nil, NoResErr
+	} else if res.StatusCode == http.StatusUnauthorized {
 		errMsg := `Unauthorized. Specify access token. 
 Read more on https://debricked.com/docs/administration/access-tokens.html`
 		if retry {
