@@ -80,6 +80,12 @@ func TestRunEError(t *testing.T) {
 	assert.ErrorContains(t, err, "⨯ scanner was nil")
 }
 
+func TestPreRun(t *testing.T) {
+	var c client.IDebClient = testdata.NewDebClientMock()
+	cmd := NewScanCmd(&c)
+	cmd.PreRun(cmd, nil)
+}
+
 type scannerMock struct {
 	err error
 }

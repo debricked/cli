@@ -58,3 +58,8 @@ func TestRunE(t *testing.T) {
 
 	assert.NoError(t, err)
 }
+
+func TestPreRun(t *testing.T) {
+	cmd := NewLicenseCmd(nil)
+	cmd.PreRun(cmd, nil)
+}

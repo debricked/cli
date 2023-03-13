@@ -15,3 +15,9 @@ func TestNewReportCmd(t *testing.T) {
 	nbrOfCommands := 2
 	assert.Lenf(t, commands, nbrOfCommands, "failed to assert that there were %d sub commands connected", nbrOfCommands)
 }
+
+func TestPreRun(t *testing.T) {
+	var c client.IDebClient = testdata.NewDebClientMock()
+	cmd := NewReportCmd(&c)
+	cmd.PreRun(cmd, nil)
+}

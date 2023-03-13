@@ -1,7 +1,10 @@
 package find
 
 import (
+	"encoding/json"
 	"errors"
+	"io"
+	"os"
 	"testing"
 
 	"github.com/debricked/cli/pkg/file"
@@ -106,9 +109,48 @@ func TestRunEWithBothStrictAndLockOnlyFlagsSet(t *testing.T) {
 	viper.Set(StrictFlag, file.StrictLockAndPairs)
 	viper.Set(LockfileOnlyFlag, true)
 
+	defer viper.Set(StrictFlag, file.StrictAll)
+	defer viper.Set(LockfileOnlyFlag, false)
+
 	f := testdata.NewFinderMock()
 	runE := RunE(f)
 	err := runE(nil, []string{"."})
 
 	assert.EqualError(t, err, "'lockfile' and 'strict' flags are mutually exclusive", "error doesn't match expected")
+}
+
+func TestRunEJson(t *testing.T) {
+	f := testdata.NewFinderMock()
+	groups := file.Groups{}
+	groups.Add(file.Group{
+		FilePath:       "manifest-file",
+		CompiledFormat: nil,
+		RelatedFiles: []string{
+			"lock-file",
+		},
+	})
+	groupsJson, _ := json.Marshal(groups.ToSlice())
+	f.SetGetGroupsReturnMock(groups, nil)
+	viper.Set(JsonFlag, true)
+
+	runE := RunE(f)
+
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := runE(nil, []string{"."})
+	assert.NoError(t, err)
+
+	_ = w.Close()
+	output, _ := io.ReadAll(r)
+	os.Stdout = rescueStdout
+
+	assert.NotEmpty(t, output)
+	assert.JSONEq(t, string(groupsJson), string(output))
+}
+
+func TestPreRun(t *testing.T) {
+	cmd := NewFindCmd(nil)
+	cmd.PreRun(cmd, nil)
 }
