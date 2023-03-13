@@ -58,3 +58,12 @@ func TestSendStatus(t *testing.T) {
 
 	j.SendStatus("status")
 }
+
+func TestDifferentNewBaseJob(t *testing.T) {
+	differentFileName := "testDifferentFile"
+	j := NewBaseJob(differentFileName)
+	assert.NotEqual(t, testFile, j.GetFile())
+	assert.Equal(t, differentFileName, j.GetFile())
+	assert.NotNil(t, j.Errors())
+	assert.NotNil(t, j.status)
+}

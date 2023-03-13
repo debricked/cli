@@ -8,7 +8,7 @@ type BaseJob struct {
 
 func NewBaseJob(file string) BaseJob {
 	return BaseJob{
-		file:   "file",
+		file:   file,
 		errs:   NewErrors(file),
 		status: make(chan string),
 	}
