@@ -35,6 +35,6 @@ func TestNewRootCmd(t *testing.T) {
 }
 
 func TestPreRun(t *testing.T) {
-	cmd := NewRootCmd("")
+	cmd := NewRootCmd("", wire.GetCliContainer())
 	cmd.PreRun(cmd, nil)
 }

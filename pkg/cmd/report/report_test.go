@@ -16,7 +16,8 @@ func TestNewReportCmd(t *testing.T) {
 }
 
 func TestPreRun(t *testing.T) {
-	var c client.IDebClient = testdata.NewDebClientMock()
-	cmd := NewReportCmd(&c)
+	var licenseReporter license.Reporter
+	var vulnReporter vulnerability.Reporter
+	cmd := NewReportCmd(licenseReporter, vulnReporter)
 	cmd.PreRun(cmd, nil)
 }

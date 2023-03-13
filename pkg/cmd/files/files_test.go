@@ -16,7 +16,6 @@ func TestNewFilesCmd(t *testing.T) {
 }
 
 func TestPreRun(t *testing.T) {
-	var c client.IDebClient = testdata.NewDebClientMock()
-	cmd := NewFilesCmd(&c)
+	cmd := NewFilesCmd(nil)
 	cmd.PreRun(cmd, nil)
 }

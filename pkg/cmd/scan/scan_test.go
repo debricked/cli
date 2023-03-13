@@ -78,8 +78,7 @@ func TestRunEError(t *testing.T) {
 }
 
 func TestPreRun(t *testing.T) {
-	var c client.IDebClient = testdata.NewDebClientMock()
-	cmd := NewScanCmd(&c)
+	cmd := NewScanCmd(nil)
 	cmd.PreRun(cmd, nil)
 }
 
