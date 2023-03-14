@@ -8,10 +8,36 @@ import (
 	"github.com/fatih/color"
 )
 
-func NewSpinnerManager() ysmrr.SpinnerManager {
-	return ysmrr.NewSpinnerManager(ysmrr.WithSpinnerColor(colors.FgHiBlue))
+type ISpinnerManager interface {
+	AddSpinner(file string) *ysmrr.Spinner
+	Start()
+	Stop()
+}
+
+type SpinnerManager struct {
+	spinnerManager ysmrr.SpinnerManager
+}
+
+func NewSpinnerManager() SpinnerManager {
+	return SpinnerManager{ysmrr.NewSpinnerManager(ysmrr.WithSpinnerColor(colors.FgHiBlue))}
+}
+
+func (sm SpinnerManager) AddSpinner(file string) *ysmrr.Spinner {
+	spinner := sm.spinnerManager.AddSpinner("")
+	SetSpinnerMessage(spinner, file, "waiting for worker")
+
+	return spinner
+}
+
+func (sm SpinnerManager) Start() {
+	sm.spinnerManager.Start()
+}
+
+func (sm SpinnerManager) Stop() {
+	sm.spinnerManager.Stop()
 }
 
 func SetSpinnerMessage(spinner *ysmrr.Spinner, filename string, message string) {
-	spinner.UpdateMessage(fmt.Sprintf("Resolving %s: %s", color.YellowString(filename), message))
+	file := color.YellowString(filename)
+	spinner.UpdateMessage(fmt.Sprintf("Resolving %s: %s", file, message))
 }
