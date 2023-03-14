@@ -3,7 +3,6 @@ package tui
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"os"
 	"testing"
 
@@ -74,7 +73,7 @@ func TestRenderCriticalJob(t *testing.T) {
 func TestRenderCriticalAndWarningJob(t *testing.T) {
 	var listBuffer bytes.Buffer
 
-	jobMock := testdata.NewJobMock("file")
+	jobMock := testdata.NewJobMock("manifest-file")
 
 	warningErr := errors.New("warning-message")
 	jobMock.Errors().Warning(warningErr)
@@ -89,7 +88,7 @@ func TestRenderCriticalAndWarningJob(t *testing.T) {
 	assert.NoError(t, err)
 	output := listBuffer.String()
 	contains := []string{
-		"file",
+		"manifest-file",
 		"\n* ",
 		"Critical",
 		":\n\tcritical-message\n",
@@ -97,7 +96,33 @@ func TestRenderCriticalAndWarningJob(t *testing.T) {
 		":\n\twarning-message\n",
 	}
 	assertOutput(t, output, contains)
-	fmt.Println(output)
+}
+
+func TestRenderCriticalAndWorkingJob(t *testing.T) {
+	var listBuffer bytes.Buffer
+
+	jobWithErrMock := testdata.NewJobMock("manifest-file")
+
+	criticalErr := errors.New("critical-message")
+	jobWithErrMock.Errors().Critical(criticalErr)
+
+	jobWorkingMock := testdata.NewJobMock("working-manifest-file")
+
+	errList := NewJobsErrorList(&listBuffer, []job.IJob{jobWithErrMock, jobWorkingMock})
+
+	err := errList.Render()
+
+	assert.NoError(t, err)
+	output := listBuffer.String()
+	contains := []string{
+		"manifest-file",
+		"\n* ",
+		"Critical",
+		":\n\tcritical-message\n",
+	}
+	assertOutput(t, output, contains)
+
+	assert.NotContains(t, output, jobWorkingMock)
 }
 
 func assertOutput(t *testing.T, output string, contains []string) {
