@@ -46,7 +46,7 @@ func (j *Job) Install() bool {
 
 func (j *Job) Run() {
 	if j.install {
-		j.SendStatus(fmt.Sprintf("creating virtualenv for %s.venv", j.GetFile()))
+		j.SendStatus(fmt.Sprintf("creating virtualenv for %s.venv", filepath.Base(j.GetFile())))
 		_, err := j.runCreateVenvCmd()
 		if err != nil {
 			j.Errors().Critical(err)
@@ -54,7 +54,7 @@ func (j *Job) Run() {
 			return
 		}
 
-		j.SendStatus(fmt.Sprintf("installing requirements in virtualenv for %s.venv", j.GetFile()))
+		j.SendStatus(fmt.Sprintf("installing requirements in virtualenv for %s.venv", filepath.Base(j.GetFile())))
 		_, err = j.runInstallCmd()
 		if err != nil {
 			j.Errors().Critical(err)
