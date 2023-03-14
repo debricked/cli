@@ -9,12 +9,18 @@ import (
 	"github.com/debricked/cli/pkg/file/testdata"
 	resolutionFile "github.com/debricked/cli/pkg/resolution/file"
 	fileTestdata "github.com/debricked/cli/pkg/resolution/file/testdata"
+	"github.com/debricked/cli/pkg/resolution/job"
+	jobTestdata "github.com/debricked/cli/pkg/resolution/job/testdata"
+
 	"github.com/debricked/cli/pkg/resolution/strategy"
 	strategyTestdata "github.com/debricked/cli/pkg/resolution/strategy/testdata"
 	"github.com/stretchr/testify/assert"
 )
 
-const workers = 10
+const (
+	workers   = 10
+	goModFile = "go.mod"
+)
 
 func TestNewResolver(t *testing.T) {
 	r := NewResolver(
@@ -119,8 +125,7 @@ func TestResolveDirWithManifestFiles(t *testing.T) {
 	}
 	f := testdata.NewFinderMock()
 	groups := file.Groups{}
-	goMod := "go.mod"
-	groups.Add(file.Group{FilePath: goMod})
+	groups.Add(file.Group{FilePath: goModFile})
 	f.SetGetGroupsReturnMock(groups, nil)
 
 	r := NewResolver(
@@ -134,9 +139,9 @@ func TestResolveDirWithManifestFiles(t *testing.T) {
 		t.Run(fmt.Sprintf("Case: %s", dir), func(t *testing.T) {
 			res, err := r.Resolve([]string{dir}, nil)
 			assert.Len(t, res.Jobs(), 1)
-			job := res.Jobs()[0]
-			assert.False(t, job.Errors().HasError())
-			assert.Equal(t, goMod, job.GetFile())
+			j := res.Jobs()[0]
+			assert.False(t, j.Errors().HasError())
+			assert.Equal(t, goModFile, j.GetFile())
 			assert.NoError(t, err)
 		})
 	}
@@ -145,8 +150,7 @@ func TestResolveDirWithManifestFiles(t *testing.T) {
 func TestResolveDirWithExclusions(t *testing.T) {
 	f := testdata.NewFinderMock()
 	groups := file.Groups{}
-	goMod := "go.mod"
-	groups.Add(file.Group{FilePath: goMod})
+	groups.Add(file.Group{FilePath: goModFile})
 	f.SetGetGroupsReturnMock(groups, nil)
 
 	r := NewResolver(
@@ -159,8 +163,38 @@ func TestResolveDirWithExclusions(t *testing.T) {
 	res, err := r.Resolve([]string{"."}, []string{"dir"})
 
 	assert.Len(t, res.Jobs(), 1)
-	job := res.Jobs()[0]
-	assert.False(t, job.Errors().HasError())
-	assert.Equal(t, goMod, job.GetFile())
+	j := res.Jobs()[0]
+	assert.False(t, j.Errors().HasError())
+	assert.Equal(t, goModFile, j.GetFile())
 	assert.NoError(t, err)
+}
+
+func TestResolveHasResolutionErrs(t *testing.T) {
+	f := testdata.NewFinderMock()
+	groups := file.Groups{}
+	groups.Add(file.Group{FilePath: goModFile})
+	f.SetGetGroupsReturnMock(groups, nil)
+
+	jobErr := errors.New("job-error")
+	jobWithErr := jobTestdata.NewJobMock(goModFile)
+	jobWithErr.Errors().Warning(jobErr)
+	schedulerMock := SchedulerMock{JobsMock: []job.IJob{jobWithErr}}
+
+	r := NewResolver(
+		f,
+		resolutionFile.NewBatchFactory(),
+		strategyTestdata.NewStrategyFactoryMock(),
+		schedulerMock,
+	)
+
+	res, err := r.Resolve([]string{""}, []string{""})
+
+	assert.NoError(t, err)
+	assert.Len(t, res.Jobs(), 1)
+	j := res.Jobs()[0]
+	assert.Equal(t, goModFile, j.GetFile())
+	assert.True(t, j.Errors().HasError())
+	errs := j.Errors().GetAll()
+	assert.Len(t, errs, 1)
+	assert.ErrorIs(t, jobErr, errs[0])
 }

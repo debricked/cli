@@ -10,10 +10,14 @@ import (
 )
 
 type SchedulerMock struct {
-	Err error
+	Err      error
+	JobsMock []job.IJob
 }
 
 func (s SchedulerMock) Schedule(jobs []job.IJob) (IResolution, error) {
+	if s.JobsMock != nil {
+		jobs = s.JobsMock
+	}
 	for _, j := range jobs {
 		j.Run()
 	}
