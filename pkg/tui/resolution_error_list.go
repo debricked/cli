@@ -33,7 +33,6 @@ func (jobsErrList JobsErrorList) Render() error {
 
 	for _, j := range jobsErrList.jobs {
 		jobsErrList.addJob(&listBuffer, j)
-		listBuffer.Write([]byte("\n"))
 	}
 
 	_, err := jobsErrList.mirror.Write(listBuffer.Bytes())
@@ -43,6 +42,10 @@ func (jobsErrList JobsErrorList) Render() error {
 
 func (jobsErrList JobsErrorList) addJob(list *bytes.Buffer, job job.IJob) {
 	var jobString string
+	if !job.Errors().HasError() {
+		return
+	}
+
 	list.Write([]byte(fmt.Sprintf("%s\n", color.YellowString(job.GetFile()))))
 
 	for _, warning := range job.Errors().GetWarningErrors() {
@@ -54,4 +57,6 @@ func (jobsErrList JobsErrorList) addJob(list *bytes.Buffer, job job.IJob) {
 		jobString = fmt.Sprintf("* %s:\n\t%s\n", color.RedString("Critical"), critical)
 		list.Write([]byte(jobString))
 	}
+
+	list.Write([]byte("\n"))
 }
