@@ -21,7 +21,7 @@ type Scheduler struct {
 	workers        int
 	queue          chan queueItem
 	waitGroup      sync.WaitGroup
-	spinnerManager ysmrr.SpinnerManager
+	spinnerManager tui.ISpinnerManager
 }
 
 func NewScheduler(workers int) *Scheduler {
@@ -33,21 +33,19 @@ func (scheduler *Scheduler) Schedule(jobs []job.IJob) (IResolution, error) {
 	scheduler.waitGroup.Add(len(jobs))
 
 	scheduler.spinnerManager = tui.NewSpinnerManager()
-	for range jobs {
-		scheduler.spinnerManager.AddSpinner("")
-	}
-	scheduler.spinnerManager.Start()
 
 	for w := 1; w <= scheduler.workers; w++ {
 		go scheduler.worker()
 	}
 
-	for i := range jobs {
+	for _, j := range jobs {
+		spinner := scheduler.spinnerManager.AddSpinner(j.GetFile())
 		scheduler.queue <- queueItem{
-			job:     jobs[i],
-			spinner: scheduler.spinnerManager.GetSpinners()[i],
+			job:     j,
+			spinner: spinner,
 		}
 	}
+	scheduler.spinnerManager.Start()
 
 	scheduler.waitGroup.Wait()
 
