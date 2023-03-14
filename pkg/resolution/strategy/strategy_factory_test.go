@@ -7,6 +7,7 @@ import (
 	"github.com/debricked/cli/pkg/resolution/pm/gomod"
 	"github.com/debricked/cli/pkg/resolution/pm/gradle"
 	"github.com/debricked/cli/pkg/resolution/pm/maven"
+	"github.com/debricked/cli/pkg/resolution/pm/pip"
 	"github.com/debricked/cli/pkg/resolution/pm/testdata"
 	"github.com/stretchr/testify/assert"
 )
@@ -29,6 +30,7 @@ func TestMake(t *testing.T) {
 		maven.Name:  maven.NewStrategy(nil),
 		gradle.Name: gradle.NewStrategy(nil),
 		gomod.Name:  gomod.NewStrategy(nil),
+		pip.Name:    pip.NewStrategy(nil),
 	}
 	f := NewStrategyFactory()
 	var batch file.IBatch
