@@ -7,7 +7,7 @@ import (
 )
 
 func TestMakeGraphCmd(t *testing.T) {
-	cmd, _ := CmdFactory{}.MakeGraphCmd()
+	cmd, _ := CmdFactory{}.MakeGraphCmd(".")
 	assert.NotNil(t, cmd)
 	args := cmd.Args
 	assert.Contains(t, args, "go")
@@ -16,7 +16,7 @@ func TestMakeGraphCmd(t *testing.T) {
 }
 
 func TestMakeListCmd(t *testing.T) {
-	cmd, _ := CmdFactory{}.MakeListCmd()
+	cmd, _ := CmdFactory{}.MakeListCmd(".")
 	assert.NotNil(t, cmd)
 	args := cmd.Args
 	assert.Contains(t, args, "go")

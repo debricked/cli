@@ -1,5 +1,10 @@
 package job
 
+import (
+	"errors"
+	"os/exec"
+)
+
 type BaseJob struct {
 	file   string
 	errs   IErrors
@@ -28,4 +33,13 @@ func (j *BaseJob) ReceiveStatus() chan string {
 
 func (j *BaseJob) SendStatus(status string) {
 	j.status <- status
+}
+
+func (j *BaseJob) GetExitError(err error) error {
+	exitErr, ok := err.(*exec.ExitError)
+	if !ok {
+		return err
+	}
+
+	return errors.New(string(exitErr.Stderr))
 }

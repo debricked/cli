@@ -37,6 +37,22 @@ func TestRunCmdOutputErr(t *testing.T) {
 	jobTestdata.AssertPathErr(t, j.Errors())
 }
 
+func TestRunCmdOutputErrNoOutput(t *testing.T) {
+	j := NewJob("file", testdata.CmdFactoryMock{Name: "go", Arg: "bad-arg"})
+
+	go jobTestdata.WaitStatus(j)
+
+	j.Run()
+
+	errs := j.Errors().GetAll()
+	assert.Len(t, errs, 1)
+	err := errs[0]
+
+	// assert empty because, when Output is executed it will allocate memory for the byte slice to contain the standard output.
+	// However since no bytes are sent to standard output err will be empty here.
+	assert.Empty(t, err)
+}
+
 func TestRun(t *testing.T) {
 	j := NewJob("file", testdata.CmdFactoryMock{Name: "echo"})
 
