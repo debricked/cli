@@ -1,6 +1,7 @@
 package maven
 
 import (
+	"errors"
 	"path/filepath"
 
 	"github.com/debricked/cli/pkg/resolution/job"
@@ -27,8 +28,13 @@ func (j *Job) Run() {
 		return
 	}
 	j.SendStatus("creating dependency graph")
-	_, err = cmd.Output()
+	var output []byte
+	output, err = cmd.Output()
 	if err != nil {
-		j.Errors().Critical(err)
+		if output == nil {
+			j.Errors().Critical(err)
+		} else {
+			j.Errors().Critical(errors.New(string(output)))
+		}
 	}
 }

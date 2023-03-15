@@ -1,6 +1,8 @@
 package gomod
 
 import (
+	"path/filepath"
+
 	"github.com/debricked/cli/pkg/resolution/job"
 	"github.com/debricked/cli/pkg/resolution/pm/util"
 	"github.com/debricked/cli/pkg/resolution/pm/writer"
@@ -30,7 +32,10 @@ func NewJob(
 
 func (j *Job) Run() {
 	j.SendStatus("creating dependency graph")
-	graphCmdOutput, err := j.runGraphCmd()
+
+	workingDirectory := filepath.Dir(filepath.Clean(j.GetFile()))
+
+	graphCmdOutput, err := j.runGraphCmd(workingDirectory)
 	if err != nil {
 		j.Errors().Critical(err)
 
@@ -38,7 +43,7 @@ func (j *Job) Run() {
 	}
 
 	j.SendStatus("creating dependency version list")
-	listCmdOutput, err := j.runListCmd()
+	listCmdOutput, err := j.runListCmd(workingDirectory)
 	if err != nil {
 		j.Errors().Critical(err)
 
@@ -65,29 +70,29 @@ func (j *Job) Run() {
 	}
 }
 
-func (j *Job) runGraphCmd() ([]byte, error) {
-	graphCmd, err := j.cmdFactory.MakeGraphCmd()
+func (j *Job) runGraphCmd(workingDirectory string) ([]byte, error) {
+	graphCmd, err := j.cmdFactory.MakeGraphCmd(workingDirectory)
 	if err != nil {
 		return nil, err
 	}
 
 	graphCmdOutput, err := graphCmd.Output()
 	if err != nil {
-		return nil, err
+		return nil, j.GetExitError(err)
 	}
 
 	return graphCmdOutput, nil
 }
 
-func (j *Job) runListCmd() ([]byte, error) {
-	listCmd, err := j.cmdFactory.MakeListCmd()
+func (j *Job) runListCmd(workingDirectory string) ([]byte, error) {
+	listCmd, err := j.cmdFactory.MakeListCmd(workingDirectory)
 	if err != nil {
 		return nil, err
 	}
 
 	listCmdOutput, err := listCmd.Output()
 	if err != nil {
-		return nil, err
+		return nil, j.GetExitError(err)
 	}
 
 	return listCmdOutput, nil
