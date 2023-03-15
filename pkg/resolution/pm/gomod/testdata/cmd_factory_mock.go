@@ -16,10 +16,10 @@ func NewEchoCmdFactory() CmdFactoryMock {
 	}
 }
 
-func (f CmdFactoryMock) MakeGraphCmd() (*exec.Cmd, error) {
+func (f CmdFactoryMock) MakeGraphCmd(_ string) (*exec.Cmd, error) {
 	return exec.Command(f.GraphCmdName, "MakeGraphCmd"), f.MakeGraphCmdErr
 }
 
-func (f CmdFactoryMock) MakeListCmd() (*exec.Cmd, error) {
+func (f CmdFactoryMock) MakeListCmd(_ string) (*exec.Cmd, error) {
 	return exec.Command(f.ListCmdName, "MakeListCmd"), f.MakeListCmdErr
 }
