@@ -43,7 +43,7 @@ func (j *Job) Run() {
 	j.SendStatus("creating dependency graph")
 	output, err := dependenciesCmd.Output()
 	if err != nil {
-		j.Errors().Critical(err)
+		j.Errors().Critical(j.GetExitError(err))
 
 		return
 	}

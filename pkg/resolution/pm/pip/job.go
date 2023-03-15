@@ -66,12 +66,16 @@ func (j *Job) Run() {
 	j.SendStatus("running cat command")
 	catCmdOutput, err := j.runCatCmd()
 	if err != nil {
+		j.Errors().Critical(err)
+
 		return
 	}
 
 	j.SendStatus("running list command")
 	listCmdOutput, err := j.runListCmd()
 	if err != nil {
+		j.Errors().Critical(err)
+
 		return
 	}
 
@@ -79,6 +83,8 @@ func (j *Job) Run() {
 	installedPackages := j.parsePipList(string(listCmdOutput))
 	ShowCmdOutput, err := j.runShowCmd(installedPackages)
 	if err != nil {
+		j.Errors().Critical(err)
+
 		return
 	}
 
@@ -120,7 +126,7 @@ func (j *Job) runCreateVenvCmd() ([]byte, error) {
 
 	createVenvCmdOutput, err := createVenvCmd.Output()
 	if err != nil {
-		return nil, err
+		return nil, j.GetExitError(err)
 	}
 
 	return createVenvCmdOutput, nil
@@ -141,7 +147,7 @@ func (j *Job) runInstallCmd() ([]byte, error) {
 
 	installCmdOutput, err := installCmd.Output()
 	if err != nil {
-		return nil, err
+		return nil, j.GetExitError(err)
 	}
 
 	return installCmdOutput, nil
@@ -150,16 +156,12 @@ func (j *Job) runInstallCmd() ([]byte, error) {
 func (j *Job) runCatCmd() ([]byte, error) {
 	listCmd, err := j.cmdFactory.MakeCatCmd(j.GetFile())
 	if err != nil {
-		j.Errors().Critical(err)
-
 		return nil, err
 	}
 
 	listCmdOutput, err := listCmd.Output()
 	if err != nil {
-		j.Errors().Critical(err)
-
-		return nil, err
+		return nil, j.GetExitError(err)
 	}
 
 	return listCmdOutput, nil
@@ -168,16 +170,12 @@ func (j *Job) runCatCmd() ([]byte, error) {
 func (j *Job) runListCmd() ([]byte, error) {
 	listCmd, err := j.cmdFactory.MakeListCmd(j.pipCommand)
 	if err != nil {
-		j.Errors().Critical(err)
-
 		return nil, err
 	}
 
 	listCmdOutput, err := listCmd.Output()
 	if err != nil {
-		j.Errors().Critical(err)
-
-		return nil, err
+		return nil, j.GetExitError(err)
 	}
 
 	return listCmdOutput, nil
@@ -186,16 +184,12 @@ func (j *Job) runListCmd() ([]byte, error) {
 func (j *Job) runShowCmd(packages []string) ([]byte, error) {
 	listCmd, err := j.cmdFactory.MakeShowCmd(j.pipCommand, packages)
 	if err != nil {
-		j.Errors().Critical(err)
-
 		return nil, err
 	}
 
 	listCmdOutput, err := listCmd.Output()
 	if err != nil {
-		j.Errors().Critical(err)
-
-		return nil, err
+		return nil, j.GetExitError(err)
 	}
 
 	return listCmdOutput, nil

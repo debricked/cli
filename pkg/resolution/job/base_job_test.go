@@ -2,6 +2,7 @@ package job
 
 import (
 	"errors"
+	"os/exec"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -66,4 +67,14 @@ func TestDifferentNewBaseJob(t *testing.T) {
 	assert.Equal(t, differentFileName, j.GetFile())
 	assert.NotNil(t, j.Errors())
 	assert.NotNil(t, j.status)
+}
+
+func TestGetExitErrorWithNoneExitError(t *testing.T) {
+	err := &exec.ExitError{
+		ProcessState: nil,
+		Stderr:       []byte("stderr"),
+	}
+	j := BaseJob{}
+	exitErr := j.GetExitError(err)
+	assert.ErrorContains(t, exitErr, string(err.Stderr))
 }
