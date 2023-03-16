@@ -3,13 +3,11 @@ version: 2.1
 jobs:
   scan:
     docker:
-      - image: debricked/cli
-    working_directory: ~/repo
+      - image: cimg/base:current
     steps:
       - checkout
-      - attach_workspace:
-          at: ~/repo
-      - run: debricked scan
+      - run: curl -L https://github.com/debricked/cli/releases/latest/download/cli_linux_x86_64.tar.gz | tar -xz debricked
+      - run: ./debricked scan
 
 workflows:
   debricked-scan:

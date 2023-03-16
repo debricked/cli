@@ -12,11 +12,5 @@ steps:
   - label: ":shield: Debricked"
     command:
       - buildkite-agent artifact download "**.debricked-maven-dependencies.txt" .
-      - debricked scan
-    plugins:
-      - docker#v5.3.0:
-          image: "debricked/cli"
-          mount-buildkite-agent: true
-          propagate-environment: true
-          environment:
-            - "DEBRICKED_TOKEN"
+      - curl -L https://github.com/debricked/cli/releases/latest/download/cli_linux_x86_64.tar.gz | tar -xz debricked
+      - ./debricked scan

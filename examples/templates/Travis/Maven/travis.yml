@@ -1,7 +1,5 @@
-#https://docs.travis-ci.com/user/languages/java#projects-using-maven
 language: java
 
-services: docker
 jobs:
   include:
     - stage: Debricked-scan
@@ -10,11 +8,9 @@ jobs:
       env:
         -  DEBRICKED_TOKEN=${DEBRICKED_TOKEN}
       before_install:
-        -  env > file.env
-        -  mvn dependency:tree -DoutputFile=.debricked-maven-dependencies.tgf -DoutputType=tgf
+        - mvn dependency:tree -DoutputFile=.debricked-maven-dependencies.tgf -DoutputType=tgf
+        - curl -L https://github.com/debricked/cli/releases/latest/download/cli_linux_x86_64.tar.gz | tar -xz debricked
       cache:
         directories:
           - $HOME/.m2
-      install: skip
-      script: docker run -v $(pwd):/$(pwd) --env-file ./file.env debricked/scan
-
+      script: ./debricked scan

@@ -4,9 +4,9 @@ image:
 test: &test
   step:
     name: Debricked Scan
-    image: debricked/cli
     script:
-      - debricked scan
+      - curl -L https://github.com/debricked/cli/releases/latest/download/cli_linux_x86_64.tar.gz | tar -xz debricked
+      - ./debricked scan
     services:
       - docker
 

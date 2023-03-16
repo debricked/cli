@@ -1,5 +1,3 @@
-services: docker
-
 jobs:
   include:
     - stage: Debricked-scan
@@ -7,6 +5,5 @@ jobs:
         branch: "*"
       env:
         -  DEBRICKED_TOKEN=${DEBRICKED_TOKEN}
-      before_install: env > file.env
-      install: skip
-      script: docker run -v $(pwd):$(pwd) --env-file ./file.env debricked/scan
+      before_install: curl -L https://github.com/debricked/cli/releases/latest/download/cli_linux_x86_64.tar.gz | tar -xz debricked
+      script: ./debricked scan

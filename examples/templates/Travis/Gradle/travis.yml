@@ -1,6 +1,5 @@
 language: java
 
-services: docker
 jobs:
   include:
     - stage: Debricked-scan
@@ -8,11 +7,9 @@ jobs:
         branch: "*"
       env:
         -  DEBRICKED_TOKEN=${DEBRICKED_TOKEN}
-
       before_install:
-        -  env > file.env
         -  ./gradlew dependencies > .debricked-gradle-dependencies.txt
-
+        - curl -L https://github.com/debricked/cli/releases/latest/download/cli_linux_x86_64.tar.gz | tar -xz debricked
       #https://docs.travis-ci.com/user/languages/java/#projects-using-gradle
       before_cache:
         - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
@@ -21,5 +18,4 @@ jobs:
         directories:
           - $HOME/.gradle/caches/
           - $HOME/.gradle/wrapper/
-      install: skip
-      script: docker run -v $(pwd):$(pwd) --env-file ./file.env  debricked/scan
+      script: ./debricked scan

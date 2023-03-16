@@ -16,10 +16,9 @@ stages:
         steps:
           - script: sh ./gradlew dependencies > .debricked-gradle-dependencies.txt
             displayName: './gradlew dependencies'
-
           - script: |
-              env > env.list
-              docker run -v $HOME:$HOME --env-file ./env.list debricked/scan
+              curl -L https://github.com/debricked/cli/releases/latest/download/cli_linux_x86_64.tar.gz | tar -xz debricked
+              ./debricked scan
             displayName: Debricked scan
             env:
               DEBRICKED_TOKEN: $(DEBRICKED_TOKEN)

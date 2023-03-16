@@ -5,7 +5,6 @@ on: [push]
 jobs:
   test:
     runs-on: ubuntu-latest
-    container: debricked/cli
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-java@v1
@@ -21,6 +20,9 @@ jobs:
           mvn dependency:tree \
           -DoutputFile=.debricked-maven-dependencies.tgf \
           -DoutputType=tgf
-      - run: debricked scan
+      - name: Install Debricked CLI
+        run: curl -L https://github.com/debricked/cli/releases/latest/download/cli_linux_x86_64.tar.gz | tar -xz debricked
+      - name: debricked scan
+        run: ./debricked scan
         env:
           DEBRICKED_TOKEN: ${{ secrets.DEBRICKED_TOKEN }}

@@ -1,6 +1,5 @@
 language: go
 
-services: docker
 jobs:
   include:
     - stage: Debricked-scan
@@ -9,11 +8,10 @@ jobs:
       env:
         -  DEBRICKED_TOKEN=${DEBRICKED_TOKEN}
       before_install:
-        -  env > file.env
         -  printf "$(go mod graph)\n\n$(go list -mod=readonly -e -m all)" > .debricked-go-dependencies.txt
+        -  curl -L https://github.com/debricked/cli/releases/latest/download/cli_linux_x86_64.tar.gz | tar -xz debricked
       cache:
         directories:
           - $HOME/.cache/go-build
           - $HOME/gopath/pkg/mod
-      install: skip
-      script: docker run -v $(pwd):$(pwd) --env-file ./file.env debricked/scan
+      script: ./debricked scan
