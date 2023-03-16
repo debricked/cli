@@ -44,7 +44,8 @@ func TestRenderWarningJob(t *testing.T) {
 		"file",
 		"\n* ",
 		"Warning",
-		":\n\twarning-message\n",
+		"|",
+		"warning-message\n",
 	}
 	assertOutput(t, output, contains)
 }
@@ -65,7 +66,8 @@ func TestRenderCriticalJob(t *testing.T) {
 		"file",
 		"\n* ",
 		"Critical",
-		":\n\tcritical-message\n",
+		"|",
+		"critical-message\n",
 	}
 	assertOutput(t, output, contains)
 }
@@ -91,9 +93,10 @@ func TestRenderCriticalAndWarningJob(t *testing.T) {
 		"manifest-file",
 		"\n* ",
 		"Critical",
-		":\n\tcritical-message\n",
+		"critical-message\n",
 		"Warning",
-		":\n\twarning-message\n",
+		"|",
+		"warning-message\n",
 	}
 	assertOutput(t, output, contains)
 }
@@ -118,7 +121,8 @@ func TestRenderCriticalAndWorkingJob(t *testing.T) {
 		"manifest-file",
 		"\n* ",
 		"Critical",
-		":\n\tcritical-message\n",
+		"|",
+		"critical-message\n",
 	}
 	assertOutput(t, output, contains)
 
