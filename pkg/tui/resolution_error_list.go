@@ -49,14 +49,30 @@ func (jobsErrList JobsErrorList) addJob(list *bytes.Buffer, job job.IJob) {
 	list.Write([]byte(fmt.Sprintf("%s\n", color.YellowString(job.GetFile()))))
 
 	for _, warning := range job.Errors().GetWarningErrors() {
-		jobString = fmt.Sprintf("* %s:\n\t%s\n", color.YellowString("Warning"), warning)
+		err := jobsErrList.createErrorString(warning, true)
+		jobString = fmt.Sprintf("* %s:\n\t%s\n", color.YellowString("Warning"), err)
 		list.Write([]byte(jobString))
 	}
 
 	for _, critical := range job.Errors().GetCriticalErrors() {
-		jobString = fmt.Sprintf("* %s:\n\t%s\n", color.RedString("Critical"), critical)
+		err := jobsErrList.createErrorString(critical, false)
+		jobString = fmt.Sprintf("* %s:\n\t%s\n", color.RedString("Critical"), err)
+
 		list.Write([]byte(jobString))
 	}
+}
 
-	list.Write([]byte("\n"))
+func (jobsErrList JobsErrorList) createErrorString(err error, warning bool) string {
+	var pipe string
+	if warning {
+		pipe = color.YellowString("|")
+	} else {
+		pipe = color.RedString("|")
+	}
+	errString := err.Error()
+	errString = pipe + errString
+	errString = strings.Replace(errString, "\n", fmt.Sprintf("\n\t%s", pipe), -1)
+	errString = strings.TrimSuffix(errString, pipe)
+
+	return errString
 }
