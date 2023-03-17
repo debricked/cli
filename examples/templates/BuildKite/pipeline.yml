@@ -2,4 +2,4 @@ steps:
   - label: ":shield: Debricked"
     command:
       - curl -L https://github.com/debricked/cli/releases/latest/download/cli_linux_x86_64.tar.gz | tar -xz debricked
-      - ./debricked scan
+      - ./debricked scan --resolve
