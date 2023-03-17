@@ -1,4 +1,3 @@
-
 trigger:
   branches:
     include:
@@ -15,11 +14,9 @@ stages:
         pool:
           vmImage: 'ubuntu-latest'
         steps:
-          - script: mvn dependency:tree -DoutputFile=.debricked-maven-dependencies.tgf -DoutputType=tgf
-            displayName: 'mvn dependency:tree'
           - script: |
               curl -L https://github.com/debricked/cli/releases/latest/download/cli_linux_x86_64.tar.gz | tar -xz debricked
-              ./debricked scan
+              ./debricked scan --resolve
             displayName: Debricked scan
             env:
               DEBRICKED_TOKEN: $(DEBRICKED_TOKEN)
