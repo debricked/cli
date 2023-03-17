@@ -1,2 +1,2 @@
 # Bitbucket Pipelines
-- [Default template](Default/bitbucket-pipelines.yml)
+- [Default template](bitbucket-pipelines.yml)

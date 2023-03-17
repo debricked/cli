@@ -1,0 +1,24 @@
+name: Debricked scan
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/Library/Caches/go-build
+            ~/go/pkg/mod
+            ~/.m2/repository
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-debricked-resolution--${{ steps.get-date.outputs.date }}
+      - name: Install Debricked CLI
+        run: curl -L https://github.com/debricked/cli/releases/latest/download/cli_linux_x86_64.tar.gz | tar -xz debricked
+      - name: debricked scan
+        run: ./debricked scan --resolve
+        env:
+          DEBRICKED_TOKEN: ${{ secrets.DEBRICKED_TOKEN }}
