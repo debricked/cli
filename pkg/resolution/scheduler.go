@@ -1,6 +1,7 @@
 package resolution
 
 import (
+	"sort"
 	"sync"
 
 	"github.com/chelnak/ysmrr"
@@ -37,6 +38,10 @@ func (scheduler *Scheduler) Schedule(jobs []job.IJob) (IResolution, error) {
 	for w := 1; w <= scheduler.workers; w++ {
 		go scheduler.worker()
 	}
+
+	sort.Slice(jobs, func(i, j int) bool {
+		return jobs[i].GetFile() < jobs[j].GetFile()
+	})
 
 	for _, j := range jobs {
 		spinner := scheduler.spinnerManager.AddSpinner(j.GetFile())
