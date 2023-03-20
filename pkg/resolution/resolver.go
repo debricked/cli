@@ -1,6 +1,7 @@
 package resolution
 
 import (
+	"fmt"
 	"os"
 	"path"
 
@@ -37,7 +38,9 @@ func NewResolver(
 }
 
 func (r Resolver) Resolve(paths []string, exclusions []string) (IResolution, error) {
+	fmt.Println("paths", paths)
 	files, err := r.refinePaths(paths, exclusions)
+	fmt.Println("files", files)
 	if err != nil {
 		return nil, err
 	}

@@ -2,10 +2,10 @@ def debrickedOutputFile = new File('.debricked.multiprojects.txt')
 
 allprojects {
     task debrickedFindSubProjectPaths() {
-        def output = project.name + "\n" + project.projectDir + "\n" + project.rootProject + "\n\n"
+        String output = project.projectDir 
         doLast {
             synchronized(debrickedOutputFile) {
-                debrickedOutputFile << output
+                debrickedOutputFile << output + System.getProperty("line.separator")
             }
         }
     }

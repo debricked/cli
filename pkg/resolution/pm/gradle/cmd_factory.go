@@ -1,21 +1,16 @@
 package gradle
 
 import (
-	"fmt"
 	"os/exec"
 )
 
-const initScript = ".debricked.gradle.initscript"
-
 type ICmdFactory interface {
 	MakeDependenciesCmd(workingDirectory string) (*exec.Cmd, error)
-	MakeFindSubGraphCmd(workingDirectory string) (*exec.Cmd, error)
-	MakeDependenciesGraphCmd(workingDirectory string) (*exec.Cmd, error)
+	MakeFindSubGraphCmd(workingDirectory string, gradlew string, initScript string) (*exec.Cmd, error)
+	MakeDependenciesGraphCmd(workingDirectory string, gradlew string, initScript string) (*exec.Cmd, error)
 }
 
 type CmdFactory struct {
-	gradlew    string
-	initScript string
 }
 
 func (_ CmdFactory) MakeDependenciesCmd(workingDirectory string) (*exec.Cmd, error) {
@@ -28,25 +23,22 @@ func (_ CmdFactory) MakeDependenciesCmd(workingDirectory string) (*exec.Cmd, err
 	}, err
 }
 
-func (cf CmdFactory) MakeFindSubGraphCmd(workingDirectory string) (*exec.Cmd, error) {
-	path, err := exec.LookPath(cf.gradlew)
-	fmt.Println(path)
-	fmt.Println(err)
-	fmt.Println(cf.gradlew, "--init-script", cf.initScript, "debrickedFindSubProjectPaths")
+func (cf CmdFactory) MakeFindSubGraphCmd(workingDirectory string, gradlew string, initScript string) (*exec.Cmd, error) {
+	path, err := exec.LookPath(gradlew)
 
 	return &exec.Cmd{
 		Path: path,
-		Args: []string{cf.gradlew, "--init-script", cf.initScript, "debrickedFindSubProjectPaths"},
+		Args: []string{gradlew, "--init-script", initScript, "debrickedFindSubProjectPaths"},
 		Dir:  workingDirectory,
 	}, err
 }
 
-func (cf CmdFactory) MakeDependenciesGraphCmd(workingDirectory string) (*exec.Cmd, error) {
-	path, err := exec.LookPath(cf.gradlew)
+func (cf CmdFactory) MakeDependenciesGraphCmd(workingDirectory string, gradlew string, initScript string) (*exec.Cmd, error) {
+	path, err := exec.LookPath(gradlew)
 
 	return &exec.Cmd{
 		Path: path,
-		Args: []string{cf.gradlew, "--init-script", cf.initScript, "debrickedAllDeps"},
+		Args: []string{gradlew, "--init-script", initScript, "debrickedAllDeps"},
 		Dir:  workingDirectory,
 	}, err
 }
