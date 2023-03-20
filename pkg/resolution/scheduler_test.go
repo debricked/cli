@@ -2,6 +2,7 @@ package resolution
 
 import (
 	"errors"
+	"sort"
 	"testing"
 
 	"github.com/debricked/cli/pkg/resolution/job"
@@ -44,12 +45,26 @@ func TestSchedule(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, res.Jobs(), 0)
 
-	res, err = s.Schedule([]job.IJob{testdata.NewJobMock(""), testdata.NewJobMock("")})
+	res, err = s.Schedule([]job.IJob{
+		testdata.NewJobMock("b/b_file.json"),
+		testdata.NewJobMock("a/b_file.json"),
+		testdata.NewJobMock("b/a_file.json"),
+		testdata.NewJobMock("a/a_file.json"),
+		testdata.NewJobMock("a/a_file.json"),
+	})
 	assert.NoError(t, err)
-	assert.Len(t, res.Jobs(), 2)
-	for _, j := range res.Jobs() {
+	jobs := res.Jobs()
+
+	assert.Len(t, jobs, 5)
+	for _, j := range jobs {
 		assert.False(t, j.Errors().HasError())
 	}
+
+	sortedJobs := jobs
+	sort.Slice(sortedJobs, func(i, j int) bool {
+		return sortedJobs[i].GetFile() < sortedJobs[j].GetFile()
+	})
+	assert.Equal(t, sortedJobs, jobs)
 }
 
 func TestScheduleJobErr(t *testing.T) {
