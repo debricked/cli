@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	fileName = ".debricked-gradle-dependencies.txt"
+	fileName = ".gradle.debricked.lock"
 )
 
 type Job struct {

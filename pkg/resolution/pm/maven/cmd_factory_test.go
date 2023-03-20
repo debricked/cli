@@ -12,6 +12,6 @@ func TestMakeDependencyTreeCmd(t *testing.T) {
 	args := cmd.Args
 	assert.Contains(t, args, "mvn")
 	assert.Contains(t, args, "dependency:tree")
-	assert.Contains(t, args, "-DoutputFile=.debricked-maven-dependencies.tgf")
+	assert.Contains(t, args, "-DoutputFile=.maven.debricked.lock")
 	assert.Contains(t, args, "-DoutputType=tgf")
 }
