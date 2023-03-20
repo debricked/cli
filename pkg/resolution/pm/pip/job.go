@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	lockFileExtension = ".debricked.lock"
+	lockFileExtension = ".pip.debricked.lock"
 	pip               = "pip"
 	lockFileDelimiter = "***"
 )
