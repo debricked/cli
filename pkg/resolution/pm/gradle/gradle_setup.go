@@ -32,11 +32,10 @@ type GradleSetup struct {
 	gradlewMap        map[string]string
 	settingsMap       map[string]string
 	subProjectMap     map[string]string
-	factoryMap        map[string]CmdFactory
 	groovyScriptPath  string
 	gradlewOsName     string
 	settingsFilenames []string
-	gradleProjects    []GradleProject
+	GradleProjects    []GradleProject
 }
 
 type GradleProject struct {
@@ -44,7 +43,7 @@ type GradleProject struct {
 	gradlew string
 }
 
-func (gs *GradleSetup) NewGradleSetup() *GradleSetup {
+func NewGradleSetup() *GradleSetup {
 	initScript, _ := filepath.Abs(".gradle-init-script.debricked.groovy")
 
 	gradlewOsName := "gradlew"
@@ -70,11 +69,16 @@ func (gs *GradleSetup) NewGradleSetup() *GradleSetup {
 		groovyScriptPath:  initScript,
 		gradlewOsName:     gradlewOsName,
 		settingsFilenames: settingsFilenames,
-		gradleProjects:    gradleProjects,
+		GradleProjects:    gradleProjects,
 	}
 }
 
-func (gs *GradleSetup) SetupFilePathMappings(files []string) {
+func (gs *GradleSetup) Setup(files []string) {
+	gs.setupFilePathMappings(files)
+	gs.setupGradleProjectMappings()
+}
+
+func (gs *GradleSetup) setupFilePathMappings(files []string) {
 	// Setup gradlew / filename mappings (could be better if we could reach the specific inserted paths)
 	for _, file := range files {
 		dir, _ := filepath.Abs(filepath.Dir(file))
@@ -94,7 +98,7 @@ func (gs *GradleSetup) SetupFilePathMappings(files []string) {
 	}
 }
 
-func (gs *GradleSetup) SetupGradleProjectMappings() {
+func (gs *GradleSetup) setupGradleProjectMappings() {
 	// Sort the settingDirs to be in order, hopefully running fewer commands
 	settingsDirs := []string{}
 	for k, _ := range gs.settingsMap {
@@ -112,13 +116,12 @@ func (gs *GradleSetup) SetupGradleProjectMappings() {
 
 		// Setup gradlew, use gradle as default if no gradlew can be found
 		gradlew := gs.GetGradleW(dir)
-
 		gradleProject := GradleProject{dir: dir, gradlew: gradlew}
 
 		// Setup subProjectPaths
 		gs.setupSubProjectPaths(gradleProject)
 
-		gs.gradleProjects = append(gs.gradleProjects, gradleProject)
+		gs.GradleProjects = append(gs.GradleProjects, gradleProject)
 	}
 }
 
