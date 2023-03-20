@@ -10,6 +10,7 @@ import (
 
 type Strategy struct {
 	files []string
+	paths []string
 }
 
 func (s Strategy) Invoke() []job.IJob {
@@ -18,7 +19,7 @@ func (s Strategy) Invoke() []job.IJob {
 	writer := writer.FileWriter{}
 	factory := CmdFactory{}
 	gradleSetup := NewGradleSetup()
-	gradleSetup.Setup(s.files)
+	gradleSetup.Setup(s.files, s.paths)
 
 	for _, gradleProject := range gradleSetup.GradleProjects {
 		jobs = append(jobs, NewJob(gradleProject.dir, gradleProject.gradlew, gradleSetup.groovyScriptPath, factory, writer))
@@ -46,6 +47,6 @@ func (s Strategy) Invoke() []job.IJob {
 	return jobs
 }
 
-func NewStrategy(files []string) Strategy {
-	return Strategy{files}
+func NewStrategy(files []string, paths []string) Strategy {
+	return Strategy{files, paths}
 }

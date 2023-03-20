@@ -51,12 +51,6 @@ func NewGradleSetup() *GradleSetup {
 		gradlewOsName = "gradlew.bat"
 	}
 	settingsFilenames := []string{"settings.gradle", "settings.gradle.kts"}
-
-	writer := writer.FileWriter{}
-
-	// Todo add handling of error
-	err := SetupFile{}.WriteInitFile(initScript, writer)
-	fmt.Println(err)
 	gradlewMap := map[string]string{}
 	settingsMap := map[string]string{}
 	subProjectMap := map[string]string{}
@@ -73,9 +67,53 @@ func NewGradleSetup() *GradleSetup {
 	}
 }
 
-func (gs *GradleSetup) Setup(files []string) {
-	gs.setupFilePathMappings(files)
+func (gs *GradleSetup) Setup(files []string, paths []string) {
+	writer := writer.FileWriter{}
+	err := SetupFile{}.WriteInitFile(gs.groovyScriptPath, writer)
+	// gs.setupFilePathMappings(files)
+	gs.findGradleProjectFiles(paths)
+	// Todo add handling of error
+	fmt.Println(err)
 	gs.setupGradleProjectMappings()
+}
+
+func (gs GradleSetup) findGradleProjectFiles(paths []string) {
+	settings := []string{"settings.gradle", "settings.gradle.kts"}
+	gradlew := []string{"gradlew"}
+
+	for _, rootPath := range paths {
+		err := filepath.Walk(
+			rootPath,
+			func(path string, fileInfo os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+				if !fileInfo.IsDir() {
+					for _, setting := range settings {
+						if setting == filepath.Base(path) {
+							dir, _ := filepath.Abs(filepath.Dir(path))
+							file, _ := filepath.Abs(path)
+							gs.settingsMap[dir] = file
+						}
+					}
+
+					for _, gradle := range gradlew {
+						if gradle == filepath.Base(path) {
+							dir, _ := filepath.Abs(filepath.Dir(path))
+							file, _ := filepath.Abs(path)
+							gs.gradlewMap[dir] = file
+						}
+					}
+				}
+
+				return nil
+			},
+		)
+
+		// TODO handle err?
+		fmt.Println(err)
+
+	}
 }
 
 func (gs *GradleSetup) setupFilePathMappings(files []string) {
@@ -163,6 +201,7 @@ func (gs *GradleSetup) GetGradleW(dir string) string {
 		gradlew = val
 	} else {
 		for dirPath, _ := range gs.gradlewMap {
+			// potential improvement, sort gradlewMap in longest path first"
 			_, err := filepath.Rel(dirPath, dir)
 			if err != nil {
 				gradlew = val

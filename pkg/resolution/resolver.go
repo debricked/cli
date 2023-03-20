@@ -46,7 +46,7 @@ func (r Resolver) Resolve(paths []string, exclusions []string) (IResolution, err
 
 	var jobs []job.IJob
 	for _, pmBatch := range pmBatches {
-		s, strategyErr := r.strategyFactory.Make(pmBatch)
+		s, strategyErr := r.strategyFactory.Make(pmBatch, paths)
 		if strategyErr == nil {
 			jobs = append(jobs, s.Invoke()...)
 		}
