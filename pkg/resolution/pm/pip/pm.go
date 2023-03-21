@@ -18,6 +18,6 @@ func (pm Pm) Name() string {
 
 func (_ Pm) Manifests() []string {
 	return []string{
-		"requirements.*(?:\\.txt)",
+		`requirements.*\.txt$`,
 	}
 }
