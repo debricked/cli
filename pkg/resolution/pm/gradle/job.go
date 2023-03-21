@@ -37,7 +37,6 @@ func NewJob(
 
 func (j *Job) Run() {
 	workingDirectory := filepath.Clean(j.GetFile())
-
 	dependenciesCmd, err := j.cmdFactory.MakeDependenciesGraphCmd(workingDirectory, j.gradlew, j.groovyInitScript)
 	if err != nil {
 		j.Errors().Critical(err)

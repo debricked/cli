@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"sort"
+	"strings"
 
 	"github.com/debricked/cli/pkg/resolution/pm/writer"
 )
@@ -200,11 +201,12 @@ func (gs *GradleSetup) GetGradleW(dir string) string {
 	if ok {
 		gradlew = val
 	} else {
-		for dirPath, _ := range gs.gradlewMap {
+		for dirPath, gradlePath := range gs.gradlewMap {
 			// potential improvement, sort gradlewMap in longest path first"
-			_, err := filepath.Rel(dirPath, dir)
-			if err != nil {
-				gradlew = val
+			rel, err := filepath.Rel(dirPath, dir)
+			isRelative := !strings.HasPrefix(rel, "..") && rel != ".."
+			if isRelative == true && err == nil {
+				gradlew = gradlePath
 				break
 			}
 		}

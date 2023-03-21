@@ -31,11 +31,7 @@ func (s Strategy) Invoke() []job.IJob {
 			continue
 		}
 
-		gradlew := initGradle
-		val, ok := gradleSetup.gradlewMap[dir]
-		if ok {
-			gradlew = val
-		}
+		gradlew := gradleSetup.GetGradleW(dir)
 		jobs = append(jobs, NewJob(dir, gradlew, gradleSetup.groovyScriptPath, factory, writer))
 	}
 
