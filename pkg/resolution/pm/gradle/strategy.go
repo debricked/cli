@@ -1,25 +1,42 @@
 package gradle
 
 import (
-	"fmt"
+	"io"
+	"log"
+	"os"
 	"path/filepath"
+
+	"github.com/fatih/color"
 
 	"github.com/debricked/cli/pkg/resolution/job"
 	"github.com/debricked/cli/pkg/resolution/pm/writer"
 )
 
 type Strategy struct {
-	files []string
-	paths []string
+	files       []string
+	paths       []string
+	ErrorWriter io.Writer
 }
 
-func (s Strategy) Invoke() []job.IJob {
+func (s Strategy) Invoke() ([]job.IJob, error) {
 	var jobs []job.IJob
-
 	writer := writer.FileWriter{}
 	factory := CmdFactory{}
 	gradleSetup := NewGradleSetup()
-	gradleSetup.Setup(s.files, s.paths)
+	err := gradleSetup.Setup(s.files, s.paths)
+
+	if err != nil {
+
+		if _, ok := err.(GradleSetupSubprojectError); ok {
+			warningColor := color.New(color.FgYellow, color.Bold).SprintFunc()
+			defaultOutputWriter := log.Writer()
+			log.SetOutput(s.ErrorWriter)
+			log.Println(warningColor("Warning:\n") + err.Error())
+			log.SetOutput(defaultOutputWriter)
+		} else {
+			return nil, err
+		}
+	}
 
 	for _, gradleProject := range gradleSetup.GradleProjects {
 		jobs = append(jobs, NewJob(gradleProject.dir, gradleProject.gradlew, gradleSetup.groovyScriptPath, factory, writer))
@@ -30,19 +47,12 @@ func (s Strategy) Invoke() []job.IJob {
 		if _, ok := gradleSetup.subProjectMap[dir]; ok {
 			continue
 		}
-
 		gradlew := gradleSetup.GetGradleW(dir)
 		jobs = append(jobs, NewJob(dir, gradlew, gradleSetup.groovyScriptPath, factory, writer))
 	}
-
-	// Add teardown (remove initfiles ?)
-	fmt.Println("SubProjects found", len(gradleSetup.subProjectMap))
-	fmt.Println("gradlew found", len(gradleSetup.gradlewMap))
-	fmt.Println("Jobs found", len(jobs))
-
-	return jobs
+	return jobs, nil
 }
 
 func NewStrategy(files []string, paths []string) Strategy {
-	return Strategy{files, paths}
+	return Strategy{files, paths, os.Stdout}
 }

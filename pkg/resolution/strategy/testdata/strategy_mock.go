@@ -13,11 +13,11 @@ func NewStrategyMock(files []string) StrategyMock {
 	return StrategyMock{files}
 }
 
-func (s StrategyMock) Invoke() []job.IJob {
+func (s StrategyMock) Invoke() ([]job.IJob, error) {
 	var jobs []job.IJob
 	for _, file := range s.files {
 		jobs = append(jobs, testdata.NewJobMock(file))
 	}
 
-	return jobs
+	return jobs, nil
 }

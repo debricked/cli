@@ -48,7 +48,11 @@ func (r Resolver) Resolve(paths []string, exclusions []string) (IResolution, err
 	for _, pmBatch := range pmBatches {
 		s, strategyErr := r.strategyFactory.Make(pmBatch, paths)
 		if strategyErr == nil {
-			jobs = append(jobs, s.Invoke()...)
+			newJobs, err := s.Invoke()
+			jobs = append(jobs, newJobs...)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 

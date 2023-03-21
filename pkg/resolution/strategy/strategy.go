@@ -5,5 +5,5 @@ import (
 )
 
 type IStrategy interface {
-	Invoke() []job.IJob
+	Invoke() ([]job.IJob, error)
 }

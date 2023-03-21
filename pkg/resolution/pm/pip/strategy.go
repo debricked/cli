@@ -9,7 +9,7 @@ type Strategy struct {
 	files []string
 }
 
-func (s Strategy) Invoke() []job.IJob {
+func (s Strategy) Invoke() ([]job.IJob, error) {
 	var jobs []job.IJob
 	for _, file := range s.files {
 		jobs = append(jobs, NewJob(
@@ -24,7 +24,7 @@ func (s Strategy) Invoke() []job.IJob {
 		)
 	}
 
-	return jobs
+	return jobs, nil
 }
 
 func NewStrategy(files []string) Strategy {
