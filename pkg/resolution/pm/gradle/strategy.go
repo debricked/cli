@@ -1,6 +1,7 @@
 package gradle
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -16,14 +17,14 @@ type Strategy struct {
 	files       []string
 	paths       []string
 	ErrorWriter io.Writer
+	GradleSetup IGradleSetup
 }
 
 func (s Strategy) Invoke() ([]job.IJob, error) {
 	var jobs []job.IJob
 	writer := writer.FileWriter{}
 	factory := CmdFactory{}
-	gradleSetup := NewGradleSetup()
-	err := gradleSetup.Setup(s.files, s.paths)
+	gradleSetup, err := s.GradleSetup.Setup(s.files, s.paths)
 
 	if err != nil {
 
@@ -40,10 +41,12 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 
 	for _, gradleProject := range gradleSetup.GradleProjects {
 		jobs = append(jobs, NewJob(gradleProject.dir, gradleProject.gradlew, gradleSetup.groovyScriptPath, factory, writer))
+		fmt.Println("Added job for " + gradleProject.dir)
 	}
-
+	fmt.Println(s.files)
 	for _, file := range s.files {
 		dir, _ := filepath.Abs(filepath.Dir(file))
+		fmt.Println("Found dir" + dir)
 		if _, ok := gradleSetup.subProjectMap[dir]; ok {
 			continue
 		}
@@ -54,5 +57,5 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 }
 
 func NewStrategy(files []string, paths []string) Strategy {
-	return Strategy{files, paths, os.Stdout}
+	return Strategy{files, paths, os.Stdout, NewGradleSetup()}
 }

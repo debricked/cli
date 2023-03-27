@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"embed"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -29,6 +30,10 @@ type ISetupFile interface {
 
 type SetupFile struct{}
 
+type IGradleSetup interface {
+	Setup(files []string, paths []string) (GradleSetup, error)
+}
+
 type GradleSetup struct {
 	gradlewMap        map[string]string
 	settingsMap       map[string]string
@@ -37,6 +42,7 @@ type GradleSetup struct {
 	gradlewOsName     string
 	settingsFilenames []string
 	GradleProjects    []GradleProject
+	CmdFactory        ICmdFactory
 }
 
 type GradleProject struct {
@@ -89,6 +95,7 @@ func NewGradleSetup() *GradleSetup {
 	settingsMap := map[string]string{}
 	subProjectMap := map[string]string{}
 	gradleProjects := []GradleProject{}
+	CmdFactory := CmdFactory{}
 	return &GradleSetup{
 		gradlewMap:        gradlewMap,
 		settingsMap:       settingsMap,
@@ -97,25 +104,26 @@ func NewGradleSetup() *GradleSetup {
 		gradlewOsName:     gradlewOsName,
 		settingsFilenames: settingsFilenames,
 		GradleProjects:    gradleProjects,
+		CmdFactory:        CmdFactory,
 	}
 }
 
-func (gs *GradleSetup) Setup(files []string, paths []string) error {
+func (gs GradleSetup) Setup(files []string, paths []string) (GradleSetup, error) {
 	writer := writer.FileWriter{}
 	err := SetupFile{}.WriteInitFile(gs.groovyScriptPath, writer)
 	if err != nil {
-		return err
+		return gs, err
 	}
 	// gs.setupFilePathMappings(files) Magnus?
 	err = gs.findGradleProjectFiles(paths)
 	if err != nil {
-		return err
+		return gs, err
 	}
 	err = gs.setupGradleProjectMappings()
 	if err != nil {
-		return err
+		return gs, err
 	}
-	return nil
+	return gs, nil
 }
 
 func (gs GradleSetup) findGradleProjectFiles(paths []string) error {
@@ -199,27 +207,24 @@ func (gs *GradleSetup) setupGradleProjectMappings() error {
 }
 
 func (gs *GradleSetup) setupSubProjectPaths(gp GradleProject) error {
-	factory := CmdFactory{}
-	dependenciesCmd, _ := factory.MakeFindSubGraphCmd(gp.dir, gp.gradlew, gs.groovyScriptPath)
+	dependenciesCmd, _ := gs.CmdFactory.MakeFindSubGraphCmd(gp.dir, gp.gradlew, gs.groovyScriptPath)
 	var stderr bytes.Buffer
 	dependenciesCmd.Stderr = &stderr
 	_, err := dependenciesCmd.Output()
 	dependenciesCmd.Stderr = os.Stderr
 	if err != nil {
-
 		errorOutput := stderr.String()
-
 		if exitError, ok := err.(*exec.ExitError); ok {
 			return GradleSetupSubprojectError{message: errorOutput + exitError.Error()}
 		}
-
 		return GradleSetupSubprojectError{message: err.Error()}
-
 	}
 	multiProject := filepath.Join(gp.dir, multiProjectFilename)
+	fmt.Println("MultiProject: ", multiProject)
 	file, err := os.Open(multiProject)
 
 	if err != nil {
+		fmt.Println("Error: ", err)
 		return GradleSetupSubprojectError{message: err.Error()}
 	}
 	defer file.Close()
