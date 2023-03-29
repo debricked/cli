@@ -57,14 +57,17 @@ type GradleSetupSubprojectError struct {
 }
 
 func (e GradleSetupScriptError) Error() string {
+
 	return e.message
 }
 
 func (e GradleSetupWalkError) Error() string {
+
 	return e.message
 }
 
 func (e GradleSetupSubprojectError) Error() string {
+
 	return e.message
 }
 
@@ -75,6 +78,7 @@ func (e GradleSetupError) Error() string {
 	for _, err := range e {
 		s += err.Error() + "\n"
 	}
+
 	return s
 }
 
@@ -93,6 +97,7 @@ func NewGradleSetup() *GradleSetup {
 	FileFinder := FileFinder{filepath: FilePath{}}
 	InitFileHandler := InitFileHandler{}
 	Writer := writer.FileWriter{}
+
 	return &GradleSetup{
 		gradlewMap:        gradlewMap,
 		settingsMap:       settingsMap,
@@ -109,23 +114,24 @@ func NewGradleSetup() *GradleSetup {
 }
 
 func (gs GradleSetup) Setup(files []string, paths []string) (GradleSetup, error) {
-
-	err := gs.InitFileHandler.WriteInitFile(gs.groovyScriptPath, gs.Writer) // WriteInitFile(gs.groovyScriptPath, writer)
+	err := gs.InitFileHandler.WriteInitFile(gs.groovyScriptPath, gs.Writer)
 	if err != nil {
+
 		return gs, err
 	}
-	// gs.setupFilePathMappings(files) Magnus?
 	settingsMap, gradlewMap, err := gs.FileFinder.FindGradleProjectFiles(paths)
-
 	gs.gradlewMap = gradlewMap
 	gs.settingsMap = settingsMap
 	if err != nil {
+
 		return gs, err
 	}
 	err = gs.setupGradleProjectMappings()
 	if err != nil {
+
 		return gs, err
 	}
+
 	return gs, nil
 }
 
@@ -137,7 +143,6 @@ func (gs *GradleSetup) setupFilePathMappings(files []string) {
 		if err == nil {
 			gs.gradlewMap[dir] = possibleGradlew
 		}
-
 		for _, settingsFilename := range gs.settingsFilenames {
 			possibleSettings := filepath.Join(dir, settingsFilename)
 			_, err := os.Stat(possibleSettings)
@@ -151,7 +156,7 @@ func (gs *GradleSetup) setupFilePathMappings(files []string) {
 func (gs *GradleSetup) setupGradleProjectMappings() error {
 	var errors GradleSetupError
 	settingsDirs := []string{}
-	for k, _ := range gs.settingsMap {
+	for k := range gs.settingsMap {
 		settingsDirs = append(settingsDirs, k)
 	}
 	sort.Strings(settingsDirs)
@@ -168,6 +173,7 @@ func (gs *GradleSetup) setupGradleProjectMappings() error {
 		}
 		gs.GradleProjects = append(gs.GradleProjects, gradleProject)
 	}
+
 	return GradleSetupSubprojectError{message: errors.Error()}
 }
 
@@ -179,12 +185,13 @@ func (gs *GradleSetup) setupSubProjectPaths(gp GradleProject) error {
 	dependenciesCmd.Stderr = os.Stderr
 	if err != nil {
 		errorOutput := stderr.String()
+
 		return GradleSetupSubprojectError{message: errorOutput + err.Error()}
 	}
 	multiProject := filepath.Join(gp.dir, multiProjectFilename)
 	file, err := os.Open(multiProject)
-
 	if err != nil {
+
 		return GradleSetupSubprojectError{message: err.Error()}
 	}
 	defer file.Close()
@@ -197,10 +204,11 @@ func (gs *GradleSetup) setupSubProjectPaths(gp GradleProject) error {
 	}
 
 	if err := scanner.Err(); err != nil {
+
 		return GradleSetupSubprojectError{message: err.Error()}
 	}
-	return nil
 
+	return nil
 }
 
 func (gs *GradleSetup) GetGradleW(dir string) string {
@@ -213,11 +221,13 @@ func (gs *GradleSetup) GetGradleW(dir string) string {
 			// potential improvement, sort gradlewMap in longest path first"
 			rel, err := filepath.Rel(dirPath, dir)
 			isRelative := !strings.HasPrefix(rel, "..") && rel != ".."
-			if isRelative == true && err == nil {
+			if isRelative && err == nil {
 				gradlew = gradlePath
+
 				break
 			}
 		}
 	}
+
 	return gradlew
 }

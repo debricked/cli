@@ -82,21 +82,26 @@ func (m *mockCmdFactory) MakeFindSubGraphCmd(workingDirectory string, gradlew st
 	content := []byte(workingDirectory)
 	file, err := os.Create(fileName)
 	if err != nil {
+
 		return nil, err
 	}
 	defer file.Close()
 	_, err = file.Write(content)
 	if err != nil {
+
 		return nil, err
 	}
+
 	return exec.Command("ls"), nil
 }
 
 func (m *mockCmdFactory) MakeDependenciesCmd(workingDirectory string) (*exec.Cmd, error) {
+
 	return exec.Command("touch", ".debricked.dependencies.txt"), nil
 }
 
 func (m *mockCmdFactory) MakeDependenciesGraphCmd(workingDirectory string, gradlew string, initScript string) (*exec.Cmd, error) {
+
 	return &exec.Cmd{
 		Path: workingDirectory,
 		Args: []string{"touch", ".debricked.dependencies.graph.txt"},
@@ -154,16 +159,19 @@ func TestGetGradleW(t *testing.T) {
 type mockInitFileHandler struct{}
 
 func (_ mockInitFileHandler) ReadInitFile() ([]byte, error) {
+
 	return gradleInitScript.ReadFile("gradle-init/gradle-init-script.groovy")
 }
 
 func (i mockInitFileHandler) WriteInitFile(targetFileName string, fileWriter writer.IFileWriter) error {
+
 	return GradleSetupScriptError{message: "read-error"}
 }
 
 type mockFileFinder struct{}
 
 func (f mockFileFinder) FindGradleProjectFiles(paths []string) (map[string]string, map[string]string, error) {
+
 	return nil, nil, GradleSetupWalkError{message: "mock error"}
 }
 
@@ -181,5 +189,4 @@ func TestSetupErrors(t *testing.T) {
 	gs.InitFileHandler = mockInitFileHandler{}
 	_, err = gs.Setup([]string{"testdata/project"}, []string{"testdata/project"})
 	assert.Equal(t, "read-error", err.Error())
-
 }

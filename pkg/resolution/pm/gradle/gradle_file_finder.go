@@ -23,18 +23,22 @@ type IFilePath interface {
 type FilePath struct{}
 
 func (fp FilePath) Walk(root string, walkFn filepath.WalkFunc) error {
+
 	return filepath.Walk(root, walkFn)
 }
 
 func (fp FilePath) Base(path string) string {
+
 	return filepath.Base(path)
 }
 
 func (fp FilePath) Abs(path string) (string, error) {
+
 	return filepath.Abs(path)
 }
 
 func (fp FilePath) Dir(path string) string {
+
 	return filepath.Dir(path)
 }
 
@@ -48,6 +52,7 @@ func (f FileFinder) FindGradleProjectFiles(paths []string) (map[string]string, m
 			rootPath,
 			func(path string, fileInfo os.FileInfo, err error) error {
 				if err != nil {
+
 					return err
 				}
 				if !fileInfo.IsDir() {
@@ -67,12 +72,15 @@ func (f FileFinder) FindGradleProjectFiles(paths []string) (map[string]string, m
 						}
 					}
 				}
+
 				return nil
 			},
 		)
 		if err != nil {
+
 			return nil, nil, GradleSetupWalkError{message: err.Error()}
 		}
 	}
+
 	return settingsMap, gradlewMap, nil
 }

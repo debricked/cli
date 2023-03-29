@@ -52,6 +52,7 @@ type mockGradleSetup struct {
 // mock for Setup
 func (m *mockGradleSetup) Setup(files []string, paths []string) (GradleSetup, error) {
 	args := m.Called()
+
 	return args.Get(0).(GradleSetup), args.Error(1)
 }
 

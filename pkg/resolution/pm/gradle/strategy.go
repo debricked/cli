@@ -24,9 +24,7 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	writer := writer.FileWriter{}
 	factory := CmdFactory{}
 	gradleSetup, err := s.GradleSetup.Setup(s.files, s.paths)
-
 	if err != nil {
-
 		if _, ok := err.(GradleSetupSubprojectError); ok {
 			warningColor := color.New(color.FgYellow, color.Bold).SprintFunc()
 			defaultOutputWriter := log.Writer()
@@ -34,10 +32,10 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 			log.Println(warningColor("Warning:\n") + err.Error())
 			log.SetOutput(defaultOutputWriter)
 		} else {
+
 			return nil, err
 		}
 	}
-
 	for _, gradleProject := range gradleSetup.GradleProjects {
 		jobs = append(jobs, NewJob(gradleProject.dir, gradleProject.gradlew, gradleSetup.groovyScriptPath, factory, writer))
 	}
@@ -49,6 +47,7 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 		gradlew := gradleSetup.GetGradleW(dir)
 		jobs = append(jobs, NewJob(dir, gradlew, gradleSetup.groovyScriptPath, factory, writer))
 	}
+
 	return jobs, nil
 }
 

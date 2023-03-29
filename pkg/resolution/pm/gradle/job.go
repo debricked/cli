@@ -26,6 +26,7 @@ func NewJob(
 	cmdFactory ICmdFactory,
 	fileWriter writer.IFileWriter,
 ) *Job {
+
 	return &Job{
 		BaseJob:          job.NewBaseJob(file),
 		gradlew:          gradlew,
@@ -40,6 +41,7 @@ func (j *Job) Run() {
 	dependenciesCmd, err := j.cmdFactory.MakeDependenciesGraphCmd(workingDirectory, j.gradlew, j.groovyInitScript)
 	if err != nil {
 		j.Errors().Critical(err)
+
 		return
 	}
 
@@ -47,6 +49,7 @@ func (j *Job) Run() {
 	_, err = dependenciesCmd.Output()
 	if err != nil {
 		j.Errors().Critical(j.GetExitError(err))
+
 		return
 	}
 }
