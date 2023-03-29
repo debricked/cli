@@ -7,10 +7,6 @@ import (
 	"github.com/debricked/cli/pkg/resolution/pm/writer"
 )
 
-const (
-	fileName = ".gradle.debricked.lock"
-)
-
 type Job struct {
 	job.BaseJob
 	gradlew          string

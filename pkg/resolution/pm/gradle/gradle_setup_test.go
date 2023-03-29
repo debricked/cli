@@ -1,7 +1,6 @@
 package gradle
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -68,10 +67,9 @@ func TestSetupGradleProjectMappings(t *testing.T) {
 	gs.subProjectMap = map[string]string{
 		filepath.Join("testdata", "project", "subproject"): filepath.Join("testdata", "project", "subproject"),
 	}
-	gs.setupGradleProjectMappings()
-
+	err := gs.setupGradleProjectMappings()
+	assert.Nil(t, err)
 	assert.Len(t, gs.GradleProjects, 2)
-	fmt.Println(gs.GradleProjects)
 }
 
 type mockCmdFactory struct {
@@ -109,13 +107,13 @@ func TestSetupSubProjectPaths(t *testing.T) {
 	gs := NewGradleSetup()
 	gs.CmdFactory = &mockCmdFactory{}
 
-	absPath, err := filepath.Abs(filepath.Join("testdata", "project"))
+	absPath, _ := filepath.Abs(filepath.Join("testdata", "project"))
 	gradleProject := GradleProject{dir: absPath, gradlew: filepath.Join("testdata", "project", "gradlew")}
-	err = gs.setupSubProjectPaths(gradleProject)
+	err := gs.setupSubProjectPaths(gradleProject)
 	assert.Nil(t, err)
 	assert.Len(t, gs.subProjectMap, 1)
 
-	absPath, err = filepath.Abs(filepath.Join("testdata", "project", "subproject"))
+	absPath, _ = filepath.Abs(filepath.Join("testdata", "project", "subproject"))
 	gradleProject = GradleProject{dir: absPath, gradlew: filepath.Join("testdata", "project", "gradlew")}
 	err = gs.setupSubProjectPaths(gradleProject)
 	assert.Nil(t, err)
@@ -127,9 +125,9 @@ func TestSetupSubProjectPathsError(t *testing.T) {
 
 	gs := NewGradleSetup()
 
-	absPath, err := filepath.Abs(filepath.Join("testdata", "project"))
+	absPath, _ := filepath.Abs(filepath.Join("testdata", "project"))
 	gradleProject := GradleProject{dir: absPath, gradlew: filepath.Join("testdata", "project", "gradlew")}
-	err = gs.setupSubProjectPaths(gradleProject)
+	err := gs.setupSubProjectPaths(gradleProject)
 
 	// assery GradleSetupSubprojectError
 	assert.NotNil(t, err)
