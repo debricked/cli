@@ -95,11 +95,6 @@ func (m *mockCmdFactory) MakeFindSubGraphCmd(workingDirectory string, gradlew st
 	return exec.Command("ls"), nil
 }
 
-func (m *mockCmdFactory) MakeDependenciesCmd(workingDirectory string) (*exec.Cmd, error) {
-
-	return exec.Command("touch", ".debricked.dependencies.txt"), nil
-}
-
 func (m *mockCmdFactory) MakeDependenciesGraphCmd(workingDirectory string, gradlew string, initScript string) (*exec.Cmd, error) {
 
 	return &exec.Cmd{
