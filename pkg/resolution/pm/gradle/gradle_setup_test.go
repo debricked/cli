@@ -68,7 +68,9 @@ func TestSetupGradleProjectMappings(t *testing.T) {
 		filepath.Join("testdata", "project", "subproject"): filepath.Join("testdata", "project", "subproject"),
 	}
 	err := gs.setupGradleProjectMappings()
-	assert.Nil(t, err)
+	// assert GradleSetupSubprojectError
+	assert.NotNil(t, err)
+
 	assert.Len(t, gs.GradleProjects, 2)
 }
 
