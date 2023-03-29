@@ -7,6 +7,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	writerTestdata "github.com/debricked/cli/pkg/resolution/pm/writer/testdata"
+
+	"github.com/debricked/cli/pkg/resolution/pm/writer"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,15 +17,6 @@ func TestNewGradleSetup(t *testing.T) {
 
 	gs := NewGradleSetup()
 	assert.NotNil(t, gs)
-}
-
-func TestFindGradleProjectFiles(t *testing.T) {
-	gs := NewGradleSetup()
-	paths := []string{filepath.Join("testdata", "project")}
-	gs.findGradleProjectFiles(paths)
-
-	assert.Len(t, gs.settingsMap, 1)
-	assert.Len(t, gs.gradlewMap, 1)
 }
 
 func TestErrors(t *testing.T) {
@@ -67,26 +61,34 @@ func TestSetupFilePathMappingsNoGradlew(t *testing.T) {
 func TestSetupGradleProjectMappings(t *testing.T) {
 	gs := NewGradleSetup()
 	gs.settingsMap = map[string]string{
-		filepath.Join("testdata", "project", "settings.gradle"): filepath.Join("testdata", "project"),
+		filepath.Join("testdata", "project"):                                  filepath.Join("testdata", "project", "settings.gradle"),
+		filepath.Join("testdata", "project", "subproject"):                    filepath.Join("testdata", "project", "settings.gradle"),
+		filepath.Join("testdata", "project", "subproject", "settings.gradle"): filepath.Join("testdata", "project", "settings.gradle"),
 	}
 	gs.subProjectMap = map[string]string{
-		filepath.Join("testdata", "project", "subproject", "build.gradle"): filepath.Join("testdata", "project", "subproject"),
+		filepath.Join("testdata", "project", "subproject"): filepath.Join("testdata", "project", "subproject"),
 	}
 	gs.setupGradleProjectMappings()
 
-	assert.Len(t, gs.GradleProjects, 1)
+	assert.Len(t, gs.GradleProjects, 2)
 	fmt.Println(gs.GradleProjects)
 }
 
-// mock cmd factory
 type mockCmdFactory struct {
 }
 
-// mock for NewCmd
 func (m *mockCmdFactory) MakeFindSubGraphCmd(workingDirectory string, gradlew string, initScript string) (*exec.Cmd, error) {
-	//	path, err := exec.LookPath(gradlew)
-
-	// return command that creates a file name ".debricked.multiprojects.txt"
+	fileName := filepath.Join(workingDirectory, ".debricked.multiprojects.txt")
+	content := []byte(workingDirectory)
+	file, err := os.Create(fileName)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	_, err = file.Write(content)
+	if err != nil {
+		return nil, err
+	}
 	return exec.Command("ls"), nil
 }
 
@@ -107,20 +109,35 @@ func TestSetupSubProjectPaths(t *testing.T) {
 	gs := NewGradleSetup()
 	gs.CmdFactory = &mockCmdFactory{}
 
-	fmt.Println(os.Getwd())
+	absPath, err := filepath.Abs(filepath.Join("testdata", "project"))
+	gradleProject := GradleProject{dir: absPath, gradlew: filepath.Join("testdata", "project", "gradlew")}
+	err = gs.setupSubProjectPaths(gradleProject)
+	assert.Nil(t, err)
+	assert.Len(t, gs.subProjectMap, 1)
 
-	gradleProject := GradleProject{dir: filepath.Join("testdata", "project"), gradlew: filepath.Join("testdata", "project", "gradlew")}
-	gs.setupSubProjectPaths(gradleProject)
-	assert.Len(t, gs.subProjectMap, 0)
+	absPath, err = filepath.Abs(filepath.Join("testdata", "project", "subproject"))
+	gradleProject = GradleProject{dir: absPath, gradlew: filepath.Join("testdata", "project", "gradlew")}
+	err = gs.setupSubProjectPaths(gradleProject)
+	assert.Nil(t, err)
+	assert.Len(t, gs.subProjectMap, 2)
 
-	gradleProject = GradleProject{dir: filepath.Join("testdata", "project", "subproject"), gradlew: filepath.Join("testdata", "project", "gradlew")}
-	gs.setupSubProjectPaths(gradleProject)
-	assert.Len(t, gs.subProjectMap, 0)
+}
 
+func TestSetupSubProjectPathsError(t *testing.T) {
+
+	gs := NewGradleSetup()
+
+	absPath, err := filepath.Abs(filepath.Join("testdata", "project"))
+	gradleProject := GradleProject{dir: absPath, gradlew: filepath.Join("testdata", "project", "gradlew")}
+	err = gs.setupSubProjectPaths(gradleProject)
+
+	// assery GradleSetupSubprojectError
+	assert.NotNil(t, err)
 }
 
 func TestGetGradleW(t *testing.T) {
 	gs := NewGradleSetup()
+
 	gs.gradlewMap = map[string]string{
 		filepath.Join("testdata", "project"): filepath.Join("testdata", "project", "gradlew"),
 	}
@@ -132,4 +149,37 @@ func TestGetGradleW(t *testing.T) {
 	gradlew = gs.GetGradleW(filepath.Join("testdata", "project"))
 
 	assert.Equal(t, filepath.Join("testdata", "project", "gradlew"), gradlew)
+}
+
+type mockInitFileHandler struct{}
+
+func (_ mockInitFileHandler) ReadInitFile() ([]byte, error) {
+	return gradleInitScript.ReadFile("gradle-init/gradle-init-script.groovy")
+}
+
+func (i mockInitFileHandler) WriteInitFile(targetFileName string, fileWriter writer.IFileWriter) error {
+	return GradleSetupScriptError{message: "read-error"}
+}
+
+type mockFileFinder struct{}
+
+func (f mockFileFinder) FindGradleProjectFiles(paths []string) (map[string]string, map[string]string, error) {
+	return nil, nil, GradleSetupWalkError{message: "mock error"}
+}
+
+// test setup
+func TestSetupErrors(t *testing.T) {
+	gs := NewGradleSetup()
+	gs.Writer = &writerTestdata.FileWriterMock{}
+	_, err := gs.Setup([]string{"testdata/project"}, []string{"testdata/project"})
+	assert.NotNil(t, err)
+
+	gs.FileFinder = mockFileFinder{}
+	_, err = gs.Setup([]string{"testdata/project"}, []string{"testdata/project"})
+	assert.Equal(t, "mock error", err.Error())
+
+	gs.InitFileHandler = mockInitFileHandler{}
+	_, err = gs.Setup([]string{"testdata/project"}, []string{"testdata/project"})
+	assert.Equal(t, "read-error", err.Error())
+
 }

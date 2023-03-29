@@ -1,7 +1,6 @@
 package gradle
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -41,12 +40,9 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 
 	for _, gradleProject := range gradleSetup.GradleProjects {
 		jobs = append(jobs, NewJob(gradleProject.dir, gradleProject.gradlew, gradleSetup.groovyScriptPath, factory, writer))
-		fmt.Println("Added job for " + gradleProject.dir)
 	}
-	fmt.Println(s.files)
 	for _, file := range s.files {
 		dir, _ := filepath.Abs(filepath.Dir(file))
-		fmt.Println("Found dir" + dir)
 		if _, ok := gradleSetup.subProjectMap[dir]; ok {
 			continue
 		}

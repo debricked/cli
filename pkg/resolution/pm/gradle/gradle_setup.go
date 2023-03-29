@@ -4,9 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"embed"
-	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"sort"
@@ -23,13 +21,6 @@ const (
 //go:embed gradle-init/gradle-init-script.groovy
 var gradleInitScript embed.FS
 
-type ISetupFile interface {
-	ReadInitFile() ([]byte, error)
-	WriteInitFile() ([]byte, error)
-}
-
-type SetupFile struct{}
-
 type IGradleSetup interface {
 	Setup(files []string, paths []string) (GradleSetup, error)
 }
@@ -43,6 +34,9 @@ type GradleSetup struct {
 	settingsFilenames []string
 	GradleProjects    []GradleProject
 	CmdFactory        ICmdFactory
+	FileFinder        IFileFinder
+	InitFileHandler   IInitFileHandler
+	Writer            writer.IFileWriter
 }
 
 type GradleProject struct {
@@ -96,6 +90,9 @@ func NewGradleSetup() *GradleSetup {
 	subProjectMap := map[string]string{}
 	gradleProjects := []GradleProject{}
 	CmdFactory := CmdFactory{}
+	FileFinder := FileFinder{filepath: FilePath{}}
+	InitFileHandler := InitFileHandler{}
+	Writer := writer.FileWriter{}
 	return &GradleSetup{
 		gradlewMap:        gradlewMap,
 		settingsMap:       settingsMap,
@@ -105,17 +102,23 @@ func NewGradleSetup() *GradleSetup {
 		settingsFilenames: settingsFilenames,
 		GradleProjects:    gradleProjects,
 		CmdFactory:        CmdFactory,
+		FileFinder:        FileFinder,
+		InitFileHandler:   InitFileHandler,
+		Writer:            Writer,
 	}
 }
 
 func (gs GradleSetup) Setup(files []string, paths []string) (GradleSetup, error) {
-	writer := writer.FileWriter{}
-	err := SetupFile{}.WriteInitFile(gs.groovyScriptPath, writer)
+
+	err := gs.InitFileHandler.WriteInitFile(gs.groovyScriptPath, gs.Writer) // WriteInitFile(gs.groovyScriptPath, writer)
 	if err != nil {
 		return gs, err
 	}
 	// gs.setupFilePathMappings(files) Magnus?
-	err = gs.findGradleProjectFiles(paths)
+	settingsMap, gradlewMap, err := gs.FileFinder.FindGradleProjectFiles(paths)
+
+	gs.gradlewMap = gradlewMap
+	gs.settingsMap = settingsMap
 	if err != nil {
 		return gs, err
 	}
@@ -124,44 +127,6 @@ func (gs GradleSetup) Setup(files []string, paths []string) (GradleSetup, error)
 		return gs, err
 	}
 	return gs, nil
-}
-
-func (gs GradleSetup) findGradleProjectFiles(paths []string) error {
-	settings := []string{"settings.gradle", "settings.gradle.kts"}
-	gradlew := []string{"gradlew"}
-
-	for _, rootPath := range paths {
-		err := filepath.Walk(
-			rootPath,
-			func(path string, fileInfo os.FileInfo, err error) error {
-				if err != nil {
-					return err
-				}
-				if !fileInfo.IsDir() {
-					for _, setting := range settings {
-						if setting == filepath.Base(path) {
-							dir, _ := filepath.Abs(filepath.Dir(path))
-							file, _ := filepath.Abs(path)
-							gs.settingsMap[dir] = file
-						}
-					}
-
-					for _, gradle := range gradlew {
-						if gradle == filepath.Base(path) {
-							dir, _ := filepath.Abs(filepath.Dir(path))
-							file, _ := filepath.Abs(path)
-							gs.gradlewMap[dir] = file
-						}
-					}
-				}
-				return nil
-			},
-		)
-		if err != nil {
-			return GradleSetupWalkError{message: err.Error()}
-		}
-	}
-	return nil
 }
 
 func (gs *GradleSetup) setupFilePathMappings(files []string) {
@@ -214,17 +179,12 @@ func (gs *GradleSetup) setupSubProjectPaths(gp GradleProject) error {
 	dependenciesCmd.Stderr = os.Stderr
 	if err != nil {
 		errorOutput := stderr.String()
-		if exitError, ok := err.(*exec.ExitError); ok {
-			return GradleSetupSubprojectError{message: errorOutput + exitError.Error()}
-		}
-		return GradleSetupSubprojectError{message: err.Error()}
+		return GradleSetupSubprojectError{message: errorOutput + err.Error()}
 	}
 	multiProject := filepath.Join(gp.dir, multiProjectFilename)
-	fmt.Println("MultiProject: ", multiProject)
 	file, err := os.Open(multiProject)
 
 	if err != nil {
-		fmt.Println("Error: ", err)
 		return GradleSetupSubprojectError{message: err.Error()}
 	}
 	defer file.Close()
@@ -260,26 +220,4 @@ func (gs *GradleSetup) GetGradleW(dir string) string {
 		}
 	}
 	return gradlew
-}
-
-func (_ SetupFile) ReadInitFile() ([]byte, error) {
-	return gradleInitScript.ReadFile("gradle-init/gradle-init-script.groovy")
-}
-
-func (sf SetupFile) WriteInitFile(targetFileName string, fileWriter writer.FileWriter) error {
-	content, err := sf.ReadInitFile()
-	if err != nil {
-		return GradleSetupScriptError{message: err.Error()}
-	}
-	lockFile, err := fileWriter.Create(targetFileName)
-	if err != nil {
-		return GradleSetupScriptError{message: err.Error()}
-	}
-	defer lockFile.Close()
-	err = fileWriter.Write(lockFile, content)
-	if err != nil {
-		return GradleSetupScriptError{message: err.Error()}
-	}
-	return nil
-
 }
