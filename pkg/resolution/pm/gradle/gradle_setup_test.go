@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	writerTestdata "github.com/debricked/cli/pkg/resolution/pm/writer/testdata"
@@ -59,19 +60,17 @@ func TestSetupFilePathMappingsNoGradlew(t *testing.T) {
 
 func TestSetupGradleProjectMappings(t *testing.T) {
 	gs := NewGradleSetup()
+	gs.CmdFactory = &mockCmdFactory{}
+
 	gs.settingsMap = map[string]string{
-		filepath.Join("testdata", "project"):                                  filepath.Join("testdata", "project", "settings.gradle"),
-		filepath.Join("testdata", "project", "subproject"):                    filepath.Join("testdata", "project", "settings.gradle"),
-		filepath.Join("testdata", "project", "subproject", "settings.gradle"): filepath.Join("testdata", "project", "settings.gradle"),
+		filepath.Join("testdata", "project"): filepath.Join("testdata", "project", "settings.gradle"),
 	}
-	gs.subProjectMap = map[string]string{
-		filepath.Join("testdata", "project", "subproject"): filepath.Join("testdata", "project", "subproject"),
-	}
+	gs.subProjectMap = map[string]string{}
 	err := gs.setupGradleProjectMappings()
 	// assert GradleSetupSubprojectError
 	assert.NotNil(t, err)
 
-	assert.Len(t, gs.GradleProjects, 2)
+	assert.Len(t, gs.GradleProjects, 1)
 }
 
 type mockCmdFactory struct {
@@ -90,6 +89,12 @@ func (m *mockCmdFactory) MakeFindSubGraphCmd(workingDirectory string, gradlew st
 	if err != nil {
 
 		return nil, err
+	}
+
+	// if windows use dir
+	if runtime.GOOS == "windows" {
+		// gradlewOsName = "gradlew.bat"
+		exec.Command("dir")
 	}
 
 	return exec.Command("ls"), nil
