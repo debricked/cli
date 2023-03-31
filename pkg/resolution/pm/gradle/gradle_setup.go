@@ -35,7 +35,7 @@ type GradleSetup struct {
 	GradleProjects    []GradleProject
 	CmdFactory        ICmdFactory
 	FileHandler       IGradleFileHandler
-	InitFileHandler   IInitFileHandler
+	InitScriptHandler IInitScriptHandler
 	Writer            writer.IFileWriter
 }
 
@@ -95,7 +95,7 @@ func NewGradleSetup() *GradleSetup {
 	gradleProjects := []GradleProject{}
 	CmdFactory := CmdFactory{}
 	FileHandler := GradleFileHandler{filepath: GradleFilePath{}}
-	InitFileHandler := InitFileHandler{}
+	InitScriptHandler := InitScriptHandler{}
 	Writer := writer.FileWriter{}
 
 	return &GradleSetup{
@@ -108,13 +108,13 @@ func NewGradleSetup() *GradleSetup {
 		GradleProjects:    gradleProjects,
 		CmdFactory:        CmdFactory,
 		FileHandler:       FileHandler,
-		InitFileHandler:   InitFileHandler,
+		InitScriptHandler: InitScriptHandler,
 		Writer:            Writer,
 	}
 }
 
 func (gs GradleSetup) Setup(files []string, paths []string) (GradleSetup, error) {
-	err := gs.InitFileHandler.WriteInitFile(gs.groovyScriptPath, gs.Writer)
+	err := gs.InitScriptHandler.WriteInitFile(gs.groovyScriptPath, gs.Writer)
 	if err != nil {
 
 		return gs, err

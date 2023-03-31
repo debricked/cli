@@ -156,14 +156,14 @@ func TestGetGradleW(t *testing.T) {
 	assert.Equal(t, filepath.Join("testdata", "project", "gradlew"), gradlew)
 }
 
-type mockInitFileHandler struct{}
+type mockInitScriptHandler struct{}
 
-func (_ mockInitFileHandler) ReadInitFile() ([]byte, error) {
+func (_ mockInitScriptHandler) ReadInitFile() ([]byte, error) {
 
 	return gradleInitScript.ReadFile("gradle-init/gradle-init-script.groovy")
 }
 
-func (i mockInitFileHandler) WriteInitFile(targetFileName string, fileWriter writer.IFileWriter) error {
+func (i mockInitScriptHandler) WriteInitFile(targetFileName string, fileWriter writer.IFileWriter) error {
 
 	return GradleSetupScriptError{message: "read-error"}
 }
@@ -186,7 +186,7 @@ func TestSetupErrors(t *testing.T) {
 	_, err = gs.Setup([]string{"testdata/project"}, []string{"testdata/project"})
 	assert.Equal(t, "mock error", err.Error())
 
-	gs.InitFileHandler = mockInitFileHandler{}
+	gs.InitScriptHandler = mockInitScriptHandler{}
 	_, err = gs.Setup([]string{"testdata/project"}, []string{"testdata/project"})
 	assert.Equal(t, "read-error", err.Error())
 }

@@ -4,19 +4,19 @@ import (
 	"github.com/debricked/cli/pkg/resolution/pm/writer"
 )
 
-type IInitFileHandler interface {
+type IInitScriptHandler interface {
 	ReadInitFile() ([]byte, error)
 	WriteInitFile(targetFileName string, fileWriter writer.IFileWriter) error
 }
 
-type InitFileHandler struct{}
+type InitScriptHandler struct{}
 
-func (_ InitFileHandler) ReadInitFile() ([]byte, error) {
+func (_ InitScriptHandler) ReadInitFile() ([]byte, error) {
 
 	return gradleInitScript.ReadFile("gradle-init/gradle-init-script.groovy")
 }
 
-func (i InitFileHandler) WriteInitFile(targetFileName string, fileWriter writer.IFileWriter) error {
+func (i InitScriptHandler) WriteInitFile(targetFileName string, fileWriter writer.IFileWriter) error {
 	content, err := i.ReadInitFile()
 	if err != nil {
 

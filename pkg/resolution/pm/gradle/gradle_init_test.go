@@ -14,7 +14,7 @@ func TestWriteInitFile(t *testing.T) {
 	createErr := errors.New("create-error")
 	fileWriterMock := &writerTestdata.FileWriterMock{CreateErr: createErr}
 
-	sf := InitFileHandler{}
+	sf := InitScriptHandler{}
 	err := sf.WriteInitFile("file", fileWriterMock)
 	assert.Equal(t, GradleSetupScriptError{createErr.Error()}, err)
 
