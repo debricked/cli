@@ -5,50 +5,50 @@ import (
 	"path/filepath"
 )
 
-type IFileFinder interface {
-	FindGradleProjectFiles(paths []string) (map[string]string, map[string]string, error)
+type IGradleFileHandler interface {
+	Find(paths []string) (map[string]string, map[string]string, error)
 }
 
-type FileFinder struct {
-	filepath IFilePath
+type GradleFileHandler struct {
+	filepath IGradleFilePath
 }
 
-type IFilePath interface {
+type IGradleFilePath interface {
 	Walk(root string, walkFn filepath.WalkFunc) error
 	Base(path string) string
 	Abs(path string) (string, error)
 	Dir(path string) string
 }
 
-type FilePath struct{}
+type GradleFilePath struct{}
 
-func (fp FilePath) Walk(root string, walkFn filepath.WalkFunc) error {
+func (fp GradleFilePath) Walk(root string, walkFn filepath.WalkFunc) error {
 
 	return filepath.Walk(root, walkFn)
 }
 
-func (fp FilePath) Base(path string) string {
+func (fp GradleFilePath) Base(path string) string {
 
 	return filepath.Base(path)
 }
 
-func (fp FilePath) Abs(path string) (string, error) {
+func (fp GradleFilePath) Abs(path string) (string, error) {
 
 	return filepath.Abs(path)
 }
 
-func (fp FilePath) Dir(path string) string {
+func (fp GradleFilePath) Dir(path string) string {
 
 	return filepath.Dir(path)
 }
 
-func (f FileFinder) FindGradleProjectFiles(paths []string) (map[string]string, map[string]string, error) {
+func (gfh GradleFileHandler) Find(paths []string) (map[string]string, map[string]string, error) {
 	settings := []string{"settings.gradle", "settings.gradle.kts"}
 	gradlew := []string{"gradlew"}
 	settingsMap := map[string]string{}
 	gradlewMap := map[string]string{}
 	for _, rootPath := range paths {
-		err := f.filepath.Walk(
+		err := gfh.filepath.Walk(
 			rootPath,
 			func(path string, fileInfo os.FileInfo, err error) error {
 				if err != nil {
@@ -57,17 +57,17 @@ func (f FileFinder) FindGradleProjectFiles(paths []string) (map[string]string, m
 				}
 				if !fileInfo.IsDir() {
 					for _, setting := range settings {
-						if setting == f.filepath.Base(path) {
-							dir, _ := f.filepath.Abs(f.filepath.Dir(path))
-							file, _ := f.filepath.Abs(path)
+						if setting == gfh.filepath.Base(path) {
+							dir, _ := gfh.filepath.Abs(gfh.filepath.Dir(path))
+							file, _ := gfh.filepath.Abs(path)
 							settingsMap[dir] = file
 						}
 					}
 
 					for _, gradle := range gradlew {
-						if gradle == f.filepath.Base(path) {
-							dir, _ := f.filepath.Abs(f.filepath.Dir(path))
-							file, _ := f.filepath.Abs(path)
+						if gradle == gfh.filepath.Base(path) {
+							dir, _ := gfh.filepath.Abs(gfh.filepath.Dir(path))
+							file, _ := gfh.filepath.Abs(path)
 							gradlewMap[dir] = file
 						}
 					}

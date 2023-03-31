@@ -168,9 +168,9 @@ func (i mockInitFileHandler) WriteInitFile(targetFileName string, fileWriter wri
 	return GradleSetupScriptError{message: "read-error"}
 }
 
-type mockFileFinder struct{}
+type mockFileHandler struct{}
 
-func (f mockFileFinder) FindGradleProjectFiles(paths []string) (map[string]string, map[string]string, error) {
+func (f mockFileHandler) Find(paths []string) (map[string]string, map[string]string, error) {
 
 	return nil, nil, GradleSetupWalkError{message: "mock error"}
 }
@@ -182,7 +182,7 @@ func TestSetupErrors(t *testing.T) {
 	_, err := gs.Setup([]string{"testdata/project"}, []string{"testdata/project"})
 	assert.NotNil(t, err)
 
-	gs.FileFinder = mockFileFinder{}
+	gs.FileHandler = mockFileHandler{}
 	_, err = gs.Setup([]string{"testdata/project"}, []string{"testdata/project"})
 	assert.Equal(t, "mock error", err.Error())
 

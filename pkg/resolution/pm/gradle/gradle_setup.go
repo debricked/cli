@@ -34,7 +34,7 @@ type GradleSetup struct {
 	settingsFilenames []string
 	GradleProjects    []GradleProject
 	CmdFactory        ICmdFactory
-	FileFinder        IFileFinder
+	FileHandler       IGradleFileHandler
 	InitFileHandler   IInitFileHandler
 	Writer            writer.IFileWriter
 }
@@ -94,7 +94,7 @@ func NewGradleSetup() *GradleSetup {
 	subProjectMap := map[string]string{}
 	gradleProjects := []GradleProject{}
 	CmdFactory := CmdFactory{}
-	FileFinder := FileFinder{filepath: FilePath{}}
+	FileHandler := GradleFileHandler{filepath: GradleFilePath{}}
 	InitFileHandler := InitFileHandler{}
 	Writer := writer.FileWriter{}
 
@@ -107,7 +107,7 @@ func NewGradleSetup() *GradleSetup {
 		settingsFilenames: settingsFilenames,
 		GradleProjects:    gradleProjects,
 		CmdFactory:        CmdFactory,
-		FileFinder:        FileFinder,
+		FileHandler:       FileHandler,
 		InitFileHandler:   InitFileHandler,
 		Writer:            Writer,
 	}
@@ -119,7 +119,7 @@ func (gs GradleSetup) Setup(files []string, paths []string) (GradleSetup, error)
 
 		return gs, err
 	}
-	settingsMap, gradlewMap, err := gs.FileFinder.FindGradleProjectFiles(paths)
+	settingsMap, gradlewMap, err := gs.FileHandler.Find(paths)
 	gs.gradlewMap = gradlewMap
 	gs.settingsMap = settingsMap
 	if err != nil {
