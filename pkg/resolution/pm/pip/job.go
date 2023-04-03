@@ -24,6 +24,7 @@ type Job struct {
 	pipCommand string
 	cmdFactory ICmdFactory
 	fileWriter writer.IFileWriter
+	pipCleaner IPipCleaner
 }
 
 func NewJob(
@@ -37,7 +38,18 @@ func NewJob(
 		install:    install,
 		cmdFactory: cmdFactory,
 		fileWriter: fileWriter,
+		pipCleaner: pipCleaner{},
 	}
+}
+
+type IPipCleaner interface {
+	RemoveAll(path string) error
+}
+
+type pipCleaner struct{}
+
+func (p pipCleaner) RemoveAll(path string) error {
+	return os.RemoveAll(path)
 }
 
 func (j *Job) Install() bool {
@@ -115,7 +127,7 @@ func (j *Job) Run() {
 
 	if j.install {
 		j.SendStatus("removing virtualenv")
-		err = os.RemoveAll(j.venvPath)
+		err = j.pipCleaner.RemoveAll(j.venvPath)
 		if err != nil {
 			j.Errors().Critical(err)
 		}
