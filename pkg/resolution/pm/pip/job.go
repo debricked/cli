@@ -112,6 +112,14 @@ func (j *Job) Run() {
 	if err != nil {
 		j.Errors().Critical(err)
 	}
+
+	if j.install {
+		j.SendStatus("removing virtualenv")
+		err = os.RemoveAll(j.venvPath)
+		if err != nil {
+			j.Errors().Critical(err)
+		}
+	}
 }
 
 func (j *Job) runCreateVenvCmd() ([]byte, error) {
