@@ -75,29 +75,10 @@ func (j *Job) Run() {
 		}
 	}
 
-	j.SendStatus("running cat command")
-	catCmdOutput, err := j.runCatCmd()
+	catCmdOutput, listCmdOutput, ShowCmdOutput, err := j.generateLockContent()
+
 	if err != nil {
-		j.Errors().Critical(err)
-
-		return
-	}
-
-	j.SendStatus("running list command")
-	listCmdOutput, err := j.runListCmd()
-	if err != nil {
-		j.Errors().Critical(err)
-
-		return
-	}
-
-	j.SendStatus("running show command")
-	installedPackages := j.parsePipList(string(listCmdOutput))
-	ShowCmdOutput, err := j.runShowCmd(installedPackages)
-	if err != nil {
-		j.Errors().Critical(err)
-
-		return
+		return // errors already appended
 	}
 
 	j.SendStatus("setting up data...")
@@ -132,6 +113,36 @@ func (j *Job) Run() {
 			j.Errors().Critical(err)
 		}
 	}
+}
+
+func (j *Job) generateLockContent() (catCmdOutput, listCmdOutput, ShowCmdOutput []byte, err error) {
+
+	j.SendStatus("running cat command")
+	catCmdOutput, err = j.runCatCmd()
+	if err != nil {
+		j.Errors().Critical(err)
+
+		return nil, nil, nil, err
+	}
+
+	j.SendStatus("running list command")
+	listCmdOutput, err = j.runListCmd()
+	if err != nil {
+		j.Errors().Critical(err)
+
+		return nil, nil, nil, err
+	}
+
+	j.SendStatus("running show command")
+	installedPackages := j.parsePipList(string(listCmdOutput))
+	ShowCmdOutput, err = j.runShowCmd(installedPackages)
+	if err != nil {
+		j.Errors().Critical(err)
+
+		return nil, nil, nil, err
+	}
+
+	return catCmdOutput, listCmdOutput, ShowCmdOutput, nil
 }
 
 func (j *Job) runCreateVenvCmd() ([]byte, error) {
