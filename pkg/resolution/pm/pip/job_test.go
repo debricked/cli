@@ -250,3 +250,24 @@ func TestRunCloseErr(t *testing.T) {
 	assert.Len(t, j.Errors().GetAll(), 1)
 	assert.Contains(t, j.Errors().GetAll(), closeErr)
 }
+
+type pipCleanerMock struct {
+	CleanErr error
+}
+
+func (p *pipCleanerMock) RemoveAll(path string) error {
+	return p.CleanErr
+}
+func TestRunCleanErr(t *testing.T) {
+	CleanErr := errors.New("clean-error")
+	fileWriterMock := &writerTestdata.FileWriterMock{}
+	cmdMock := testdata.NewEchoCmdFactory()
+	j := NewJob("file", true, cmdMock, fileWriterMock)
+	j.pipCleaner = &pipCleanerMock{CleanErr: CleanErr}
+
+	go jobTestdata.WaitStatus(j)
+	j.Run()
+
+	assert.Len(t, j.Errors().GetAll(), 1)
+	assert.Contains(t, j.Errors().GetAll(), CleanErr)
+}
