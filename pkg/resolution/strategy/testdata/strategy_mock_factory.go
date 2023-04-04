@@ -15,3 +15,14 @@ func (sf FactoryMock) Make(pmFileBatch file.IBatch, paths []string) (strategy.IS
 
 	return NewStrategyMock(pmFileBatch.Files()), nil
 }
+
+type FactoryErrorMock struct{}
+
+func NewStrategyFactoryErrorMock() FactoryErrorMock {
+	return FactoryErrorMock{}
+}
+
+func (sf FactoryErrorMock) Make(pmFileBatch file.IBatch, paths []string) (strategy.IStrategy, error) {
+
+	return NewStrategyErrorMock(pmFileBatch.Files()), nil
+}

@@ -49,10 +49,10 @@ func (r Resolver) Resolve(paths []string, exclusions []string) (IResolution, err
 		s, strategyErr := r.strategyFactory.Make(pmBatch, paths)
 		if strategyErr == nil {
 			newJobs, err := s.Invoke()
-			jobs = append(jobs, newJobs...)
 			if err != nil {
 				return nil, err
 			}
+			jobs = append(jobs, newJobs...)
 		}
 	}
 
