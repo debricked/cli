@@ -76,8 +76,9 @@ func (j *Job) Run() {
 	}
 
 	err := j.writeLockContent()
-
 	if err != nil {
+		j.Errors().Critical(err)
+
 		return
 	}
 
@@ -91,20 +92,15 @@ func (j *Job) Run() {
 }
 
 func (j *Job) writeLockContent() error {
-
 	j.SendStatus("running cat command")
 	catCmdOutput, err := j.runCatCmd()
 	if err != nil {
-		j.Errors().Critical(err)
-
 		return err
 	}
 
 	j.SendStatus("running list command")
 	listCmdOutput, err := j.runListCmd()
 	if err != nil {
-		j.Errors().Critical(err)
-
 		return err
 	}
 
@@ -112,8 +108,6 @@ func (j *Job) writeLockContent() error {
 	installedPackages := j.parsePipList(string(listCmdOutput))
 	ShowCmdOutput, err := j.runShowCmd(installedPackages)
 	if err != nil {
-		j.Errors().Critical(err)
-
 		return err
 	}
 
@@ -121,8 +115,6 @@ func (j *Job) writeLockContent() error {
 	lockFileName := fmt.Sprintf(".%s%s", filepath.Base(j.GetFile()), lockFileExtension)
 	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.GetFile(), lockFileName))
 	if err != nil {
-		j.Errors().Critical(err)
-
 		return err
 	}
 	defer closeFile(j, lockFile)
@@ -136,12 +128,8 @@ func (j *Job) writeLockContent() error {
 	res := []byte(strings.Join(fileContents, "\n"))
 
 	j.SendStatus("writing data...")
-	err = j.fileWriter.Write(lockFile, res)
-	if err != nil {
-		j.Errors().Critical(err)
-	}
 
-	return nil
+	return j.fileWriter.Write(lockFile, res)
 }
 
 func (j *Job) runCreateVenvCmd() ([]byte, error) {
