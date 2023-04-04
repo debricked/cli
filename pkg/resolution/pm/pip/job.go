@@ -32,13 +32,14 @@ func NewJob(
 	install bool,
 	cmdFactory ICmdFactory,
 	fileWriter writer.IFileWriter,
+	pipCleaner IPipCleaner,
 ) *Job {
 	return &Job{
 		BaseJob:    job.NewBaseJob(file),
 		install:    install,
 		cmdFactory: cmdFactory,
 		fileWriter: fileWriter,
-		pipCleaner: pipCleaner{},
+		pipCleaner: pipCleaner,
 	}
 }
 

@@ -21,7 +21,7 @@ const (
 func TestNewJob(t *testing.T) {
 	j := NewJob("file", false, CmdFactory{
 		execPath: ExecPath{},
-	}, writer.FileWriter{})
+	}, writer.FileWriter{}, pipCleaner{})
 	assert.Equal(t, "file", j.GetFile())
 	assert.False(t, j.Errors().HasError())
 }
@@ -39,7 +39,7 @@ func TestRunCreateVenvCmdErr(t *testing.T) {
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	cmdFactoryMock.MakeCreateVenvErr = cmdErr
 	fileWriterMock := &writerTestdata.FileWriterMock{}
-	j := NewJob("file", true, cmdFactoryMock, fileWriterMock)
+	j := NewJob("file", true, cmdFactoryMock, fileWriterMock, nil)
 
 	go jobTestdata.WaitStatus(j)
 	j.Run()
@@ -51,7 +51,7 @@ func TestRunCreateVenvCmdErr(t *testing.T) {
 func TestRunCreateVenvCmdOutputErr(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	cmdMock.CreateVenvCmdName = badName
-	j := NewJob("file", true, cmdMock, nil)
+	j := NewJob("file", true, cmdMock, nil, nil)
 
 	go jobTestdata.WaitStatus(j)
 	j.Run()
@@ -64,7 +64,7 @@ func TestRunInstallCmdErr(t *testing.T) {
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	cmdFactoryMock.MakeInstallErr = cmdErr
 	fileWriterMock := &writerTestdata.FileWriterMock{}
-	j := NewJob("file", true, cmdFactoryMock, fileWriterMock)
+	j := NewJob("file", true, cmdFactoryMock, fileWriterMock, nil)
 
 	go jobTestdata.WaitStatus(j)
 	j.Run()
@@ -76,7 +76,7 @@ func TestRunInstallCmdErr(t *testing.T) {
 func TestRunInstallCmdOutputErr(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	cmdMock.InstallCmdName = badName
-	j := NewJob("file", true, cmdMock, nil)
+	j := NewJob("file", true, cmdMock, nil, nil)
 
 	go jobTestdata.WaitStatus(j)
 	j.Run()
@@ -89,7 +89,7 @@ func TestRunCatCmdErr(t *testing.T) {
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	cmdFactoryMock.MakeCatErr = cmdErr
 	fileWriterMock := &writerTestdata.FileWriterMock{}
-	j := NewJob("file", true, cmdFactoryMock, fileWriterMock)
+	j := NewJob("file", true, cmdFactoryMock, fileWriterMock, nil)
 
 	go jobTestdata.WaitStatus(j)
 	j.Run()
@@ -101,7 +101,7 @@ func TestRunCatCmdErr(t *testing.T) {
 func TestRunCatCmdOutputErr(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	cmdMock.CatCmdName = badName
-	j := NewJob("file", false, cmdMock, nil)
+	j := NewJob("file", false, cmdMock, nil, nil)
 
 	go jobTestdata.WaitStatus(j)
 	j.Run()
@@ -114,7 +114,7 @@ func TestRunListCmdErr(t *testing.T) {
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	cmdFactoryMock.MakeListErr = cmdErr
 	fileWriterMock := &writerTestdata.FileWriterMock{}
-	j := NewJob("file", true, cmdFactoryMock, fileWriterMock)
+	j := NewJob("file", true, cmdFactoryMock, fileWriterMock, nil)
 
 	go jobTestdata.WaitStatus(j)
 	j.Run()
@@ -126,7 +126,7 @@ func TestRunListCmdErr(t *testing.T) {
 func TestRunListCmdOutputErr(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	cmdMock.ListCmdName = badName
-	j := NewJob("file", false, cmdMock, nil)
+	j := NewJob("file", false, cmdMock, nil, nil)
 
 	go jobTestdata.WaitStatus(j)
 	j.Run()
@@ -139,7 +139,7 @@ func TestRunShowCmdErr(t *testing.T) {
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	cmdFactoryMock.MakeShowErr = cmdErr
 	fileWriterMock := &writerTestdata.FileWriterMock{}
-	j := NewJob("file", true, cmdFactoryMock, fileWriterMock)
+	j := NewJob("file", true, cmdFactoryMock, fileWriterMock, nil)
 
 	go jobTestdata.WaitStatus(j)
 	j.Run()
@@ -151,7 +151,7 @@ func TestRunShowCmdErr(t *testing.T) {
 func TestRunShowCmdOutputErr(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	cmdMock.ShowCmdName = badName
-	j := NewJob("file", false, cmdMock, nil)
+	j := NewJob("file", false, cmdMock, nil, nil)
 
 	go jobTestdata.WaitStatus(j)
 	j.Run()
@@ -178,7 +178,7 @@ func TestRun(t *testing.T) {
 
 	fileWriterMock := &writerTestdata.FileWriterMock{}
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	j := NewJob("file", true, cmdFactoryMock, fileWriterMock)
+	j := NewJob("file", true, cmdFactoryMock, fileWriterMock, pipCleaner{})
 
 	go jobTestdata.WaitStatus(j)
 	j.Run()
@@ -191,7 +191,7 @@ func TestRun(t *testing.T) {
 func TestRunInstall(t *testing.T) {
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	fileWriterMock := &writerTestdata.FileWriterMock{}
-	j := NewJob("file", false, cmdFactoryMock, fileWriterMock)
+	j := NewJob("file", false, cmdFactoryMock, fileWriterMock, nil)
 
 	_, err := j.runInstallCmd()
 	assert.NoError(t, err)
@@ -202,7 +202,7 @@ func TestRunInstall(t *testing.T) {
 func TestParsePipList(t *testing.T) {
 	j := NewJob("file", false, CmdFactory{
 		execPath: ExecPath{},
-	}, writer.FileWriter{})
+	}, writer.FileWriter{}, pipCleaner{})
 	file, err := os.ReadFile("testdata/list.txt")
 	assert.Nil(t, err)
 	pipData := string(file)
@@ -216,7 +216,7 @@ func TestRunCreateErr(t *testing.T) {
 	createErr := errors.New("create-error")
 	fileWriterMock := &writerTestdata.FileWriterMock{CreateErr: createErr}
 	cmdMock := testdata.NewEchoCmdFactory()
-	j := NewJob("file", true, cmdMock, fileWriterMock)
+	j := NewJob("file", true, cmdMock, fileWriterMock, nil)
 
 	go jobTestdata.WaitStatus(j)
 	j.Run()
@@ -229,7 +229,7 @@ func TestRunWriteErr(t *testing.T) {
 	writeErr := errors.New("write-error")
 	fileWriterMock := &writerTestdata.FileWriterMock{WriteErr: writeErr}
 	cmdMock := testdata.NewEchoCmdFactory()
-	j := NewJob("file", true, cmdMock, fileWriterMock)
+	j := NewJob("file", true, cmdMock, fileWriterMock, nil)
 
 	go jobTestdata.WaitStatus(j)
 	j.Run()
@@ -242,7 +242,7 @@ func TestRunCloseErr(t *testing.T) {
 	closeErr := errors.New("close-error")
 	fileWriterMock := &writerTestdata.FileWriterMock{CloseErr: closeErr}
 	cmdMock := testdata.NewEchoCmdFactory()
-	j := NewJob("file", true, cmdMock, fileWriterMock)
+	j := NewJob("file", true, cmdMock, fileWriterMock, pipCleaner{})
 
 	go jobTestdata.WaitStatus(j)
 	j.Run()
@@ -255,14 +255,15 @@ type pipCleanerMock struct {
 	CleanErr error
 }
 
-func (p *pipCleanerMock) RemoveAll(path string) error {
+func (p *pipCleanerMock) RemoveAll(_ string) error {
 	return p.CleanErr
 }
+
 func TestRunCleanErr(t *testing.T) {
 	CleanErr := errors.New("clean-error")
 	fileWriterMock := &writerTestdata.FileWriterMock{}
 	cmdMock := testdata.NewEchoCmdFactory()
-	j := NewJob("file", true, cmdMock, fileWriterMock)
+	j := NewJob("file", true, cmdMock, fileWriterMock, nil)
 	j.pipCleaner = &pipCleanerMock{CleanErr: CleanErr}
 
 	go jobTestdata.WaitStatus(j)
