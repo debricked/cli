@@ -59,7 +59,7 @@ func (j *Job) Install() bool {
 
 func (j *Job) Run() {
 	if j.install {
-		j.SendStatus(fmt.Sprintf("creating virtualenv for %s.venv", filepath.Base(j.GetFile())))
+		j.SendStatus("creating venv")
 		_, err := j.runCreateVenvCmd()
 		if err != nil {
 			j.Errors().Critical(err)
@@ -67,7 +67,7 @@ func (j *Job) Run() {
 			return
 		}
 
-		j.SendStatus(fmt.Sprintf("installing requirements in virtualenv for %s.venv", filepath.Base(j.GetFile())))
+		j.SendStatus("installing requirements")
 		_, err = j.runInstallCmd()
 		if err != nil {
 			j.Errors().Critical(err)
@@ -84,7 +84,7 @@ func (j *Job) Run() {
 	}
 
 	if j.install {
-		j.SendStatus("removing virtualenv")
+		j.SendStatus("removing venv")
 		err = j.pipCleaner.RemoveAll(j.venvPath)
 		if err != nil {
 			j.Errors().Critical(err)
@@ -93,26 +93,23 @@ func (j *Job) Run() {
 }
 
 func (j *Job) writeLockContent() error {
-	j.SendStatus("running cat command")
+	j.SendStatus("generating lock file")
 	catCmdOutput, err := j.runCatCmd()
 	if err != nil {
 		return err
 	}
 
-	j.SendStatus("running list command")
 	listCmdOutput, err := j.runListCmd()
 	if err != nil {
 		return err
 	}
 
-	j.SendStatus("running show command")
 	installedPackages := j.parsePipList(string(listCmdOutput))
 	ShowCmdOutput, err := j.runShowCmd(installedPackages)
 	if err != nil {
 		return err
 	}
 
-	j.SendStatus("setting up data...")
 	lockFileName := fmt.Sprintf(".%s%s", filepath.Base(j.GetFile()), lockFileExtension)
 	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.GetFile(), lockFileName))
 	if err != nil {
@@ -128,7 +125,7 @@ func (j *Job) writeLockContent() error {
 	fileContents = append(fileContents, string(ShowCmdOutput))
 	res := []byte(strings.Join(fileContents, "\n"))
 
-	j.SendStatus("writing data...")
+	j.SendStatus("writing lock file")
 
 	return j.fileWriter.Write(lockFile, res)
 }
