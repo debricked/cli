@@ -38,9 +38,9 @@ var formatsMock = []Format{
 	},
 	{
 		// Format with regex but without lock file regexes
-		Regex:            "requirements.*(?:\\.txt)",
+		Regex:            "requirements.*\\.txt$",
 		DocumentationUrl: "https://debricked.com/docs/language-support/python.html",
-		LockFileRegexes:  nil,
+		LockFileRegexes:  []string{".*\\.pip\\.debricked\\.lock"},
 	},
 }
 

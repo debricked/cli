@@ -96,7 +96,7 @@ func TestGetGroups(t *testing.T) {
 
 	exclusions := []string{"testdata/go/*.mod", "testdata/misc/**"}
 	excludedFiles := []string{"testdata/go/go.mod", "testdata/misc/requirements.txt"}
-	const nbrOfGroups = 2
+	const nbrOfGroups = 4
 
 	fileGroups, err := finder.GetGroups(path, exclusions, false, StrictAll)
 
@@ -104,7 +104,6 @@ func TestGetGroups(t *testing.T) {
 	assert.Equalf(t, nbrOfGroups, fileGroups.Size(), "failed to assert that %d groups were created. %d was found", nbrOfGroups, fileGroups.Size())
 
 	for _, fileGroup := range fileGroups.ToSlice() {
-
 		hasContent := fileGroup.CompiledFormat != nil && (strings.Contains(fileGroup.FilePath, path) || len(fileGroup.RelatedFiles) > 0)
 		assert.True(t, hasContent, "failed to assert that format had content")
 
@@ -204,7 +203,7 @@ func TestGetGroupsWithOnlyLockFiles(t *testing.T) {
 	setUp(true)
 	path := "testdata/misc"
 	const nbrOfGroups = 1
-	fileGroups, err := finder.GetGroups(path, []string{"**/requirements.txt"}, false, StrictAll)
+	fileGroups, err := finder.GetGroups(path, []string{"**/requirements*.txt"}, false, StrictAll)
 	assert.NoError(t, err)
 	assert.Equalf(t, nbrOfGroups, fileGroups.Size(), "failed to assert that %d groups were created. %d was found", nbrOfGroups, fileGroups.Size())
 
@@ -215,6 +214,30 @@ func TestGetGroupsWithOnlyLockFiles(t *testing.T) {
 	file := fileGroup.GetAllFiles()[0]
 
 	assert.Contains(t, file, "Cargo.lock", "failed to assert that the related file was Cargo.lock")
+}
+
+func TestGetGroupsWithTwoFileMatchesInSameDir(t *testing.T) {
+	setUp(true)
+	path := "testdata/pip"
+	const nbrOfGroups = 2
+	fileGroups, err := finder.GetGroups(path, []string{}, false, StrictAll)
+	assert.NoError(t, err)
+	assert.Equalf(t, nbrOfGroups, fileGroups.Size(), "failed to assert that %d groups were created. %d was found", nbrOfGroups, fileGroups.Size())
+
+	var files []string
+	for _, fg := range fileGroups.groups {
+		assert.Len(t, fg.RelatedFiles, 1)
+		files = append(files, filepath.Base(fg.FilePath))
+		relatedFile := fg.RelatedFiles[0]
+		if strings.Contains(fg.FilePath, "requirements.txt") {
+			assert.Contains(t, relatedFile, "requirements.txt.pip.debricked.lock")
+		} else {
+			assert.Contains(t, relatedFile, "requirements-dev.txt.pip.debricked.lock")
+		}
+	}
+
+	assert.Contains(t, files, "requirements.txt")
+	assert.Contains(t, files, "requirements-dev.txt")
 }
 
 func TestGetGroupsWithStrictFlag(t *testing.T) {
@@ -231,7 +254,7 @@ func TestGetGroupsWithStrictFlag(t *testing.T) {
 			name:                   "StrictnessSetTo0",
 			strictness:             StrictAll,
 			testedGroupIndex:       3,
-			expectedNumberOfGroups: 5,
+			expectedNumberOfGroups: 7,
 			expectedManifestFile:   "requirements.txt",
 			expectedLockFiles:      []string{},
 		},
@@ -239,7 +262,7 @@ func TestGetGroupsWithStrictFlag(t *testing.T) {
 			name:                   "StrictnessSetTo1",
 			strictness:             StrictLockAndPairs,
 			testedGroupIndex:       1,
-			expectedNumberOfGroups: 3,
+			expectedNumberOfGroups: 5,
 			expectedManifestFile:   "",
 			expectedLockFiles: []string{
 				"Cargo.lock",
@@ -249,7 +272,7 @@ func TestGetGroupsWithStrictFlag(t *testing.T) {
 			name:                   "StrictnessSetTo2",
 			strictness:             StrictPairs,
 			testedGroupIndex:       0,
-			expectedNumberOfGroups: 1,
+			expectedNumberOfGroups: 3,
 			expectedManifestFile:   "composer.json",
 			expectedLockFiles: []string{
 				"composer.lock",

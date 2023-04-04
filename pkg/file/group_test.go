@@ -46,3 +46,48 @@ func TestGetAllFiles(t *testing.T) {
 	g.FilePath = ""
 	assert.Len(t, g.GetAllFiles(), 0, "failed to assert number of files")
 }
+
+func TestCheckFilePathDependantCasesEmptyGroup(t *testing.T) {
+	group := NewGroup("", nil, []string{})
+	var check bool
+
+	check = group.checkFilePathDependantCases(true, false, "requirements.txt")
+	assert.True(t, check)
+
+	check = group.checkFilePathDependantCases(true, false, "requirements-dev.txt")
+	assert.True(t, check)
+
+	check = group.checkFilePathDependantCases(true, false, "requirements-dev.txt")
+	assert.True(t, check)
+
+	check = group.checkFilePathDependantCases(false, true, "requirements.txt.pip.debricked.lock")
+	assert.False(t, check)
+}
+
+func TestCheckFilePathDependantCasesWithFilePath(t *testing.T) {
+	group := NewGroup("requirements.txt", nil, []string{})
+	var check bool
+
+	check = group.checkFilePathDependantCases(false, true, "requirements.txt.pip.debricked.lock")
+	assert.True(t, check)
+
+	check = group.checkFilePathDependantCases(false, true, "requirements-dev.txt.pip.debricked.lock")
+	assert.False(t, check)
+}
+
+func TestCheckFilePathDependantCasesWithLockFile(t *testing.T) {
+	group := NewGroup("", nil, []string{"requirements.txt.pip.debricked.lock"})
+	var check bool
+
+	check = group.checkFilePathDependantCases(true, false, "requirements.txt")
+	assert.True(t, check)
+
+	check = group.checkFilePathDependantCases(true, false, "requirements-dev.txt")
+	assert.False(t, check)
+
+	check = group.checkFilePathDependantCases(true, false, "requirements-dev.txt")
+	assert.False(t, check)
+
+	check = group.checkFilePathDependantCases(false, false, "file.txt")
+	assert.True(t, check)
+}
