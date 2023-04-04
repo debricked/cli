@@ -16,28 +16,27 @@ type Strategy struct {
 	files       []string
 	paths       []string
 	ErrorWriter io.Writer
-	GradleSetup IGradleSetup
+	GradleSetup ISetup
 }
 
 func (s Strategy) Invoke() ([]job.IJob, error) {
 	var jobs []job.IJob
-	writer := writer.FileWriter{}
+	fileWriter := writer.FileWriter{}
 	factory := CmdFactory{}
-	gradleSetup, err := s.GradleSetup.Setup(s.files, s.paths)
+	gradleSetup, err := s.GradleSetup.Configure(s.files, s.paths)
 	if err != nil {
-		if _, ok := err.(GradleSetupSubprojectError); ok {
+		if _, ok := err.(SetupSubprojectError); ok {
 			warningColor := color.New(color.FgYellow, color.Bold).SprintFunc()
 			defaultOutputWriter := log.Writer()
 			log.SetOutput(s.ErrorWriter)
 			log.Println(warningColor("Warning:\n") + err.Error())
 			log.SetOutput(defaultOutputWriter)
 		} else {
-
 			return nil, err
 		}
 	}
 	for _, gradleProject := range gradleSetup.GradleProjects {
-		jobs = append(jobs, NewJob(gradleProject.dir, gradleProject.gradlew, gradleSetup.groovyScriptPath, factory, writer))
+		jobs = append(jobs, NewJob(gradleProject.dir, gradleProject.gradlew, gradleSetup.groovyScriptPath, factory, fileWriter))
 	}
 	for _, file := range s.files {
 		dir, _ := filepath.Abs(filepath.Dir(file))
@@ -45,7 +44,7 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 			continue
 		}
 		gradlew := gradleSetup.GetGradleW(dir)
-		jobs = append(jobs, NewJob(dir, gradlew, gradleSetup.groovyScriptPath, factory, writer))
+		jobs = append(jobs, NewJob(dir, gradlew, gradleSetup.groovyScriptPath, factory, fileWriter))
 	}
 
 	return jobs, nil

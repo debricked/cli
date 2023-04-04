@@ -14,128 +14,76 @@ import (
 )
 
 const (
-	initGradle           = "gradle"
-	multiProjectFilename = ".debricked.multiprojects.txt"
+	initGradle               = "gradle"
+	multiProjectFilename     = ".debricked.multiprojects.txt"
+	gradleInitScriptFileName = ".gradle-init-script.debricked.groovy"
 )
 
 //go:embed gradle-init/gradle-init-script.groovy
 var gradleInitScript embed.FS
 
-type IGradleSetup interface {
-	Setup(files []string, paths []string) (GradleSetup, error)
+type ISetup interface {
+	Configure(files []string, paths []string) (Setup, error)
 }
 
-type GradleSetup struct {
+type Setup struct {
 	gradlewMap        map[string]string
 	settingsMap       map[string]string
 	subProjectMap     map[string]string
 	groovyScriptPath  string
 	gradlewOsName     string
 	settingsFilenames []string
-	GradleProjects    []GradleProject
+	GradleProjects    []Project
 	CmdFactory        ICmdFactory
-	FileHandler       IGradleFileHandler
+	MetaFileFinder    IMetaFileFinder
 	InitScriptHandler IInitScriptHandler
 	Writer            writer.IFileWriter
 }
 
-type GradleProject struct {
-	dir     string
-	gradlew string
-}
-
-type GradleSetupScriptError struct {
-	message string
-}
-
-type GradleSetupWalkError struct {
-	message string
-}
-
-type GradleSetupSubprojectError struct {
-	message string
-}
-
-func (e GradleSetupScriptError) Error() string {
-
-	return e.message
-}
-
-func (e GradleSetupWalkError) Error() string {
-
-	return e.message
-}
-
-func (e GradleSetupSubprojectError) Error() string {
-
-	return e.message
-}
-
-type GradleSetupError []error
-
-func (e GradleSetupError) Error() string {
-	var s string
-	for _, err := range e {
-		s += err.Error() + "\n"
-	}
-
-	return s
-}
-
-func NewGradleSetup() *GradleSetup {
-	initScript, _ := filepath.Abs(".gradle-init-script.debricked.groovy")
+func NewGradleSetup() *Setup {
+	groovyScriptPath, _ := filepath.Abs(gradleInitScriptFileName)
 	gradlewOsName := "gradlew"
 	if runtime.GOOS == "windows" {
 		gradlewOsName = "gradlew.bat"
 	}
-	settingsFilenames := []string{"settings.gradle", "settings.gradle.kts"}
-	gradlewMap := map[string]string{}
-	settingsMap := map[string]string{}
-	subProjectMap := map[string]string{}
-	gradleProjects := []GradleProject{}
-	CmdFactory := CmdFactory{}
-	FileHandler := GradleFileHandler{filepath: GradleFilePath{}}
-	InitScriptHandler := InitScriptHandler{}
-	Writer := writer.FileWriter{}
 
-	return &GradleSetup{
-		gradlewMap:        gradlewMap,
-		settingsMap:       settingsMap,
-		subProjectMap:     subProjectMap,
-		groovyScriptPath:  initScript,
+	return &Setup{
+		gradlewMap:        map[string]string{},
+		settingsMap:       map[string]string{},
+		subProjectMap:     map[string]string{},
+		groovyScriptPath:  groovyScriptPath,
 		gradlewOsName:     gradlewOsName,
-		settingsFilenames: settingsFilenames,
-		GradleProjects:    gradleProjects,
-		CmdFactory:        CmdFactory,
-		FileHandler:       FileHandler,
-		InitScriptHandler: InitScriptHandler,
-		Writer:            Writer,
+		settingsFilenames: []string{"settings.gradle", "settings.gradle.kts"},
+		GradleProjects:    []Project{},
+		CmdFactory:        CmdFactory{},
+		MetaFileFinder:    MetaFileFinder{filepath: FilePath{}},
+		InitScriptHandler: InitScriptHandler{},
+		Writer:            writer.FileWriter{},
 	}
 }
 
-func (gs GradleSetup) Setup(files []string, paths []string) (GradleSetup, error) {
+func (gs *Setup) Configure(_ []string, paths []string) (Setup, error) {
 	err := gs.InitScriptHandler.WriteInitFile(gs.groovyScriptPath, gs.Writer)
 	if err != nil {
 
-		return gs, err
+		return *gs, err
 	}
-	settingsMap, gradlewMap, err := gs.FileHandler.Find(paths)
+	settingsMap, gradlewMap, err := gs.MetaFileFinder.Find(paths)
 	gs.gradlewMap = gradlewMap
 	gs.settingsMap = settingsMap
 	if err != nil {
 
-		return gs, err
+		return *gs, err
 	}
 	err = gs.setupGradleProjectMappings()
-	if err != nil {
-
-		return gs, err
+	if err != nil && len(err.Error()) > 0 {
+		return *gs, err
 	}
 
-	return gs, nil
+	return *gs, nil
 }
 
-func (gs *GradleSetup) setupFilePathMappings(files []string) {
+func (gs *Setup) setupFilePathMappings(files []string) {
 	for _, file := range files {
 		dir, _ := filepath.Abs(filepath.Dir(file))
 		possibleGradlew := filepath.Join(dir, gs.gradlewOsName)
@@ -153,9 +101,9 @@ func (gs *GradleSetup) setupFilePathMappings(files []string) {
 	}
 }
 
-func (gs *GradleSetup) setupGradleProjectMappings() error {
-	var errors GradleSetupError
-	settingsDirs := []string{}
+func (gs *Setup) setupGradleProjectMappings() error {
+	var errors SetupError
+	var settingsDirs []string
 	for k := range gs.settingsMap {
 		settingsDirs = append(settingsDirs, k)
 	}
@@ -165,7 +113,7 @@ func (gs *GradleSetup) setupGradleProjectMappings() error {
 			continue
 		}
 		gradlew := gs.GetGradleW(dir)
-		gradleProject := GradleProject{dir: dir, gradlew: gradlew}
+		gradleProject := Project{dir: dir, gradlew: gradlew}
 		err := gs.setupSubProjectPaths(gradleProject)
 
 		if err != nil {
@@ -174,10 +122,10 @@ func (gs *GradleSetup) setupGradleProjectMappings() error {
 		gs.GradleProjects = append(gs.GradleProjects, gradleProject)
 	}
 
-	return GradleSetupSubprojectError{message: errors.Error()}
+	return SetupSubprojectError{message: errors.Error()}
 }
 
-func (gs *GradleSetup) setupSubProjectPaths(gp GradleProject) error {
+func (gs *Setup) setupSubProjectPaths(gp Project) error {
 	dependenciesCmd, _ := gs.CmdFactory.MakeFindSubGraphCmd(gp.dir, gp.gradlew, gs.groovyScriptPath)
 	var stderr bytes.Buffer
 	dependenciesCmd.Stderr = &stderr
@@ -186,13 +134,13 @@ func (gs *GradleSetup) setupSubProjectPaths(gp GradleProject) error {
 	if err != nil {
 		errorOutput := stderr.String()
 
-		return GradleSetupSubprojectError{message: errorOutput + err.Error()}
+		return SetupSubprojectError{message: errorOutput + err.Error()}
 	}
 	multiProject := filepath.Join(gp.dir, multiProjectFilename)
 	file, err := os.Open(multiProject)
 	if err != nil {
 
-		return GradleSetupSubprojectError{message: err.Error()}
+		return SetupSubprojectError{message: err.Error()}
 	}
 	defer file.Close()
 	defer os.Remove(multiProject)
@@ -204,14 +152,13 @@ func (gs *GradleSetup) setupSubProjectPaths(gp GradleProject) error {
 	}
 
 	if err := scanner.Err(); err != nil {
-
-		return GradleSetupSubprojectError{message: err.Error()}
+		return SetupSubprojectError{message: err.Error()}
 	}
 
 	return nil
 }
 
-func (gs *GradleSetup) GetGradleW(dir string) string {
+func (gs *Setup) GetGradleW(dir string) string {
 	gradlew := initGradle
 	val, ok := gs.gradlewMap[dir]
 	if ok {

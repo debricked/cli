@@ -9,7 +9,7 @@ import (
 )
 
 func TestFind(t *testing.T) {
-	finder := GradleFileHandler{filepath: GradleFilePath{}}
+	finder := MetaFileFinder{filepath: FilePath{}}
 	paths := []string{filepath.Join("testdata", "project")}
 	sMap, gMap, _ := finder.Find(paths)
 
@@ -18,7 +18,7 @@ func TestFind(t *testing.T) {
 }
 
 func TestFindNoFiles(t *testing.T) {
-	finder := GradleFileHandler{filepath: GradleFilePath{}}
+	finder := MetaFileFinder{filepath: FilePath{}}
 	paths := []string{filepath.Join("testdata", "project", "subproject")}
 	sMap, gMap, _ := finder.Find(paths)
 
@@ -45,14 +45,14 @@ func (m mockGradleFilePath) Dir(path string) string {
 }
 
 func TestWalkError(t *testing.T) {
-	finder := GradleFileHandler{filepath: mockGradleFilePath{}}
+	finder := MetaFileFinder{filepath: mockGradleFilePath{}}
 	paths := []string{filepath.Join("testdata", "project", "subproject")}
 	_, _, err := finder.Find(paths)
-	assert.EqualError(t, err, GradleSetupWalkError{message: "test"}.Error())
+	assert.EqualError(t, err, SetupWalkError{message: "test"}.Error())
 }
 
 func TestWalkFuncError(t *testing.T) {
-	finder := GradleFileHandler{filepath: GradleFilePath{}}
+	finder := MetaFileFinder{filepath: FilePath{}}
 	paths := []string{filepath.Join("testdata", "test")}
 	_, _, err := finder.Find(paths)
 

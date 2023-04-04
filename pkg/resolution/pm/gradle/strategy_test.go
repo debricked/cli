@@ -44,22 +44,22 @@ func TestInvokeManyFiles(t *testing.T) {
 	assert.Len(t, jobs, 2)
 }
 
-// mock for IGradleSetup
+// mock for ISetup
 type mockGradleSetup struct {
 	mock.Mock
 }
 
 // mock for Setup
-func (m *mockGradleSetup) Setup(files []string, paths []string) (GradleSetup, error) {
+func (m *mockGradleSetup) Configure(_ []string, _ []string) (Setup, error) {
 	args := m.Called()
 
-	return args.Get(0).(GradleSetup), args.Error(1)
+	return args.Get(0).(Setup), args.Error(1)
 }
 
 func TestInvokeError(t *testing.T) {
 	s := NewStrategy([]string{"file"}, []string{"path"})
 	mocked := &mockGradleSetup{}
-	mocked.On("Setup").Return(GradleSetup{}, GradleSetupWalkError{})
+	mocked.On("Configure").Return(Setup{}, SetupWalkError{})
 
 	s.GradleSetup = mocked
 	jobs, _ := s.Invoke()
@@ -72,7 +72,7 @@ func TestInvokeFoundProject(t *testing.T) {
 	dir, _ := os.Getwd()
 	subprojectMap[dir] = ""
 	mocked := &mockGradleSetup{}
-	mocked.On("Setup").Return(GradleSetup{GradleProjects: []GradleProject{{dir: dir, gradlew: "gradlew"}}, groovyScriptPath: "", subProjectMap: subprojectMap}, nil)
+	mocked.On("Configure").Return(Setup{GradleProjects: []Project{{dir: dir, gradlew: "gradlew"}}, groovyScriptPath: "", subProjectMap: subprojectMap}, nil)
 
 	s.GradleSetup = mocked
 	jobs, _ := s.Invoke()

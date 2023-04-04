@@ -9,8 +9,7 @@ type ICmdFactory interface {
 	MakeDependenciesGraphCmd(workingDirectory string, gradlew string, initScript string) (*exec.Cmd, error)
 }
 
-type CmdFactory struct {
-}
+type CmdFactory struct{}
 
 func (cf CmdFactory) MakeFindSubGraphCmd(workingDirectory string, gradlew string, initScript string) (*exec.Cmd, error) {
 	path, err := exec.LookPath(gradlew)

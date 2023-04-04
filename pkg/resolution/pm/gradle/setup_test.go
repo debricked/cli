@@ -21,13 +21,13 @@ func TestNewGradleSetup(t *testing.T) {
 
 func TestErrors(t *testing.T) {
 
-	walkError := GradleSetupWalkError{message: "test"}
+	walkError := SetupWalkError{message: "test"}
 	assert.Equal(t, "test", walkError.Error())
 
-	scriptError := GradleSetupScriptError{message: "test"}
+	scriptError := SetupScriptError{message: "test"}
 	assert.Equal(t, "test", scriptError.Error())
 
-	subprojectError := GradleSetupSubprojectError{message: "test"}
+	subprojectError := SetupSubprojectError{message: "test"}
 	assert.Equal(t, "test", subprojectError.Error())
 
 }
@@ -115,13 +115,13 @@ func TestSetupSubProjectPaths(t *testing.T) {
 	gs.CmdFactory = &mockCmdFactory{}
 
 	absPath, _ := filepath.Abs(filepath.Join("testdata", "project"))
-	gradleProject := GradleProject{dir: absPath, gradlew: filepath.Join("testdata", "project", "gradlew")}
+	gradleProject := Project{dir: absPath, gradlew: filepath.Join("testdata", "project", "gradlew")}
 	err := gs.setupSubProjectPaths(gradleProject)
 	assert.Nil(t, err)
 	assert.Len(t, gs.subProjectMap, 1)
 
 	absPath, _ = filepath.Abs(filepath.Join("testdata", "project", "subproject"))
-	gradleProject = GradleProject{dir: absPath, gradlew: filepath.Join("testdata", "project", "gradlew")}
+	gradleProject = Project{dir: absPath, gradlew: filepath.Join("testdata", "project", "gradlew")}
 	err = gs.setupSubProjectPaths(gradleProject)
 	assert.Nil(t, err)
 	assert.Len(t, gs.subProjectMap, 2)
@@ -133,7 +133,7 @@ func TestSetupSubProjectPathsError(t *testing.T) {
 	gs := NewGradleSetup()
 
 	absPath, _ := filepath.Abs(filepath.Join("testdata", "project"))
-	gradleProject := GradleProject{dir: absPath, gradlew: filepath.Join("testdata", "project", "gradlew")}
+	gradleProject := Project{dir: absPath, gradlew: filepath.Join("testdata", "project", "gradlew")}
 	err := gs.setupSubProjectPaths(gradleProject)
 
 	// assery GradleSetupSubprojectError
@@ -156,37 +156,47 @@ func TestGetGradleW(t *testing.T) {
 	assert.Equal(t, filepath.Join("testdata", "project", "gradlew"), gradlew)
 }
 
-type mockInitScriptHandler struct{}
+type mockInitScriptHandler struct {
+	writeInitFileErr error
+}
 
 func (_ mockInitScriptHandler) ReadInitFile() ([]byte, error) {
-
 	return gradleInitScript.ReadFile("gradle-init/gradle-init-script.groovy")
 }
 
-func (i mockInitScriptHandler) WriteInitFile(targetFileName string, fileWriter writer.IFileWriter) error {
-
-	return GradleSetupScriptError{message: "read-error"}
+func (i mockInitScriptHandler) WriteInitFile(_ string, _ writer.IFileWriter) error {
+	return i.writeInitFileErr
 }
 
-type mockFileHandler struct{}
-
-func (f mockFileHandler) Find(paths []string) (map[string]string, map[string]string, error) {
-
-	return nil, nil, GradleSetupWalkError{message: "mock error"}
+type mockFileHandler struct {
+	setupWalkErr error
 }
 
-// test setup
-func TestSetupErrors(t *testing.T) {
+func (f mockFileHandler) Find(_ []string) (map[string]string, map[string]string, error) {
+	return nil, nil, f.setupWalkErr
+}
+
+func TestConfigureErrors(t *testing.T) {
 	gs := NewGradleSetup()
 	gs.Writer = &writerTestdata.FileWriterMock{}
-	_, err := gs.Setup([]string{"testdata/project"}, []string{"testdata/project"})
+	_, err := gs.Configure([]string{"testdata/project"}, []string{"testdata/project"})
 	assert.NotNil(t, err)
 
-	gs.FileHandler = mockFileHandler{}
-	_, err = gs.Setup([]string{"testdata/project"}, []string{"testdata/project"})
+	gs.MetaFileFinder = mockFileHandler{setupWalkErr: SetupScriptError{message: "mock error"}}
+	_, err = gs.Configure([]string{"testdata/project"}, []string{"testdata/project"})
 	assert.Equal(t, "mock error", err.Error())
 
-	gs.InitScriptHandler = mockInitScriptHandler{}
-	_, err = gs.Setup([]string{"testdata/project"}, []string{"testdata/project"})
-	assert.Equal(t, "read-error", err.Error())
+	gs.InitScriptHandler = mockInitScriptHandler{writeInitFileErr: SetupScriptError{message: "write-init-file-err"}}
+	_, err = gs.Configure([]string{"testdata/project"}, []string{"testdata/project"})
+	assert.Equal(t, "write-init-file-err", err.Error())
+}
+
+func TestConfigure(t *testing.T) {
+	gs := NewGradleSetup()
+	gs.Writer = &writerTestdata.FileWriterMock{}
+	gs.MetaFileFinder = mockFileHandler{setupWalkErr: nil}
+	gs.InitScriptHandler = mockInitScriptHandler{writeInitFileErr: nil}
+
+	_, err := gs.Configure([]string{"testdata/project"}, []string{"testdata/project"})
+	assert.NoError(t, err)
 }
