@@ -75,35 +75,10 @@ func (j *Job) Run() {
 		}
 	}
 
-	catCmdOutput, listCmdOutput, ShowCmdOutput, err := j.generateLockContent()
+	err := j.writeLockContent()
 
 	if err != nil {
-		return // errors already appended
-	}
-
-	j.SendStatus("setting up data...")
-	lockFileName := fmt.Sprintf(".%s%s", filepath.Base(j.GetFile()), lockFileExtension)
-	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.GetFile(), lockFileName))
-	if err != nil {
-		j.Errors().Critical(err)
-
 		return
-	}
-	defer closeFile(j, lockFile)
-
-	var fileContents []string
-	fileContents = append(fileContents, string(catCmdOutput))
-	fileContents = append(fileContents, lockFileDelimiter)
-	fileContents = append(fileContents, string(listCmdOutput))
-	fileContents = append(fileContents, lockFileDelimiter)
-	fileContents = append(fileContents, string(ShowCmdOutput))
-
-	res := []byte(strings.Join(fileContents, "\n"))
-	j.SendStatus("writing data...")
-
-	err = j.fileWriter.Write(lockFile, res)
-	if err != nil {
-		j.Errors().Critical(err)
 	}
 
 	if j.install {
@@ -115,34 +90,58 @@ func (j *Job) Run() {
 	}
 }
 
-func (j *Job) generateLockContent() (catCmdOutput, listCmdOutput, ShowCmdOutput []byte, err error) {
+func (j *Job) writeLockContent() error {
 
 	j.SendStatus("running cat command")
-	catCmdOutput, err = j.runCatCmd()
+	catCmdOutput, err := j.runCatCmd()
 	if err != nil {
 		j.Errors().Critical(err)
 
-		return nil, nil, nil, err
+		return err
 	}
 
 	j.SendStatus("running list command")
-	listCmdOutput, err = j.runListCmd()
+	listCmdOutput, err := j.runListCmd()
 	if err != nil {
 		j.Errors().Critical(err)
 
-		return nil, nil, nil, err
+		return err
 	}
 
 	j.SendStatus("running show command")
 	installedPackages := j.parsePipList(string(listCmdOutput))
-	ShowCmdOutput, err = j.runShowCmd(installedPackages)
+	ShowCmdOutput, err := j.runShowCmd(installedPackages)
 	if err != nil {
 		j.Errors().Critical(err)
 
-		return nil, nil, nil, err
+		return err
 	}
 
-	return catCmdOutput, listCmdOutput, ShowCmdOutput, nil
+	j.SendStatus("setting up data...")
+	lockFileName := fmt.Sprintf(".%s%s", filepath.Base(j.GetFile()), lockFileExtension)
+	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.GetFile(), lockFileName))
+	if err != nil {
+		j.Errors().Critical(err)
+
+		return err
+	}
+	defer closeFile(j, lockFile)
+
+	var fileContents []string
+	fileContents = append(fileContents, string(catCmdOutput))
+	fileContents = append(fileContents, lockFileDelimiter)
+	fileContents = append(fileContents, string(listCmdOutput))
+	fileContents = append(fileContents, lockFileDelimiter)
+	fileContents = append(fileContents, string(ShowCmdOutput))
+	res := []byte(strings.Join(fileContents, "\n"))
+
+	j.SendStatus("writing data...")
+	err = j.fileWriter.Write(lockFile, res)
+	if err != nil {
+		j.Errors().Critical(err)
+	}
+
+	return nil
 }
 
 func (j *Job) runCreateVenvCmd() ([]byte, error) {
