@@ -56,14 +56,26 @@ func (m *mockGradleSetup) Configure(_ []string, _ []string) (Setup, error) {
 	return args.Get(0).(Setup), args.Error(1)
 }
 
-func TestInvokeError(t *testing.T) {
+func TestInvokeWalkError(t *testing.T) {
 	s := NewStrategy([]string{"file"}, []string{"path"})
 	mocked := &mockGradleSetup{}
 	mocked.On("Configure").Return(Setup{}, SetupWalkError{})
 
 	s.GradleSetup = mocked
-	jobs, _ := s.Invoke()
+	jobs, err := s.Invoke()
 	assert.Empty(t, jobs)
+	assert.Equal(t, err, SetupWalkError{})
+}
+
+func TestInvokeSubprojectError(t *testing.T) {
+	s := NewStrategy([]string{"file"}, []string{"path"})
+	mocked := &mockGradleSetup{}
+	mocked.On("Configure").Return(Setup{}, SetupSubprojectError{})
+	s.GradleSetup = mocked
+	jobs, err := s.Invoke()
+	assert.Nil(t, err)
+	assert.Len(t, jobs, 1)
+	assert.Equal(t, s.ErrorWriter, os.Stdout)
 }
 
 func TestInvokeFoundProject(t *testing.T) {
