@@ -76,8 +76,8 @@ func TestSetupGradleProjectMappings(t *testing.T) {
 type mockCmdFactory struct {
 }
 
-func (m *mockCmdFactory) MakeFindSubGraphCmd(workingDirectory string, gradlew string, initScript string) (*exec.Cmd, error) {
-	fileName := filepath.Join(workingDirectory, ".debricked.multiprojects.txt")
+func (m *mockCmdFactory) MakeFindSubGraphCmd(workingDirectory string, _ string, _ string) (*exec.Cmd, error) {
+	fileName := filepath.Join(workingDirectory, multiProjectFilename)
 	content := []byte(workingDirectory)
 	file, err := os.Create(fileName)
 	if err != nil {
@@ -100,8 +100,7 @@ func (m *mockCmdFactory) MakeFindSubGraphCmd(workingDirectory string, gradlew st
 	return exec.Command("ls"), nil
 }
 
-func (m *mockCmdFactory) MakeDependenciesGraphCmd(workingDirectory string, gradlew string, initScript string) (*exec.Cmd, error) {
-
+func (m *mockCmdFactory) MakeDependenciesGraphCmd(workingDirectory string, _ string, _ string) (*exec.Cmd, error) {
 	return &exec.Cmd{
 		Path: workingDirectory,
 		Args: []string{"touch", ".debricked.dependencies.graph.txt"},
@@ -146,7 +145,6 @@ func (m *mockCmdFactory2) MakeDependenciesGraphCmd(workingDirectory string, grad
 }
 
 func TestSetupSubProjectPaths(t *testing.T) {
-
 	gs := NewGradleSetup()
 	gs.CmdFactory = &mockCmdFactory{}
 
@@ -164,7 +162,6 @@ func TestSetupSubProjectPaths(t *testing.T) {
 }
 
 func TestSetupSubProjectPathsNoFiles(t *testing.T) {
-
 	gs := NewGradleSetup()
 	gs.CmdFactory = &mockCmdFactory2{}
 
@@ -175,14 +172,12 @@ func TestSetupSubProjectPathsNoFiles(t *testing.T) {
 }
 
 func TestSetupSubProjectPathsError(t *testing.T) {
-
 	gs := NewGradleSetup()
 
 	absPath, _ := filepath.Abs(filepath.Join("testdata", "project"))
 	gradleProject := Project{dir: absPath, gradlew: filepath.Join("testdata", "project", "gradlew")}
 	err := gs.setupSubProjectPaths(gradleProject)
 
-	// assery GradleSetupSubprojectError
 	assert.NotNil(t, err)
 }
 
