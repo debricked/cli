@@ -2,6 +2,8 @@ package file
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
 )
 
 type Group struct {
@@ -43,4 +45,42 @@ func (fileGroup *Group) GetAllFiles() []string {
 	}
 
 	return append(files, fileGroup.RelatedFiles...)
+}
+
+func (fileGroup *Group) checkFilePathDependantCases(fileMatch bool, lockFileMatch bool, file string) bool {
+	if lockFileMatch {
+		filePathDependantCases := fileGroup.getFilePathDependantCases()
+		for _, c := range filePathDependantCases {
+			if strings.HasSuffix(file, c) {
+				fileBase, _ := strings.CutSuffix(file, c)
+
+				return len(fileGroup.FilePath) > 0 && (fileBase == filepath.Base(fileGroup.FilePath))
+			}
+		}
+
+		return true
+	}
+
+	if fileMatch {
+		filePathDependantCases := fileGroup.getFilePathDependantCases()
+		for _, c := range filePathDependantCases {
+			for _, lockFile := range fileGroup.RelatedFiles {
+				if strings.HasSuffix(lockFile, c) {
+					lockFileBase, _ := strings.CutSuffix(lockFile, c)
+
+					return lockFileBase == file
+				}
+			}
+		}
+
+		return true
+	}
+
+	return true
+}
+
+func (fileGroup *Group) getFilePathDependantCases() []string {
+	return []string{
+		".pip.debricked.lock",
+	}
 }

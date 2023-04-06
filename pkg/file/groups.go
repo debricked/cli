@@ -45,14 +45,15 @@ func (gs *Groups) Match(format *CompiledFormat, path string, lockfileOnly bool) 
 
 func (gs *Groups) matchExistingGroup(format *CompiledFormat, fileMatch bool, lockFileMatch bool, dir string, file string) bool {
 	for _, g := range gs.groups {
-		var gDir string
+		var groupDir string
 		if g.HasFile() {
-			gDir, _ = filepath.Split(g.FilePath)
+			groupDir, _ = filepath.Split(g.FilePath)
 		} else {
-			gDir, _ = filepath.Split(g.RelatedFiles[0])
+			groupDir, _ = filepath.Split(g.RelatedFiles[0])
 		}
 
-		if gDir == dir && format == g.CompiledFormat {
+		matchesGroup := groupDir == dir && format == g.CompiledFormat && g.checkFilePathDependantCases(fileMatch, lockFileMatch, file)
+		if matchesGroup {
 			if fileMatch {
 				g.FilePath = dir + file
 
