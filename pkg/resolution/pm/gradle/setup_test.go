@@ -96,7 +96,7 @@ func (m *mockCmdFactory) MakeFindSubGraphCmd(workingDirectory string, _ string, 
 	// if windows use dir
 	if runtime.GOOS == "windows" {
 		// gradlewOsName = "gradlew.bat"
-		return exec.Command("cmd", "/C", "dir"), nil
+		return exec.Command("dir"), nil
 	}
 
 	return exec.Command("ls"), nil
