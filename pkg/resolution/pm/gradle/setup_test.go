@@ -1,6 +1,7 @@
 package gradle
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -110,6 +111,18 @@ func (m *mockCmdFactory) MakeDependenciesGraphCmd(workingDirectory string, _ str
 	}, nil
 }
 
+func TestSetupSubProjectPathsNoFileCreated(t *testing.T) {
+	gs := NewGradleSetup()
+	gs.CmdFactory = &mockCmdFactory{createFile: false}
+
+	absPath, _ := filepath.Abs(filepath.Join("testdata", "project"))
+	gradleProject := Project{dir: absPath, gradlew: filepath.Join("testdata", "project", "gradlew")}
+	err := gs.setupSubProjectPaths(gradleProject)
+	fmt.Println(err)
+	assert.NotNil(t, err)
+	assert.Len(t, gs.subProjectMap, 0)
+}
+
 func TestSetupSubProjectPaths(t *testing.T) {
 	gs := NewGradleSetup()
 	gs.CmdFactory = &mockCmdFactory{createFile: true}
@@ -125,16 +138,6 @@ func TestSetupSubProjectPaths(t *testing.T) {
 	err = gs.setupSubProjectPaths(gradleProject)
 	assert.Nil(t, err)
 	assert.Len(t, gs.subProjectMap, 2)
-}
-
-func TestSetupSubProjectPathsNoFileCreated(t *testing.T) {
-	gs := NewGradleSetup()
-	gs.CmdFactory = &mockCmdFactory{createFile: false}
-
-	absPath, _ := filepath.Abs(filepath.Join("testdata", "project"))
-	gradleProject := Project{dir: absPath, gradlew: filepath.Join("testdata", "project", "gradlew")}
-	err := gs.setupSubProjectPaths(gradleProject)
-	assert.NotNil(t, err)
 }
 
 func TestSetupSubProjectPathsError(t *testing.T) {
