@@ -1,4 +1,4 @@
-FROM golang:1.19-alpine AS dev
+FROM golang:1.20-alpine AS dev
 WORKDIR /cli
 RUN apk update \
     && apk --no-cache --update add git build-base
