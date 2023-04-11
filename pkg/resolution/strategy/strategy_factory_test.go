@@ -20,7 +20,7 @@ func TestNewStrategyFactory(t *testing.T) {
 func TestMakeErr(t *testing.T) {
 	f := NewStrategyFactory()
 	batch := file.NewBatch(testdata.PmMock{N: "test"})
-	s, err := f.Make(batch)
+	s, err := f.Make(batch, nil)
 	assert.Nil(t, s)
 	assert.ErrorContains(t, err, "failed to make strategy from test")
 }
@@ -28,7 +28,7 @@ func TestMakeErr(t *testing.T) {
 func TestMake(t *testing.T) {
 	cases := map[string]IStrategy{
 		maven.Name:  maven.NewStrategy(nil),
-		gradle.Name: gradle.NewStrategy(nil),
+		gradle.Name: gradle.NewStrategy(nil, nil),
 		gomod.Name:  gomod.NewStrategy(nil),
 		pip.Name:    pip.NewStrategy(nil),
 	}
@@ -37,7 +37,7 @@ func TestMake(t *testing.T) {
 	for name, strategy := range cases {
 		batch = file.NewBatch(testdata.PmMock{N: name})
 		t.Run(name, func(t *testing.T) {
-			s, err := f.Make(batch)
+			s, err := f.Make(batch, nil)
 			assert.NoError(t, err)
 			assert.Equal(t, strategy, s)
 		})

@@ -37,7 +37,7 @@ func TestNewStrategy(t *testing.T) {
 func TestInvokeNoFiles(t *testing.T) {
 	s := NewStrategy([]string{})
 
-	jobs := s.Invoke()
+	jobs, _ := s.Invoke()
 
 	assert.Empty(t, jobs)
 }
@@ -46,7 +46,7 @@ func TestInvokeOneFile(t *testing.T) {
 	s := NewStrategy([]string{"file"})
 	s.pomService = PomServiceMock{}
 
-	jobs := s.Invoke()
+	jobs, _ := s.Invoke()
 
 	assert.Len(t, jobs, 1)
 }
@@ -55,7 +55,7 @@ func TestInvokeManyFiles(t *testing.T) {
 	s := NewStrategy([]string{"file-1", "file-2"})
 	s.pomService = PomServiceMock{}
 
-	jobs := s.Invoke()
+	jobs, _ := s.Invoke()
 
 	assert.Len(t, jobs, 2)
 }

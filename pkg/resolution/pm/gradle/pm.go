@@ -19,5 +19,6 @@ func (pm Pm) Name() string {
 func (_ Pm) Manifests() []string {
 	return []string{
 		"build.gradle",
+		"build.gradle.kts",
 	}
 }
