@@ -69,7 +69,7 @@ func TestDifferentNewBaseJob(t *testing.T) {
 	assert.NotNil(t, j.status)
 }
 
-func TestGetExitErrorWithNoneExitError(t *testing.T) {
+func TestGetExitErrorWithExitError(t *testing.T) {
 	err := &exec.ExitError{
 		ProcessState: nil,
 		Stderr:       []byte("stderr"),
@@ -77,4 +77,11 @@ func TestGetExitErrorWithNoneExitError(t *testing.T) {
 	j := BaseJob{}
 	exitErr := j.GetExitError(err)
 	assert.ErrorContains(t, exitErr, string(err.Stderr))
+}
+
+func TestGetExitErrorWithNoneExitError(t *testing.T) {
+	err := &exec.Error{Err: errors.New("none-exit-err")}
+	j := BaseJob{}
+	exitErr := j.GetExitError(err)
+	assert.ErrorContains(t, exitErr, err.Error())
 }

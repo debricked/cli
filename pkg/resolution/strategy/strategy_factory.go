@@ -11,7 +11,7 @@ import (
 )
 
 type IFactory interface {
-	Make(pmBatch file.IBatch) (IStrategy, error)
+	Make(pmBatch file.IBatch, paths []string) (IStrategy, error)
 }
 
 type Factory struct{}
@@ -20,13 +20,13 @@ func NewStrategyFactory() Factory {
 	return Factory{}
 }
 
-func (sf Factory) Make(pmFileBatch file.IBatch) (IStrategy, error) {
+func (sf Factory) Make(pmFileBatch file.IBatch, paths []string) (IStrategy, error) {
 	name := pmFileBatch.Pm().Name()
 	switch name {
 	case maven.Name:
 		return maven.NewStrategy(pmFileBatch.Files()), nil
 	case gradle.Name:
-		return gradle.NewStrategy(pmFileBatch.Files()), nil
+		return gradle.NewStrategy(pmFileBatch.Files(), paths), nil
 	case gomod.Name:
 		return gomod.NewStrategy(pmFileBatch.Files()), nil
 	case pip.Name:

@@ -10,3 +10,4 @@ dist/
 test/resolve/testdata/pip/requirements.txt.venv/
 test/resolve/testdata/pip/.requirements.txt.debricked.lock
 pkg/scan/testdata/npm/yarn.lock
+pkg/resolution/pm/gradle/.gradle-init-script.debricked.groovy

@@ -45,6 +45,18 @@ func TestResolve(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestResolveInvokeError(t *testing.T) {
+	r := NewResolver(
+		&testdata.FinderMock{},
+		resolutionFile.NewBatchFactory(),
+		strategyTestdata.NewStrategyFactoryErrorMock(),
+		NewScheduler(workers),
+	)
+
+	_, err := r.Resolve([]string{"../../go.mod"}, nil)
+	assert.NotNil(t, err)
+}
+
 func TestResolveStrategyError(t *testing.T) {
 	r := NewResolver(
 		&testdata.FinderMock{},
