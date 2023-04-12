@@ -21,6 +21,7 @@ var commitAuthor string
 var repositoryUrl string
 var integrationName string
 var exclusions = file.DefaultExclusions()
+var passOnDowntime bool
 
 const (
 	RepositoryFlag    = "repository"
@@ -30,6 +31,7 @@ const (
 	RepositoryUrlFlag = "repository-url"
 	IntegrationFlag   = "integration"
 	ExclusionFlag     = "exclusion"
+	PassOnTimeOut     = "pass-on-timeout"
 )
 
 var scanCmdError error
@@ -82,12 +84,15 @@ Special Terms | Meaning
 
 Examples: 
 $ debricked scan . `+exampleFlags)
+	cmd.Flags().BoolVarP(&passOnDowntime, PassOnTimeOut, "p", false, "pass scan if there is a service access timeout")
+
 	viper.MustBindEnv(RepositoryFlag)
 	viper.MustBindEnv(CommitFlag)
 	viper.MustBindEnv(BranchFlag)
 	viper.MustBindEnv(CommitAuthorFlag)
 	viper.MustBindEnv(RepositoryUrlFlag)
 	viper.MustBindEnv(IntegrationFlag)
+	viper.MustBindEnv(PassOnTimeOut)
 
 	return cmd
 }
@@ -107,6 +112,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			CommitAuthor:    viper.GetString(CommitAuthorFlag),
 			RepositoryUrl:   viper.GetString(RepositoryUrlFlag),
 			IntegrationName: viper.GetString(IntegrationFlag),
+			PassOnTimeOut:   viper.GetBool(PassOnTimeOut),
 		}
 		if s != nil {
 			scanCmdError = (*s).Scan(options)

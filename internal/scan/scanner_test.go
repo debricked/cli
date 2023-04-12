@@ -81,7 +81,6 @@ func TestScan(t *testing.T) {
 
 	path := testdataYarn
 	repositoryName := path
-	commitName := "testdata/yarn-commit"
 	cwd, _ := os.Getwd()
 	// reset working directory that has been manipulated in scanner.Scan
 	defer resetWd(t, cwd)
@@ -89,7 +88,7 @@ func TestScan(t *testing.T) {
 		Path:            path,
 		Exclusions:      nil,
 		RepositoryName:  repositoryName,
-		CommitName:      commitName,
+		CommitName:      "commit",
 		BranchName:      "",
 		CommitAuthor:    "",
 		RepositoryUrl:   "",
@@ -455,6 +454,57 @@ func TestSetWorkingDirectory(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestScanServiceDowntime(t *testing.T) {
+	var debClient client.IDebClient
+	clientMock := testdata.NewDebClientMock()
+	clientMock.SetServiceUp(false)
+	debClient = clientMock
+
+	var ciService ci.IService = ci.NewService(nil)
+
+	scanner, _ := NewDebrickedScanner(&debClient, ciService)
+
+	path := testdataYarn
+	repositoryName := path
+	commitName := "testdata/yarn-commit"
+	cwd, _ := os.Getwd()
+	// reset working directory that has been manipulated in scanner.Scan
+	defer resetWd(t, cwd)
+	opts := DebrickedOptions{
+		Path:           path,
+		Exclusions:     nil,
+		RepositoryName: repositoryName,
+		CommitName:     commitName,
+		PassOnTimeOut:  true,
+	}
+
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := scanner.Scan(opts)
+
+	_ = w.Close()
+	output, _ := io.ReadAll(r)
+	os.Stdout = rescueStdout
+
+	if err != nil {
+		t.Error("failed to assert that scan ran without errors. Error:", err)
+	}
+	assert.Contains(t, string(output), client.NoResErr.Error())
+	resetWd(t, cwd)
+
+	opts.PassOnTimeOut = false
+	rescueStdout = os.Stdout
+	os.Stdout = w
+
+	err = scanner.Scan(opts)
+
+	_ = w.Close()
+	os.Stdout = rescueStdout
+	assert.ErrorIs(t, err, client.NoResErr)
 }
 
 func addMockedFormatsResponse(clientMock *testdata.DebClientMock) {

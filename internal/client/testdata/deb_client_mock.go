@@ -14,6 +14,11 @@ type DebClientMock struct {
 	realDebClient    *client.DebClient
 	responseQueue    []MockResponse
 	responseUriQueue map[string][]MockResponse
+	serviceUp        bool
+}
+
+func (mock *DebClientMock) SetServiceUp(serviceUp bool) {
+	mock.serviceUp = serviceUp
 }
 
 func NewDebClientMock() *DebClientMock {
@@ -22,13 +27,15 @@ func NewDebClientMock() *DebClientMock {
 	return &DebClientMock{
 		realDebClient:    debClient,
 		responseQueue:    []MockResponse{},
-		responseUriQueue: map[string][]MockResponse{}}
+		responseUriQueue: map[string][]MockResponse{},
+		serviceUp:        true,
+	}
 }
 
 func (mock *DebClientMock) Get(uri string, format string) (*http.Response, error) {
 	response, err := mock.popResponse(mock.RemoveQueryParamsFromUri(uri))
 
-	if response != nil {
+	if response != nil || !mock.serviceUp {
 		return response, err
 	}
 
@@ -82,6 +89,10 @@ func (mock *DebClientMock) RemoveQueryParamsFromUri(uri string) string {
 }
 
 func (mock *DebClientMock) popResponse(uri string) (*http.Response, error) {
+	if !mock.serviceUp {
+		return nil, client.NoResErr
+	}
+
 	var responseMock MockResponse
 	uriQueue, existsInUriQueue := mock.responseUriQueue[uri]
 	existsInQueue := len(mock.responseQueue) != 0

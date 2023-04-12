@@ -43,6 +43,7 @@ type DebrickedOptions struct {
 	CommitAuthor    string
 	RepositoryUrl   string
 	IntegrationName string
+	PassOnTimeOut   bool
 }
 
 func NewDebrickedScanner(c *client.IDebClient, ciService ci.IService) (*DebrickedScanner, error) {
@@ -93,7 +94,7 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 
 	result, err := dScanner.scan(dOptions, *gitMetaObject)
 	if err != nil {
-		return err
+		return dScanner.handleScanError(err, dOptions.PassOnTimeOut)
 	}
 
 	if result == nil {
@@ -130,6 +131,16 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 	}
 
 	return result, nil
+}
+
+func (dScanner *DebrickedScanner) handleScanError(err error, passOnTimeOut bool) error {
+	if err == client.NoResErr && passOnTimeOut {
+		fmt.Println(err)
+
+		return nil
+	}
+
+	return err
 }
 
 // SetWorkingDirectory sets working directory in accordance with the path option
