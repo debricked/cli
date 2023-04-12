@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/debricked/cli/pkg/cmd/root"
+	"github.com/debricked/cli/internal/cmd/root"
 )
 
 var version string // Set at compile time
