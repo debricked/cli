@@ -123,9 +123,9 @@ func TestRunEJson(t *testing.T) {
 	f := testdata.NewFinderMock()
 	groups := file.Groups{}
 	groups.Add(file.Group{
-		FilePath:       "manifest-file",
+		ManifestFile:   "manifest-file",
 		CompiledFormat: nil,
-		RelatedFiles: []string{
+		LockFiles: []string{
 			"lock-file",
 		},
 	})

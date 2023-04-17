@@ -10,9 +10,9 @@ import (
 )
 
 type Format struct {
-	Regex            string   `json:"regex"`
-	DocumentationUrl string   `json:"documentationUrl"`
-	LockFileRegexes  []string `json:"lockFileRegexes"`
+	ManifestFileRegex string   `json:"regex"`
+	DocumentationUrl  string   `json:"documentationUrl"`
+	LockFileRegexes   []string `json:"lockFileRegexes"`
 }
 
 func NewCompiledFormat(format *Format) (*CompiledFormat, error) {
@@ -20,8 +20,8 @@ func NewCompiledFormat(format *Format) (*CompiledFormat, error) {
 	var err error
 	isPcre := false
 
-	if len(format.Regex) > 0 {
-		compiledRegex, err = regexp.Compile(format.Regex)
+	if len(format.ManifestFileRegex) > 0 {
+		compiledRegex, err = regexp.Compile(format.ManifestFileRegex)
 		if err != nil && strings.Contains(err.Error(), syntax.ErrInvalidPerlOp.String()) {
 			isPcre = true
 			err = nil
@@ -59,16 +59,16 @@ func NewCompiledFormat(format *Format) (*CompiledFormat, error) {
 }
 
 type CompiledFormat struct {
-	Regex            *regexp.Regexp
-	DocumentationUrl *string
-	LockFileRegexes  []*regexp.Regexp
-	format           *Format
-	pcre             bool
+	ManifestFileRegex *regexp.Regexp
+	DocumentationUrl  *string
+	LockFileRegexes   []*regexp.Regexp
+	format            *Format
+	pcre              bool
 }
 
 func (format *CompiledFormat) MatchFile(filename string) bool {
 	if format.pcre {
-		matched, err := pcre.Match(format.format.Regex, filename)
+		matched, err := pcre.Match(format.format.ManifestFileRegex, filename)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -76,7 +76,7 @@ func (format *CompiledFormat) MatchFile(filename string) bool {
 		return matched
 	}
 
-	if format.Regex != nil && format.Regex.MatchString(filename) {
+	if format.ManifestFileRegex != nil && format.ManifestFileRegex.MatchString(filename) {
 		return true
 	}
 

@@ -8,9 +8,9 @@ import (
 
 func ExamplePrint() {
 	format := Format{
-		Regex:            "Regex",
-		DocumentationUrl: "https://debricked.com/docs",
-		LockFileRegexes:  []string{},
+		ManifestFileRegex: "ManifestFileRegex",
+		DocumentationUrl:  "https://debricked.com/docs",
+		LockFileRegexes:   []string{},
 	}
 	compiledFormat, _ := NewCompiledFormat(&format)
 	g := NewGroup("package.json", compiledFormat, []string{"yarn.lock"})
@@ -22,16 +22,16 @@ func ExamplePrint() {
 
 func TestHasFile(t *testing.T) {
 	g := Group{
-		FilePath:       "",
+		ManifestFile:   "",
 		CompiledFormat: nil,
-		RelatedFiles:   []string{"yarn.lock"},
+		LockFiles:      []string{"yarn.lock"},
 	}
 	assert.False(t, g.HasFile(), "failed to assert that group had no dependency file")
 
 	g = Group{
-		FilePath:       "package.json",
+		ManifestFile:   "package.json",
 		CompiledFormat: nil,
-		RelatedFiles:   []string{"yarn.lock"},
+		LockFiles:      []string{"yarn.lock"},
 	}
 	assert.True(t, g.HasFile(), "failed to assert that group had a dependency file")
 }
@@ -40,10 +40,10 @@ func TestGetAllFiles(t *testing.T) {
 	g := NewGroup("package.json", nil, []string{"yarn.lock"})
 	assert.Len(t, g.GetAllFiles(), 2, "failed to assert number of files")
 
-	g.RelatedFiles = []string{}
+	g.LockFiles = []string{}
 	assert.Len(t, g.GetAllFiles(), 1, "failed to assert number of files")
 
-	g.FilePath = ""
+	g.ManifestFile = ""
 	assert.Len(t, g.GetAllFiles(), 0, "failed to assert number of files")
 }
 

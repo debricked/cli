@@ -7,21 +7,21 @@ import (
 )
 
 type Group struct {
-	FilePath       string          `json:"dependencyFile"`
+	ManifestFile   string          `json:"manifestFile"`
 	CompiledFormat *CompiledFormat `json:"-"`
-	RelatedFiles   []string        `json:"lockFiles"`
+	LockFiles      []string        `json:"lockFiles"`
 }
 
-func NewGroup(filePath string, format *CompiledFormat, relatedFiles []string) *Group {
-	return &Group{FilePath: filePath, CompiledFormat: format, RelatedFiles: relatedFiles}
+func NewGroup(manifestFile string, format *CompiledFormat, lockFiles []string) *Group {
+	return &Group{ManifestFile: manifestFile, CompiledFormat: format, LockFiles: lockFiles}
 }
 
 func (fileGroup *Group) Print() {
 	hasFile := fileGroup.HasFile()
 	if hasFile {
-		fmt.Println(fileGroup.FilePath)
+		fmt.Println(fileGroup.ManifestFile)
 	}
-	for _, filePath := range fileGroup.RelatedFiles {
+	for _, filePath := range fileGroup.LockFiles {
 		if hasFile {
 			fmt.Println(" * " + filePath)
 		} else {
@@ -31,20 +31,20 @@ func (fileGroup *Group) Print() {
 }
 
 func (fileGroup *Group) HasFile() bool {
-	return fileGroup.FilePath != ""
+	return fileGroup.ManifestFile != ""
 }
 
 func (fileGroup *Group) HasLockFiles() bool {
-	return len(fileGroup.RelatedFiles) > 0
+	return len(fileGroup.LockFiles) > 0
 }
 
 func (fileGroup *Group) GetAllFiles() []string {
 	var files []string
 	if fileGroup.HasFile() {
-		files = append(files, fileGroup.FilePath)
+		files = append(files, fileGroup.ManifestFile)
 	}
 
-	return append(files, fileGroup.RelatedFiles...)
+	return append(files, fileGroup.LockFiles...)
 }
 
 func (fileGroup *Group) checkFilePathDependantCases(fileMatch bool, lockFileMatch bool, file string) bool {
@@ -54,7 +54,7 @@ func (fileGroup *Group) checkFilePathDependantCases(fileMatch bool, lockFileMatc
 			if strings.HasSuffix(file, c) {
 				fileBase, _ := strings.CutSuffix(file, c)
 
-				return len(fileGroup.FilePath) > 0 && (fileBase == filepath.Base(fileGroup.FilePath))
+				return len(fileGroup.ManifestFile) > 0 && (fileBase == filepath.Base(fileGroup.ManifestFile))
 			}
 		}
 
@@ -64,7 +64,7 @@ func (fileGroup *Group) checkFilePathDependantCases(fileMatch bool, lockFileMatc
 	if fileMatch {
 		filePathDependantCases := fileGroup.getFilePathDependantCases()
 		for _, c := range filePathDependantCases {
-			for _, lockFile := range fileGroup.RelatedFiles {
+			for _, lockFile := range fileGroup.LockFiles {
 				if strings.HasSuffix(lockFile, c) {
 					lockFileBase, _ := strings.CutSuffix(lockFile, c)
 

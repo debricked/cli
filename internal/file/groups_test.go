@@ -8,9 +8,9 @@ import (
 
 func TestMatch(t *testing.T) {
 	f := Format{
-		Regex:            "composer\\.json",
-		DocumentationUrl: "",
-		LockFileRegexes:  []string{"composer\\.lock"},
+		ManifestFileRegex: "composer\\.json",
+		DocumentationUrl:  "",
+		LockFileRegexes:   []string{"composer\\.lock"},
 	}
 	compiledF, _ := NewCompiledFormat(&f)
 	var gs Groups
@@ -48,11 +48,11 @@ func TestMatch(t *testing.T) {
 			assert.Equal(t, 1, gs.Size(), "failed to assert that there was one Group in Groups")
 
 			g := gs.groups[0]
-			assert.Equal(t, c.file, g.FilePath, "failed to assert that FilePath had correct value directory/composer.json")
+			assert.Equal(t, c.file, g.ManifestFile, "failed to assert that ManifestFile had correct value directory/composer.json")
 
-			assert.Len(t, g.RelatedFiles, 1, "failed to assert that there was one lock file")
+			assert.Len(t, g.LockFiles, 1, "failed to assert that there was one lock file")
 
-			lockFile := g.RelatedFiles[0]
+			lockFile := g.LockFiles[0]
 			assert.Equal(t, c.lockFile, lockFile, "failed to assert lock file name")
 		})
 	}
@@ -131,18 +131,18 @@ func TestFilterGroupsByStrictness(t *testing.T) {
 			)
 			assert.Equalf(
 				t,
-				fileGroup.FilePath,
+				fileGroup.ManifestFile,
 				c.expectedManifestFile,
 				"actual manifest file %s doesn't match expected %s",
-				fileGroup.FilePath,
+				fileGroup.ManifestFile,
 				c.expectedManifestFile,
 			)
 			assert.EqualValuesf(
 				t,
-				fileGroup.RelatedFiles,
+				fileGroup.LockFiles,
 				c.expectedLockFiles,
 				"actual lock files list %s doesn't match expected %s",
-				fileGroup.RelatedFiles,
+				fileGroup.LockFiles,
 				c.expectedLockFiles,
 			)
 		})

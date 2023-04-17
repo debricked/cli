@@ -53,7 +53,7 @@ $ debricked files find . `+exampleFlags)
 Format:
 [
   {
-    "dependencyFile": "package.json",
+    "manifestFile": "package.json",
     "lockFiles": [
       "yarn.lock"
     ]
@@ -65,8 +65,8 @@ Format:
 Strictness Level | Meaning
 ---------------- | -------
 0 (default)      | Returns all matched manifest and lock files regardless if they're paired or not
-1                | Returns only lock files and pairs of manifest and lock-file
-2                | Returns only pairs of manifest and lock-file
+1                | Returns only lock files and pairs of manifest and lock file
+2                | Returns only pairs of manifest and lock file
 `)
 
 	viper.MustBindEnv(ExclusionFlag)

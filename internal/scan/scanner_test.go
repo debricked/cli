@@ -509,8 +509,8 @@ func TestScanServiceDowntime(t *testing.T) {
 
 func addMockedFormatsResponse(clientMock *testdata.DebClientMock) {
 	formats := []file.Format{{
-		Regex:           "",
-		LockFileRegexes: []string{"yarn\\.lock"},
+		ManifestFileRegex: "",
+		LockFileRegexes:   []string{"yarn\\.lock"},
 	}}
 	formatsBytes, _ := json.Marshal(formats)
 	formatsMockRes := testdata.MockResponse{

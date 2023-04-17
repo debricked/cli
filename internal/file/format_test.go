@@ -14,33 +14,33 @@ const (
 var formatsMock = []Format{
 	{
 		// Format with regex and lock file regex
-		Regex:            "composer\\.json",
-		DocumentationUrl: "https://debricked.com/docs/language-support/php.html",
-		LockFileRegexes:  []string{"composer\\.lock"},
+		ManifestFileRegex: "composer\\.json",
+		DocumentationUrl:  "https://debricked.com/docs/language-support/php.html",
+		LockFileRegexes:   []string{"composer\\.lock"},
 	},
 	{
 		// Format with regex and multiple lock file regexes
-		Regex:            "package\\.json",
-		DocumentationUrl: "https://debricked.com/docs/language-support/javascript.html",
-		LockFileRegexes:  []string{"yarn\\.lock", "package-lock\\.json"},
+		ManifestFileRegex: "package\\.json",
+		DocumentationUrl:  "https://debricked.com/docs/language-support/javascript.html",
+		LockFileRegexes:   []string{"yarn\\.lock", "package-lock\\.json"},
 	},
 	{
 		// Format with regex and debricked made lock file regex
-		Regex:            "go\\.mod",
-		DocumentationUrl: "https://debricked.com/docs/language-support/golang.html",
-		LockFileRegexes:  []string{"\\.debricked-go-dependencies\\.txt"},
+		ManifestFileRegex: "go\\.mod",
+		DocumentationUrl:  "https://debricked.com/docs/language-support/golang.html",
+		LockFileRegexes:   []string{"\\.debricked-go-dependencies\\.txt"},
 	},
 	{
 		// Format without regex but with one lock file regex
-		Regex:            "",
-		DocumentationUrl: "https://debricked.com/docs/language-support/rust.html",
-		LockFileRegexes:  []string{"Cargo\\.lock"},
+		ManifestFileRegex: "",
+		DocumentationUrl:  "https://debricked.com/docs/language-support/rust.html",
+		LockFileRegexes:   []string{"Cargo\\.lock"},
 	},
 	{
 		// Format with regex but without lock file regexes
-		Regex:            "requirements.*\\.txt$",
-		DocumentationUrl: "https://debricked.com/docs/language-support/python.html",
-		LockFileRegexes:  []string{".*\\.pip\\.debricked\\.lock"},
+		ManifestFileRegex: "requirements.*\\.txt$",
+		DocumentationUrl:  "https://debricked.com/docs/language-support/python.html",
+		LockFileRegexes:   []string{".*\\.pip\\.debricked\\.lock"},
 	},
 }
 
@@ -54,7 +54,7 @@ func TestNewCompiledFormat(t *testing.T) {
 	compiledF, err := NewCompiledFormat(f)
 
 	assert.NoError(t, err)
-	assert.Equal(t, regex, compiledF.Regex.String())
+	assert.Equal(t, regex, compiledF.ManifestFileRegex.String())
 	assert.Equal(t, url, *compiledF.DocumentationUrl, "failed to assert that documentation url was set")
 	assert.Len(t, compiledF.LockFileRegexes, 1, "failed to assert that one lock file regex exists")
 }
@@ -69,7 +69,7 @@ func TestNewCompiledFormatNoRegexes(t *testing.T) {
 	compiledF, err := NewCompiledFormat(f)
 
 	assert.NoError(t, err)
-	assert.Nil(t, compiledF.Regex)
+	assert.Nil(t, compiledF.ManifestFileRegex)
 	assert.Len(t, compiledF.LockFileRegexes, 0)
 }
 
@@ -97,7 +97,7 @@ func TestNewCompiledFormatNoLockFileRegex(t *testing.T) {
 	if err != nil {
 		t.Error("failed to assert that error was nil")
 	}
-	if compiledF.Regex.String() != regex {
+	if compiledF.ManifestFileRegex.String() != regex {
 		t.Error("failed to assert that regex was set")
 	}
 	if *compiledF.DocumentationUrl != url {
@@ -128,7 +128,7 @@ func TestNewCompiledFormatNoFileRegex(t *testing.T) {
 	}
 	compiledF, err := NewCompiledFormat(f)
 	assert.Nil(t, err)
-	assert.Nil(t, compiledF.Regex)
+	assert.Nil(t, compiledF.ManifestFileRegex)
 	assert.Equal(t, url, *compiledF.DocumentationUrl)
 	assert.Len(t, compiledF.LockFileRegexes, 1, "failed to assert that one lock file regex exists")
 }

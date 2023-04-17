@@ -103,7 +103,7 @@ var matchTests = []matchTest{
 
 func TestMatch(t *testing.T) {
 	for _, matchT := range matchTests {
-		name := fmt.Sprintf("PCRE Regex: %s, string: %s, matched: %t", matchT.pcreRegex, matchT.str, matchT.matched)
+		name := fmt.Sprintf("PCRE ManifestFileRegex: %s, string: %s, matched: %t", matchT.pcreRegex, matchT.str, matchT.matched)
 		t.Run(name, func(t *testing.T) {
 			matched, err := Match(matchT.pcreRegex, matchT.str)
 			assert.Equal(t, matchT.err, err)

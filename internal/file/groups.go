@@ -47,19 +47,19 @@ func (gs *Groups) matchExistingGroup(format *CompiledFormat, fileMatch bool, loc
 	for _, g := range gs.groups {
 		var groupDir string
 		if g.HasFile() {
-			groupDir, _ = filepath.Split(g.FilePath)
+			groupDir, _ = filepath.Split(g.ManifestFile)
 		} else {
-			groupDir, _ = filepath.Split(g.RelatedFiles[0])
+			groupDir, _ = filepath.Split(g.LockFiles[0])
 		}
 
 		matchesGroup := groupDir == dir && format == g.CompiledFormat && g.checkFilePathDependantCases(fileMatch, lockFileMatch, file)
 		if matchesGroup {
 			if fileMatch {
-				g.FilePath = dir + file
+				g.ManifestFile = dir + file
 
 				return true
 			} else if lockFileMatch {
-				g.RelatedFiles = append(g.RelatedFiles, dir+file)
+				g.LockFiles = append(g.LockFiles, dir+file)
 
 				return true
 			}
