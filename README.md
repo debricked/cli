@@ -13,7 +13,7 @@
   </p>
 </p>
 
-`debricked` is Debricked's own command line interface. It brings open source security, compliance and health to your
+`debricked` is Debricked's command line interface. It brings open source security, compliance and health to your
 project via the command prompt.
 <br/>
 <br/>
@@ -26,8 +26,8 @@ project via the command prompt.
     <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg" />
   </a>
-  <a href="https://github.com/debricked/cli#beta-software-%EF%B8%8F">
-    <img src="https://img.shields.io/badge/stability-beta-33bbff.svg" />
+  <a href="https://github.com/debricked/cli/releases/latest">
+    <img src="https://img.shields.io/github/v/release/debricked/cli" />
   </a>
   <a href="https://twitter.com/debrickedab">
     <img src="https://img.shields.io/badge/Twitter-00acee?logo=twitter&logoColor=white" />
@@ -39,9 +39,6 @@ project via the command prompt.
   <img src="/assets/cli.png" alt="CLI Screenshot">
   <br />
 </p>
-
-## Beta software ⚠️
-This product is not in a stable phase. Breaking changes can occur at any time.
 
 ## Installation
 Check out the [releases](https://github.com/debricked/cli/releases/latest) page. Choose the asset that is applicable for your system.
