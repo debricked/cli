@@ -25,6 +25,8 @@ type Scheduler struct {
 	spinnerManager tui.ISpinnerManager
 }
 
+const resolving = "Resolving"
+
 func NewScheduler(workers int) *Scheduler {
 	return &Scheduler{workers: workers, waitGroup: sync.WaitGroup{}}
 }
@@ -44,7 +46,7 @@ func (scheduler *Scheduler) Schedule(jobs []job.IJob) (IResolution, error) {
 	})
 
 	for _, j := range jobs {
-		spinner := scheduler.spinnerManager.AddSpinner(j.GetFile())
+		spinner := scheduler.spinnerManager.AddSpinner(resolving, j.GetFile())
 		scheduler.queue <- queueItem{
 			job:     j,
 			spinner: spinner,
@@ -85,6 +87,7 @@ func (scheduler *Scheduler) finish(item queueItem) {
 		item.spinner.Error()
 	} else {
 		scheduler.spinnerManager.SetSpinnerMessage(item.spinner, item.job.GetFile(), "done")
+
 		item.spinner.Complete()
 	}
 }

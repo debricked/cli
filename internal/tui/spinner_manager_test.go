@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const resolving = "Resolving"
+
 func TestNewSpinnerManager(t *testing.T) {
 	spinnerManager := NewSpinnerManager(
 		"Resolving",
@@ -24,13 +26,14 @@ func TestSetSpinnerMessage(t *testing.T) {
 		"waiting for worker",
 	)
 	message := "test"
-	spinner := spinnerManager.AddSpinner(message)
+	spinner := spinnerManager.AddSpinner(resolving, message)
 	assert.Contains(t, spinner.GetMessage(), fmt.Sprintf("Resolving %s: waiting for worker", color.YellowString(message)))
 
 	fileName := "file-name"
 	message = "new test message"
 
 	spinnerManager.SetSpinnerMessage(spinner, fileName, message)
+
 	assert.Contains(t, spinner.GetMessage(), fmt.Sprintf("Resolving %s: %s", color.YellowString(fileName), message))
 }
 
@@ -46,7 +49,7 @@ func TestSetSpinnerMessageLongFilenameParts(t *testing.T) {
 	}
 	longFileName := filepath.Join(longFilenameParts...)
 
-	spinner := spinnerManager.AddSpinner(longFileName)
+	spinner := spinnerManager.AddSpinner(resolving, longFileName)
 	message := spinner.GetMessage()
 
 	assert.Contains(t, message, longFileName)
@@ -76,7 +79,7 @@ func TestSetSpinnerMessageLongFilenameManyDirs(t *testing.T) {
 		longFilenameParts[len(longFilenameParts)-1],
 	}
 	truncatedFilename := filepath.Join(truncatedFilenameParts...)
-	spinner := spinnerManager.AddSpinner(longFileName)
+	spinner := spinnerManager.AddSpinner(resolving, longFileName)
 	message := spinner.GetMessage()
 
 	assert.Contains(t, message, truncatedFilename)
