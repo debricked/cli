@@ -16,3 +16,11 @@ allprojects {
         outputFile = file('./.gradle.debricked.lock')
     }
 }
+
+
+allprojects{
+    task debrickedJarsToFolder(type: Copy) {
+        into ".debrickedTmpDir"
+        from configurations.default
+    }
+}
