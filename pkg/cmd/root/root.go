@@ -1,6 +1,7 @@
 package root
 
 import (
+	"github.com/debricked/cli/pkg/cmd/callgraph"
 	"github.com/debricked/cli/pkg/cmd/files"
 	"github.com/debricked/cli/pkg/cmd/report"
 	"github.com/debricked/cli/pkg/cmd/resolve"
@@ -43,6 +44,7 @@ Read more: https://debricked.com/docs/administration/access-tokens.html`,
 	rootCmd.AddCommand(files.NewFilesCmd(container.Finder()))
 	rootCmd.AddCommand(scan.NewScanCmd(container.Scanner()))
 	rootCmd.AddCommand(resolve.NewResolveCmd(container.Resolver()))
+	rootCmd.AddCommand(callgraph.NewCallgraphCmd(container.CallgraphGenerator()))
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 

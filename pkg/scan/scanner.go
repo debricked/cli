@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/debricked/cli/pkg/callgraph"
 	"github.com/debricked/cli/pkg/ci"
 	"github.com/debricked/cli/pkg/ci/env"
 	"github.com/debricked/cli/pkg/client"
@@ -34,6 +35,7 @@ type DebrickedScanner struct {
 	uploader  *upload.IUploader
 	ciService ci.IService
 	resolver  resolution.IResolver
+	callgraph callgraph.IGenerator
 }
 
 type DebrickedOptions struct {
@@ -54,6 +56,7 @@ func NewDebrickedScanner(
 	uploader upload.IUploader,
 	ciService ci.IService,
 	resolver resolution.IResolver,
+	callgraph callgraph.IGenerator,
 ) *DebrickedScanner {
 	return &DebrickedScanner{
 		c,
@@ -61,6 +64,7 @@ func NewDebrickedScanner(
 		&uploader,
 		ciService,
 		resolver,
+		callgraph,
 	}
 }
 

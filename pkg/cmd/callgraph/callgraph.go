@@ -1,11 +1,12 @@
-package resolve
+package callgraph
 
 import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/debricked/cli/pkg/callgraph"
+	conf "github.com/debricked/cli/pkg/callgraph/config"
 	"github.com/debricked/cli/pkg/file"
-	"github.com/debricked/cli/pkg/resolution"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -16,18 +17,18 @@ const (
 	ExclusionFlag = "exclusion"
 )
 
-func NewResolveCmd(resolver resolution.IResolver) *cobra.Command {
+func NewCallgraphCmd(generator callgraph.IGenerator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "callgraph [path]",
 		Short: "Generate a static callgraph for the given directory and subdirectories",
 		Long: `If a directory is inputted all manifest files without a lock file are resolved.
 Example:
-$ debricked files resolve go.mod pkg/
+$ debricked callgraph 
 `,
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			_ = viper.BindPFlags(cmd.Flags())
 		},
-		RunE: RunE(resolver),
+		RunE: RunE(generator),
 	}
 	fileExclusionExample := filepath.Join("*", "**.lock")
 	dirExclusionExample := filepath.Join("**", "node_modules", "**")
@@ -49,12 +50,15 @@ $ debricked files resolve . `+exampleFlags)
 	return cmd
 }
 
-func RunE(resolver resolution.IResolver) func(_ *cobra.Command, args []string) error {
+func RunE(callgraph callgraph.IGenerator) func(_ *cobra.Command, args []string) error {
 	return func(_ *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			args = append(args, ".")
 		}
-		_, err := resolver.Resolve(args, viper.GetStringSlice(ExclusionFlag))
+		configs := []conf.IConfig{
+			conf.NewConfig("java", "", []string{}),
+		}
+		_, err := callgraph.Generate(args, viper.GetStringSlice(ExclusionFlag), configs)
 
 		return err
 	}

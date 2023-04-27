@@ -3,6 +3,8 @@ package wire
 import (
 	"fmt"
 
+	"github.com/debricked/cli/pkg/callgraph"
+	callgraphStrategy "github.com/debricked/cli/pkg/callgraph/strategy"
 	"github.com/debricked/cli/pkg/ci"
 	"github.com/debricked/cli/pkg/client"
 	"github.com/debricked/cli/pkg/file"
@@ -64,6 +66,10 @@ func (cc *CliContainer) wire() error {
 		cc.strategyFactory,
 		cc.scheduler,
 	)
+	cc.callgraph = callgraph.NewGenerator(
+		cc.cgStrategyFactory,
+		cc.cgScheduler,
+	)
 
 	cc.scanner = scan.NewDebrickedScanner(
 		&cc.debClient,
@@ -71,6 +77,7 @@ func (cc *CliContainer) wire() error {
 		cc.uploader,
 		cc.ciService,
 		cc.resolver,
+		cc.callgraph,
 	)
 
 	cc.licenseReporter = licenseReport.Reporter{DebClient: cc.debClient}
@@ -92,6 +99,9 @@ type CliContainer struct {
 	batchFactory          resolutionFile.IBatchFactory
 	licenseReporter       licenseReport.Reporter
 	vulnerabilityReporter vulnerabilityReport.Reporter
+	callgraph             callgraph.IGenerator
+	cgScheduler           callgraph.IScheduler
+	cgStrategyFactory     callgraphStrategy.IFactory
 }
 
 func (cc *CliContainer) DebClient() client.IDebClient {
@@ -108,6 +118,10 @@ func (cc *CliContainer) Scanner() scan.IScanner {
 
 func (cc *CliContainer) Resolver() resolution.IResolver {
 	return cc.resolver
+}
+
+func (cc *CliContainer) CallgraphGenerator() callgraph.IGenerator {
+	return cc.callgraph
 }
 
 func (cc *CliContainer) LicenseReporter() licenseReport.Reporter {
