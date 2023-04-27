@@ -1,0 +1,47 @@
+package job
+
+import (
+	"errors"
+	"os/exec"
+
+	err "github.com/debricked/cli/pkg/io/err"
+)
+
+type BaseJob struct {
+	files  []string
+	errs   err.IErrors
+	status chan string
+}
+
+func NewBaseJob(files []string) BaseJob {
+	return BaseJob{
+		files:  files,
+		errs:   err.NewErrors("test"),
+		status: make(chan string),
+	}
+}
+
+func (j *BaseJob) GetFiles() []string {
+	return j.files
+}
+
+func (j *BaseJob) Errors() err.IErrors {
+	return j.errs
+}
+
+func (j *BaseJob) ReceiveStatus() chan string {
+	return j.status
+}
+
+func (j *BaseJob) SendStatus(status string) {
+	j.status <- status
+}
+
+func (j *BaseJob) GetExitError(err error) error {
+	exitErr, ok := err.(*exec.ExitError)
+	if !ok {
+		return err
+	}
+
+	return errors.New(string(exitErr.Stderr))
+}
