@@ -13,6 +13,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/debricked/cli/internal/callgraph"
+	callgraphTestdata "github.com/debricked/cli/internal/callgraph/testdata"
 	"github.com/debricked/cli/internal/ci"
 	"github.com/debricked/cli/internal/ci/argo"
 	"github.com/debricked/cli/internal/ci/azure"
@@ -52,7 +54,8 @@ func TestNewDebrickedScanner(t *testing.T) {
 	var finder file.IFinder
 	var uploader upload.IUploader
 	var resolver resolution.IResolver
-	s := NewDebrickedScanner(&debClient, finder, uploader, cis, resolver)
+	var generator callgraph.IGenerator
+	s := NewDebrickedScanner(&debClient, finder, uploader, cis, resolver, generator)
 
 	assert.NotNil(t, s)
 }
@@ -67,7 +70,7 @@ func TestScan(t *testing.T) {
 	addMockedFinishResponse(clientMock, http.StatusNoContent)
 	addMockedStatusResponse(clientMock, http.StatusOK, 50)
 	addMockedStatusResponse(clientMock, http.StatusOK, 100)
-	scanner := makeScanner(clientMock, nil)
+	scanner := makeScanner(clientMock, nil, nil)
 
 	path := testdataNpm
 	repositoryName := path
@@ -120,7 +123,7 @@ func TestScan(t *testing.T) {
 
 func TestScanFailingMetaObject(t *testing.T) {
 	var debClient client.IDebClient = testdata.NewDebClientMock()
-	scanner := NewDebrickedScanner(&debClient, nil, nil, ciService, nil)
+	scanner := NewDebrickedScanner(&debClient, nil, nil, ciService, nil, nil)
 	cwd, _ := os.Getwd()
 	path := testdataNpm
 	opts := DebrickedOptions{
@@ -149,7 +152,7 @@ func TestScanFailingMetaObject(t *testing.T) {
 func TestScanFailingNoFiles(t *testing.T) {
 	clientMock := testdata.NewDebClientMock()
 	addMockedFormatsResponse(clientMock, "package\\.json")
-	scanner := makeScanner(clientMock, nil)
+	scanner := makeScanner(clientMock, nil, nil)
 	opts := DebrickedOptions{
 		Path:            "",
 		Exclusions:      []string{"testdata/**"},
@@ -167,7 +170,7 @@ func TestScanFailingNoFiles(t *testing.T) {
 
 func TestScanBadOpts(t *testing.T) {
 	var c client.IDebClient
-	scanner := NewDebrickedScanner(&c, nil, nil, nil, nil)
+	scanner := NewDebrickedScanner(&c, nil, nil, nil, nil, nil)
 	var opts IOptions
 
 	err := scanner.Scan(opts)
@@ -187,7 +190,7 @@ func TestScanEmptyResult(t *testing.T) {
 	// Create mocked scan result response, 201 is returned when the queue time are too long
 	addMockedStatusResponse(clientMock, http.StatusCreated, 0)
 
-	scanner := makeScanner(clientMock, nil)
+	scanner := makeScanner(clientMock, nil, nil)
 	path := testdataNpm
 	repositoryName := path
 	commitName := testdataNpm
@@ -226,7 +229,7 @@ func TestScanEmptyResult(t *testing.T) {
 
 func TestScanInCiWithPathSet(t *testing.T) {
 	var debClient client.IDebClient = testdata.NewDebClientMock()
-	scanner := NewDebrickedScanner(&debClient, nil, nil, ciService, nil)
+	scanner := NewDebrickedScanner(&debClient, nil, nil, ciService, nil, nil)
 	cwd, _ := os.Getwd()
 	defer resetWd(t, cwd)
 	path := testdataNpm
@@ -258,7 +261,7 @@ func TestScanWithResolve(t *testing.T) {
 	resolverMock := resolveTestdata.ResolverMock{}
 	resolverMock.SetFiles([]string{"yarn.lock"})
 
-	scanner := makeScanner(clientMock, &resolverMock)
+	scanner := makeScanner(clientMock, &resolverMock, nil)
 
 	cwd, _ := os.Getwd()
 	defer resetWd(t, cwd)
@@ -288,7 +291,7 @@ func TestScanWithResolve(t *testing.T) {
 func TestScanWithResolveErr(t *testing.T) {
 	clientMock := testdata.NewDebClientMock()
 	resolutionErr := errors.New("resolution-error")
-	scanner := makeScanner(clientMock, &resolveTestdata.ResolverMock{Err: resolutionErr})
+	scanner := makeScanner(clientMock, &resolveTestdata.ResolverMock{Err: resolutionErr}, nil)
 	cwd, _ := os.Getwd()
 	defer resetWd(t, cwd)
 
@@ -304,6 +307,10 @@ func TestScanWithResolveErr(t *testing.T) {
 	}
 	err := scanner.Scan(opts)
 	assert.ErrorIs(t, err, resolutionErr)
+}
+
+func TestScanWithCallgraphGenerate(t *testing.T) {
+
 }
 
 func TestMapEnvToOptions(t *testing.T) {
@@ -508,7 +515,7 @@ func TestScanServiceDowntime(t *testing.T) {
 
 	var ciService ci.IService = ci.NewService(nil)
 
-	scanner := NewDebrickedScanner(&debClient, finder, nil, ciService, nil)
+	scanner := NewDebrickedScanner(&debClient, finder, nil, ciService, nil, nil)
 
 	path := testdataNpm
 	repositoryName := path
@@ -595,7 +602,7 @@ func resetWd(t *testing.T, wd string) {
 	}
 }
 
-func makeScanner(clientMock *testdata.DebClientMock, resolverMock *resolveTestdata.ResolverMock) *DebrickedScanner {
+func makeScanner(clientMock *testdata.DebClientMock, resolverMock *resolveTestdata.ResolverMock, generatorMock *callgraphTestdata.GeneratorMock) *DebrickedScanner {
 	var debClient client.IDebClient = clientMock
 
 	var finder file.IFinder
@@ -606,7 +613,7 @@ func makeScanner(clientMock *testdata.DebClientMock, resolverMock *resolveTestda
 
 	var cis ci.IService = ci.NewService(nil)
 
-	return NewDebrickedScanner(&debClient, finder, uploader, cis, resolverMock)
+	return NewDebrickedScanner(&debClient, finder, uploader, cis, resolverMock, generatorMock)
 }
 
 func cleanUpResolution(t *testing.T, resolverMock resolveTestdata.ResolverMock) {

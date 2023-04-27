@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/debricked/cli/internal/callgraph"
+	"github.com/debricked/cli/internal/callgraph/config"
 	"github.com/debricked/cli/internal/ci"
 	"github.com/debricked/cli/internal/ci/env"
 	"github.com/debricked/cli/internal/client"
@@ -34,11 +36,13 @@ type DebrickedScanner struct {
 	uploader  *upload.IUploader
 	ciService ci.IService
 	resolver  resolution.IResolver
+	callgraph callgraph.IGenerator
 }
 
 type DebrickedOptions struct {
 	Path            string
 	Resolve         bool
+	CallGraph       bool
 	Exclusions      []string
 	RepositoryName  string
 	CommitName      string
@@ -55,6 +59,7 @@ func NewDebrickedScanner(
 	uploader upload.IUploader,
 	ciService ci.IService,
 	resolver resolution.IResolver,
+	callgraph callgraph.IGenerator,
 ) *DebrickedScanner {
 	return &DebrickedScanner{
 		c,
@@ -62,6 +67,7 @@ func NewDebrickedScanner(
 		&uploader,
 		ciService,
 		resolver,
+		callgraph,
 	}
 }
 
@@ -128,6 +134,17 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 	fileGroups, err := dScanner.finder.GetGroups(options.Path, options.Exclusions, false, file.StrictAll)
 	if err != nil {
 		return nil, err
+	}
+
+	if options.CallGraph {
+		configs := []config.IConfig{
+			config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}),
+		}
+		timeout := 60
+		resErr := dScanner.callgraph.GenerateWithTimer([]string{options.Path}, options.Exclusions, configs, timeout)
+		if resErr != nil {
+			return nil, resErr
+		}
 	}
 
 	uploaderOptions := upload.DebrickedOptions{FileGroups: fileGroups, GitMetaObject: gitMetaObject, IntegrationsName: options.IntegrationName}

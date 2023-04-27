@@ -36,6 +36,7 @@ func assertCliContainer(t *testing.T, cc *CliContainer) {
 	assert.NotNil(t, cc.Finder())
 	assert.NotNil(t, cc.Scanner())
 	assert.NotNil(t, cc.Resolver())
+	assert.NotNil(t, cc.CallgraphGenerator())
 	assert.NotNil(t, cc.LicenseReporter())
 	assert.NotNil(t, cc.VulnerabilityReporter())
 }

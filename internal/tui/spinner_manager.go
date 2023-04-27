@@ -12,7 +12,7 @@ import (
 )
 
 type ISpinnerManager interface {
-	AddSpinner(file string) *ysmrr.Spinner
+	AddSpinner(action string, file string) *ysmrr.Spinner
 	Start()
 	Stop()
 }
@@ -25,9 +25,9 @@ func NewSpinnerManager() SpinnerManager {
 	return SpinnerManager{ysmrr.NewSpinnerManager(ysmrr.WithSpinnerColor(colors.FgHiBlue))}
 }
 
-func (sm SpinnerManager) AddSpinner(file string) *ysmrr.Spinner {
+func (sm SpinnerManager) AddSpinner(action string, file string) *ysmrr.Spinner {
 	spinner := sm.spinnerManager.AddSpinner("")
-	SetSpinnerMessage(spinner, file, "waiting for worker")
+	SetSpinnerMessage(spinner, action, file, "waiting for worker")
 
 	return spinner
 }
@@ -40,7 +40,7 @@ func (sm SpinnerManager) Stop() {
 	sm.spinnerManager.Stop()
 }
 
-func SetSpinnerMessage(spinner *ysmrr.Spinner, filename string, message string) {
+func SetSpinnerMessage(spinner *ysmrr.Spinner, action string, filename string, message string) {
 	const maxNumberOfChars = 50
 	truncatedFilename := filename
 	if len(truncatedFilename) > maxNumberOfChars {
@@ -60,5 +60,5 @@ func SetSpinnerMessage(spinner *ysmrr.Spinner, filename string, message string) 
 
 	}
 	file := color.YellowString(truncatedFilename)
-	spinner.UpdateMessage(fmt.Sprintf("Resolving %s: %s", file, message))
+	spinner.UpdateMessage(fmt.Sprintf("%s %s: %s", action, file, message))
 }
