@@ -1,6 +1,7 @@
 package callgraph
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/chelnak/ysmrr"
@@ -29,13 +30,24 @@ func NewScheduler(workers int) *Scheduler {
 }
 
 func (scheduler *Scheduler) Schedule(jobs []job.IJob) (IGeneration, error) {
+	fmt.Println("Starting scheduler")
 	scheduler.queue = make(chan queueItem, len(jobs))
 	scheduler.waitGroup.Add(len(jobs))
 	scheduler.spinnerManager = tui.NewSpinnerManager()
 	scheduler.spinnerManager.Start()
+	fmt.Println("Done with spinner start")
+
+	for _, j := range jobs {
+		spinner := scheduler.spinnerManager.AddSpinner("Test")
+		scheduler.queue <- queueItem{
+			job:     j,
+			spinner: spinner,
+		}
+	}
 
 	// Run it in sequence
 	for item := range scheduler.queue {
+		fmt.Println("start job")
 		go scheduler.updateStatus(item)
 		item.job.Run()
 		scheduler.finish(item)
@@ -43,6 +55,7 @@ func (scheduler *Scheduler) Schedule(jobs []job.IJob) (IGeneration, error) {
 	}
 
 	scheduler.spinnerManager.Stop()
+	fmt.Println("Done")
 
 	return NewGeneration(jobs), nil
 }

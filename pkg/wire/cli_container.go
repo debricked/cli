@@ -66,6 +66,8 @@ func (cc *CliContainer) wire() error {
 		cc.strategyFactory,
 		cc.scheduler,
 	)
+	cc.cgStrategyFactory = callgraphStrategy.NewStrategyFactory()
+	cc.cgScheduler = callgraph.NewScheduler(10)
 	cc.callgraph = callgraph.NewGenerator(
 		cc.cgStrategyFactory,
 		cc.cgScheduler,

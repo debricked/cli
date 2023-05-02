@@ -2,6 +2,7 @@ package java
 
 import (
 	"errors"
+	"fmt"
 
 	conf "github.com/debricked/cli/pkg/callgraph/config"
 	"github.com/debricked/cli/pkg/callgraph/job"
@@ -23,6 +24,7 @@ func NewJob(files []string, cmdFactory ICmdFactory, writer ioWriter.IFileWriter,
 }
 
 func (j *Job) Run() {
+	fmt.Println("ENTERED RUN")
 	workingDirectory := "." // filepath.Dir(filepath.Clean(j.GetFile()))
 	targetClasses := "/home/magnus/Projects/exploration/dependency-demo-app/target/classes/"
 	dependencyClasses := "/home/magnus/Projects/exploration/dependency-demo-app/target/dependency/"
@@ -34,7 +36,9 @@ func (j *Job) Run() {
 	}
 	j.SendStatus("creating dependency graph")
 	var output []byte
+	fmt.Println("run command", cmd.Args)
 	output, err = cmd.Output()
+	fmt.Println("done running command", cmd.Args)
 	if err != nil {
 		if output == nil {
 			j.Errors().Critical(err)
