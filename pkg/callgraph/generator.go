@@ -3,6 +3,8 @@ package callgraph
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"runtime"
 	"time"
 
@@ -49,6 +51,45 @@ func (r Generator) GenerateWithTimer(paths []string, exclusions []string, config
 	return nil
 }
 
+func findFiles(roots []string, exclusions []string) ([]string, error) {
+	files := make(map[string]bool)
+	var err error = nil
+
+	for _, root := range roots {
+		err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
+			for _, dir := range exclusions {
+				if info.IsDir() && info.Name() == dir {
+					return filepath.SkipDir
+				}
+			}
+
+			// If the current path is a file, print its name
+			if !info.IsDir() {
+				files[path] = true
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			break
+		}
+	}
+
+	fileList := make([]string, len(files))
+	i := 0
+	for k := range files {
+		fileList[i] = k
+		i++
+	}
+
+	return fileList, err
+}
+
 func (r Generator) Generate(paths []string, exclusions []string, configs []config.IConfig, status chan bool) (IGeneration, error) {
 
 	// For each config (or single root provided with commands from CMD), run CG.generation.
@@ -59,11 +100,14 @@ func (r Generator) Generate(paths []string, exclusions []string, configs []confi
 	// Run scheduler on the jobs
 	// add refine-path-step
 
+	files, err := findFiles(paths, exclusions)
+	fmt.Println(err)
+
 	var jobs []job.IJob
 	for _, config := range configs {
-		fmt.Println("hello", config, paths)
+		fmt.Println("hello", config, files)
 		fmt.Println("strFac", r.strategyFactory)
-		s, strategyErr := r.strategyFactory.Make(config, paths)
+		s, strategyErr := r.strategyFactory.Make(config, files)
 		if strategyErr == nil {
 			newJobs, err := s.Invoke()
 			if err != nil {

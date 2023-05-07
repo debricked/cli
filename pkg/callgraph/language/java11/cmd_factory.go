@@ -8,6 +8,29 @@ type ICmdFactory interface {
 
 type CmdFactory struct{}
 
+func (_ CmdFactory) MakeBuildMvnCopyDependenciesCmd(
+	workingDirectory string,
+	rootPomDir string,
+) (*exec.Cmd, error) {
+	path, err := exec.LookPath("mvn")
+
+	return &exec.Cmd{
+		Path: path,
+		Args: []string{
+			"mvn",
+			"-q",
+			"-B",
+			"-f",
+			rootPomDir,
+			"package",
+			"dependency:copy-dependencies",
+			"-DoutputDirectory=$dependencyDir",
+			"-DskipTests",
+		},
+		Dir: workingDirectory,
+	}, err
+}
+
 func (_ CmdFactory) MakeCallGraphGenerationCmd(
 	workingDirectory string,
 	targetClasses string,

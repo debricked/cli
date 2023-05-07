@@ -1,6 +1,8 @@
 package java
 
 import (
+	"path/filepath"
+
 	conf "github.com/debricked/cli/pkg/callgraph/config"
 	"github.com/debricked/cli/pkg/callgraph/job"
 	"github.com/debricked/cli/pkg/io/writer"
@@ -14,6 +16,15 @@ type Strategy struct {
 func (s Strategy) Invoke() ([]job.IJob, error) {
 	var jobs []job.IJob
 	// Filter relevant files
+	pattern := "*.jar"
+	dirsWithJarFiles := make(map[string]bool)
+	for _, file := range s.files {
+		matched, _ := filepath.Match(pattern, filepath.Base(file))
+		if matched {
+			dirsWithJarFiles[filepath.Dir(file)] = true
+		}
+	}
+
 	jobs = append(jobs, NewJob(
 		s.files,
 		CmdFactory{},
