@@ -55,6 +55,7 @@ func (j *Job) Run() {
 			j.Errors().Critical(permissionErr)
 		}
 		j.Errors().Critical(err)
+
 		return
 	}
 

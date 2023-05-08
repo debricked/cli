@@ -39,7 +39,7 @@ func TestInvokeOneFile(t *testing.T) {
 }
 
 func TestInvokeManyFiles(t *testing.T) {
-	s := NewStrategy([]string{"file-1", "file-2"}, nil)
+	s := NewStrategy([]string{"test/file-1", "test/file-2", "test2/file-2"}, nil)
 	jobs, _ := s.Invoke()
 	assert.Len(t, jobs, 2)
 }
