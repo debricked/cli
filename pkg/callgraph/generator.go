@@ -11,6 +11,7 @@ import (
 	"github.com/debricked/cli/pkg/callgraph/config"
 	"github.com/debricked/cli/pkg/callgraph/job"
 	"github.com/debricked/cli/pkg/callgraph/strategy"
+	"github.com/debricked/cli/pkg/io/finder"
 )
 
 type IGenerator interface {
@@ -67,7 +68,6 @@ func findFiles(roots []string, exclusions []string) ([]string, error) {
 				}
 			}
 
-			// If the current path is a file, print its name
 			if !info.IsDir() {
 				files[path] = true
 			}
@@ -99,14 +99,15 @@ func (r Generator) Generate(paths []string, exclusions []string, configs []confi
 	// Find job-files,
 	// Run scheduler on the jobs
 	// add refine-path-step
-
-	files, err := findFiles(paths, exclusions)
+	targetPath := ".debrickedTmpFolder"
+	// pm := "mvn"
+	debrickedExclusions := []string{targetPath}
+	exclusions = append(exclusions, debrickedExclusions...)
+	files, err := finder.FindFiles(paths, exclusions)
 	fmt.Println(err)
 
 	var jobs []job.IJob
 	for _, config := range configs {
-		fmt.Println("hello", config, files)
-		fmt.Println("strFac", r.strategyFactory)
 		s, strategyErr := r.strategyFactory.Make(config, files)
 		if strategyErr == nil {
 			newJobs, err := s.Invoke()

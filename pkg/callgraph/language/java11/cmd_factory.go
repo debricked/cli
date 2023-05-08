@@ -4,13 +4,14 @@ import "os/exec"
 
 type ICmdFactory interface {
 	MakeCallGraphGenerationCmd(workingDirectory string, targetClasses string, dependencyClasses string) (*exec.Cmd, error)
+	MakeBuildMvnCopyDependenciesCmd(workingDirectory string, targetRootPomDir string) (*exec.Cmd, error)
 }
 
 type CmdFactory struct{}
 
 func (_ CmdFactory) MakeBuildMvnCopyDependenciesCmd(
 	workingDirectory string,
-	rootPomDir string,
+	targetRootPomDir string,
 ) (*exec.Cmd, error) {
 	path, err := exec.LookPath("mvn")
 
@@ -21,7 +22,7 @@ func (_ CmdFactory) MakeBuildMvnCopyDependenciesCmd(
 			"-q",
 			"-B",
 			"-f",
-			rootPomDir,
+			targetRootPomDir,
 			"package",
 			"dependency:copy-dependencies",
 			"-DoutputDirectory=$dependencyDir",

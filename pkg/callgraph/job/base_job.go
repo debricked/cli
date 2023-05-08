@@ -8,17 +8,23 @@ import (
 )
 
 type BaseJob struct {
+	dir    string
 	files  []string
 	errs   err.IErrors
 	status chan string
 }
 
-func NewBaseJob(files []string) BaseJob {
+func NewBaseJob(dir string, files []string) BaseJob {
 	return BaseJob{
+		dir:    dir,
 		files:  files,
 		errs:   err.NewErrors("test"),
 		status: make(chan string),
 	}
+}
+
+func (j *BaseJob) GetDir() string {
+	return j.dir
 }
 
 func (j *BaseJob) GetFiles() []string {
