@@ -28,11 +28,15 @@ func NewJob(dir string, files []string, cmdFactory ICmdFactory, writer ioWriter.
 func (j *Job) Run() {
 	fmt.Println("ENTERED RUN")
 	workingDirectory := j.GetDir()
+	fmt.Println("Files:", j.GetFiles())
 	targetClasses := j.GetFiles()[0]
-	dependencyDir := ".debricked/mvndeps/"
+	dependencyDir := ".debrickedTmpFolder"
 	targetDir := path.Join(workingDirectory, dependencyDir)
 	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
-		j.cmdFactory.MakeBuildMvnCopyDependenciesCmd(workingDirectory, targetDir)
+		cmd, _ := j.cmdFactory.MakeBuildMvnCopyDependenciesCmd(workingDirectory, targetDir)
+		fmt.Println("building and getting jars", cmd.Args)
+		cmd.Output()
+
 	}
 
 	cmd, err := j.cmdFactory.MakeCallGraphGenerationCmd(workingDirectory, targetClasses, targetDir)

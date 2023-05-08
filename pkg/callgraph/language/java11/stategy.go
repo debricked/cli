@@ -1,6 +1,8 @@
 package java
 
 import (
+	"fmt"
+
 	conf "github.com/debricked/cli/pkg/callgraph/config"
 	"github.com/debricked/cli/pkg/callgraph/job"
 	"github.com/debricked/cli/pkg/io/finder"
@@ -17,13 +19,16 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	// Filter relevant files
 
 	roots := finder.FindMavenRoots(s.files)
-	jarFiles := finder.FindJarDirs(s.files)
-	rootPomJarMapping := finder.MapFilesToDir(roots, jarFiles)
+	classDirs := finder.FindJavaClassDirs(s.files)
+	rootPomClassMapping := finder.MapFilesToDir(roots, classDirs)
+	fmt.Println("roots", rootPomClassMapping)
 
-	for rootDir, jars := range rootPomJarMapping {
+	for rootDir, classDirs := range rootPomClassMapping {
+		// For each class paths dir within the root, find GCDPath as entrypoint
+		classDir := finder.GCDPath(classDirs)
 		jobs = append(jobs, NewJob(
 			rootDir,
-			jars,
+			[]string{classDir},
 			CmdFactory{},
 			writer.FileWriter{},
 			s.config,

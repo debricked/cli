@@ -2,8 +2,8 @@ package finder
 
 import "path/filepath"
 
-func FindJarDirs(files []string) []string {
-	filteredFiles := FilterFiles(files, "*.jar")
+func FindJavaClassDirs(files []string) []string {
+	filteredFiles := FilterFiles(files, "*.class")
 	dirsWithJarFiles := make(map[string]bool)
 	for _, file := range filteredFiles {
 		dirsWithJarFiles[filepath.Dir(file)] = true

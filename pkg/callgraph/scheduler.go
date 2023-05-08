@@ -35,7 +35,7 @@ func (scheduler *Scheduler) Schedule(jobs []job.IJob) (IGeneration, error) {
 	scheduler.waitGroup.Add(len(jobs))
 	scheduler.spinnerManager = tui.NewSpinnerManager()
 	scheduler.spinnerManager.Start()
-	fmt.Println("Done with spinner start")
+	fmt.Println("Done with spinner start", len(jobs))
 
 	for _, j := range jobs {
 		spinner := scheduler.spinnerManager.AddSpinner("Test")

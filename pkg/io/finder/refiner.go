@@ -3,6 +3,7 @@ package finder
 import (
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func FindFiles(roots []string, exclusions []string) ([]string, error) {
@@ -82,4 +83,32 @@ func MapFilesToDir(dirs []string, files []string) map[string][]string {
 
 	return dirToFilesMap
 
+}
+
+func GCDPath(paths []string) string {
+	var result string
+	var shortest string
+
+	for i, path := range paths {
+		if i == 0 || len(path) < len(shortest) {
+			shortest = path
+		}
+	}
+
+	for i := 0; i < len(shortest); i++ {
+		c := shortest[i]
+
+		if filepath.Separator == c {
+			dirpath := shortest[:i+1]
+			for _, path := range paths {
+				if !strings.HasPrefix(path, dirpath) {
+					return result
+				}
+			}
+
+			result = dirpath
+		}
+	}
+
+	return result
 }
