@@ -35,16 +35,27 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 			return nil, err
 		}
 	}
+	gradleMainDirs := make(map[string]bool)
 	for _, gradleProject := range gradleSetup.GradleProjects {
-		jobs = append(jobs, NewJob(gradleProject.dir, gradleProject.gradlew, gradleSetup.groovyScriptPath, factory, fileWriter))
+		dir := gradleProject.dir
+		if _, ok := gradleMainDirs[dir]; ok {
+			continue
+		}
+		gradleMainDirs[dir] = true
+		jobs = append(jobs, NewJob(gradleProject.mainBuildFile, dir, gradleProject.gradlew, gradleSetup.groovyScriptPath, factory, fileWriter))
+
 	}
 	for _, file := range s.files {
 		dir, _ := filepath.Abs(filepath.Dir(file))
 		if _, ok := gradleSetup.subProjectMap[dir]; ok {
 			continue
 		}
+		if _, ok := gradleMainDirs[dir]; ok {
+			continue
+		}
+		gradleMainDirs[dir] = true
 		gradlew := gradleSetup.GetGradleW(dir)
-		jobs = append(jobs, NewJob(dir, gradlew, gradleSetup.groovyScriptPath, factory, fileWriter))
+		jobs = append(jobs, NewJob(file, dir, gradlew, gradleSetup.groovyScriptPath, factory, fileWriter))
 	}
 
 	return jobs, nil

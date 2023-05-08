@@ -113,7 +113,8 @@ func (gs *Setup) setupGradleProjectMappings() error {
 			continue
 		}
 		gradlew := gs.GetGradleW(dir)
-		gradleProject := Project{dir: dir, gradlew: gradlew}
+		mainFile := gs.settingsMap[dir]
+		gradleProject := Project{dir: dir, gradlew: gradlew, mainBuildFile: mainFile}
 		err := gs.setupSubProjectPaths(gradleProject)
 
 		if err != nil {

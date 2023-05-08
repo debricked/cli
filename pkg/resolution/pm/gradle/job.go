@@ -9,6 +9,7 @@ import (
 
 type Job struct {
 	job.BaseJob
+	dir              string
 	gradlew          string
 	groovyInitScript string
 	cmdFactory       ICmdFactory
@@ -17,6 +18,7 @@ type Job struct {
 
 func NewJob(
 	file string,
+	dir string,
 	gradlew string,
 	groovyInitScript string,
 	cmdFactory ICmdFactory,
@@ -25,6 +27,7 @@ func NewJob(
 
 	return &Job{
 		BaseJob:          job.NewBaseJob(file),
+		dir:              dir,
 		gradlew:          gradlew,
 		groovyInitScript: groovyInitScript,
 		cmdFactory:       cmdFactory,
@@ -33,7 +36,7 @@ func NewJob(
 }
 
 func (j *Job) Run() {
-	workingDirectory := filepath.Clean(j.GetFile())
+	workingDirectory := filepath.Clean(j.GetDir())
 	dependenciesCmd, err := j.cmdFactory.MakeDependenciesGraphCmd(workingDirectory, j.gradlew, j.groovyInitScript)
 	if err != nil {
 		j.Errors().Critical(err)
@@ -48,4 +51,8 @@ func (j *Job) Run() {
 
 		return
 	}
+}
+
+func (j *Job) GetDir() string {
+	return j.dir
 }
