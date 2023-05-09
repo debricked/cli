@@ -18,12 +18,22 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	var jobs []job.IJob
 	// Filter relevant files
 
-	roots := finder.FindMavenRoots(s.files)
-	classDirs := finder.FindJavaClassDirs(s.files)
-	rootPomClassMapping := finder.MapFilesToDir(roots, classDirs)
-	fmt.Println("roots", rootPomClassMapping)
+	pmConfig := s.config.Kwargs()["pm"]
+	var roots []string
+	switch pmConfig {
+	case gradle:
+		roots = finder.FindGradleRoots(s.files)
+	case maven:
+		roots = finder.FindMavenRoots(s.files)
+	default:
+		roots = finder.FindMavenRoots(s.files)
+	}
 
-	for rootDir, classDirs := range rootPomClassMapping {
+	classDirs := finder.FindJavaClassDirs(s.files)
+	rootClassMapping := finder.MapFilesToDir(roots, classDirs)
+	fmt.Println("roots", rootClassMapping)
+
+	for rootDir, classDirs := range rootClassMapping {
 		// For each class paths dir within the root, find GCDPath as entrypoint
 		classDir := finder.GCDPath(classDirs)
 		jobs = append(jobs, NewJob(

@@ -1,5 +1,9 @@
 package finder
 
+func FindGradleRoots(files []string) []string {
+	return []string{}
+}
+
 // import (
 // 	"bufio"
 // 	"bytes"

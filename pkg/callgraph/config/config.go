@@ -2,21 +2,21 @@ package config
 
 type IConfig interface {
 	Language() string
-	Path() string
-	Arguments() []string
+	Args() []string
+	Kwargs() map[string]string
 }
 
 type Config struct {
-	language  string
-	execPath  string
-	arguments []string
+	language string
+	args     []string
+	kwargs   map[string]string
 }
 
-func NewConfig(language string, execPath string, arguments []string) Config {
+func NewConfig(language string, args []string, kwargs map[string]string) Config {
 	return Config{
 		language,
-		execPath,
-		arguments,
+		args,
+		kwargs,
 	}
 }
 
@@ -24,10 +24,10 @@ func (c Config) Language() string {
 	return c.language
 }
 
-func (c Config) Path() string {
-	return c.execPath
+func (c Config) Args() []string {
+	return c.args
 }
 
-func (c Config) Arguments() []string {
-	return c.arguments
+func (c Config) Kwargs() map[string]string {
+	return c.kwargs
 }

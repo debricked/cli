@@ -91,16 +91,7 @@ func findFiles(roots []string, exclusions []string) ([]string, error) {
 }
 
 func (r Generator) Generate(paths []string, exclusions []string, configs []config.IConfig, status chan bool) (IGeneration, error) {
-
-	// For each config (or single root provided with commands from CMD), run CG.generation.
-
-	// Might need to run it sequentially since it is a heavy operation that in itself might use multithreads
-
-	// Find job-files,
-	// Run scheduler on the jobs
-	// add refine-path-step
 	targetPath := ".debrickedTmpFolder"
-	// pm := "mvn"
 	debrickedExclusions := []string{targetPath}
 	exclusions = append(exclusions, debrickedExclusions...)
 	files, err := finder.FindFiles(paths, exclusions)

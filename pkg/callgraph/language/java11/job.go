@@ -3,11 +3,17 @@ package java
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path"
 
 	conf "github.com/debricked/cli/pkg/callgraph/config"
 	"github.com/debricked/cli/pkg/callgraph/job"
 	ioWriter "github.com/debricked/cli/pkg/io/writer"
+)
+
+const (
+	maven  = "maven"
+	gradle = "gradle"
 )
 
 type Job struct {
@@ -31,10 +37,16 @@ func (j *Job) Run() {
 	targetClasses := j.GetFiles()[0]
 	dependencyDir := ".debrickedTmpFolder"
 	targetDir := path.Join(workingDirectory, dependencyDir)
+	configPm := j.config.Kwargs()["pm"]
 
 	// If folder doesn't exist, build
 	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
-		cmd, err := j.cmdFactory.MakeBuildMvnCopyDependenciesCmd(workingDirectory, targetDir)
+		var cmd *exec.Cmd
+		if configPm == gradle {
+			cmd, err = j.cmdFactory.MakeBuildGradleCopyDependenciesCmd(workingDirectory, targetDir)
+		} else {
+			cmd, err = j.cmdFactory.MakeBuildMvnCopyDependenciesCmd(workingDirectory, targetDir)
+		}
 		fmt.Println("building and getting jars", cmd.Args)
 		if err != nil {
 			j.Errors().Critical(err)
