@@ -13,13 +13,13 @@ allprojects {
 
 allprojects {
     task debrickedAllDeps(type: DependencyReportTask) {
-        outputFile = file('./.gradle.debricked.lock')
+        outputFile = file('./.debricked-gradle-dependencies.txt')
     }
 }
 
 
 allprojects{
-    task debrickedJarsToFolder(type: Copy) {
+    task debrickedCopyDependencies(type: Copy) {
         into ".debrickedTmpDir"
         from configurations.default
     }

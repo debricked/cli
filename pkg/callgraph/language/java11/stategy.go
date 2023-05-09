@@ -20,13 +20,18 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 
 	pmConfig := s.config.Kwargs()["pm"]
 	var roots []string
+	var err error
 	switch pmConfig {
 	case gradle:
-		roots = finder.FindGradleRoots(s.files)
+		roots, err = finder.FindGradleRoots(s.files)
 	case maven:
-		roots = finder.FindMavenRoots(s.files)
+		roots, err = finder.FindMavenRoots(s.files)
 	default:
-		roots = finder.FindMavenRoots(s.files)
+		roots, err = finder.FindMavenRoots(s.files)
+	}
+
+	if err != nil {
+		fmt.Println("error", err)
 	}
 
 	classDirs := finder.FindJavaClassDirs(s.files)
