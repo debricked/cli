@@ -3,39 +3,34 @@ package java
 import "os/exec"
 
 type ICmdFactory interface {
-	MakeBuildMvnCopyDependenciesCmd(workingDirectory string, targetRootPomDir string) (*exec.Cmd, error)
-	MakeBuildGradleCopyDependenciesCmd(workingDirectory string, targetRootPomDir string) (*exec.Cmd, error)
+	MakeMvnCopyDependenciesCmd(workingDirectory string, targetRootPomDir string) (*exec.Cmd, error)
+	MakeGradleCopyDependenciesCmd(workingDirectory string, targetRootPomDir string) (*exec.Cmd, error)
 	MakeCallGraphGenerationCmd(callgraphJarPath string, workingDirectory string, targetClasses string, dependencyClasses string) (*exec.Cmd, error)
 }
 
 type CmdFactory struct{}
 
-func (_ CmdFactory) MakeBuildGradleCopyDependenciesCmd(
+func (_ CmdFactory) MakeGradleCopyDependenciesCmd(
 	workingDirectory string,
-	targetRootPomDir string,
+	gradlew string,
 ) (*exec.Cmd, error) {
-	path, err := exec.LookPath("mvn")
+	path, err := exec.LookPath(gradlew)
 
+	// TargetDir already in groovy script
 	return &exec.Cmd{
 		Path: path,
 		Args: []string{
-			"mvn",
+			"gradle",
 			"-q",
-			"-B",
-			"-f",
-			"pom.xml",
-			"package",
-			"dependency:copy-dependencies",
-			"-DoutputDirectory=" + targetRootPomDir,
-			"-DskipTests",
+			"debrickedCopyDependencies",
 		},
 		Dir: workingDirectory,
 	}, err
 }
 
-func (_ CmdFactory) MakeBuildMvnCopyDependenciesCmd(
+func (_ CmdFactory) MakeMvnCopyDependenciesCmd(
 	workingDirectory string,
-	targetRootPomDir string,
+	targetDir string,
 ) (*exec.Cmd, error) {
 	path, err := exec.LookPath("mvn")
 
@@ -45,11 +40,8 @@ func (_ CmdFactory) MakeBuildMvnCopyDependenciesCmd(
 			"mvn",
 			"-q",
 			"-B",
-			"-f",
-			"pom.xml",
-			"package",
 			"dependency:copy-dependencies",
-			"-DoutputDirectory=" + targetRootPomDir,
+			"-DoutputDirectory=" + targetDir,
 			"-DskipTests",
 		},
 		Dir: workingDirectory,

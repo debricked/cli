@@ -39,15 +39,21 @@ func (j *Job) Run() {
 	targetDir := path.Join(workingDirectory, dependencyDir)
 	configPm := j.config.Kwargs()["pm"]
 
-	// If folder doesn't exist, build
+	// If folder doesn't exist, copy dependencies
 	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
 		var cmd *exec.Cmd
 		if configPm == gradle {
-			cmd, err = j.cmdFactory.MakeBuildGradleCopyDependenciesCmd(workingDirectory, targetDir)
+			targetGradlew := path.Join(workingDirectory, "gradlew")
+			gradlew := "gradle"
+			if _, err := os.Stat(targetGradlew); os.IsExist(err) {
+				gradlew = targetGradlew
+			}
+
+			cmd, err = j.cmdFactory.MakeGradleCopyDependenciesCmd(workingDirectory, gradlew)
 		} else {
-			cmd, err = j.cmdFactory.MakeBuildMvnCopyDependenciesCmd(workingDirectory, targetDir)
+			cmd, err = j.cmdFactory.MakeMvnCopyDependenciesCmd(workingDirectory, targetDir)
 		}
-		fmt.Println("building and getting jars", cmd.Args)
+		fmt.Println("Copying relevant jars to target folder", targetDir, cmd.Args)
 		if err != nil {
 			j.Errors().Critical(err)
 
