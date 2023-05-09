@@ -1,7 +1,6 @@
 package java
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -32,29 +31,35 @@ func (j *Job) Run() {
 	targetClasses := j.GetFiles()[0]
 	dependencyDir := ".debrickedTmpFolder"
 	targetDir := path.Join(workingDirectory, dependencyDir)
-	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
-		cmd, _ := j.cmdFactory.MakeBuildMvnCopyDependenciesCmd(workingDirectory, targetDir)
-		fmt.Println("building and getting jars", cmd.Args)
-		cmd.Output()
 
+	// If folder doesn't exist, build
+	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
+		cmd, err := j.cmdFactory.MakeBuildMvnCopyDependenciesCmd(workingDirectory, targetDir)
+		fmt.Println("building and getting jars", cmd.Args)
+		if err != nil {
+			j.Errors().Critical(err)
+
+			return
+		}
+		_, err = cmd.Output()
+
+		if err != nil {
+			j.Errors().Critical(err)
+
+			return
+		}
 	}
 
-	cmd, err := j.cmdFactory.MakeCallGraphGenerationCmd(workingDirectory, targetClasses, targetDir)
+	j.SendStatus("generating call graph")
+	callgraph := Callgraph{
+		cmdFactory:       j.cmdFactory,
+		workingDirectory: workingDirectory,
+		targetClasses:    targetClasses,
+		targetDir:        targetDir,
+	}
+	err := callgraph.runCallGraphWithSetup()
+
 	if err != nil {
 		j.Errors().Critical(err)
-
-		return
-	}
-	j.SendStatus("creating dependency graph")
-	var output []byte
-	fmt.Println("run command", cmd.Args)
-	output, err = cmd.Output()
-	fmt.Println("done running command", cmd.Args)
-	if err != nil {
-		if output == nil {
-			j.Errors().Critical(err)
-		} else {
-			j.Errors().Critical(errors.New(string(output)))
-		}
 	}
 }

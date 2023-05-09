@@ -3,8 +3,8 @@ package java
 import "os/exec"
 
 type ICmdFactory interface {
-	MakeCallGraphGenerationCmd(workingDirectory string, targetClasses string, dependencyClasses string) (*exec.Cmd, error)
 	MakeBuildMvnCopyDependenciesCmd(workingDirectory string, targetRootPomDir string) (*exec.Cmd, error)
+	MakeCallGraphGenerationCmd(callgraphJarPath string, workingDirectory string, targetClasses string, dependencyClasses string) (*exec.Cmd, error)
 }
 
 type CmdFactory struct{}
@@ -33,19 +33,19 @@ func (_ CmdFactory) MakeBuildMvnCopyDependenciesCmd(
 }
 
 func (_ CmdFactory) MakeCallGraphGenerationCmd(
+	callgraphJarPath string,
 	workingDirectory string,
 	targetClasses string,
 	dependencyClasses string,
 ) (*exec.Cmd, error) {
 	path, err := exec.LookPath("java")
-	javaVulnFunc := "/home/magnus/Projects/debricked/vulnerable-functionality-github/vulnerable-functionality/java/common/target/SootWrapper.jar"
 
 	return &exec.Cmd{
 		Path: path,
 		Args: []string{
 			"java",
 			"-jar",
-			javaVulnFunc,
+			callgraphJarPath,
 			"-u",
 			targetClasses,
 			"-l",
