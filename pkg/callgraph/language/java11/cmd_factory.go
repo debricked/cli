@@ -3,8 +3,8 @@ package java
 import "os/exec"
 
 type ICmdFactory interface {
-	MakeMvnCopyDependenciesCmd(workingDirectory string, targetRootPomDir string) (*exec.Cmd, error)
-	MakeGradleCopyDependenciesCmd(workingDirectory string, targetRootPomDir string) (*exec.Cmd, error)
+	MakeGradleCopyDependenciesCmd(workingDirectory string, gradlew string, groovyFilePath string) (*exec.Cmd, error)
+	MakeMvnCopyDependenciesCmd(workingDirectory string, targetDir string) (*exec.Cmd, error)
 	MakeCallGraphGenerationCmd(callgraphJarPath string, workingDirectory string, targetClasses string, dependencyClasses string) (*exec.Cmd, error)
 }
 
@@ -13,6 +13,7 @@ type CmdFactory struct{}
 func (_ CmdFactory) MakeGradleCopyDependenciesCmd(
 	workingDirectory string,
 	gradlew string,
+	groovyFilePath string,
 ) (*exec.Cmd, error) {
 	path, err := exec.LookPath(gradlew)
 
@@ -21,6 +22,8 @@ func (_ CmdFactory) MakeGradleCopyDependenciesCmd(
 		Path: path,
 		Args: []string{
 			"gradle",
+			"-b",
+			groovyFilePath,
 			"-q",
 			"debrickedCopyDependencies",
 		},

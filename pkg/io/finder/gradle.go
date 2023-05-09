@@ -53,7 +53,7 @@ func NewGradleSetup() *Setup {
 		gradlewOsName = "gradlew.bat"
 	}
 	writer := writer.FileWriter{}
-	ish := InitScriptHandler{groovyScriptPath, writer}
+	ish := InitScriptHandler{groovyScriptPath, "embeded/gradle-init-script.groovy", writer}
 
 	return &Setup{
 		gradlewMap:        map[string]string{},
@@ -199,6 +199,7 @@ func (gs *Setup) GetGradleW(dir string) string {
 }
 
 func FindGradleRoots(files []string) ([]string, error) {
+	gradleBuildFiles := FilterFiles(files, "gradle.build(.kts)?")
 	gradleSetup := NewGradleSetup()
 	err := gradleSetup.Configure(files)
 	if err != nil {
@@ -214,7 +215,7 @@ func FindGradleRoots(files []string) ([]string, error) {
 		}
 		gradleMainDirs[dir] = true
 	}
-	for _, file := range files {
+	for _, file := range gradleBuildFiles {
 		dir, _ := filepath.Abs(filepath.Dir(file))
 		if _, ok := gradleSetup.subProjectMap[dir]; ok {
 			continue

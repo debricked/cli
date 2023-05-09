@@ -1,6 +1,7 @@
 package java
 
 import (
+	"embed"
 	"fmt"
 	"os"
 	"os/exec"
@@ -8,6 +9,7 @@ import (
 
 	conf "github.com/debricked/cli/pkg/callgraph/config"
 	"github.com/debricked/cli/pkg/callgraph/job"
+	"github.com/debricked/cli/pkg/io/finder"
 	ioWriter "github.com/debricked/cli/pkg/io/writer"
 )
 
@@ -30,6 +32,9 @@ func NewJob(dir string, files []string, cmdFactory ICmdFactory, writer ioWriter.
 	}
 }
 
+//go:embed embeded/gradle-script.groovy
+var gradleInitScript embed.FS
+
 func (j *Job) Run() {
 	fmt.Println("ENTERED RUN")
 	workingDirectory := j.GetDir()
@@ -37,19 +42,23 @@ func (j *Job) Run() {
 	targetClasses := j.GetFiles()[0]
 	dependencyDir := ".debrickedTmpFolder"
 	targetDir := path.Join(workingDirectory, dependencyDir)
-	configPm := j.config.Kwargs()["pm"]
+	pmConfig := j.config.Kwargs()["pm"]
 
 	// If folder doesn't exist, copy dependencies
 	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
 		var cmd *exec.Cmd
-		if configPm == gradle {
+		if pmConfig == gradle {
 			targetGradlew := path.Join(workingDirectory, "gradlew")
 			gradlew := "gradle"
 			if _, err := os.Stat(targetGradlew); os.IsExist(err) {
 				gradlew = targetGradlew
 			}
 
-			cmd, err = j.cmdFactory.MakeGradleCopyDependenciesCmd(workingDirectory, gradlew)
+			groovyFilePath := path.Join(workingDirectory, ".debrickedGroovyScript.groovy")
+			ish := finder.NewScriptHandler(groovyFilePath, "embeded/gradle-script.groovy", ioWriter.FileWriter{})
+			ish.WriteInitFile()
+
+			cmd, err = j.cmdFactory.MakeGradleCopyDependenciesCmd(workingDirectory, gradlew, groovyFilePath)
 		} else {
 			cmd, err = j.cmdFactory.MakeMvnCopyDependenciesCmd(workingDirectory, targetDir)
 		}

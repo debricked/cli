@@ -1,6 +1,7 @@
 package finder
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/vifraa/gopom"
@@ -52,6 +53,8 @@ func (p PomService) GetRootPomFiles(files []string) []string {
 			roots = append(roots, file)
 		}
 	}
+
+	fmt.Println("lenroot", roots)
 
 	return roots
 }

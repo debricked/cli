@@ -11,11 +11,20 @@ type IInitScriptHandler interface {
 
 type InitScriptHandler struct {
 	groovyScriptPath string
+	initPath         string
 	fileWriter       writer.IFileWriter
 }
 
+func NewScriptHandler(groovyScriptPath string, initPath string, fileWriter writer.IFileWriter) InitScriptHandler {
+	return InitScriptHandler{
+		groovyScriptPath,
+		initPath,
+		fileWriter,
+	}
+}
+
 func (i InitScriptHandler) ReadInitFile() ([]byte, error) {
-	return gradleInitScript.ReadFile("embeded/gradle-init-script.groovy")
+	return gradleInitScript.ReadFile(i.initPath)
 }
 
 func (i InitScriptHandler) WriteInitFile() error {

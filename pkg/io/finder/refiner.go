@@ -58,6 +58,10 @@ func FilterFiles(files []string, pattern string) []string {
 func MapFilesToDir(dirs []string, files []string) map[string][]string {
 	dirToFilesMap := make(map[string][]string)
 
+	if len(dirs) == 0 {
+		return dirToFilesMap
+	}
+
 	for _, file := range files {
 		longestMatchLength := 0
 		var matchingDir string
