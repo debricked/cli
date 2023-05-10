@@ -25,21 +25,26 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	switch pmConfig {
 	case gradle:
 		roots, err = finder.FindGradleRoots(s.files)
-		fmt.Println("gradle", roots)
 	case maven:
 		roots, err = finder.FindMavenRoots(s.files)
-		fmt.Println("maven", roots)
 	default:
 		roots, err = finder.FindMavenRoots(s.files)
 	}
 
 	if err != nil {
 		fmt.Println("error", err)
+		return jobs, err
 	}
 
+	fmt.Println("roots", roots)
 	classDirs := finder.FindJavaClassDirs(s.files)
 	rootClassMapping := finder.MapFilesToDir(roots, classDirs)
 	fmt.Println("roots", rootClassMapping)
+
+	if len(roots) != 0 && len(rootClassMapping) == 0 {
+		fmt.Println("error", err)
+		return jobs, fmt.Errorf("Roots found but without related classes, make sure to build your project before running")
+	}
 
 	// TODO: If we want to build, build jobs need to execute before trying to find javaClassDirs.
 	// If not, mapping between roots and classes could get wonky
