@@ -1,7 +1,7 @@
 package gradle
 
 import (
-	"errors"
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -44,9 +44,9 @@ func (j *Job) Run() {
 
 	if err != nil {
 		if strings.HasSuffix(err.Error(), "gradlew\": permission denied") {
-			permissionDeniedErr := "Permission to execute gradlew is not granted, fallback to PATHs gradle installation will be used.\nFull error: " + err.Error()
+			permissionErr = fmt.Errorf("Permission to execute gradlew is not granted, fallback to PATHs gradle installation will be used.\nFull error: %s", err.Error())
+
 			dependenciesCmd, err = j.cmdFactory.MakeDependenciesGraphCmd(workingDirectory, "gradle", j.groovyInitScript)
-			permissionErr = errors.New(permissionDeniedErr)
 		}
 	}
 
@@ -63,11 +63,7 @@ func (j *Job) Run() {
 	_, err = dependenciesCmd.Output()
 
 	if permissionErr != nil {
-		if err != nil {
-			j.Errors().Critical(permissionErr)
-		} else {
-			j.Errors().Warning(permissionErr)
-		}
+		j.Errors().Warning(permissionErr)
 	}
 
 	if err != nil {
