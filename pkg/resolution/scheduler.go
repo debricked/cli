@@ -25,6 +25,8 @@ type Scheduler struct {
 	spinnerManager tui.ISpinnerManager
 }
 
+const resolving = "Resolving"
+
 func NewScheduler(workers int) *Scheduler {
 	return &Scheduler{workers: workers, waitGroup: sync.WaitGroup{}}
 }
@@ -44,7 +46,7 @@ func (scheduler *Scheduler) Schedule(jobs []job.IJob) (IResolution, error) {
 	})
 
 	for _, j := range jobs {
-		spinner := scheduler.spinnerManager.AddSpinner(j.GetFile())
+		spinner := scheduler.spinnerManager.AddSpinner(resolving, j.GetFile())
 		scheduler.queue <- queueItem{
 			job:     j,
 			spinner: spinner,
@@ -75,16 +77,16 @@ func (scheduler *Scheduler) worker() {
 func (scheduler *Scheduler) updateStatus(item queueItem) {
 	for {
 		msg := <-item.job.ReceiveStatus()
-		tui.SetSpinnerMessage(item.spinner, item.job.GetFile(), msg)
+		tui.SetSpinnerMessage(item.spinner, resolving, item.job.GetFile(), msg)
 	}
 }
 
 func (scheduler *Scheduler) finish(item queueItem) {
 	if item.job.Errors().HasError() {
-		tui.SetSpinnerMessage(item.spinner, item.job.GetFile(), "failed")
+		tui.SetSpinnerMessage(item.spinner, resolving, item.job.GetFile(), "failed")
 		item.spinner.Error()
 	} else {
-		tui.SetSpinnerMessage(item.spinner, item.job.GetFile(), "done")
+		tui.SetSpinnerMessage(item.spinner, resolving, item.job.GetFile(), "done")
 		item.spinner.Complete()
 	}
 }
