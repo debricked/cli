@@ -36,6 +36,10 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 		return jobs, err
 	}
 
+	// TODO: If we want to build, build jobs need to execute before trying to find javaClassDirs.
+	// If not, mapping between roots and classes could get wonky
+	// Perfect time to build after getting roots, and maybe if no classes are found?
+
 	fmt.Println("roots", roots)
 	classDirs := finder.FindJavaClassDirs(s.files)
 	rootClassMapping := finder.MapFilesToDir(roots, classDirs)
@@ -45,9 +49,6 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 		fmt.Println("error", err)
 		return jobs, fmt.Errorf("Roots found but without related classes, make sure to build your project before running")
 	}
-
-	// TODO: If we want to build, build jobs need to execute before trying to find javaClassDirs.
-	// If not, mapping between roots and classes could get wonky
 
 	for rootDir, classDirs := range rootClassMapping {
 		// For each class paths dir within the root, find GCDPath as entrypoint
