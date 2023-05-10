@@ -18,7 +18,7 @@ func NewBaseJob(dir string, files []string) BaseJob {
 	return BaseJob{
 		dir:    dir,
 		files:  files,
-		errs:   err.NewErrors("test"),
+		errs:   err.NewErrors(dir),
 		status: make(chan string),
 	}
 }

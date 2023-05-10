@@ -44,6 +44,7 @@ type Setup struct {
 	MetaFileFinder    IMetaFileFinder
 	Writer            writer.IFileWriter
 	InitScriptHandler IInitScriptHandler
+	CmdFactory        ICmdFactory
 }
 
 func NewGradleSetup() *Setup {
@@ -66,6 +67,7 @@ func NewGradleSetup() *Setup {
 		MetaFileFinder:    MetaFileFinder{filepath: FilePath{}},
 		Writer:            writer,
 		InitScriptHandler: ish,
+		CmdFactory:        CmdFactory{},
 	}
 }
 
@@ -134,7 +136,12 @@ func (gs *Setup) setupGradleProjectMappings() error {
 	return SetupSubprojectError{message: errors.Error()}
 }
 
-func MakeFindSubGraphCmd(workingDirectory string, gradlew string, initScript string) (*exec.Cmd, error) {
+type ICmdFactory interface {
+	MakeFindSubGraphCmd(workingDirectory string, gradlew string, initScript string) (*exec.Cmd, error)
+}
+type CmdFactory struct{}
+
+func (cf CmdFactory) MakeFindSubGraphCmd(workingDirectory string, gradlew string, initScript string) (*exec.Cmd, error) {
 	path, err := exec.LookPath(gradlew)
 
 	return &exec.Cmd{
@@ -145,7 +152,7 @@ func MakeFindSubGraphCmd(workingDirectory string, gradlew string, initScript str
 }
 
 func (gs *Setup) setupSubProjectPaths(gp Project) error {
-	dependenciesCmd, _ := MakeFindSubGraphCmd(gp.dir, gp.gradlew, gs.groovyScriptPath)
+	dependenciesCmd, _ := gs.CmdFactory.MakeFindSubGraphCmd(gp.dir, gp.gradlew, gs.groovyScriptPath)
 	var stderr bytes.Buffer
 	dependenciesCmd.Stderr = &stderr
 	_, err := dependenciesCmd.Output()
@@ -196,40 +203,4 @@ func (gs *Setup) GetGradleW(dir string) string {
 	}
 
 	return gradlew
-}
-
-func FindGradleRoots(files []string) ([]string, error) {
-	gradleBuildFiles := FilterFiles(files, "gradle.build(.kts)?")
-	gradleSetup := NewGradleSetup()
-	err := gradleSetup.Configure(files)
-	if err != nil {
-
-		return []string{}, err
-	}
-
-	gradleMainDirs := make(map[string]bool)
-	for _, gradleProject := range gradleSetup.GradleProjects {
-		dir := gradleProject.dir
-		if _, ok := gradleMainDirs[dir]; ok {
-			continue
-		}
-		gradleMainDirs[dir] = true
-	}
-	for _, file := range gradleBuildFiles {
-		dir, _ := filepath.Abs(filepath.Dir(file))
-		if _, ok := gradleSetup.subProjectMap[dir]; ok {
-			continue
-		}
-		if _, ok := gradleMainDirs[dir]; ok {
-			continue
-		}
-		gradleMainDirs[dir] = true
-	}
-
-	roots := []string{}
-	for key := range gradleMainDirs {
-		roots = append(roots, key)
-	}
-
-	return roots, nil
 }

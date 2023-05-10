@@ -12,6 +12,7 @@ import (
 type Strategy struct {
 	config conf.IConfig
 	files  []string
+	finder finder.IFinder
 }
 
 func (s Strategy) Invoke() ([]job.IJob, error) {
@@ -24,11 +25,11 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	var err error
 	switch pmConfig {
 	case gradle:
-		roots, err = finder.FindGradleRoots(s.files)
+		roots, err = s.finder.FindGradleRoots(s.files)
 	case maven:
-		roots, err = finder.FindMavenRoots(s.files)
+		roots, err = s.finder.FindMavenRoots(s.files)
 	default:
-		roots, err = finder.FindMavenRoots(s.files)
+		roots, err = s.finder.FindMavenRoots(s.files)
 	}
 
 	if err != nil {
@@ -41,8 +42,8 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	// Perfect time to build after getting roots, and maybe if no classes are found?
 
 	fmt.Println("roots", roots)
-	classDirs := finder.FindJavaClassDirs(s.files)
-	rootClassMapping := finder.MapFilesToDir(roots, classDirs)
+	classDirs, _ := s.finder.FindJavaClassDirs(s.files)
+	rootClassMapping := s.finder.MapFilesToDir(roots, classDirs)
 	fmt.Println("roots", rootClassMapping)
 
 	if len(roots) != 0 && len(rootClassMapping) == 0 {
@@ -66,6 +67,6 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	return jobs, nil
 }
 
-func NewStrategy(config conf.IConfig, files []string) Strategy {
-	return Strategy{config, files}
+func NewStrategy(config conf.IConfig, files []string, finder finder.IFinder) Strategy {
+	return Strategy{config, files, finder}
 }

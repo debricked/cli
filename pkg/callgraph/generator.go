@@ -96,10 +96,11 @@ func (r Generator) Generate(paths []string, exclusions []string, configs []confi
 	exclusions = append(exclusions, debrickedExclusions...)
 	files, err := finder.FindFiles(paths, exclusions)
 	fmt.Println(err)
+	finder := finder.Finder{}
 
 	var jobs []job.IJob
 	for _, config := range configs {
-		s, strategyErr := r.strategyFactory.Make(config, files)
+		s, strategyErr := r.strategyFactory.Make(config, files, finder)
 		if strategyErr == nil {
 			newJobs, err := s.Invoke()
 			if err != nil {

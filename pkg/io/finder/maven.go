@@ -58,10 +58,3 @@ func (p PomService) GetRootPomFiles(files []string) []string {
 
 	return roots
 }
-
-func FindMavenRoots(files []string) ([]string, error) {
-	pomFiles := FilterFiles(files, "pom.xml")
-	ps := PomService{}
-	rootFiles := ps.GetRootPomFiles(pomFiles)
-	return rootFiles, nil
-}
