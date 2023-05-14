@@ -63,6 +63,8 @@ func RunE(callgraph callgraph.IGenerator) func(_ *cobra.Command, args []string) 
 		// err := callgraph.GenerateWithTimer(args, viper.GetStringSlice(ExclusionFlag), configs, 10)
 		_, err := callgraph.Generate(args, viper.GetStringSlice(ExclusionFlag), configs, make(chan bool))
 
+		fmt.Println("Done with generate callgraph")
+
 		return err
 	}
 }

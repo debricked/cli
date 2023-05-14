@@ -47,14 +47,22 @@ func (scheduler *Scheduler) Schedule(jobs []job.IJob) (IGeneration, error) {
 		}
 	}
 
+	jobIteration := 0
 	// Run it in sequence
 	for item := range scheduler.queue {
+		jobIteration += 1
 		fmt.Println("start job")
 		go scheduler.updateStatus(item)
 		item.job.Run()
+		fmt.Println("finish job")
 		scheduler.finish(item)
+		fmt.Println("wait done")
 		scheduler.waitGroup.Done()
+		if jobIteration == len(jobs) {
+			close(scheduler.queue)
+		}
 	}
+	fmt.Println("out")
 
 	scheduler.spinnerManager.Stop()
 	fmt.Println("Done")
