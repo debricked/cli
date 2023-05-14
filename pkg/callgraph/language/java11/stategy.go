@@ -21,7 +21,12 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	var jobs []job.IJob
 	// Filter relevant files
 
+	if s.config == nil {
+		return jobs, fmt.Errorf("No config is setup")
+	}
+
 	pmConfig := s.config.Kwargs()["pm"]
+
 	println("CONFIG", pmConfig)
 	var roots []string
 	var err error

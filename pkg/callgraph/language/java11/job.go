@@ -77,6 +77,7 @@ func (j *Job) Run() {
 		}
 	}
 
+	fmt.Println("Generating callgraph!")
 	j.SendStatus("generating call graph")
 	callgraph := Callgraph{
 		cmdFactory:       j.cmdFactory,

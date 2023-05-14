@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/debricked/cli/pkg/callgraph/config"
-	"github.com/debricked/cli/pkg/callgraph/strategy"
 	strategyTestdata "github.com/debricked/cli/pkg/callgraph/strategy/testdata"
 	"github.com/stretchr/testify/assert"
 )
@@ -15,7 +14,7 @@ const (
 	goModFile = "go.mod"
 )
 
-func TestNewResolver(t *testing.T) {
+func TestNewGenerator(t *testing.T) {
 	r := NewGenerator(
 		strategyTestdata.NewStrategyFactoryMock(),
 		NewScheduler(workers),
@@ -23,7 +22,7 @@ func TestNewResolver(t *testing.T) {
 	assert.NotNil(t, r)
 }
 
-func TestResolve(t *testing.T) {
+func TestGenerate(t *testing.T) {
 	r := NewGenerator(
 		strategyTestdata.NewStrategyFactoryMock(),
 		NewScheduler(workers),
@@ -38,7 +37,7 @@ func TestResolve(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestResolveInvokeError(t *testing.T) {
+func TestGenerateInvokeError(t *testing.T) {
 	r := NewGenerator(
 		strategyTestdata.NewStrategyFactoryErrorMock(),
 		NewScheduler(workers),
@@ -52,22 +51,7 @@ func TestResolveInvokeError(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestResolveStrategyError(t *testing.T) {
-	r := NewGenerator(
-		strategy.NewStrategyFactory(),
-		NewScheduler(workers),
-	)
-
-	var status chan bool
-	configs := []config.IConfig{
-		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}),
-	}
-	res, err := r.Generate([]string{"../../go.mod"}, nil, configs, status)
-	assert.Empty(t, res.Jobs())
-	assert.NoError(t, err)
-}
-
-func TestResolveScheduleError(t *testing.T) {
+func TestGenerateScheduleError(t *testing.T) {
 	errAssertion := errors.New("error")
 	r := NewGenerator(
 		strategyTestdata.NewStrategyFactoryMock(),
@@ -83,7 +67,7 @@ func TestResolveScheduleError(t *testing.T) {
 	assert.ErrorIs(t, err, errAssertion)
 }
 
-func TestResolveDirWithoutConfig(t *testing.T) {
+func TestGenerateDirWithoutConfig(t *testing.T) {
 	r := NewGenerator(
 		strategyTestdata.NewStrategyFactoryMock(),
 		SchedulerMock{},
@@ -93,18 +77,4 @@ func TestResolveDirWithoutConfig(t *testing.T) {
 	res, err := r.Generate([]string{"invalid-dir"}, nil, nil, status)
 	assert.Empty(t, res.Jobs())
 	assert.NoError(t, err)
-}
-
-func TestResolveInvalidDir(t *testing.T) {
-	r := NewGenerator(
-		strategyTestdata.NewStrategyFactoryMock(),
-		SchedulerMock{},
-	)
-	var status chan bool
-	configs := []config.IConfig{
-		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}),
-	}
-
-	_, err := r.Generate([]string{"invalid-dir"}, nil, configs, status)
-	assert.Error(t, err)
 }

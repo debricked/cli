@@ -21,7 +21,7 @@ func (_ CmdFactory) MakeGradleCopyDependenciesCmd(
 	return &exec.Cmd{
 		Path: path,
 		Args: []string{
-			"gradle",
+			gradlew,
 			"-b",
 			groovyFilePath,
 			"-q",

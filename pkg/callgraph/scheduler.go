@@ -32,6 +32,10 @@ func NewScheduler(workers int) *Scheduler {
 }
 
 func (scheduler *Scheduler) Schedule(jobs []job.IJob) (IGeneration, error) {
+	if len(jobs) == 0 {
+		return NewGeneration(jobs), nil
+	}
+
 	fmt.Println("Starting scheduler")
 	scheduler.queue = make(chan queueItem, len(jobs))
 	scheduler.waitGroup.Add(len(jobs))

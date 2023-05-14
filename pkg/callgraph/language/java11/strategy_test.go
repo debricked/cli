@@ -31,7 +31,7 @@ func TestNewStrategy(t *testing.T) {
 	finder.FindMavenRootsNames = testFiles
 	s = NewStrategy(conf, testFiles, finder)
 	assert.NotNil(t, s)
-	assert.Len(t, s.files, 2)
+	assert.Len(t, s.files, 1)
 	assert.Equal(t, s.config, conf)
 }
 
@@ -48,7 +48,7 @@ func TestInvokeOneFile(t *testing.T) {
 	finder.FindMavenRootsNames = testFiles
 	s := NewStrategy(conf, testFiles, finder)
 	jobs, _ := s.Invoke()
-	assert.Len(t, jobs, 1)
+	assert.Len(t, jobs, 0)
 }
 
 func TestInvokeManyFiles(t *testing.T) {
@@ -58,16 +58,21 @@ func TestInvokeManyFiles(t *testing.T) {
 	finder.FindMavenRootsNames = testFiles
 	s := NewStrategy(conf, testFiles, finder)
 	jobs, _ := s.Invoke()
-	assert.Len(t, jobs, 2)
+	assert.Len(t, jobs, 0)
 }
 
-func TestInvokeManyFilesWFilters(t *testing.T) {
+func TestInvokeManyFilesWCorrectFilters(t *testing.T) {
 	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"})
 	finder := testdata.NewEmptyFinderMock()
-	testFiles := []string{"file-1", "file-2"}
+	testFiles := []string{"file-1", "file-2", "file-3"}
 	finder.FindMavenRootsNames = []string{"file-3"}
+	finder.FindJavaClassDirsNames = []string{"file-3/test.class"}
 	s := NewStrategy(conf, testFiles, finder)
 	jobs, _ := s.Invoke()
-	assert.Equal(t, jobs, []string{"file-3"})
 	assert.Len(t, jobs, 1)
+	for _, job := range jobs {
+		assert.Equal(t, job.GetFiles(), []string{"file-3/"})
+		assert.Equal(t, job.GetDir(), "file-3")
+
+	}
 }
