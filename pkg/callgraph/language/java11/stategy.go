@@ -2,11 +2,13 @@ package java
 
 import (
 	"fmt"
+	"log"
 
 	conf "github.com/debricked/cli/pkg/callgraph/config"
 	"github.com/debricked/cli/pkg/callgraph/job"
 	"github.com/debricked/cli/pkg/io/finder"
 	"github.com/debricked/cli/pkg/io/writer"
+	"github.com/fatih/color"
 )
 
 type Strategy struct {
@@ -47,8 +49,12 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	fmt.Println("roots", rootClassMapping)
 
 	if len(roots) != 0 && len(rootClassMapping) == 0 {
-		fmt.Println("error", err)
-		return jobs, fmt.Errorf("Roots found but without related classes, make sure to build your project before running")
+		err = fmt.Errorf("Roots found but without related classes, make sure to build your project before running")
+		warningColor := color.New(color.FgYellow, color.Bold).SprintFunc()
+		defaultOutputWriter := log.Writer()
+		log.Println(warningColor("Warning: ") + err.Error())
+		log.SetOutput(defaultOutputWriter)
+		return jobs, err
 	}
 
 	for rootDir, classDirs := range rootClassMapping {
