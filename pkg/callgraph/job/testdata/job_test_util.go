@@ -6,10 +6,11 @@ import (
 	"testing"
 
 	"github.com/debricked/cli/pkg/callgraph/job"
+	"github.com/debricked/cli/pkg/io/err"
 	"github.com/stretchr/testify/assert"
 )
 
-func AssertPathErr(t *testing.T, jobErrs job.IErrors) {
+func AssertPathErr(t *testing.T, jobErrs err.IErrors) {
 	var path string
 	if runtime.GOOS == "windows" {
 		path = "%PATH%"

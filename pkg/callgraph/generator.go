@@ -112,5 +112,7 @@ func (r Generator) Generate(paths []string, exclusions []string, configs []confi
 
 	fmt.Println("Run scheduler")
 	generation, err := r.scheduler.Schedule(jobs)
+
+	status <- true
 	return generation, err
 }

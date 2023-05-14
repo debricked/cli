@@ -86,7 +86,6 @@ func MapFilesToDir(dirs []string, files []string) map[string][]string {
 	}
 
 	return dirToFilesMap
-
 }
 
 func GCDPath(paths []string) string {

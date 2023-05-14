@@ -43,7 +43,7 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 
 	fmt.Println("roots", roots)
 	classDirs, _ := s.finder.FindJavaClassDirs(s.files)
-	rootClassMapping := s.finder.MapFilesToDir(roots, classDirs)
+	rootClassMapping := finder.MapFilesToDir(roots, classDirs)
 	fmt.Println("roots", rootClassMapping)
 
 	if len(roots) != 0 && len(rootClassMapping) == 0 {

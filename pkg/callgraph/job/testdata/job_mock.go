@@ -3,13 +3,13 @@ package testdata
 import (
 	"fmt"
 
-	"github.com/debricked/cli/pkg/resolution/job"
+	"github.com/debricked/cli/pkg/io/err"
 )
 
 type JobMock struct {
 	dir    string
 	files  []string
-	errs   job.IErrors
+	errs   err.IErrors
 	status chan string
 }
 
@@ -21,11 +21,11 @@ func (j *JobMock) GetDir() string {
 	return j.dir
 }
 
-func (j *JobMock) GetFiles() string {
-	return j.file
+func (j *JobMock) GetFiles() []string {
+	return j.files
 }
 
-func (j *JobMock) Errors() job.IErrors {
+func (j *JobMock) Errors() err.IErrors {
 	return j.errs
 }
 
@@ -38,10 +38,10 @@ func NewJobMock(dir string, files []string) *JobMock {
 		dir:    dir,
 		files:  files,
 		status: make(chan string),
-		errs:   job.NewErrors(file),
+		errs:   err.NewErrors(dir),
 	}
 }
 
-func (j *JobMock) SetErr(err job.IError) {
+func (j *JobMock) SetErr(err err.IError) {
 	j.errs.Critical(err)
 }
