@@ -22,12 +22,16 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	// Filter relevant files
 
 	if s.config == nil {
-		return jobs, fmt.Errorf("No config is setup")
+		err := fmt.Errorf("No config is setup")
+		warningColor := color.New(color.FgYellow, color.Bold).SprintFunc()
+		defaultOutputWriter := log.Writer()
+		log.Println(warningColor("Warning: ") + err.Error())
+		log.SetOutput(defaultOutputWriter)
+		return jobs, nil
 	}
 
 	pmConfig := s.config.Kwargs()["pm"]
 
-	println("CONFIG", pmConfig)
 	var roots []string
 	var err error
 	switch pmConfig {
@@ -48,18 +52,16 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	// If not, mapping between roots and classes could get wonky
 	// Perfect time to build after getting roots, and maybe if no classes are found?
 
-	fmt.Println("roots", roots)
 	classDirs, _ := s.finder.FindJavaClassDirs(s.files)
 	rootClassMapping := finder.MapFilesToDir(roots, classDirs)
-	fmt.Println("roots", rootClassMapping)
 
 	if len(roots) != 0 && len(rootClassMapping) == 0 {
-		err = fmt.Errorf("Roots found but without related classes, make sure to build your project before running")
+		err = fmt.Errorf("Roots found but without related classes, make sure to build your project before running, roots: %v", roots)
 		warningColor := color.New(color.FgYellow, color.Bold).SprintFunc()
 		defaultOutputWriter := log.Writer()
 		log.Println(warningColor("Warning: ") + err.Error())
 		log.SetOutput(defaultOutputWriter)
-		return jobs, err
+		return jobs, nil
 	}
 
 	for rootDir, classDirs := range rootClassMapping {

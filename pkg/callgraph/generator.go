@@ -95,7 +95,6 @@ func (r Generator) Generate(paths []string, exclusions []string, configs []confi
 	debrickedExclusions := []string{targetPath}
 	exclusions = append(exclusions, debrickedExclusions...)
 	files, err := finder.FindFiles(paths, exclusions)
-	fmt.Println(err)
 	finder := finder.Finder{}
 
 	var jobs []job.IJob
@@ -110,17 +109,12 @@ func (r Generator) Generate(paths []string, exclusions []string, configs []confi
 		}
 	}
 
-	fmt.Println("Run scheduler")
 	generation, err := r.scheduler.Schedule(jobs)
 
-	fmt.Println("update status")
 	select {
 	case status <- true:
-		fmt.Println("sent message", status)
 	default:
-		fmt.Println("no message sent")
 	}
 
-	fmt.Println("returning generator")
 	return generation, err
 }

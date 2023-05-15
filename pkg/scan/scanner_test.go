@@ -13,6 +13,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/debricked/cli/pkg/callgraph"
 	"github.com/debricked/cli/pkg/ci"
 	"github.com/debricked/cli/pkg/ci/argo"
 	"github.com/debricked/cli/pkg/ci/azure"
@@ -52,7 +53,8 @@ func TestNewDebrickedScanner(t *testing.T) {
 	var finder file.IFinder
 	var uploader upload.IUploader
 	var resolver resolution.IResolver
-	s := NewDebrickedScanner(&debClient, finder, uploader, cis, resolver)
+	var generator callgraph.IGenerator
+	s := NewDebrickedScanner(&debClient, finder, uploader, cis, resolver, generator)
 
 	assert.NotNil(t, s)
 }
@@ -121,7 +123,7 @@ func TestScan(t *testing.T) {
 
 func TestScanFailingMetaObject(t *testing.T) {
 	var debClient client.IDebClient = testdata.NewDebClientMock()
-	scanner := NewDebrickedScanner(&debClient, nil, nil, ciService, nil)
+	scanner := NewDebrickedScanner(&debClient, nil, nil, ciService, nil, nil)
 	cwd, _ := os.Getwd()
 	path := testdataYarn
 	opts := DebrickedOptions{
@@ -168,7 +170,7 @@ func TestScanFailingNoFiles(t *testing.T) {
 
 func TestScanBadOpts(t *testing.T) {
 	var c client.IDebClient
-	scanner := NewDebrickedScanner(&c, nil, nil, nil, nil)
+	scanner := NewDebrickedScanner(&c, nil, nil, nil, nil, nil)
 	var opts IOptions
 
 	err := scanner.Scan(opts)
@@ -227,7 +229,7 @@ func TestScanEmptyResult(t *testing.T) {
 
 func TestScanInCiWithPathSet(t *testing.T) {
 	var debClient client.IDebClient = testdata.NewDebClientMock()
-	scanner := NewDebrickedScanner(&debClient, nil, nil, ciService, nil)
+	scanner := NewDebrickedScanner(&debClient, nil, nil, ciService, nil, nil)
 	cwd, _ := os.Getwd()
 	defer resetWd(t, cwd)
 	path := testdataYarn
