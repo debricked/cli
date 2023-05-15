@@ -1,4 +1,4 @@
-package finder
+package gradle
 
 import (
 	"bufio"
@@ -28,18 +28,18 @@ type ISetup interface {
 }
 
 type Project struct {
-	dir           string
-	gradlew       string
-	mainBuildFile string
+	Dir           string
+	Gradlew       string
+	MainBuildFile string
 }
 
 type Setup struct {
-	gradlewMap        map[string]string
-	settingsMap       map[string]string
-	subProjectMap     map[string]string
-	groovyScriptPath  string
-	gradlewOsName     string
-	settingsFilenames []string
+	GradlewMap        map[string]string
+	SettingsMap       map[string]string
+	SubProjectMap     map[string]string
+	GroovyScriptPath  string
+	GradlewOsName     string
+	SettingsFilenames []string
 	GradleProjects    []Project
 	MetaFileFinder    IMetaFileFinder
 	Writer            writer.IFileWriter
@@ -57,12 +57,12 @@ func NewGradleSetup() *Setup {
 	ish := InitScriptHandler{groovyScriptPath, "embeded/gradle-init-script.groovy", writer}
 
 	return &Setup{
-		gradlewMap:        map[string]string{},
-		settingsMap:       map[string]string{},
-		subProjectMap:     map[string]string{},
-		groovyScriptPath:  groovyScriptPath,
-		gradlewOsName:     gradlewOsName,
-		settingsFilenames: []string{"settings.gradle", "settings.gradle.kts"},
+		GradlewMap:        map[string]string{},
+		SettingsMap:       map[string]string{},
+		SubProjectMap:     map[string]string{},
+		GroovyScriptPath:  groovyScriptPath,
+		GradlewOsName:     gradlewOsName,
+		SettingsFilenames: []string{"settings.gradle", "settings.gradle.kts"},
 		GradleProjects:    []Project{},
 		MetaFileFinder:    MetaFileFinder{filepath: FilePath{}},
 		Writer:            writer,
@@ -78,8 +78,8 @@ func (gs *Setup) Configure(files []string) error {
 		return err
 	}
 	settingsMap, gradlewMap, err := gs.MetaFileFinder.Find(files)
-	gs.gradlewMap = gradlewMap
-	gs.settingsMap = settingsMap
+	gs.GradlewMap = gradlewMap
+	gs.SettingsMap = settingsMap
 	if err != nil {
 
 		return err
@@ -96,16 +96,16 @@ func (gs *Setup) Configure(files []string) error {
 func (gs *Setup) setupFilePathMappings(files []string) {
 	for _, file := range files {
 		dir, _ := filepath.Abs(filepath.Dir(file))
-		possibleGradlew := filepath.Join(dir, gs.gradlewOsName)
+		possibleGradlew := filepath.Join(dir, gs.GradlewOsName)
 		_, err := os.Stat(possibleGradlew)
 		if err == nil {
-			gs.gradlewMap[dir] = possibleGradlew
+			gs.GradlewMap[dir] = possibleGradlew
 		}
-		for _, settingsFilename := range gs.settingsFilenames {
+		for _, settingsFilename := range gs.SettingsFilenames {
 			possibleSettings := filepath.Join(dir, settingsFilename)
 			_, err := os.Stat(possibleSettings)
 			if err == nil {
-				gs.settingsMap[dir] = possibleSettings
+				gs.SettingsMap[dir] = possibleSettings
 			}
 		}
 	}
@@ -114,17 +114,17 @@ func (gs *Setup) setupFilePathMappings(files []string) {
 func (gs *Setup) setupGradleProjectMappings() error {
 	var errors SetupError
 	var settingsDirs []string
-	for k := range gs.settingsMap {
+	for k := range gs.SettingsMap {
 		settingsDirs = append(settingsDirs, k)
 	}
 	sort.Strings(settingsDirs)
 	for _, dir := range settingsDirs {
-		if _, ok := gs.subProjectMap[dir]; ok {
+		if _, ok := gs.SubProjectMap[dir]; ok {
 			continue
 		}
 		gradlew := gs.GetGradleW(dir)
-		mainFile := gs.settingsMap[dir]
-		gradleProject := Project{dir: dir, gradlew: gradlew, mainBuildFile: mainFile}
+		mainFile := gs.SettingsMap[dir]
+		gradleProject := Project{Dir: dir, Gradlew: gradlew, MainBuildFile: mainFile}
 		err := gs.setupSubProjectPaths(gradleProject)
 
 		if err != nil {
@@ -152,7 +152,7 @@ func (cf CmdFactory) MakeFindSubGraphCmd(workingDirectory string, gradlew string
 }
 
 func (gs *Setup) setupSubProjectPaths(gp Project) error {
-	dependenciesCmd, _ := gs.CmdFactory.MakeFindSubGraphCmd(gp.dir, gp.gradlew, gs.groovyScriptPath)
+	dependenciesCmd, _ := gs.CmdFactory.MakeFindSubGraphCmd(gp.Dir, gp.Gradlew, gs.GroovyScriptPath)
 	var stderr bytes.Buffer
 	dependenciesCmd.Stderr = &stderr
 	_, err := dependenciesCmd.Output()
@@ -162,7 +162,7 @@ func (gs *Setup) setupSubProjectPaths(gp Project) error {
 
 		return SetupSubprojectError{message: errorOutput + err.Error()}
 	}
-	multiProject := filepath.Join(gp.dir, multiProjectFilename)
+	multiProject := filepath.Join(gp.Dir, multiProjectFilename)
 	file, err := os.Open(multiProject)
 	if err != nil {
 
@@ -174,7 +174,7 @@ func (gs *Setup) setupSubProjectPaths(gp Project) error {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		subProjectPath := scanner.Text()
-		gs.subProjectMap[subProjectPath] = gp.dir
+		gs.SubProjectMap[subProjectPath] = gp.Dir
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -186,11 +186,11 @@ func (gs *Setup) setupSubProjectPaths(gp Project) error {
 
 func (gs *Setup) GetGradleW(dir string) string {
 	gradlew := initGradle
-	val, ok := gs.gradlewMap[dir]
+	val, ok := gs.GradlewMap[dir]
 	if ok {
 		gradlew = val
 	} else {
-		for dirPath, gradlePath := range gs.gradlewMap {
+		for dirPath, gradlePath := range gs.GradlewMap {
 			// potential improvement, sort gradlewMap in longest path first"
 			rel, err := filepath.Rel(dirPath, dir)
 			isRelative := !strings.HasPrefix(rel, "..") && rel != ".."

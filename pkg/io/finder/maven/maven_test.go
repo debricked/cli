@@ -1,4 +1,4 @@
-package finder
+package maven
 
 import (
 	"path/filepath"

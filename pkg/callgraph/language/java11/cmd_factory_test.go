@@ -7,10 +7,9 @@ import (
 )
 
 func TestMakeGradleCopyDependenciesCmd(t *testing.T) {
-	workingDir := "dir"
 	gradlew := "gradlew"
 	groovyFilePath := "groovyfilename"
-	cmd, err := CmdFactory{}.MakeGradleCopyDependenciesCmd(workingDir, gradlew, groovyFilePath)
+	cmd, err := CmdFactory{}.MakeGradleCopyDependenciesCmd(dir, gradlew, groovyFilePath)
 	assert.NotNil(t, cmd)
 	args := cmd.Args
 	assert.Contains(t, args, "gradlew")
@@ -20,9 +19,8 @@ func TestMakeGradleCopyDependenciesCmd(t *testing.T) {
 }
 
 func TestMakeMvnCopyDependenciesCmd(t *testing.T) {
-	workingDir := "dir"
 	targetDir := "target"
-	cmd, _ := CmdFactory{}.MakeMvnCopyDependenciesCmd(workingDir, targetDir)
+	cmd, _ := CmdFactory{}.MakeMvnCopyDependenciesCmd(dir, targetDir)
 	assert.NotNil(t, cmd)
 	args := cmd.Args
 	assert.Contains(t, args, "mvn")
@@ -34,10 +32,9 @@ func TestMakeMvnCopyDependenciesCmd(t *testing.T) {
 
 func TestMakeCallGraphGenerationCmd(t *testing.T) {
 	jarPath := "jarpath"
-	workingDir := "dir"
 	targetClasses := "targetclasses"
 	dependencyClasses := "dependencypath"
-	cmd, err := CmdFactory{}.MakeCallGraphGenerationCmd(jarPath, workingDir, targetClasses, dependencyClasses)
+	cmd, err := CmdFactory{}.MakeCallGraphGenerationCmd(jarPath, dir, targetClasses, dependencyClasses)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, cmd)

@@ -8,7 +8,7 @@ import (
 
 	conf "github.com/debricked/cli/pkg/callgraph/config"
 	"github.com/debricked/cli/pkg/callgraph/job"
-	"github.com/debricked/cli/pkg/io/finder"
+	gfinder "github.com/debricked/cli/pkg/io/finder/gradle"
 	ioWriter "github.com/debricked/cli/pkg/io/writer"
 )
 
@@ -52,7 +52,7 @@ func (j *Job) Run() {
 			}
 
 			groovyFilePath := path.Join(workingDirectory, ".debrickedGroovyScript.groovy")
-			ish := finder.NewScriptHandler(groovyFilePath, "embeded/gradle-script.groovy", ioWriter.FileWriter{})
+			ish := gfinder.NewScriptHandler(groovyFilePath, "embeded/gradle-script.groovy", ioWriter.FileWriter{})
 			ish.WriteInitFile()
 
 			cmd, err = j.cmdFactory.MakeGradleCopyDependenciesCmd(workingDirectory, gradlew, groovyFilePath)

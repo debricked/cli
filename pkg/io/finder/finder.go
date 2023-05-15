@@ -1,6 +1,11 @@
 package finder
 
-import "path/filepath"
+import (
+	"path/filepath"
+
+	"github.com/debricked/cli/pkg/io/finder/gradle"
+	"github.com/debricked/cli/pkg/io/finder/maven"
+)
 
 type IFinder interface {
 	FindMavenRoots(files []string) ([]string, error)
@@ -12,7 +17,7 @@ type Finder struct{}
 
 func (f Finder) FindMavenRoots(files []string) ([]string, error) {
 	pomFiles := FilterFiles(files, "pom.xml")
-	ps := PomService{}
+	ps := maven.PomService{}
 	rootFiles := ps.GetRootPomFiles(pomFiles)
 	return rootFiles, nil
 }
@@ -34,7 +39,7 @@ func (f Finder) FindJavaClassDirs(files []string) ([]string, error) {
 
 func (f Finder) FindGradleRoots(files []string) ([]string, error) {
 	gradleBuildFiles := FilterFiles(files, "gradle.build(.kts)?")
-	gradleSetup := NewGradleSetup()
+	gradleSetup := gradle.NewGradleSetup()
 	err := gradleSetup.Configure(files)
 	if err != nil {
 
@@ -43,7 +48,7 @@ func (f Finder) FindGradleRoots(files []string) ([]string, error) {
 
 	gradleMainDirs := make(map[string]bool)
 	for _, gradleProject := range gradleSetup.GradleProjects {
-		dir := gradleProject.dir
+		dir := gradleProject.Dir
 		if _, ok := gradleMainDirs[dir]; ok {
 			continue
 		}
@@ -51,7 +56,7 @@ func (f Finder) FindGradleRoots(files []string) ([]string, error) {
 	}
 	for _, file := range gradleBuildFiles {
 		dir, _ := filepath.Abs(filepath.Dir(file))
-		if _, ok := gradleSetup.subProjectMap[dir]; ok {
+		if _, ok := gradleSetup.SubProjectMap[dir]; ok {
 			continue
 		}
 		if _, ok := gradleMainDirs[dir]; ok {

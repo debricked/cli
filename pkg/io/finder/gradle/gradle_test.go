@@ -1,4 +1,4 @@
-package finder
+package gradle
 
 import (
 	"fmt"
@@ -10,7 +10,6 @@ import (
 
 	writerTestdata "github.com/debricked/cli/pkg/io/writer/testdata"
 
-	"github.com/debricked/cli/pkg/io/writer"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,16 +37,16 @@ func TestSetupFilePathMappings(t *testing.T) {
 	files := []string{filepath.Join("testdata", "project", "build.gradle")}
 	gs.setupFilePathMappings(files)
 
-	assert.Len(t, gs.gradlewMap, 1)
-	assert.Len(t, gs.settingsMap, 1)
+	assert.Len(t, gs.GradlewMap, 1)
+	assert.Len(t, gs.SettingsMap, 1)
 }
 
 func TestSetupFilePathMappingsNoFiles(t *testing.T) {
 	gs := NewGradleSetup()
 	gs.setupFilePathMappings([]string{})
 
-	assert.Len(t, gs.gradlewMap, 0)
-	assert.Len(t, gs.settingsMap, 0)
+	assert.Len(t, gs.GradlewMap, 0)
+	assert.Len(t, gs.SettingsMap, 0)
 }
 
 func TestSetupFilePathMappingsNoGradlew(t *testing.T) {
@@ -55,18 +54,18 @@ func TestSetupFilePathMappingsNoGradlew(t *testing.T) {
 	files := []string{filepath.Join("testdata", "project", "subproject", "build.gradle")}
 	gs.setupFilePathMappings(files)
 
-	assert.Len(t, gs.gradlewMap, 0)
-	assert.Len(t, gs.settingsMap, 0)
+	assert.Len(t, gs.GradlewMap, 0)
+	assert.Len(t, gs.SettingsMap, 0)
 }
 
 func TestSetupGradleProjectMappings(t *testing.T) {
 	gs := NewGradleSetup()
 	gs.CmdFactory = &mockCmdFactory{}
 
-	gs.settingsMap = map[string]string{
+	gs.SettingsMap = map[string]string{
 		filepath.Join("testdata", "project"): filepath.Join("testdata", "project", "settings.gradle"),
 	}
-	gs.subProjectMap = map[string]string{}
+	gs.SubProjectMap = map[string]string{}
 	err := gs.setupGradleProjectMappings()
 	// assert GradleSetupSubprojectError
 	assert.NotNil(t, err)
@@ -108,11 +107,11 @@ func TestSetupSubProjectPathsNoFileCreated(t *testing.T) {
 	gs.CmdFactory = &mockCmdFactory{createFile: false}
 
 	absPath, _ := filepath.Abs(filepath.Join("testdata", "project"))
-	gradleProject := Project{dir: absPath, gradlew: filepath.Join("testdata", "project", "gradlew")}
+	gradleProject := Project{Dir: absPath, Gradlew: filepath.Join("testdata", "project", "gradlew")}
 	err := gs.setupSubProjectPaths(gradleProject)
 	fmt.Println(err)
 	assert.NotNil(t, err)
-	assert.Len(t, gs.subProjectMap, 0)
+	assert.Len(t, gs.SubProjectMap, 0)
 }
 
 func TestSetupSubProjectPaths(t *testing.T) {
@@ -120,23 +119,23 @@ func TestSetupSubProjectPaths(t *testing.T) {
 	gs.CmdFactory = &mockCmdFactory{createFile: true}
 
 	absPath, _ := filepath.Abs(filepath.Join("testdata", "project"))
-	gradleProject := Project{dir: absPath, gradlew: filepath.Join("testdata", "project", "gradlew")}
+	gradleProject := Project{Dir: absPath, Gradlew: filepath.Join("testdata", "project", "gradlew")}
 	err := gs.setupSubProjectPaths(gradleProject)
 	assert.Nil(t, err)
-	assert.Len(t, gs.subProjectMap, 1)
+	assert.Len(t, gs.SubProjectMap, 1)
 
 	absPath, _ = filepath.Abs(filepath.Join("testdata", "project", "subproject"))
-	gradleProject = Project{dir: absPath, gradlew: filepath.Join("testdata", "project", "gradlew")}
+	gradleProject = Project{Dir: absPath, Gradlew: filepath.Join("testdata", "project", "gradlew")}
 	err = gs.setupSubProjectPaths(gradleProject)
 	assert.Nil(t, err)
-	assert.Len(t, gs.subProjectMap, 2)
+	assert.Len(t, gs.SubProjectMap, 2)
 }
 
 func TestSetupSubProjectPathsError(t *testing.T) {
 	gs := NewGradleSetup()
 
 	absPath, _ := filepath.Abs(filepath.Join("testdata", "project"))
-	gradleProject := Project{dir: absPath, gradlew: filepath.Join("testdata", "project", "gradlew")}
+	gradleProject := Project{Dir: absPath, Gradlew: filepath.Join("testdata", "project", "gradlew")}
 	err := gs.setupSubProjectPaths(gradleProject)
 
 	assert.NotNil(t, err)
@@ -145,7 +144,7 @@ func TestSetupSubProjectPathsError(t *testing.T) {
 func TestGetGradleW(t *testing.T) {
 	gs := NewGradleSetup()
 
-	gs.gradlewMap = map[string]string{
+	gs.GradlewMap = map[string]string{
 		filepath.Join("testdata", "project"): filepath.Join("testdata", "project", "gradlew"),
 	}
 
@@ -160,9 +159,6 @@ func TestGetGradleW(t *testing.T) {
 
 type mockInitScriptHandler struct {
 	writeInitFileErr error
-	groovyScriptPath string
-	initPath         string
-	fileWriter       writer.IFileWriter
 }
 
 func (_ mockInitScriptHandler) ReadInitFile() ([]byte, error) {

@@ -1,6 +1,8 @@
 package java
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/debricked/cli/pkg/callgraph/config"
@@ -65,14 +67,16 @@ func TestInvokeManyFilesWCorrectFilters(t *testing.T) {
 	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"})
 	finder := testdata.NewEmptyFinderMock()
 	testFiles := []string{"file-1", "file-2", "file-3"}
-	finder.FindMavenRootsNames = []string{"file-3"}
+	finder.FindMavenRootsNames = []string{"file-3/pom.xml"}
 	finder.FindJavaClassDirsNames = []string{"file-3/test.class"}
 	s := NewStrategy(conf, testFiles, finder)
 	jobs, _ := s.Invoke()
 	assert.Len(t, jobs, 1)
 	for _, job := range jobs {
-		assert.Equal(t, job.GetFiles(), []string{"file-3/"})
-		assert.Equal(t, job.GetDir(), "file-3")
+		file, _ := filepath.Abs("file-3/")
+		dir, _ := filepath.Abs("file-3/")
+		assert.Equal(t, job.GetFiles(), []string{file + string(os.PathSeparator)}) // Get files return gcd path
+		assert.Equal(t, job.GetDir(), dir)
 
 	}
 }
