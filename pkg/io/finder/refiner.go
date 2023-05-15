@@ -55,6 +55,22 @@ func FilterFiles(files []string, pattern string) []string {
 	return filteredFiles
 }
 
+func ConvertPathsToAbsPaths(paths []string) ([]string, error) {
+	absPaths := []string{}
+
+	for _, path := range paths {
+		path, err := filepath.Abs(path)
+
+		if err != nil {
+			return []string{}, err
+		}
+
+		absPaths = append(absPaths, path)
+	}
+
+	return absPaths, nil
+}
+
 func MapFilesToDir(dirs []string, files []string) map[string][]string {
 	dirToFilesMap := make(map[string][]string)
 

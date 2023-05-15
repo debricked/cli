@@ -2,7 +2,6 @@ package java
 
 import (
 	"embed"
-	"fmt"
 	"os"
 	"os/exec"
 	"path"
@@ -36,9 +35,7 @@ func NewJob(dir string, files []string, cmdFactory ICmdFactory, writer ioWriter.
 var gradleInitScript embed.FS
 
 func (j *Job) Run() {
-	fmt.Println("ENTERED RUN")
 	workingDirectory := j.GetDir()
-	fmt.Println("Files:", j.GetFiles())
 	targetClasses := j.GetFiles()[0]
 	dependencyDir := ".debrickedTmpFolder"
 	targetDir := path.Join(workingDirectory, dependencyDir)
@@ -62,7 +59,7 @@ func (j *Job) Run() {
 		} else {
 			cmd, err = j.cmdFactory.MakeMvnCopyDependenciesCmd(workingDirectory, targetDir)
 		}
-		fmt.Println("Copying relevant jars to target folder", targetDir, cmd.Args)
+		j.SendStatus("copying external dep jars to target folder" + targetDir)
 		if err != nil {
 			j.Errors().Critical(err)
 
@@ -77,7 +74,6 @@ func (j *Job) Run() {
 		}
 	}
 
-	fmt.Println("Generating callgraph!")
 	j.SendStatus("generating call graph")
 	callgraph := Callgraph{
 		cmdFactory:       j.cmdFactory,

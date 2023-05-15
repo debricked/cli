@@ -1,6 +1,8 @@
 package java
 
-import "os/exec"
+import (
+	"os/exec"
+)
 
 type ICmdFactory interface {
 	MakeGradleCopyDependenciesCmd(workingDirectory string, gradlew string, groovyFilePath string) (*exec.Cmd, error)
@@ -37,17 +39,19 @@ func (_ CmdFactory) MakeMvnCopyDependenciesCmd(
 ) (*exec.Cmd, error) {
 	path, err := exec.LookPath("mvn")
 
+	args := []string{
+		"mvn",
+		"-q",
+		"-B",
+		"dependency:copy-dependencies",
+		"-DoutputDirectory=" + targetDir,
+		"-DskipTests",
+	}
+
 	return &exec.Cmd{
 		Path: path,
-		Args: []string{
-			"mvn",
-			"-q",
-			"-B",
-			"dependency:copy-dependencies",
-			"-DoutputDirectory=" + targetDir,
-			"-DskipTests",
-		},
-		Dir: workingDirectory,
+		Args: args,
+		Dir:  workingDirectory,
 	}, err
 }
 
@@ -58,20 +62,21 @@ func (_ CmdFactory) MakeCallGraphGenerationCmd(
 	dependencyClasses string,
 ) (*exec.Cmd, error) {
 	path, err := exec.LookPath("java")
+	args := []string{
+		"java",
+		"-jar",
+		callgraphJarPath,
+		"-u",
+		targetClasses,
+		"-l",
+		dependencyClasses,
+		"-f",
+		".debricked-call-graph",
+	}
 
 	return &exec.Cmd{
 		Path: path,
-		Args: []string{
-			"java",
-			"-jar",
-			callgraphJarPath,
-			"-u",
-			targetClasses,
-			"-l",
-			dependencyClasses,
-			"-f",
-			".debricked-call-graph",
-		},
-		Dir: workingDirectory,
+		Args: args,
+		Dir:  workingDirectory,
 	}, err
 }

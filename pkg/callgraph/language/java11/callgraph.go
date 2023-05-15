@@ -2,7 +2,6 @@ package java
 
 import (
 	"embed"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -47,13 +46,10 @@ func (cg *Callgraph) runCallGraphWithSetup() error {
 
 func (cg *Callgraph) runCallGraph(callgraphJarPath string) error {
 	cmd, err := cg.cmdFactory.MakeCallGraphGenerationCmd(callgraphJarPath, cg.workingDirectory, cg.targetClasses, cg.targetDir)
-	fmt.Println(cmd)
 	if err != nil {
 		return err
 	}
-	fmt.Println("run command", cmd.Args)
 	_, err = cmd.Output()
 
-	fmt.Println("done running command", cmd.Args)
 	return err
 }

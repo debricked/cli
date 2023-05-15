@@ -3,6 +3,7 @@ package java
 import (
 	"fmt"
 	"log"
+	"path/filepath"
 
 	conf "github.com/debricked/cli/pkg/callgraph/config"
 	"github.com/debricked/cli/pkg/callgraph/job"
@@ -22,11 +23,7 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	// Filter relevant files
 
 	if s.config == nil {
-		err := fmt.Errorf("No config is setup")
-		warningColor := color.New(color.FgYellow, color.Bold).SprintFunc()
-		defaultOutputWriter := log.Writer()
-		log.Println(warningColor("Warning: ") + err.Error())
-		log.SetOutput(defaultOutputWriter)
+		strategyWarning("No config is setup")
 		return jobs, nil
 	}
 
@@ -44,8 +41,8 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	}
 
 	if err != nil {
-		fmt.Println("error", err)
-		return jobs, err
+		strategyWarning("Error while finding roots: " + err.Error())
+		return jobs, nil
 	}
 
 	// TODO: If we want to build, build jobs need to execute before trying to find javaClassDirs.
@@ -53,20 +50,23 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	// Perfect time to build after getting roots, and maybe if no classes are found?
 
 	classDirs, _ := s.finder.FindJavaClassDirs(s.files)
-	rootClassMapping := finder.MapFilesToDir(roots, classDirs)
+	absRoots, _ := finder.ConvertPathsToAbsPaths(roots)
+	absClassDirs, _ := finder.ConvertPathsToAbsPaths(classDirs)
+	rootClassMapping := finder.MapFilesToDir(absRoots, absClassDirs)
 
-	if len(roots) != 0 && len(rootClassMapping) == 0 {
-		err = fmt.Errorf("Roots found but without related classes, make sure to build your project before running, roots: %v", roots)
-		warningColor := color.New(color.FgYellow, color.Bold).SprintFunc()
-		defaultOutputWriter := log.Writer()
-		log.Println(warningColor("Warning: ") + err.Error())
-		log.SetOutput(defaultOutputWriter)
+	for _, root := range absRoots {
+		if _, ok := rootClassMapping[root]; ok == false {
+			strategyWarning("Root found without related classes, make sure to build your project before running, root: " + root)
+		}
+	}
+	if len(rootClassMapping) == 0 {
 		return jobs, nil
 	}
 
-	for rootDir, classDirs := range rootClassMapping {
+	for rootFile, classDirs := range rootClassMapping {
 		// For each class paths dir within the root, find GCDPath as entrypoint
 		classDir := finder.GCDPath(classDirs)
+		rootDir := filepath.Dir(rootFile)
 		jobs = append(jobs, NewJob(
 			rootDir,
 			[]string{classDir},
@@ -82,4 +82,12 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 
 func NewStrategy(config conf.IConfig, files []string, finder finder.IFinder) Strategy {
 	return Strategy{config, files, finder}
+}
+
+func strategyWarning(errMsg string) {
+	err := fmt.Errorf(errMsg)
+	warningColor := color.New(color.FgYellow, color.Bold).SprintFunc()
+	defaultOutputWriter := log.Writer()
+	log.Println(warningColor("Warning: ") + err.Error())
+	log.SetOutput(defaultOutputWriter)
 }
