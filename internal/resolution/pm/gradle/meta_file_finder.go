@@ -44,8 +44,9 @@ func (finder MetaFileFinder) Find(paths []string) (map[string]string, map[string
 	settingsMap := map[string]string{}
 	gradlewMap := map[string]string{}
 	for _, rootPath := range paths {
+		cleanRootPath := filepath.Clean(rootPath)
 		err := finder.filepath.Walk(
-			rootPath,
+			cleanRootPath,
 			func(path string, fileInfo os.FileInfo, err error) error {
 				if err != nil {
 
