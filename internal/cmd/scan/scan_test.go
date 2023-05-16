@@ -3,7 +3,7 @@ package scan
 import (
 	"testing"
 
-	"github.com/debricked/cli/pkg/scan"
+	"github.com/debricked/cli/internal/scan"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"

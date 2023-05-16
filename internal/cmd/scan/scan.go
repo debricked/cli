@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/debricked/cli/pkg/file"
-	"github.com/debricked/cli/pkg/scan"
+	"github.com/debricked/cli/internal/file"
+	"github.com/debricked/cli/internal/scan"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

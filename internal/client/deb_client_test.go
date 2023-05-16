@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	testdataClient "github.com/debricked/cli/internal/client/testdata/client"
+	"github.com/stretchr/testify/assert"
 )
 
 var client *DebClient

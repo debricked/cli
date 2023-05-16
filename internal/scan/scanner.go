@@ -6,14 +6,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/debricked/cli/pkg/ci"
-	"github.com/debricked/cli/pkg/ci/env"
-	"github.com/debricked/cli/pkg/client"
-	"github.com/debricked/cli/pkg/file"
-	"github.com/debricked/cli/pkg/git"
-	"github.com/debricked/cli/pkg/resolution"
-	"github.com/debricked/cli/pkg/tui"
-	"github.com/debricked/cli/pkg/upload"
+	"github.com/debricked/cli/internal/ci"
+	"github.com/debricked/cli/internal/ci/env"
+	"github.com/debricked/cli/internal/client"
+	"github.com/debricked/cli/internal/file"
+	"github.com/debricked/cli/internal/git"
+	"github.com/debricked/cli/internal/resolution"
+	"github.com/debricked/cli/internal/tui"
+	"github.com/debricked/cli/internal/upload"
 	"github.com/fatih/color"
 )
 

@@ -3,8 +3,8 @@ package report
 import (
 	"testing"
 
-	"github.com/debricked/cli/pkg/report/license"
-	"github.com/debricked/cli/pkg/report/vulnerability"
+	"github.com/debricked/cli/internal/report/license"
+	"github.com/debricked/cli/internal/report/vulnerability"
 	"github.com/stretchr/testify/assert"
 )
 

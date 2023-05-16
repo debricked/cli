@@ -13,27 +13,27 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/debricked/cli/pkg/ci"
-	"github.com/debricked/cli/pkg/ci/argo"
-	"github.com/debricked/cli/pkg/ci/azure"
-	"github.com/debricked/cli/pkg/ci/bitbucket"
-	"github.com/debricked/cli/pkg/ci/buildkite"
-	"github.com/debricked/cli/pkg/ci/circleci"
-	"github.com/debricked/cli/pkg/ci/env"
-	"github.com/debricked/cli/pkg/ci/github"
-	"github.com/debricked/cli/pkg/ci/gitlab"
-	"github.com/debricked/cli/pkg/ci/travis"
-	"github.com/debricked/cli/pkg/client"
-	"github.com/debricked/cli/pkg/client/testdata"
-	"github.com/debricked/cli/pkg/file"
-	"github.com/debricked/cli/pkg/git"
-	"github.com/debricked/cli/pkg/resolution"
-	resolveTestdata "github.com/debricked/cli/pkg/resolution/testdata"
-	"github.com/debricked/cli/pkg/upload"
+	"github.com/debricked/cli/internal/ci"
+	"github.com/debricked/cli/internal/ci/argo"
+	"github.com/debricked/cli/internal/ci/azure"
+	"github.com/debricked/cli/internal/ci/bitbucket"
+	"github.com/debricked/cli/internal/ci/buildkite"
+	"github.com/debricked/cli/internal/ci/circleci"
+	"github.com/debricked/cli/internal/ci/env"
+	"github.com/debricked/cli/internal/ci/github"
+	"github.com/debricked/cli/internal/ci/gitlab"
+	"github.com/debricked/cli/internal/ci/travis"
+	"github.com/debricked/cli/internal/client"
+	"github.com/debricked/cli/internal/client/testdata"
+	"github.com/debricked/cli/internal/file"
+	"github.com/debricked/cli/internal/git"
+	"github.com/debricked/cli/internal/resolution"
+	resolveTestdata "github.com/debricked/cli/internal/resolution/testdata"
+	"github.com/debricked/cli/internal/upload"
 	"github.com/stretchr/testify/assert"
 )
 
-var testdataYarn = filepath.Join("testdata", "yarn")
+var testdataNpm = filepath.Join("testdata", "npm")
 
 var ciService ci.IService = ci.NewService([]ci.ICi{
 	argo.Ci{},
@@ -62,14 +62,14 @@ func TestScan(t *testing.T) {
 		t.Skipf("TestScan is skipped due to Windows env")
 	}
 	clientMock := testdata.NewDebClientMock()
-	addMockedFormatsResponse(clientMock, "yarn\\.lock")
+	addMockedFormatsResponse(clientMock, "package\\.json")
 	addMockedFileUploadResponse(clientMock)
 	addMockedFinishResponse(clientMock, http.StatusNoContent)
 	addMockedStatusResponse(clientMock, http.StatusOK, 50)
 	addMockedStatusResponse(clientMock, http.StatusOK, 100)
 	scanner := makeScanner(clientMock, nil)
 
-	path := testdataYarn
+	path := testdataNpm
 	repositoryName := path
 	cwd, _ := os.Getwd()
 	// reset working directory that has been manipulated in scanner.Scan
@@ -103,7 +103,7 @@ func TestScan(t *testing.T) {
 		"Working directory: /",
 		"cli/internal/scan",
 		"Successfully uploaded",
-		"yarn.lock\n",
+		"package.json\n",
 		"Successfully initialized scan\n",
 		"Scanning...",
 		"0% |",
@@ -122,7 +122,7 @@ func TestScanFailingMetaObject(t *testing.T) {
 	var debClient client.IDebClient = testdata.NewDebClientMock()
 	scanner := NewDebrickedScanner(&debClient, nil, nil, ciService, nil)
 	cwd, _ := os.Getwd()
-	path := testdataYarn
+	path := testdataNpm
 	opts := DebrickedOptions{
 		Path:            path,
 		Exclusions:      nil,
@@ -148,7 +148,7 @@ func TestScanFailingMetaObject(t *testing.T) {
 
 func TestScanFailingNoFiles(t *testing.T) {
 	clientMock := testdata.NewDebClientMock()
-	addMockedFormatsResponse(clientMock, "yarn\\.lock")
+	addMockedFormatsResponse(clientMock, "package\\.json")
 	scanner := makeScanner(clientMock, nil)
 	opts := DebrickedOptions{
 		Path:            "",
@@ -180,7 +180,7 @@ func TestScanEmptyResult(t *testing.T) {
 		t.Skipf("TestScan is skipped due to Windows env")
 	}
 	clientMock := testdata.NewDebClientMock()
-	addMockedFormatsResponse(clientMock, "yarn\\.lock")
+	addMockedFormatsResponse(clientMock, "package\\.json")
 	addMockedFileUploadResponse(clientMock)
 	addMockedFinishResponse(clientMock, http.StatusNoContent)
 	addMockedStatusResponse(clientMock, http.StatusOK, 50)
@@ -188,9 +188,9 @@ func TestScanEmptyResult(t *testing.T) {
 	addMockedStatusResponse(clientMock, http.StatusCreated, 0)
 
 	scanner := makeScanner(clientMock, nil)
-	path := testdataYarn
+	path := testdataNpm
 	repositoryName := path
-	commitName := "testdata/yarn-commit"
+	commitName := testdataNpm
 	cwd, _ := os.Getwd()
 	// reset working directory that has been manipulated in scanner.Scan
 	defer resetWd(t, cwd)
@@ -229,7 +229,7 @@ func TestScanInCiWithPathSet(t *testing.T) {
 	scanner := NewDebrickedScanner(&debClient, nil, nil, ciService, nil)
 	cwd, _ := os.Getwd()
 	defer resetWd(t, cwd)
-	path := testdataYarn
+	path := testdataNpm
 	_ = os.Setenv("GITLAB_CI", "gitlab")
 	_ = os.Setenv("CI_PROJECT_DIR", ".")
 	opts := DebrickedOptions{
@@ -245,7 +245,7 @@ func TestScanInCiWithPathSet(t *testing.T) {
 	err := scanner.Scan(opts)
 	assert.ErrorIs(t, git.RepositoryNameError, err)
 	cwd, _ = os.Getwd()
-	assert.Contains(t, cwd, testdataYarn)
+	assert.Contains(t, cwd, testdataNpm)
 }
 
 func TestScanWithResolve(t *testing.T) {
@@ -265,7 +265,7 @@ func TestScanWithResolve(t *testing.T) {
 	// Clean up resolution must be done before wd reset, otherwise files cannot be deleted
 	defer cleanUpResolution(t, resolverMock)
 
-	path := filepath.Join("testdata", "npm")
+	path := testdataNpm
 	repositoryName := path
 	commitName := "testdata/npm-commit"
 	opts := DebrickedOptions{
@@ -292,9 +292,9 @@ func TestScanWithResolveErr(t *testing.T) {
 	cwd, _ := os.Getwd()
 	defer resetWd(t, cwd)
 
-	path := filepath.Join("testdata", "npm")
+	path := testdataNpm
 	repositoryName := path
-	commitName := "testdata/npm-commit"
+	commitName := "testdata/yarn-commit"
 	opts := DebrickedOptions{
 		Path:           path,
 		Resolve:        true,
@@ -503,12 +503,14 @@ func TestScanServiceDowntime(t *testing.T) {
 	clientMock := testdata.NewDebClientMock()
 	clientMock.SetServiceUp(false)
 	debClient = clientMock
+	var finder file.IFinder
+	finder, _ = file.NewFinder(debClient)
 
 	var ciService ci.IService = ci.NewService(nil)
 
-	scanner, _ := NewDebrickedScanner(&debClient, ciService)
+	scanner := NewDebrickedScanner(&debClient, finder, nil, ciService, nil)
 
-	path := testdataYarn
+	path := testdataNpm
 	repositoryName := path
 	commitName := "testdata/yarn-commit"
 	cwd, _ := os.Getwd()

@@ -3,7 +3,7 @@ package root
 import (
 	"testing"
 
-	"github.com/debricked/cli/pkg/wire"
+	"github.com/debricked/cli/internal/wire"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )

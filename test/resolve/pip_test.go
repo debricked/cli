@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/debricked/cli/pkg/cmd/resolve"
-	"github.com/debricked/cli/pkg/wire"
+	"github.com/debricked/cli/internal/cmd/resolve"
+	"github.com/debricked/cli/internal/wire"
 	"github.com/stretchr/testify/assert"
 )
 

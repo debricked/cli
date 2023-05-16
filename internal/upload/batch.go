@@ -15,10 +15,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/debricked/cli/pkg/client"
-	"github.com/debricked/cli/pkg/file"
-	"github.com/debricked/cli/pkg/git"
-	"github.com/debricked/cli/pkg/tui"
+	"github.com/debricked/cli/internal/client"
+	"github.com/debricked/cli/internal/file"
+	"github.com/debricked/cli/internal/git"
+	"github.com/debricked/cli/internal/tui"
 	"github.com/fatih/color"
 )
 

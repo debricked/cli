@@ -30,9 +30,9 @@ func TestUpload(t *testing.T) {
 	var c client.IDebClient = &debClientMock{}
 	uploader, _ := NewUploader(c)
 	metaObject, _ := git.NewMetaObject(
-		"testdata/yarn",
-		"testdata/yarn",
-		"testdata/yarn-commit",
+		"testdata/npm",
+		"testdata/npm",
+		"testdata/npm-commit",
 		"",
 		"",
 		"",
@@ -71,9 +71,9 @@ func TestUploadPollingError(t *testing.T) {
 	debClientMock.AddMockUriResponse("/api/1.0/open/ci/upload/status", scanMockRes)
 	uploader, _ := NewUploader(debClientMock)
 	metaObject, _ := git.NewMetaObject(
-		"testdata/yarn",
-		"testdata/yarn",
-		"testdata/yarn-commit",
+		"testdata/npm",
+		"testdata/npm",
+		"testdata/npm-commit",
 		"",
 		"",
 		"",

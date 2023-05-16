@@ -4,7 +4,7 @@ RED='\033[0;31m'
 SET='\033[0m'
 set -e
 
-go test -cover -coverprofile=coverage.out ./pkg/...
+go test -cover -coverprofile=coverage.out ./internal/...
 
 echo -e "\nChecking test coverage threshold..."
 regex='[0-9]+\.*[0-9]*'

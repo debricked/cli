@@ -1,8 +1,8 @@
 package files
 
 import (
-	"github.com/debricked/cli/pkg/cmd/files/find"
-	"github.com/debricked/cli/pkg/file"
+	"github.com/debricked/cli/internal/cmd/files/find"
+	"github.com/debricked/cli/internal/file"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

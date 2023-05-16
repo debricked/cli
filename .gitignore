@@ -6,8 +6,9 @@ node_modules
 debricked
 dist/
 /.debricked-go-dependencies.txt
+/.gomod.debricked.lock
 /.env
 test/resolve/testdata/pip/requirements.txt.venv/
 test/resolve/testdata/pip/.requirements.txt.debricked.lock
-pkg/scan/testdata/npm/yarn.lock
-pkg/resolution/pm/gradle/.gradle-init-script.debricked.groovy
+internal/cmd/scan/testdata/npm/yarn.lock
+internal/resolution/pm/gradle/.gradle-init-script.debricked.groovy

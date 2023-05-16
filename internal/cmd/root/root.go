@@ -1,11 +1,11 @@
 package root
 
 import (
-	"github.com/debricked/cli/pkg/cmd/files"
-	"github.com/debricked/cli/pkg/cmd/report"
-	"github.com/debricked/cli/pkg/cmd/resolve"
-	"github.com/debricked/cli/pkg/cmd/scan"
-	"github.com/debricked/cli/pkg/wire"
+	"github.com/debricked/cli/internal/cmd/files"
+	"github.com/debricked/cli/internal/cmd/report"
+	"github.com/debricked/cli/internal/cmd/resolve"
+	"github.com/debricked/cli/internal/cmd/scan"
+	"github.com/debricked/cli/internal/wire"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

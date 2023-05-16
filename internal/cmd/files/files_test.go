@@ -3,7 +3,7 @@ package files
 import (
 	"testing"
 
-	"github.com/debricked/cli/pkg/file"
+	"github.com/debricked/cli/internal/file"
 	"github.com/stretchr/testify/assert"
 )
 

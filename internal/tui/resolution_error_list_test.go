@@ -6,8 +6,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/debricked/cli/pkg/resolution/job"
-	"github.com/debricked/cli/pkg/resolution/job/testdata"
+	"github.com/debricked/cli/internal/resolution/job"
+	"github.com/debricked/cli/internal/resolution/job/testdata"
 	"github.com/stretchr/testify/assert"
 )
 
