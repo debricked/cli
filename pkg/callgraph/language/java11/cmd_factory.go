@@ -5,11 +5,33 @@ import (
 )
 
 type ICmdFactory interface {
+	MakeGradleCopyDependenciesCmd(workingDirectory string, gradlew string, groovyFilePath string) (*exec.Cmd, error)
 	MakeMvnCopyDependenciesCmd(workingDirectory string, targetDir string) (*exec.Cmd, error)
 	MakeCallGraphGenerationCmd(callgraphJarPath string, workingDirectory string, targetClasses string, dependencyClasses string) (*exec.Cmd, error)
 }
 
 type CmdFactory struct{}
+
+func (_ CmdFactory) MakeGradleCopyDependenciesCmd(
+	workingDirectory string,
+	gradlew string,
+	groovyFilePath string,
+) (*exec.Cmd, error) {
+	path, err := exec.LookPath(gradlew)
+
+	// TargetDir already in groovy script
+	return &exec.Cmd{
+		Path: path,
+		Args: []string{
+			gradlew,
+			"-b",
+			groovyFilePath,
+			"-q",
+			"debrickedCopyDependencies",
+		},
+		Dir: workingDirectory,
+	}, err
+}
 
 func (_ CmdFactory) MakeMvnCopyDependenciesCmd(
 	workingDirectory string,

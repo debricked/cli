@@ -6,6 +6,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestMakeGradleCopyDependenciesCmd(t *testing.T) {
+	gradlew := "gradlew"
+	groovyFilePath := "groovyfilename"
+	cmd, err := CmdFactory{}.MakeGradleCopyDependenciesCmd(dir, gradlew, groovyFilePath)
+	assert.NotNil(t, cmd)
+	args := cmd.Args
+	assert.Contains(t, args, "gradlew")
+	assert.Contains(t, args, "groovyfilename")
+	assert.ErrorContains(t, err, "executable file not found in")
+	assert.ErrorContains(t, err, "PATH")
+}
+
 func TestMakeMvnCopyDependenciesCmd(t *testing.T) {
 	targetDir := "target"
 	cmd, _ := CmdFactory{}.MakeMvnCopyDependenciesCmd(dir, targetDir)
