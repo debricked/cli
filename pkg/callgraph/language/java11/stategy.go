@@ -32,8 +32,6 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	var roots []string
 	var err error
 	switch pmConfig {
-	case gradle:
-		roots, err = s.finder.FindGradleRoots(s.files)
 	case maven:
 		roots, err = s.finder.FindMavenRoots(s.files)
 	default:
