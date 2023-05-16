@@ -57,6 +57,7 @@ func RunE(callgraph callgraph.IGenerator) func(_ *cobra.Command, args []string) 
 		}
 		configs := []conf.IConfig{
 			conf.NewConfig("java", []string{}, map[string]string{"pm": "maven"}),
+			// conf.NewConfig("java", []string{}, map[string]string{"pm": "gradle"}),
 		}
 
 		// err := callgraph.GenerateWithTimer(args, viper.GetStringSlice(ExclusionFlag), configs, 10)

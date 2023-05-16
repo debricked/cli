@@ -30,6 +30,35 @@ func TestNewJob(t *testing.T) {
 	assert.False(t, j.Errors().HasError())
 }
 
+// func TestRunMakeGradleCopyDependenciesCmdErr(t *testing.T) {
+// 	cmdErr := errors.New("cmd-error")
+// 	cmdFactoryMock := testdata.NewEchoCmdFactory()
+// 	cmdFactoryMock.GradleCopyDepErr = cmdErr
+// 	fileWriterMock := &writerTestdata.FileWriterMock{}
+// 	config := conf.NewConfig("java", nil, map[string]string{"pm": gradle})
+// 	j := NewJob(dir, files, cmdFactoryMock, fileWriterMock, config)
+
+// 	go jobTestdata.WaitStatus(j)
+// 	j.Run()
+
+// 	assert.Len(t, j.Errors().GetAll(), 1)
+// 	assert.Contains(t, j.Errors().GetAll(), cmdErr)
+// }
+
+// func TestRunMakeGradleCopyDependenciesOutputErr(t *testing.T) {
+// 	cmdMock := testdata.NewEchoCmdFactory()
+// 	cmdMock.GradleCopyDepName = badName
+// 	cmdFactoryMock := testdata.NewEchoCmdFactory()
+// 	fileWriterMock := &writerTestdata.FileWriterMock{}
+// 	config := conf.NewConfig("java", nil, map[string]string{"pm": gradle})
+// 	j := NewJob(dir, files, cmdFactoryMock, fileWriterMock, config)
+
+// 	go jobTestdata.WaitStatus(j)
+// 	j.Run()
+
+// 	jobTestdata.AssertPathErr(t, j.Errors())
+// }
+
 func TestRunMakeMavenCopyDependenciesCmdErr(t *testing.T) {
 	cmdErr := errors.New("cmd-error")
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
@@ -44,6 +73,22 @@ func TestRunMakeMavenCopyDependenciesCmdErr(t *testing.T) {
 	assert.Len(t, j.Errors().GetAll(), 1)
 	assert.Contains(t, j.Errors().GetAll(), cmdErr)
 }
+
+// TODO need to update this with callgraph mock?
+// func TestRunMakeMavenCopyDependenciesOutputErr(t *testing.T) {
+// 	cmdMock := testdata.NewEchoCmdFactory()
+// 	cmdMock.MvnCopyDepName = badName
+// 	cmdFactoryMock := testdata.NewEchoCmdFactory()
+// 	fileWriterMock := &writerTestdata.FileWriterMock{}
+// 	config := conf.NewConfig("java", nil, map[string]string{"pm": maven})
+// 	j := NewJob(dir, files, cmdFactoryMock, fileWriterMock, config)
+
+// 	go jobTestdata.WaitStatus(j)
+// 	j.Run()
+
+// 	fmt.Println(j.Errors())
+// 	jobTestdata.AssertPathErr(t, j.Errors())
+// }
 
 func TestRun(t *testing.T) {
 	fileWriterMock := &writerTestdata.FileWriterMock{}
