@@ -23,7 +23,7 @@ RUN apk --no-cache --update add \
     python3 \
     py3-scipy \
     py3-pip \
-    go
+    go~=1.20
 
 ENV MAVEN_VERSION 3.9.0
 ENV MAVEN_HOME /usr/lib/mvn
