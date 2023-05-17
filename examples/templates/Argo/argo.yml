@@ -25,7 +25,7 @@ spec:
         image: debricked/cli
         workingDir: /repository
         command:
-          - debricked scan --resolve
+          - debricked scan
         env:
           - name: DEBRICKED_TOKEN
             value: "{{inputs.parameters.debricked-token}}"

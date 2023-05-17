@@ -17,4 +17,4 @@ jobs:
           - $HOME/.gradle/wrapper/
           - $HOME/.m2
           - $HOME/.cache/pip
-      script: ./debricked scan --resolve
+      script: ./debricked scan

@@ -19,7 +19,7 @@ var commitAuthor string
 var repositoryUrl string
 var integrationName string
 var exclusions = file.DefaultExclusions()
-var resolve bool
+var noResolve bool
 var passOnDowntime bool
 
 const (
@@ -30,7 +30,7 @@ const (
 	RepositoryUrlFlag = "repository-url"
 	IntegrationFlag   = "integration"
 	ExclusionFlag     = "exclusion"
-	ResolveFlag       = "resolve"
+	NoResolveFlag     = "no-resolve"
 	PassOnTimeOut     = "pass-on-timeout"
 )
 
@@ -80,7 +80,7 @@ Special Terms | Meaning
 Examples: 
 $ debricked scan . `+exampleFlags)
 	cmd.Flags().BoolVarP(&passOnDowntime, PassOnTimeOut, "p", false, "pass scan if there is a service access timeout")
-	cmd.Flags().BoolVar(&resolve, ResolveFlag, false, `Resolves manifest files that lack lock files. This enables more accurate dependency scanning since the whole dependency tree will be analysed.
+	cmd.Flags().BoolVar(&noResolve, NoResolveFlag, false, `disables resolution of manifest files that lack lock files. Resolving manifest files enables more accurate dependency scanning since the whole dependency tree will be analysed.
 For example, if there is a "go.mod" in the target path, its dependencies are going to get resolved onto a lock file, and latter scanned.`)
 
 	viper.MustBindEnv(RepositoryFlag)
@@ -102,7 +102,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 		}
 		options := scan.DebrickedOptions{
 			Path:            path,
-			Resolve:         viper.GetBool(ResolveFlag),
+			Resolve:         !viper.GetBool(NoResolveFlag),
 			Exclusions:      viper.GetStringSlice(ExclusionFlag),
 			RepositoryName:  viper.GetString(RepositoryFlag),
 			CommitName:      viper.GetString(CommitFlag),

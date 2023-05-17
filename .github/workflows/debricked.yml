@@ -24,4 +24,4 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - run: |
-          go run cmd/debricked/main.go scan -t ${{ secrets.DEBRICKED_TOKEN }} -e "pkg/**" -e "test/**"  --resolve
+          go run cmd/debricked/main.go scan -t ${{ secrets.DEBRICKED_TOKEN }} -e "pkg/**" -e "test/**"
