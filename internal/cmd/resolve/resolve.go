@@ -20,7 +20,7 @@ func NewResolveCmd(resolver resolution.IResolver) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "resolve [path]",
 		Short: "Resolve manifest files",
-		Long: `If a directory is inputted all manifest files without a lock file are resolved.
+		Long: `Resolve manifest files. If a directory is inputted all manifest files without a lock file are resolved.
 Example:
 $ debricked files resolve go.mod pkg/
 `,
