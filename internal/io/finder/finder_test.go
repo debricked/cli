@@ -25,3 +25,17 @@ func TestFindJavaClassDirs(t *testing.T) {
 	assert.Len(t, files, 1)
 	assert.Equal(t, files[0], "test2/basd/qwe")
 }
+
+func TestFindFiles(t *testing.T) {
+	f := Finder{}
+	files, err := f.FindFiles([]string{"."}, nil)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, files)
+}
+
+func TestFindFilesErr(t *testing.T) {
+	f := Finder{}
+	files, err := f.FindFiles([]string{"totaly-not-a-valid-path-123123123"}, nil)
+	assert.NotNil(t, err)
+	assert.Empty(t, files)
+}

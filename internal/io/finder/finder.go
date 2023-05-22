@@ -1,6 +1,7 @@
 package finder
 
 import (
+	"os"
 	"path/filepath"
 
 	"github.com/debricked/cli/internal/io/finder/maven"
@@ -9,6 +10,7 @@ import (
 type IFinder interface {
 	FindMavenRoots(files []string) ([]string, error)
 	FindJavaClassDirs(files []string) ([]string, error)
+	FindFiles(paths []string, exclusions []string) ([]string, error)
 }
 
 type Finder struct{}
@@ -34,4 +36,42 @@ func (f Finder) FindJavaClassDirs(files []string) ([]string, error) {
 	}
 
 	return jarFiles, nil
+}
+
+func (f Finder) FindFiles(roots []string, exclusions []string) ([]string, error) {
+	files := make(map[string]bool)
+	var err error = nil
+
+	for _, root := range roots {
+		err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
+			for _, dir := range exclusions {
+				if info.IsDir() && info.Name() == dir {
+					return filepath.SkipDir
+				}
+			}
+
+			if !info.IsDir() {
+				files[path] = true
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			break
+		}
+	}
+
+	fileList := make([]string, len(files))
+	i := 0
+	for k := range files {
+		fileList[i] = k
+		i++
+	}
+
+	return fileList, err
 }
