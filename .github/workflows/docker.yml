@@ -20,7 +20,7 @@ jobs:
 
       - name: Docker meta - cli
         if: ${{ matrix.stage == 'cli' }}
-        id: meta-cli
+        id: meta
         uses: docker/metadata-action@v4
         with:
           flavor: |
@@ -29,28 +29,14 @@ jobs:
             debricked/cli
             ghcr.io/debricked/cli
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=edge
-            
-      - name: Docker meta - other
-        if: ${{ matrix.stage != 'cli' }}
-        id: meta-other
-        uses: docker/metadata-action@v4
-        with:
-          flavor: |
-            latest=true
-            suffix=${{ matrix.stage }},onlatest=true
-          images: |
-            debricked/cli
-            ghcr.io/debricked/cli
-          tags: |
-            type=semver,pattern={{version}}-
-            type=semver,pattern={{major}}.{{minor}}-
-            type=semver,pattern={{major}}-
-            type=raw,value=edge-
-            type=raw,value=
+            type=semver,pattern={{version}},enable={{matrix.stage == 'cli'}}
+            type=semver,pattern={{major}}.{{minor}}, enable={{matrix.stage == 'cli'}}
+            type=semver,pattern={{major}},enable={{matrix.stage == 'cli'}}
+            type=edge,enable={{matrix.stage == 'cli'}}
+            type=semver,pattern={{version}}-${{ matrix.stage }}
+            type=semver,pattern={{major}}.{{minor}}-${{ matrix.stage }}
+            type=semver,pattern={{major}}-${{ matrix.stage }}
+            type=raw,value=edge-${{ matrix.stage }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
