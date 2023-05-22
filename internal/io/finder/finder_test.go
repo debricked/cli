@@ -1,6 +1,7 @@
 package finder
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -23,7 +24,8 @@ func TestFindJavaClassDirs(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Len(t, files, 1)
-	assert.Equal(t, files[0], "test2/basd/qwe")
+	gt := filepath.Join("test2", "basd", "qwe")
+	assert.Equal(t, files[0], gt)
 }
 
 func TestFindFiles(t *testing.T) {
