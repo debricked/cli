@@ -24,6 +24,26 @@ func TestMapFilesToDir(t *testing.T) {
 	assert.Len(t, mapFiles["test2/"], 2)
 }
 
+func TestFindLongestDirMatch(t *testing.T) {
+
+	dirs := []string{"test/", "test2/"}
+	file := "test/asd"
+	dirMatch, err := findLongestDirMatch(file, dirs)
+
+	assert.Equal(t, "test/", dirMatch)
+	assert.Nil(t, err)
+}
+
+func TestFindLongestDirMatchErr(t *testing.T) {
+
+	dirs := []string{"test/", "test2/"}
+	file := "gest/asd"
+	dirMatch, err := findLongestDirMatch(file, dirs)
+
+	assert.Equal(t, "", dirMatch)
+	assert.NotNil(t, err)
+}
+
 func TestMapFilesToEmptyDir(t *testing.T) {
 
 	dirs := []string{}
