@@ -29,10 +29,10 @@ jobs:
             debricked/cli
             ghcr.io/debricked/cli
           tags: |
-            type=semver,pattern={{version}},enable={{matrix.stage == 'cli'}}
-            type=semver,pattern={{major}}.{{minor}}, enable={{matrix.stage == 'cli'}}
-            type=semver,pattern={{major}},enable={{matrix.stage == 'cli'}}
-            type=edge,enable={{matrix.stage == 'cli'}}
+            type=semver,pattern={{version}},enable=${{ matrix.stage == 'cli' }}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ matrix.stage == 'cli' }}
+            type=semver,pattern={{major}},enable=${{ matrix.stage == 'cli' }}
+            type=edge,enable=${{ matrix.stage == 'cli' }}
             type=semver,pattern={{version}}-${{ matrix.stage }}
             type=semver,pattern={{major}}.{{minor}}-${{ matrix.stage }}
             type=semver,pattern={{major}}-${{ matrix.stage }}
