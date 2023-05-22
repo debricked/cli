@@ -1,6 +1,7 @@
 package finder
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 )
@@ -41,28 +42,8 @@ func MapFilesToDir(dirs []string, files []string) map[string][]string {
 	}
 
 	for _, file := range files {
-		longestMatchLength := 0
-		var matchingDir string
-		matched := false
-		for _, dir := range dirs {
-			matchLength := 0
-			longestSeperatorMatch := 0
-			for i := 0; i < len(file) && i < len(dir); i++ {
-				if file[i] != dir[i] {
-					break
-				}
-				matchLength++
-				if filepath.Separator == file[i] {
-					longestSeperatorMatch = matchLength
-				}
-			}
-			if longestSeperatorMatch > longestMatchLength {
-				longestMatchLength = longestSeperatorMatch
-				matchingDir = dir
-				matched = true
-			}
-		}
-		if !matched {
+		matchingDir, err := findLongestDirMatch(file, dirs)
+		if err != nil {
 			continue
 		}
 
@@ -73,6 +54,37 @@ func MapFilesToDir(dirs []string, files []string) map[string][]string {
 	}
 
 	return dirToFilesMap
+}
+
+func findLongestDirMatch(file string, dirs []string) (string, error) {
+	var matchingDir string
+	longestMatchLength := 0
+	matched := false
+
+	for _, dir := range dirs {
+		matchLength := 0
+		longestSeperatorMatch := 0
+		for i := 0; i < len(file) && i < len(dir); i++ {
+			if file[i] != dir[i] {
+				break
+			}
+			matchLength++
+			if filepath.Separator == file[i] {
+				longestSeperatorMatch = matchLength
+			}
+		}
+		if longestSeperatorMatch > longestMatchLength {
+			longestMatchLength = longestSeperatorMatch
+			matchingDir = dir
+			matched = true
+		}
+	}
+
+	if !matched {
+		return "", fmt.Errorf("No part of the path matches")
+	}
+
+	return matchingDir, nil
 }
 
 func GCDPath(paths []string) string {
