@@ -36,6 +36,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}-${{ matrix.stage }}
             type=semver,pattern={{major}}-${{ matrix.stage }}
             type=raw,value=edge-${{ matrix.stage }}
+            type=raw,value=latest-${{ matrix.stage }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
