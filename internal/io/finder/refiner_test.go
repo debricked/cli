@@ -59,3 +59,10 @@ func TestGCDPath(t *testing.T) {
 
 	assert.Equal(t, res, "test2/")
 }
+
+func TestNoGCDPath(t *testing.T) {
+	files := []string{"nogcdtest2/bas", "test2/basd/qwe"}
+	res := GCDPath(files)
+
+	assert.Equal(t, res, "")
+}
