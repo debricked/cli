@@ -12,24 +12,45 @@ jobs:
     name: 'Push Docker images'
     strategy:
       matrix:
-        stage: [ 'cli', 'scan', 'cli-resolution']
+        stage: [ 'cli', 'scan', 'resolution']
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Docker meta
+      - name: Docker meta - cli
+        if: ${{ matrix.stage == 'cli' }}
         id: meta
         uses: docker/metadata-action@v4
         with:
+          flavor: |
+            latest=true
           images: |
-            debricked/${{ matrix.stage }}
-            ghcr.io/debricked/${{ matrix.stage }}
+            debricked/cli
+            ghcr.io/debricked/cli
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             type=edge
+            
+      - name: Docker meta - other
+        if: ${{ matrix.stage != 'cli' }}
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          flavor: |
+            latest=true
+            suffix=${{ matrix.stage }},onlatest=true
+          images: |
+            debricked/cli
+            ghcr.io/debricked/cli
+          tags: |
+            type=semver,pattern={{version}}-
+            type=semver,pattern={{major}}.{{minor}}-
+            type=semver,pattern={{major}}-
+            type=edge-
+            type=raw,value=
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2

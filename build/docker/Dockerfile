@@ -17,7 +17,7 @@ COPY --from=dev /cli/debricked /usr/bin/debricked
 FROM cli AS scan
 ENTRYPOINT [ "debricked",  "scan" ]
 
-FROM cli AS cli-resolution
+FROM cli AS resolution
 RUN apk --no-cache --update add \
     openjdk8-jre \
     python3 \

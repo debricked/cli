@@ -78,7 +78,7 @@ When the scan is complete, you will see the total number of vulnerabilities foun
 ### Docker
 To make a scan directly through Docker based on your current working directory, you can use the following command:
 ```sh
-docker run -v $(pwd):/root  debricked/scan -t <access-token>
+docker run -v $(pwd):/root  debricked/cli:scan -t <access-token>
 ```
 
 ### CI/CD integration
