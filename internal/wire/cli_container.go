@@ -9,6 +9,8 @@ import (
 	"github.com/debricked/cli/internal/client"
 	"github.com/debricked/cli/internal/file"
 	"github.com/debricked/cli/internal/fingerprint"
+	"github.com/debricked/cli/internal/io/finder"
+	callgraphFinder "github.com/debricked/cli/internal/io/finder"
 	licenseReport "github.com/debricked/cli/internal/report/license"
 	vulnerabilityReport "github.com/debricked/cli/internal/report/vulnerability"
 	"github.com/debricked/cli/internal/resolution"
@@ -73,7 +75,9 @@ func (cc *CliContainer) wire() error {
 	)
 	cc.cgStrategyFactory = callgraphStrategy.NewStrategyFactory()
 	cc.cgScheduler = callgraph.NewScheduler(10)
+	cc.cgFinder = callgraphFinder.Finder{}
 	cc.callgraph = callgraph.NewGenerator(
+		cc.cgFinder,
 		cc.cgStrategyFactory,
 		cc.cgScheduler,
 	)
@@ -109,6 +113,7 @@ type CliContainer struct {
 	licenseReporter       licenseReport.Reporter
 	vulnerabilityReporter vulnerabilityReport.Reporter
 	callgraph             callgraph.IGenerator
+	cgFinder              finder.IFinder
 	cgScheduler           callgraph.IScheduler
 	cgStrategyFactory     callgraphStrategy.IFactory
 }
