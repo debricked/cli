@@ -8,7 +8,7 @@ Feel free to reach out to any of the maintainers or other community members if y
 
 Requirements
 
-    Go version 1.17 or higher
+    Go version 1.20 or higher
 
 ### If you have questions
 
