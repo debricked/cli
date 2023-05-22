@@ -18,12 +18,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Docker meta - cli
+      - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
         with:
           flavor: |
-            latest=true
+            latest=${{ matrix.stage == 'cli' }}
           images: |
             debricked/cli
             ghcr.io/debricked/cli
