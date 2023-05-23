@@ -24,17 +24,19 @@ func TestMakeCallGraphGenerationCmd(t *testing.T) {
 	jarPath := "jarpath"
 	targetClasses := "targetclasses"
 	dependencyClasses := "dependencypath"
+	outputName := ".outputName"
 	ctx, _ := ctxTestdata.NewContextMock()
-	cmd, err := CmdFactory{}.MakeCallGraphGenerationCmd(jarPath, dir, targetClasses, dependencyClasses, ctx)
+	cmd, err := CmdFactory{}.MakeCallGraphGenerationCmd(jarPath, dir, targetClasses, dependencyClasses, outputName, ctx)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, cmd)
 	args := cmd.Args
 	assert.Contains(t, args, "java")
 	assert.Contains(t, args, "-jar")
-	assert.Contains(t, args, "jarpath")
-	assert.Contains(t, args, "targetclasses")
-	assert.Contains(t, args, "dependencypath")
+	assert.Contains(t, args, jarPath)
+	assert.Contains(t, args, targetClasses)
+	assert.Contains(t, args, dependencyClasses)
+	assert.Contains(t, args, outputName)
 }
 
 func TestMakeBuildMavenCmd(t *testing.T) {

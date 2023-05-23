@@ -18,7 +18,7 @@ import (
 
 type debClientMock struct{}
 
-func (mock *debClientMock) Post(_ string, _ string, _ *bytes.Buffer) (*http.Response, error) {
+func (mock *debClientMock) Post(_ string, _ string, _ *bytes.Buffer, _ int) (*http.Response, error) {
 	return &http.Response{}, nil
 }
 
