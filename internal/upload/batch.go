@@ -29,6 +29,8 @@ var (
 	InitScanErr          = errors.New("failed to initialize a scan")
 )
 
+const callgraphName = ".debricked-call-graph"
+
 type uploadBatch struct {
 	client          *client.IDebClient
 	fileGroups      file.Groups
@@ -47,7 +49,14 @@ func (uploadBatch *uploadBatch) upload() error {
 		const ok = 0
 		const fail = 1
 		for f := range fileQueue {
-			err := uploadBatch.uploadFile(f)
+			fileName := filepath.Base(f)
+			var err error
+			timeout := 0
+			if strings.HasSuffix(fileName, callgraphName) {
+				timeout = 30
+			}
+			err = uploadBatch.uploadFile(f, timeout)
+
 			if err != nil {
 				log.Println("Failed to upload:", f)
 				if err != nil {
@@ -91,7 +100,7 @@ func (uploadBatch *uploadBatch) upload() error {
 }
 
 // uploadFile Reads file content from filepath and uploads it to Debricked. Returns HTTP status code or 0 if other error occur
-func (uploadBatch *uploadBatch) uploadFile(filePath string) error {
+func (uploadBatch *uploadBatch) uploadFile(filePath string, timeout int) error {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 	defer writer.Close()
@@ -116,10 +125,12 @@ func (uploadBatch *uploadBatch) uploadFile(filePath string) error {
 	if uploadBatch.initialized() {
 		_ = writer.WriteField("ciUploadId", strconv.Itoa(uploadBatch.ciUploadId))
 	}
+
 	response, err := (*uploadBatch.client).Post(
 		"/api/1.0/open/uploads/dependencies/files",
 		writer.FormDataContentType(),
 		body,
+		timeout,
 	)
 	if err != nil {
 		return err
@@ -161,6 +172,7 @@ func (uploadBatch *uploadBatch) initAnalysis() error {
 		"/api/1.0/open/finishes/dependencies/files/uploads",
 		"application/json",
 		bytes.NewBuffer(body),
+		0,
 	)
 	if err != nil {
 		return err
@@ -229,7 +241,11 @@ func (uploadBatch *uploadBatch) initUpload() ([]string, error) {
 	for len(files) > 0 {
 		entryFile := files[0]
 		files = files[1:]
-		err := uploadBatch.uploadFile(entryFile)
+		timeout := 0
+		if strings.HasSuffix(filepath.Base(entryFile), callgraphName) {
+			timeout = 30
+		}
+		err := uploadBatch.uploadFile(entryFile, timeout)
 		if err == nil {
 			printSuccessfulUpload(entryFile)
 

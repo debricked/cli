@@ -8,8 +8,8 @@ import (
 	"github.com/debricked/cli/internal/callgraph/cgexec"
 	conf "github.com/debricked/cli/internal/callgraph/config"
 	"github.com/debricked/cli/internal/callgraph/job"
+	"github.com/debricked/cli/internal/io"
 	"github.com/debricked/cli/internal/io/finder"
-	"github.com/debricked/cli/internal/io/writer"
 	"github.com/fatih/color"
 )
 
@@ -74,7 +74,8 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 			rootDir,
 			[]string{classDir},
 			CmdFactory{},
-			writer.FileWriter{},
+			io.FileWriter{},
+			io.NewArchive(rootDir),
 			s.config,
 			s.ctx,
 		),

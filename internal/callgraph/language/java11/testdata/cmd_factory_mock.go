@@ -24,6 +24,6 @@ func (f CmdFactoryMock) MakeMvnCopyDependenciesCmd(_ string, _ string, _ cgexec.
 	return exec.Command(f.MvnCopyDepName, "MvnCopyDep"), f.MvnCopyDepErr
 }
 
-func (f CmdFactoryMock) MakeCallGraphGenerationCmd(_ string, _ string, _ string, _ string, _ cgexec.IContext) (*exec.Cmd, error) {
+func (f CmdFactoryMock) MakeCallGraphGenerationCmd(_ string, _ string, _ string, _ string, _ string, _ cgexec.IContext) (*exec.Cmd, error) {
 	return exec.Command(f.CallGraphGenName, "CallGraphGen"), f.CallGraphGenErr
 }

@@ -131,20 +131,24 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		}
 	}
 
-	fileGroups, err := dScanner.finder.GetGroups(options.Path, options.Exclusions, false, file.StrictAll)
-	if err != nil {
-		return nil, err
-	}
-
 	if options.CallGraph {
 		configs := []config.IConfig{
 			config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}),
 		}
 		timeout := 60
-		resErr := dScanner.callgraph.GenerateWithTimer([]string{options.Path}, options.Exclusions, configs, timeout)
+		path := options.Path
+		if path == "" {
+			path = "."
+		}
+		resErr := dScanner.callgraph.GenerateWithTimer([]string{path}, options.Exclusions, configs, timeout)
 		if resErr != nil {
 			return nil, resErr
 		}
+	}
+
+	fileGroups, err := dScanner.finder.GetGroups(options.Path, options.Exclusions, false, file.StrictAll)
+	if err != nil {
+		return nil, err
 	}
 
 	uploaderOptions := upload.DebrickedOptions{FileGroups: fileGroups, GitMetaObject: gitMetaObject, IntegrationsName: options.IntegrationName}

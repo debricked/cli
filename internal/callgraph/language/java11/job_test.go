@@ -3,14 +3,16 @@ package java
 import (
 	"errors"
 	"fmt"
+	"os"
+	"syscall"
 	"testing"
 
 	ctxTestdata "github.com/debricked/cli/internal/callgraph/cgexec/testdata"
 	conf "github.com/debricked/cli/internal/callgraph/config"
 	jobTestdata "github.com/debricked/cli/internal/callgraph/job/testdata"
 	"github.com/debricked/cli/internal/callgraph/language/java11/testdata"
-	ioWriter "github.com/debricked/cli/internal/io/writer"
-	writerTestdata "github.com/debricked/cli/internal/io/writer/testdata"
+	io "github.com/debricked/cli/internal/io"
+	ioTestData "github.com/debricked/cli/internal/io/testdata"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,10 +25,15 @@ var files = []string{"file"}
 
 func TestNewJob(t *testing.T) {
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	writer := ioWriter.FileWriter{}
+	writer := io.FileWriter{}
 	config := conf.Config{}
 	ctx, _ := ctxTestdata.NewContextMock()
-	j := NewJob(dir, files, cmdFactoryMock, writer, config, ctx)
+
+	fs := ioTestData.FileSystemMock{}
+	zip := ioTestData.ZipMock{}
+	archiveMock := io.NewArchiveWithStructs("dir", fs, zip)
+
+	j := NewJob(dir, files, cmdFactoryMock, writer, archiveMock, config, ctx)
 	assert.Equal(t, []string{"file"}, j.GetFiles())
 	assert.Equal(t, "dir", j.GetDir())
 	assert.False(t, j.Errors().HasError())
@@ -36,10 +43,15 @@ func TestRunMakeMavenCopyDependenciesCmdErr(t *testing.T) {
 	cmdErr := errors.New("cmd-error")
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	cmdFactoryMock.MvnCopyDepErr = cmdErr
-	fileWriterMock := &writerTestdata.FileWriterMock{}
+	fileWriterMock := &ioTestData.FileWriterMock{}
+
+	fs := ioTestData.FileSystemMock{}
+	zip := ioTestData.ZipMock{}
+	archiveMock := io.NewArchiveWithStructs("dir", fs, zip)
+
 	config := conf.NewConfig("java", nil, map[string]string{"pm": maven})
 	ctx, _ := ctxTestdata.NewContextMock()
-	j := NewJob(dir, files, cmdFactoryMock, fileWriterMock, config, ctx)
+	j := NewJob(dir, files, cmdFactoryMock, fileWriterMock, archiveMock, config, ctx)
 
 	go jobTestdata.WaitStatus(j)
 	j.Run()
@@ -49,58 +61,132 @@ func TestRunMakeMavenCopyDependenciesCmdErr(t *testing.T) {
 }
 
 func TestRun(t *testing.T) {
-	fileWriterMock := &writerTestdata.FileWriterMock{}
+	fileWriterMock := &ioTestData.FileWriterMock{}
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	config := conf.NewConfig("java", nil, map[string]string{"pm": maven})
 	ctx, _ := ctxTestdata.NewContextMock()
-	j := NewJob(dir, files, cmdFactoryMock, fileWriterMock, config, ctx)
+
+	fs := ioTestData.FileSystemMock{}
+	zip := ioTestData.ZipMock{}
+	archiveMock := io.NewArchiveWithStructs("dir", fs, zip)
+
+	j := NewJob(dir, files, cmdFactoryMock, fileWriterMock, archiveMock, config, ctx)
 
 	go jobTestdata.WaitStatus(j)
 	j.Run()
 
+	fmt.Println(j.Errors().GetAll())
 	assert.False(t, j.Errors().HasError())
-	fmt.Println(string(fileWriterMock.Contents))
-	assert.False(t, false)
 }
 
-// func TestRunCreateErr(t *testing.T) {
-// 	createErr := errors.New("create-error")
-// 	fileWriterMock := &writerTestdata.FileWriterMock{CreateErr: createErr}
-// 	cmdFactoryMock := testdata.NewEchoCmdFactory()
-// 	config := conf.NewConfig("java", nil, map[string]string{"pm": maven})
-// 	j := NewJob(dir, files, cmdFactoryMock, fileWriterMock, config)
+func TestRunCallgraphMock(t *testing.T) {
+	fileWriterMock := &ioTestData.FileWriterMock{}
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	config := conf.NewConfig("java", nil, map[string]string{"pm": maven})
+	ctx, _ := ctxTestdata.NewContextMock()
+	callgraphMock := testdata.CallgraphMock{}
 
-// 	go jobTestdata.WaitStatus(j)
-// 	j.Run()
+	fs := ioTestData.FileSystemMock{}
+	zip := ioTestData.ZipMock{}
+	archiveMock := io.NewArchiveWithStructs("dir", fs, zip)
 
-// 	assert.Len(t, j.Errors().GetAll(), 1)
-// 	assert.Contains(t, j.Errors().GetAll(), createErr)
-// }
+	j := NewJob(dir, files, cmdFactoryMock, fileWriterMock, archiveMock, config, ctx)
+	j.runCallGraph(callgraphMock)
 
-// func TestRunWriteErr(t *testing.T) {
-// 	writeErr := errors.New("write-error")
-// 	fileWriterMock := &writerTestdata.FileWriterMock{WriteErr: writeErr}
-// 	cmdFactoryMock := testdata.NewEchoCmdFactory()
-// 	config := conf.NewConfig("java", nil, map[string]string{"pm": maven})
-// 	j := NewJob(dir, files, cmdFactoryMock, fileWriterMock, config)
+	assert.False(t, j.Errors().HasError())
+}
 
-// 	go jobTestdata.WaitStatus(j)
-// 	j.Run()
+func TestRunCallgraphMockError(t *testing.T) {
+	fileWriterMock := &ioTestData.FileWriterMock{}
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	config := conf.NewConfig("java", nil, map[string]string{"pm": maven})
+	ctx, _ := ctxTestdata.NewContextMock()
+	callgraphMock := testdata.CallgraphMock{RunCallGraphWithSetupError: fmt.Errorf("error")}
 
-// 	assert.Len(t, j.Errors().GetAll(), 1)
-// 	assert.Contains(t, j.Errors().GetAll(), writeErr)
-// }
+	fs := ioTestData.FileSystemMock{}
+	zip := ioTestData.ZipMock{}
+	archiveMock := io.NewArchiveWithStructs("dir", fs, zip)
 
-// func TestRunCloseErr(t *testing.T) {
-// 	closeErr := errors.New("close-error")
-// 	fileWriterMock := &writerTestdata.FileWriterMock{CloseErr: closeErr}
-// 	cmdFactoryMock := testdata.NewEchoCmdFactory()
-// 	config := conf.NewConfig("java", nil, map[string]string{"pm": maven})
-// 	j := NewJob(dir, files, cmdFactoryMock, fileWriterMock, config)
+	j := NewJob(dir, files, cmdFactoryMock, fileWriterMock, archiveMock, config, ctx)
+	j.runCallGraph(callgraphMock)
 
-// 	go jobTestdata.WaitStatus(j)
-// 	j.Run()
+	assert.True(t, j.Errors().HasError())
+}
 
-// 	assert.Len(t, j.Errors().GetAll(), 1)
-// 	assert.Contains(t, j.Errors().GetAll(), closeErr)
-// }
+func TestRunPostProcessMock(t *testing.T) {
+	fileWriterMock := &ioTestData.FileWriterMock{}
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	config := conf.NewConfig("java", nil, map[string]string{"pm": maven})
+	ctx, _ := ctxTestdata.NewContextMock()
+
+	fs := ioTestData.FileSystemMock{}
+	zip := ioTestData.ZipMock{}
+	archiveMock := io.NewArchiveWithStructs("dir", fs, zip)
+
+	j := NewJob(dir, files, cmdFactoryMock, fileWriterMock, archiveMock, config, ctx)
+	go jobTestdata.WaitStatus(j)
+	j.runPostProcess()
+
+	assert.False(t, j.Errors().HasError())
+}
+
+func TestRunPostProcessZipFileError(t *testing.T) {
+	fileWriterMock := &ioTestData.FileWriterMock{}
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	config := conf.NewConfig("java", nil, map[string]string{"pm": maven})
+	ctx, _ := ctxTestdata.NewContextMock()
+	archiveMock := ioTestData.ArchiveMock{ZipFileError: fmt.Errorf("error")}
+
+	j := NewJob(dir, files, cmdFactoryMock, fileWriterMock, archiveMock, config, ctx)
+	go jobTestdata.WaitStatus(j)
+	j.runPostProcess()
+
+	assert.True(t, j.Errors().HasError())
+}
+
+func TestRunPostProcessB64Error(t *testing.T) {
+	fileWriterMock := &ioTestData.FileWriterMock{}
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	config := conf.NewConfig("java", nil, map[string]string{"pm": maven})
+	ctx, _ := ctxTestdata.NewContextMock()
+
+	archiveMock := ioTestData.ArchiveMock{B64Error: fmt.Errorf("error")}
+
+	j := NewJob(dir, files, cmdFactoryMock, fileWriterMock, archiveMock, config, ctx)
+	go jobTestdata.WaitStatus(j)
+	j.runPostProcess()
+
+	assert.True(t, j.Errors().HasError())
+}
+
+func TestRunPostProcessCleanupError(t *testing.T) {
+	fileWriterMock := &ioTestData.FileWriterMock{}
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	config := conf.NewConfig("java", nil, map[string]string{"pm": maven})
+	ctx, _ := ctxTestdata.NewContextMock()
+
+	archiveMock := ioTestData.ArchiveMock{CleanupError: fmt.Errorf("error")}
+
+	j := NewJob(dir, files, cmdFactoryMock, fileWriterMock, archiveMock, config, ctx)
+	go jobTestdata.WaitStatus(j)
+	j.runPostProcess()
+
+	assert.True(t, j.Errors().HasError())
+}
+
+func TestRunPostProcessCleanupNoFileExistError(t *testing.T) {
+	fileWriterMock := &ioTestData.FileWriterMock{}
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	config := conf.NewConfig("java", nil, map[string]string{"pm": maven})
+	ctx, _ := ctxTestdata.NewContextMock()
+
+	err := &os.PathError{}
+	err.Err = syscall.ENOENT
+	archiveMock := ioTestData.ArchiveMock{CleanupError: err}
+
+	j := NewJob(dir, files, cmdFactoryMock, fileWriterMock, archiveMock, config, ctx)
+	go jobTestdata.WaitStatus(j)
+	j.runPostProcess()
+
+	assert.False(t, j.Errors().HasError())
+}

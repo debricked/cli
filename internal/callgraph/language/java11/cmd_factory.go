@@ -8,7 +8,7 @@ import (
 
 type ICmdFactory interface {
 	MakeMvnCopyDependenciesCmd(workingDirectory string, targetDir string, ctx cgexec.IContext) (*exec.Cmd, error)
-	MakeCallGraphGenerationCmd(callgraphJarPath string, workingDirectory string, targetClasses string, dependencyClasses string, ctx cgexec.IContext) (*exec.Cmd, error)
+	MakeCallGraphGenerationCmd(callgraphJarPath string, workingDirectory string, targetClasses string, dependencyClasses string, outputName string, ctx cgexec.IContext) (*exec.Cmd, error)
 }
 
 type CmdFactory struct{}
@@ -37,6 +37,7 @@ func (_ CmdFactory) MakeCallGraphGenerationCmd(
 	workingDirectory string,
 	targetClasses string,
 	dependencyClasses string,
+	outputName string,
 	ctx cgexec.IContext,
 ) (*exec.Cmd, error) {
 	path, err := exec.LookPath("java")
@@ -49,7 +50,7 @@ func (_ CmdFactory) MakeCallGraphGenerationCmd(
 		"-l",
 		dependencyClasses,
 		"-f",
-		".debricked-call-graph",
+		outputName,
 	}
 
 	return cgexec.MakeCommand(workingDirectory, path, args, ctx), err

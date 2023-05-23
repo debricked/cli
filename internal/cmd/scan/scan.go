@@ -21,6 +21,7 @@ var integrationName string
 var exclusions = file.DefaultExclusions()
 var noResolve bool
 var passOnDowntime bool
+var callgraph bool
 
 const (
 	RepositoryFlag    = "repository"
@@ -32,6 +33,7 @@ const (
 	ExclusionFlag     = "exclusion"
 	NoResolveFlag     = "no-resolve"
 	PassOnTimeOut     = "pass-on-timeout"
+	CallGraphFlag     = "callgraph"
 )
 
 var scanCmdError error
@@ -82,6 +84,7 @@ $ debricked scan . `+exampleFlags)
 	cmd.Flags().BoolVarP(&passOnDowntime, PassOnTimeOut, "p", false, "pass scan if there is a service access timeout")
 	cmd.Flags().BoolVar(&noResolve, NoResolveFlag, false, `disables resolution of manifest files that lack lock files. Resolving manifest files enables more accurate dependency scanning since the whole dependency tree will be analysed.
 For example, if there is a "go.mod" in the target path, its dependencies are going to get resolved onto a lock file, and latter scanned.`)
+	cmd.Flags().BoolVar(&callgraph, CallGraphFlag, false, `Enables callgraph generation during scan.`)
 
 	viper.MustBindEnv(RepositoryFlag)
 	viper.MustBindEnv(CommitFlag)
@@ -111,6 +114,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			RepositoryUrl:   viper.GetString(RepositoryUrlFlag),
 			IntegrationName: viper.GetString(IntegrationFlag),
 			PassOnTimeOut:   viper.GetBool(PassOnTimeOut),
+			CallGraph:       viper.GetBool(CallGraphFlag),
 		}
 		if s != nil {
 			scanCmdError = (*s).Scan(options)
