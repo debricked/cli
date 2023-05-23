@@ -2,11 +2,13 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/hashicorp/go-retryablehttp"
@@ -33,6 +35,29 @@ func post(uri string, debClient *DebClient, contentType string, body *bytes.Buff
 		return nil, err
 	}
 	request.Header.Add("Content-Type", contentType)
+	res, err := debClient.httpClient.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	req := func() (*http.Response, error) {
+		return post(uri, debClient, contentType, body, false)
+	}
+
+	return interpret(res, req, debClient, retry)
+}
+
+func postWithTimeout(uri string, debClient *DebClient, contentType string, body *bytes.Buffer, retry bool, timeout int) (*http.Response, error) {
+	request, err := newRequest("POST", *debClient.host+uri, debClient.jwtToken, "application/json", body)
+	if err != nil {
+		return nil, err
+	}
+	request.Header.Add("Content-Type", contentType)
+
+	timeoutDuration := time.Duration(timeout) * time.Second
+	ctx, cancel := context.WithTimeout(request.Context(), timeoutDuration)
+	defer cancel()
+	request = request.WithContext(ctx)
+
 	res, err := debClient.httpClient.Do(request)
 	if err != nil {
 		return nil, err
