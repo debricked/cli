@@ -19,7 +19,10 @@ func TestNewCallgraphCmd(t *testing.T) {
 	assert.Len(t, commands, nbrOfCommands)
 
 	flags := cmd.Flags()
-	flagAssertions := map[string]string{}
+	flagAssertions := map[string]string{
+		ExclusionFlag: "e",
+		BuildFlag:     "b",
+	}
 	for name, shorthand := range flagAssertions {
 		flag := flags.Lookup(name)
 		assert.NotNil(t, flag)
@@ -28,6 +31,7 @@ func TestNewCallgraphCmd(t *testing.T) {
 
 	var flagKeys = []string{
 		ExclusionFlag,
+		BuildFlag,
 	}
 	viperKeys := viper.AllKeys()
 	for _, flagKey := range flagKeys {
