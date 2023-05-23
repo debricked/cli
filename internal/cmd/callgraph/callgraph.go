@@ -49,6 +49,7 @@ Example:
 $ debricked files resolve . `+exampleFlags)
 	cmd.Flags().BoolVarP(&buildEnabled, BuildFlag, "b", true, "Should automatically build all source code in project to enable call graph generation.")
 	viper.MustBindEnv(ExclusionFlag)
+	viper.MustBindEnv(BuildFlag)
 
 	return cmd
 }
