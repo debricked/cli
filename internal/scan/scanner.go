@@ -175,7 +175,11 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 			config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven"),
 		}
 		timeout := 60
-		resErr := dScanner.callgraph.GenerateWithTimer([]string{options.Path}, options.Exclusions, configs, timeout)
+		path := options.Path
+		if path == "" {
+			path = "."
+		}
+		resErr := dScanner.callgraph.GenerateWithTimer([]string{path}, options.Exclusions, configs, timeout)
 		if resErr != nil {
 			return nil, resErr
 		}

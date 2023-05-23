@@ -136,6 +136,32 @@ func TestPost(t *testing.T) {
 		"/api/1.0/open/user-permissions/toggle-allow-snooze",
 		"application/json",
 		bytes.NewBuffer(jsonData),
+		0,
+	)
+	if err != nil {
+		t.Fatal("failed to assert that no client error occurred. Error:", err)
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusForbidden {
+		t.Error("failed to assert that status code was 403")
+	}
+}
+
+func TestPostWithTimeout(t *testing.T) {
+	clientMock := testdataClient.NewMock()
+	clientMock.AddMockResponse(testdataClient.MockResponse{
+		StatusCode:   http.StatusForbidden,
+		ResponseBody: io.NopCloser(strings.NewReader("{}")),
+		Error:        nil,
+	})
+	client = NewDebClient(&tkn, clientMock)
+	data := map[string]bool{"allowSnooze": true}
+	jsonData, _ := json.Marshal(data)
+	res, err := client.Post(
+		"/api/1.0/open/user-permissions/toggle-allow-snooze",
+		"application/json",
+		bytes.NewBuffer(jsonData),
+		10,
 	)
 	if err != nil {
 		t.Fatal("failed to assert that no client error occurred. Error:", err)

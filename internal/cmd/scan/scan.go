@@ -22,6 +22,7 @@ var exclusions = file.Exclusions()
 var noResolve bool
 var noFingerprint bool
 var passOnDowntime bool
+var callgraph bool
 
 const (
 	RepositoryFlag    = "repository"
@@ -34,6 +35,7 @@ const (
 	NoResolveFlag     = "no-resolve"
 	FingerprintFlag   = "fingerprint"
 	PassOnTimeOut     = "pass-on-timeout"
+	CallGraphFlag     = "callgraph"
 )
 
 var scanCmdError error
@@ -88,6 +90,7 @@ $ debricked scan . `+exampleFlags)
 For example, if there is a "go.mod" in the target path, its dependencies are going to get resolved onto a lock file, and latter scanned.`)
 	cmd.Flags().BoolVar(&noFingerprint, FingerprintFlag, false, "enables fingerprinting for undeclared component identification. Can be run as a standalone command [files fingerprint] with more granular options. [beta feature]")
 	cmd.Flags().MarkHidden(FingerprintFlag) //nolint:errcheck
+	cmd.Flags().BoolVar(&callgraph, CallGraphFlag, false, `Enables callgraph generation during scan.`)
 
 	viper.MustBindEnv(RepositoryFlag)
 	viper.MustBindEnv(CommitFlag)
@@ -118,6 +121,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			RepositoryUrl:   viper.GetString(RepositoryUrlFlag),
 			IntegrationName: viper.GetString(IntegrationFlag),
 			PassOnTimeOut:   viper.GetBool(PassOnTimeOut),
+			CallGraph:       viper.GetBool(CallGraphFlag),
 		}
 		if s != nil {
 			scanCmdError = (*s).Scan(options)
