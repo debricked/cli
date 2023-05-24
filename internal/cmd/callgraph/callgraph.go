@@ -15,10 +15,10 @@ var exclusions = file.DefaultExclusions()
 
 const (
 	ExclusionFlag = "exclusion"
-	BuildFlag     = "build"
+	NoBuildFlag   = "no-build"
 )
 
-var buildEnabled bool
+var buildDisabled bool
 
 func NewCallgraphCmd(generator callgraph.IGenerator) *cobra.Command {
 	cmd := &cobra.Command{
@@ -47,9 +47,9 @@ Special Terms | Meaning
 
 Example: 
 $ debricked files resolve . `+exampleFlags)
-	cmd.Flags().BoolVarP(&buildEnabled, BuildFlag, "b", true, "Should automatically build all source code in project to enable call graph generation.")
+	cmd.Flags().BoolVarP(&buildDisabled, NoBuildFlag, "b", false, "Should not automatically build all source code in project to enable call graph generation.")
 	viper.MustBindEnv(ExclusionFlag)
-	viper.MustBindEnv(BuildFlag)
+	viper.MustBindEnv(NoBuildFlag)
 
 	return cmd
 }
