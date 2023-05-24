@@ -28,13 +28,14 @@ func (f CmdFactoryMock) MakeCallGraphGenerationCmd(_ string, _ string, _ string,
 	return exec.Command(f.CallGraphGenName, "CallGraphGen"), f.CallGraphGenErr
 }
 
-func (_ CmdFactoryMock) BuildMaven(workingDirectory string, ctx cgexec.IContext) *exec.Cmd {
+func (_ CmdFactoryMock) MakeBuildMavenCmd(workingDirectory string, ctx cgexec.IContext) (*exec.Cmd, error) {
 	// NOTE: mvn compile should work in theory and be faster
+	path, err := exec.LookPath("mvn")
 	args := []string{
 		"mvn",
 		"package",
 		"-q",
 		"-DskipTests",
 	}
-	return cgexec.MakeCommand(workingDirectory, "", args, ctx)
+	return cgexec.MakeCommand(workingDirectory, path, args, ctx), err
 }
