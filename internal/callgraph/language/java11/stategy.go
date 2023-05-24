@@ -14,10 +14,11 @@ import (
 )
 
 type Strategy struct {
-	config conf.IConfig
-	files  []string
-	finder finder.IFinder
-	ctx    cgexec.IContext
+	config     conf.IConfig
+	cmdFactory ICmdFactory
+	files      []string
+	finder     finder.IFinder
+	ctx        cgexec.IContext
 }
 
 func (s Strategy) Invoke() ([]job.IJob, error) {
@@ -28,12 +29,6 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 		strategyWarning("No config is setup")
 
 		return jobs, nil
-	}
-
-	if s.config.Build() {
-		fmt.Println("SHOULD BUILD")
-	} else {
-		fmt.Println("SHOULD NOT BUILD")
 	}
 
 	pmConfig := s.config.PackageManager()
@@ -53,7 +48,11 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 		return jobs, err
 	}
 
-	//TODO ADD build after finding all the root dirs??
+	if s.config.Build() {
+		for _, root := range roots {
+			s.cmdFactory.BuildMaven(root, s.ctx)
+		}
+	}
 
 	classDirs, _ := s.finder.FindJavaClassDirs(s.files)
 	absRoots, _ := finder.ConvertPathsToAbsPaths(roots)
@@ -81,7 +80,7 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 		jobs = append(jobs, NewJob(
 			rootDir,
 			[]string{classDir},
-			CmdFactory{},
+			s.cmdFactory,
 			writer.FileWriter{},
 			s.config,
 			s.ctx,
@@ -93,7 +92,7 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 }
 
 func NewStrategy(config conf.IConfig, files []string, finder finder.IFinder, ctx cgexec.IContext) Strategy {
-	return Strategy{config, files, finder, ctx}
+	return Strategy{config, CmdFactory{}, files, finder, ctx}
 }
 
 func strategyWarning(errMsg string) {
