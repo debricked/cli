@@ -4,19 +4,25 @@ type IConfig interface {
 	Language() string
 	Args() []string
 	Kwargs() map[string]string
+	Build() bool
+	PackageManager() string
 }
 
 type Config struct {
-	language string
-	args     []string
-	kwargs   map[string]string
+	language       string
+	args           []string
+	kwargs         map[string]string
+	build          bool
+	packageManager string
 }
 
-func NewConfig(language string, args []string, kwargs map[string]string) Config {
+func NewConfig(language string, args []string, kwargs map[string]string, build bool, packageManager string) Config {
 	return Config{
 		language,
 		args,
 		kwargs,
+		build,
+		packageManager,
 	}
 }
 
@@ -30,4 +36,12 @@ func (c Config) Args() []string {
 
 func (c Config) Kwargs() map[string]string {
 	return c.kwargs
+}
+
+func (c Config) Build() bool {
+	return c.build
+}
+
+func (c Config) PackageManager() string {
+	return c.packageManager
 }
