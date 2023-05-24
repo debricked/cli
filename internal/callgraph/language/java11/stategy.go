@@ -30,7 +30,13 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 		return jobs, nil
 	}
 
-	pmConfig := s.config.Kwargs()["pm"]
+	if s.config.Build() {
+		fmt.Println("SHOULD BUILD")
+	} else {
+		fmt.Println("SHOULD NOT BUILD")
+	}
+
+	pmConfig := s.config.PackageManager()
 
 	var roots []string
 	var err error
@@ -46,6 +52,8 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 
 		return jobs, err
 	}
+
+	//TODO ADD build after finding all the root dirs??
 
 	classDirs, _ := s.finder.FindJavaClassDirs(s.files)
 	absRoots, _ := finder.ConvertPathsToAbsPaths(roots)

@@ -33,7 +33,7 @@ func TestGenerate(t *testing.T) {
 	)
 
 	configs := []config.IConfig{
-		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}),
+		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, ""),
 	}
 	ctx, _ := ctxTestdata.NewContextMock()
 	err := g.Generate([]string{"../../go.mod"}, nil, configs, ctx)
@@ -49,7 +49,7 @@ func TestGenerateWithTimer(t *testing.T) {
 	)
 
 	configs := []config.IConfig{
-		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}),
+		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, ""),
 	}
 	err := g.GenerateWithTimer([]string{"../../go.mod"}, nil, configs, 1000)
 	assert.NoError(t, err)
@@ -64,7 +64,7 @@ func TestGenerateInvokeError(t *testing.T) {
 	)
 
 	configs := []config.IConfig{
-		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}),
+		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, ""),
 	}
 	ctx, _ := ctxTestdata.NewContextMock()
 	err := g.Generate([]string{"../../go.mod"}, nil, configs, ctx)
@@ -80,7 +80,7 @@ func TestGenerateScheduleError(t *testing.T) {
 	)
 
 	configs := []config.IConfig{
-		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}),
+		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, ""),
 	}
 	ctx, _ := ctxTestdata.NewContextMock()
 	err := g.Generate([]string{"../../go.mod"}, nil, configs, ctx)
