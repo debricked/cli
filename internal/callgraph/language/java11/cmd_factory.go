@@ -9,6 +9,7 @@ import (
 type ICmdFactory interface {
 	MakeMvnCopyDependenciesCmd(workingDirectory string, targetDir string, ctx cgexec.IContext) (*exec.Cmd, error)
 	MakeCallGraphGenerationCmd(callgraphJarPath string, workingDirectory string, targetClasses string, dependencyClasses string, ctx cgexec.IContext) (*exec.Cmd, error)
+	BuildMaven(workingDirectory string, ctx cgexec.IContext) *exec.Cmd
 }
 
 type CmdFactory struct{}
@@ -53,4 +54,15 @@ func (_ CmdFactory) MakeCallGraphGenerationCmd(
 	}
 
 	return cgexec.MakeCommand(workingDirectory, path, args, ctx), err
+}
+
+func (_ CmdFactory) BuildMaven(workingDirectory string, ctx cgexec.IContext) *exec.Cmd {
+	// NOTE: mvn compile should work in theory and be faster
+	args := []string{
+		"mvn",
+		"package",
+		"-q",
+		"-DskipTests",
+	}
+	return cgexec.MakeCommand(workingDirectory, "", args, ctx)
 }
