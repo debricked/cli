@@ -138,7 +138,7 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 
 	if options.CallGraph {
 		configs := []config.IConfig{
-			config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, ""),
+			config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven"),
 		}
 		timeout := 60
 		resErr := dScanner.callgraph.GenerateWithTimer([]string{options.Path}, options.Exclusions, configs, timeout)

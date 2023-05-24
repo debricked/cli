@@ -37,7 +37,7 @@ func (j *Job) Run() {
 	targetClasses := j.GetFiles()[0]
 	dependencyDir := ".debrickedTmpFolder"
 	targetDir := path.Join(workingDirectory, dependencyDir)
-	pmConfig := j.config.Kwargs()["pm"]
+	pmConfig := j.config.PackageManager()
 
 	// If folder doesn't exist, copy dependencies
 	if _, err := os.Stat(targetDir); os.IsNotExist(err) {

@@ -28,7 +28,7 @@ func TestNewStrategy(t *testing.T) {
 	assert.NotNil(t, s)
 	assert.Len(t, s.files, 2)
 
-	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "")
+	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "maven")
 	finder := testdata.NewEmptyFinderMock()
 	testFiles := []string{"file-1"}
 	finder.FindMavenRootsNames = testFiles
@@ -46,7 +46,7 @@ func TestInvokeNoFiles(t *testing.T) {
 }
 
 func TestInvokeOneFile(t *testing.T) {
-	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "")
+	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "maven")
 	finder := testdata.NewEmptyFinderMock()
 	testFiles := []string{"file-1"}
 	finder.FindMavenRootsNames = testFiles
@@ -57,7 +57,7 @@ func TestInvokeOneFile(t *testing.T) {
 }
 
 func TestInvokeManyFiles(t *testing.T) {
-	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "")
+	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "maven")
 	finder := testdata.NewEmptyFinderMock()
 	testFiles := []string{"file-1", "file-2"}
 	finder.FindMavenRootsNames = testFiles
@@ -68,7 +68,7 @@ func TestInvokeManyFiles(t *testing.T) {
 }
 
 func TestInvokeManyFilesWCorrectFilters(t *testing.T) {
-	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "")
+	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, false, "maven")
 	finder := testdata.NewEmptyFinderMock()
 	testFiles := []string{"file-1", "file-2", "file-3"}
 	finder.FindMavenRootsNames = []string{"file-3/pom.xml"}
