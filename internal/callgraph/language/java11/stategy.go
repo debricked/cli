@@ -3,6 +3,7 @@ package java
 import (
 	"fmt"
 	"log"
+	"path"
 	"path/filepath"
 
 	"github.com/debricked/cli/internal/callgraph/cgexec"
@@ -47,14 +48,28 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 
 		return jobs, err
 	}
-
+	classDirs := []string{}
 	if s.config.Build() {
-		for _, root := range roots {
-			s.cmdFactory.BuildMaven(root, s.ctx)
+		for _, rootFile := range roots {
+			rootDir := filepath.Dir(rootFile)
+			cmd, err := s.cmdFactory.MakeBuildMavenCmd(rootDir, s.ctx)
+			if err != nil {
+				strategyWarning("Error while building roots: " + err.Error())
+				return jobs, nil
+			}
+			err = cgexec.RunCommand(cmd, s.ctx)
+
+			if err != nil {
+				strategyWarning("Error while building roots: " + err.Error())
+				return jobs, nil
+			}
+			classDirs = append(classDirs, path.Join(rootDir, "target/classes"))
 		}
+
 	}
 
-	classDirs, _ := s.finder.FindJavaClassDirs(s.files)
+	javaClassDirs, _ := s.finder.FindJavaClassDirs(s.files)
+	classDirs = append(classDirs, javaClassDirs...)
 	absRoots, _ := finder.ConvertPathsToAbsPaths(roots)
 	absClassDirs, _ := finder.ConvertPathsToAbsPaths(classDirs)
 	rootClassMapping := finder.MapFilesToDir(absRoots, absClassDirs)

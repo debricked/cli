@@ -37,7 +37,7 @@ func TestRunMakeMavenCopyDependenciesCmdErr(t *testing.T) {
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	cmdFactoryMock.MvnCopyDepErr = cmdErr
 	fileWriterMock := &writerTestdata.FileWriterMock{}
-	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "")
+	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven")
 	ctx, _ := ctxTestdata.NewContextMock()
 	j := NewJob(dir, files, cmdFactoryMock, fileWriterMock, config, ctx)
 
@@ -51,7 +51,7 @@ func TestRunMakeMavenCopyDependenciesCmdErr(t *testing.T) {
 func TestRun(t *testing.T) {
 	fileWriterMock := &writerTestdata.FileWriterMock{}
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "")
+	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven")
 	ctx, _ := ctxTestdata.NewContextMock()
 	j := NewJob(dir, files, cmdFactoryMock, fileWriterMock, config, ctx)
 
