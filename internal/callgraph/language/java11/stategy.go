@@ -54,13 +54,13 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 			rootDir := filepath.Dir(rootFile)
 			cmd, err := s.cmdFactory.MakeBuildMavenCmd(rootDir, s.ctx)
 			if err != nil {
-				strategyWarning("Error while building roots: " + err.Error())
+				strategyWarning("Error while building roots (Make command): " + err.Error() + "\nRoot: " + rootDir)
 				return jobs, nil
 			}
 			err = cgexec.RunCommand(cmd, s.ctx)
 
 			if err != nil {
-				strategyWarning("Error while building roots: " + err.Error())
+				strategyWarning("Error while building roots (Run command): " + err.Error() + "\nRoot: " + rootDir)
 				return jobs, nil
 			}
 			classDirs = append(classDirs, path.Join(rootDir, "target/classes"))

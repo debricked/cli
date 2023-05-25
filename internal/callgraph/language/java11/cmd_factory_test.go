@@ -57,14 +57,21 @@ func TestMakeBuildMavenCmd(t *testing.T) {
 func TestMakeBuildMavenCmdFunctional(t *testing.T) {
 	workingDir, err := os.Getwd()
 	if err != nil {
-		t.Log(err)
+		t.Fatal(err)
 	}
 	t.Log(workingDir)
 	javaProjectPath := "testdata/mvnproj"
 	javaProjectAbsPath := path.Join(workingDir, javaProjectPath)
-	assert.NoDirExists(t, path.Join(javaProjectAbsPath, "target"))
+	javaProjectTargetAbsPath := path.Join(javaProjectAbsPath, "target")
+	assert.NoDirExists(t, javaProjectTargetAbsPath)
 	// ctx, _ := ctxTestdata.NewContextMock() // TODO change to real context, no mock
 	ctx, _ := cgexec.NewContext(10000)
-	CmdFactory{}.MakeBuildMavenCmd(javaProjectAbsPath, ctx)
-	assert.DirExists(t, path.Join(javaProjectAbsPath, "target"))
+	cmd, err := CmdFactory{}.MakeBuildMavenCmd(javaProjectAbsPath, ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cgexec.RunCommand(cmd, ctx)
+	assert.DirExists(t, javaProjectTargetAbsPath)
+	os.RemoveAll(javaProjectTargetAbsPath)
+	assert.NoDirExists(t, javaProjectTargetAbsPath)
 }
