@@ -70,7 +70,10 @@ func TestMakeBuildMavenCmdFunctional(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cgexec.RunCommand(cmd, ctx)
+	err = cgexec.RunCommand(cmd, ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
 	assert.DirExists(t, javaProjectTargetAbsPath)
 	os.RemoveAll(javaProjectTargetAbsPath)
 	assert.NoDirExists(t, javaProjectTargetAbsPath)

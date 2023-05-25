@@ -65,5 +65,6 @@ func (_ CmdFactory) MakeBuildMavenCmd(workingDirectory string, ctx cgexec.IConte
 		"-q",
 		"-DskipTests",
 	}
+
 	return cgexec.MakeCommand(workingDirectory, path, args, ctx), err
 }
