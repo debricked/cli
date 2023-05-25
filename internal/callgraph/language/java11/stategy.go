@@ -32,40 +32,33 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 		return jobs, nil
 	}
 
-	pmConfig := s.config.PackageManager()
-
 	var roots []string
 	var err error
-	switch pmConfig {
-	case maven:
-		roots, err = s.finder.FindMavenRoots(s.files)
-	default:
-		roots, err = s.finder.FindMavenRoots(s.files)
-	}
+	// NOTE: Removed to meet cyclic complexity limit of 10.
+	// pmConfig := s.config.PackageManager()
+	// switch pmConfig {
+	// case maven:
+	// 	roots, err = s.finder.FindMavenRoots(s.files)
+	// default:
+	// 	roots, err = s.finder.FindMavenRoots(s.files)
+	// }
 
+	roots, err = s.finder.FindMavenRoots(s.files)
 	if err != nil {
 		strategyWarning("Error while finding roots: " + err.Error())
 
 		return jobs, err
 	}
-	classDirs := []string{}
+
+	var classDirs []string
 	if s.config.Build() {
-		for _, rootFile := range roots {
-			rootDir := filepath.Dir(rootFile)
-			cmd, err := s.cmdFactory.MakeBuildMavenCmd(rootDir, s.ctx)
-			if err != nil {
-				strategyWarning("Error while building roots (Make command): " + err.Error() + "\nRoot: " + rootDir)
-				return jobs, nil
-			}
-			err = cgexec.RunCommand(cmd, s.ctx)
+		classDirs, err = buildProjects(s, roots)
+		if err != nil {
 
-			if err != nil {
-				strategyWarning("Error while building roots (Run command): " + err.Error() + "\nRoot: " + rootDir)
-				return jobs, nil
-			}
-			classDirs = append(classDirs, path.Join(rootDir, "target/classes"))
+			return jobs, err
 		}
-
+	} else {
+		classDirs = []string{}
 	}
 
 	javaClassDirs, _ := s.finder.FindJavaClassDirs(s.files)
@@ -83,11 +76,6 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	if foundRootsWoClasses > 0 {
 		strategyWarning("Found " + fmt.Sprint(foundRootsWoClasses) + " roots without related classes, make sure to build your project before running.")
 	}
-
-	if len(rootClassMapping) == 0 {
-		return jobs, nil
-	}
-
 	for rootFile, classDirs := range rootClassMapping {
 		// For each class paths dir within the root, find GCDPath as entrypoint
 		classDir := finder.GCDPath(classDirs)
@@ -116,4 +104,27 @@ func strategyWarning(errMsg string) {
 	defaultOutputWriter := log.Writer()
 	log.Println(warningColor("Warning: ") + err.Error())
 	log.SetOutput(defaultOutputWriter)
+}
+
+func buildProjects(s Strategy, roots []string) ([]string, error) {
+	classDirs := []string{}
+	for _, rootFile := range roots {
+		rootDir := filepath.Dir(rootFile)
+		cmd, err := s.cmdFactory.MakeBuildMavenCmd(rootDir, s.ctx)
+		if err != nil {
+			strategyWarning("Error while building roots (Make command): " + err.Error() + "\nRoot: " + rootDir)
+
+			return nil, err
+		}
+		err = cgexec.RunCommand(cmd, s.ctx)
+
+		if err != nil {
+			strategyWarning("Error while building roots (Run command): " + err.Error() + "\nRoot: " + rootDir)
+
+			return nil, err
+		}
+		classDirs = append(classDirs, path.Join(rootDir, "target/classes"))
+	}
+
+	return classDirs, nil
 }
