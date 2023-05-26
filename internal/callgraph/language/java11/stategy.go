@@ -11,6 +11,7 @@ import (
 	"github.com/debricked/cli/internal/callgraph/job"
 	"github.com/debricked/cli/internal/io/finder"
 	"github.com/debricked/cli/internal/io/writer"
+	"github.com/debricked/cli/internal/tui"
 	"github.com/fatih/color"
 )
 
@@ -107,12 +108,19 @@ func strategyWarning(errMsg string) {
 }
 
 func buildProjects(s Strategy, roots []string) ([]string, error) {
+	spinnerManager := tui.NewSpinnerManager()
+	spinnerManager.Start()
 	classDirs := []string{}
+	spinnerType := "Build Maven Project"
 	for _, rootFile := range roots {
 		rootDir := filepath.Dir(rootFile)
+		spinner := spinnerManager.AddSpinner(spinnerType, rootDir)
 		cmd, err := s.cmdFactory.MakeBuildMavenCmd(rootDir, s.ctx)
 		if err != nil {
 			strategyWarning("Error while building roots (Make command): " + err.Error() + "\nRoot: " + rootDir)
+			spinner.Error()
+			tui.SetSpinnerMessage(spinner, spinnerType, rootDir, "fail")
+			spinnerManager.Stop()
 
 			return nil, err
 		}
@@ -120,11 +128,17 @@ func buildProjects(s Strategy, roots []string) ([]string, error) {
 
 		if err != nil {
 			strategyWarning("Error while building roots (Run command): " + err.Error() + "\nRoot: " + rootDir)
+			spinner.Error()
+			tui.SetSpinnerMessage(spinner, spinnerType, rootDir, "fail")
+			spinnerManager.Stop()
 
 			return nil, err
 		}
 		classDirs = append(classDirs, path.Join(rootDir, "target/classes"))
+		tui.SetSpinnerMessage(spinner, spinnerType, rootDir, "success")
+		spinner.Complete()
 	}
+	spinnerManager.Stop()
 
 	return classDirs, nil
 }
