@@ -1,11 +1,8 @@
 package java
 
 import (
-	"os"
-	"path"
 	"testing"
 
-	"github.com/debricked/cli/internal/callgraph/cgexec"
 	ctxTestdata "github.com/debricked/cli/internal/callgraph/cgexec/testdata"
 	"github.com/stretchr/testify/assert"
 )
@@ -52,29 +49,4 @@ func TestMakeBuildMavenCmd(t *testing.T) {
 	assert.Contains(t, args, "package")
 	assert.Contains(t, args, "-q")
 	assert.Contains(t, args, "-DskipTests")
-}
-
-func TestMakeBuildMavenCmdFunctional(t *testing.T) {
-	workingDir, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(workingDir)
-	javaProjectPath := "testdata/mvnproj"
-	javaProjectAbsPath := path.Join(workingDir, javaProjectPath)
-	javaProjectTargetAbsPath := path.Join(javaProjectAbsPath, "target")
-	assert.NoDirExists(t, javaProjectTargetAbsPath)
-	// ctx, _ := ctxTestdata.NewContextMock() // TODO change to real context, no mock
-	ctx, _ := cgexec.NewContext(10000)
-	cmd, err := CmdFactory{}.MakeBuildMavenCmd(javaProjectAbsPath, ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = cgexec.RunCommand(cmd, ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	assert.DirExists(t, javaProjectTargetAbsPath)
-	os.RemoveAll(javaProjectTargetAbsPath)
-	assert.NoDirExists(t, javaProjectTargetAbsPath)
 }

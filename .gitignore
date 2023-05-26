@@ -14,8 +14,12 @@ internal/cmd/scan/testdata/npm/yarn.lock
 internal/resolution/pm/gradle/.gradle-init-script.debricked.groovy
 internal/callgraph/language/java11/testdata/mvnproj/target
 test/resolve/testdata/npm/yarn.lock
+test/resolve/testdata/nuget/packages.lock.json
 test/resolve/testdata/nuget/csproj/packages.lock.json
 test/resolve/testdata/nuget/packagesconfig/packages.config.nuget.debricked.lock
+test/resolve/testdata/nuget/obj
 test/resolve/testdata/nuget/**/obj
 debricked.fingerprints.wfp
 test/resolve/testdata/gomod/gomod.debricked.lock
+.debricked.fingerprints.wfp
+/mvnproj/target

@@ -36,6 +36,7 @@ func (_ CmdFactoryMock) MakeBuildMavenCmd(workingDirectory string, ctx cgexec.IC
 		"package",
 		"-q",
 		"-DskipTests",
+		"-e",
 	}
 	return cgexec.MakeCommand(workingDirectory, path, args, ctx), err
 }
