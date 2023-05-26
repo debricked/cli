@@ -17,3 +17,4 @@ test/resolve/testdata/npm/yarn.lock
 test/resolve/testdata/nuget/packages.lock.json
 test/resolve/testdata/nuget/obj
 .debricked.fingerprints.wfp
+/mvnproj/target

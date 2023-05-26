@@ -1,6 +1,7 @@
 package cgexec
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -9,11 +10,21 @@ import (
 )
 
 func RunCommand(cmd *exec.Cmd, ctx IContext) error {
+	args := strings.Join(cmd.Args, " ")
+	var stdoutBuf, stderrBuf bytes.Buffer
+	cmd.Stderr = &stderrBuf
+	var err error
+	var outputCmd []byte
 	if ctx == nil {
-		_, err := cmd.Output()
+		outputCmd, err = cmd.CombinedOutput()
+		if _, ok := err.(*exec.ExitError); ok {
+			err = fmt.Errorf("Command '%s' executed in folder '%s' gave the following error:\n%s", args, cmd.Dir, outputCmd)
+		}
 
 		return err
 	}
+
+	cmd.Stdout = &stdoutBuf
 
 	// Start the external process
 	if err := cmd.Start(); err != nil {
@@ -28,8 +39,7 @@ func RunCommand(cmd *exec.Cmd, ctx IContext) error {
 	go func() {
 		err := cmd.Wait()
 		if err != nil {
-			args := strings.Join(cmd.Args, " ")
-			err = fmt.Errorf("Command '%s' executed in folder '%s' gave the following error: %s", args, cmd.Dir, err.Error())
+			err = fmt.Errorf("Command '%s' executed in folder '%s' gave the following error: \n%s\n%s", args, cmd.Dir, stdoutBuf.String(), stderrBuf.String())
 		}
 
 		done <- err
