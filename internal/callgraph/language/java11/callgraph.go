@@ -53,12 +53,13 @@ func (cg *Callgraph) runCallGraphWithSetup() error {
 }
 
 func (cg *Callgraph) runCallGraph(callgraphJarPath string) error {
-	cmd, err := cg.cmdFactory.MakeCallGraphGenerationCmd(callgraphJarPath, cg.workingDirectory, cg.targetClasses, cg.targetDir, cg.ctx)
+	osCmd, err := cg.cmdFactory.MakeCallGraphGenerationCmd(callgraphJarPath, cg.workingDirectory, cg.targetClasses, cg.targetDir, cg.ctx)
 	if err != nil {
 		return err
 	}
 
-	err = cgexec.RunCommand(cmd, cg.ctx)
+	cmd := cgexec.NewCommand(osCmd)
+	err = cgexec.RunCommand(*cmd, cg.ctx)
 
 	return err
 }

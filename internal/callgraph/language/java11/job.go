@@ -41,9 +41,9 @@ func (j *Job) Run() {
 
 	// If folder doesn't exist, copy dependencies
 	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
-		var cmd *exec.Cmd
+		var osCmd *exec.Cmd
 		if pmConfig == maven {
-			cmd, err = j.cmdFactory.MakeMvnCopyDependenciesCmd(workingDirectory, targetDir, j.ctx)
+			osCmd, err = j.cmdFactory.MakeMvnCopyDependenciesCmd(workingDirectory, targetDir, j.ctx)
 			j.SendStatus("copying external dep jars to target folder" + targetDir)
 		}
 		if err != nil {
@@ -52,7 +52,8 @@ func (j *Job) Run() {
 			return
 		}
 
-		err = cgexec.RunCommand(cmd, j.ctx)
+		cmd := cgexec.NewCommand(osCmd)
+		err = cgexec.RunCommand(*cmd, j.ctx)
 
 		if err != nil {
 			j.Errors().Critical(err)

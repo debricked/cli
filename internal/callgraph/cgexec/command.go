@@ -14,14 +14,18 @@ type ICommand interface {
 	Start() error
 	Wait() error
 	GetProcess() *os.Process
-	SetStdErr()
-	SetStdout()
+	SetStderr(*bytes.Buffer)
+	SetStdout(*bytes.Buffer)
 	GetArgs() []string
 	GetDir() string
 }
 
 type Command struct {
 	osCmd *exec.Cmd
+}
+
+func NewCommand(osCmd *exec.Cmd) *Command {
+	return &Command{osCmd}
 }
 
 func (cmd Command) SetStderr(stderr *bytes.Buffer) {
@@ -56,11 +60,9 @@ func (cmd Command) GetDir() string {
 	return cmd.osCmd.Dir
 }
 
-func RunCommand(osCmd *exec.Cmd, ctx IContext) error {
-	cmd := Command{osCmd}
+func RunCommand(cmd ICommand, ctx IContext) error {
 	args := strings.Join(cmd.GetArgs(), " ")
 	var stdoutBuf, stderrBuf bytes.Buffer
-	// cmd.Stderr = &stderrBuf
 	cmd.SetStderr(&stderrBuf)
 	var err error
 	var outputCmd []byte
@@ -73,7 +75,6 @@ func RunCommand(osCmd *exec.Cmd, ctx IContext) error {
 		return err
 	}
 
-	// cmd.Stdout = &stdoutBuf
 	cmd.SetStdout(&stdoutBuf)
 
 	// Start the external process
