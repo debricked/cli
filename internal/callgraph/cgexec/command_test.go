@@ -20,7 +20,7 @@ func TestMakeCommandFailsWithContext(t *testing.T) {
 	}, ctx)
 	err := RunCommand(cmd, ctx)
 	t.Log(err)
-	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "there is no POM in this directory")
 }
 
 func TestMakeCommandFailsWithNoContext(t *testing.T) {
@@ -34,5 +34,13 @@ func TestMakeCommandFailsWithNoContext(t *testing.T) {
 	}, nil)
 	err := RunCommand(cmd, nil)
 	t.Log(err)
-	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "exec: Stderr already set")
 }
+
+// func TestMakeCommandFailsDeadlineExceeded(t *testing.T) {
+// 	ctx, _ := execTestdata.NewContextMock()
+// 	cmd := execTestdata.NewCmdMock()
+// 	err := RunCommand(cmd, ctx)
+// 	t.Log(err)
+// 	assert.Contains(t, err.Error(), "Timeout error: Set timeout duration for Callgraph jobs reached")
+// }
