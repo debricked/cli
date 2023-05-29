@@ -1,26 +1,57 @@
 package testdata
 
-import "github.com/stretchr/testify/mock"
+import (
+	"bytes"
+	"errors"
+	"os"
+)
 
-type CmdMock struct {
-	mock.Mock
+type CmdConfig struct {
+	Start error
 }
 
-func NewCmdMock() CmdMock {
-	return CmdMock{}
+func NewCmdConfig() *CmdConfig {
+	return &CmdConfig{errors.New("test error")}
 }
 
-func (m *CmdMock) CombinedOutput() ([]byte, error) {
-	args := m.Called()
-	return args.Get(0).([]byte), args.Error(1)
+type CommandMock struct {
+	cmdConfig CmdConfig
 }
 
-func (m *CmdMock) Start() error {
-	args := m.Called()
-	return args.Error(0)
+func NewCommandMock() CommandMock {
+	return CommandMock{}
 }
 
-func (m *CmdMock) Wait() error {
-	args := m.Called()
-	return args.Error(0)
+func NewCommandMockWithConfig(cmdConfig CmdConfig) CommandMock {
+	return CommandMock{cmdConfig}
+}
+
+func (m CommandMock) CombinedOutput() ([]byte, error) {
+	return []byte{}, nil
+}
+
+func (m CommandMock) Start() error {
+	return m.cmdConfig.Start
+}
+
+func (m CommandMock) Wait() error {
+	return nil
+}
+
+func (m CommandMock) GetProcess() *os.Process {
+	return nil
+}
+
+func (m CommandMock) SetStderr(stderr *bytes.Buffer) {
+}
+
+func (m CommandMock) SetStdout(stdout *bytes.Buffer) {
+}
+
+func (m CommandMock) GetArgs() []string {
+	return []string{"mvn", "package", "TEST"}
+}
+
+func (m CommandMock) GetDir() string {
+	return "."
 }

@@ -115,7 +115,7 @@ func buildProjects(s Strategy, roots []string) ([]string, error) {
 	for _, rootFile := range roots {
 		rootDir := filepath.Dir(rootFile)
 		spinner := spinnerManager.AddSpinner(spinnerType, rootDir)
-		cmd, err := s.cmdFactory.MakeBuildMavenCmd(rootDir, s.ctx)
+		osCmd, err := s.cmdFactory.MakeBuildMavenCmd(rootDir, s.ctx)
 		if err != nil {
 			strategyWarning("Error while building roots (Make command): " + err.Error() + "\nRoot: " + rootDir)
 			spinner.Error()
@@ -124,7 +124,8 @@ func buildProjects(s Strategy, roots []string) ([]string, error) {
 
 			return nil, err
 		}
-		err = cgexec.RunCommand(cmd, s.ctx)
+		cmd := cgexec.NewCommand(osCmd)
+		err = cgexec.RunCommand(*cmd, s.ctx)
 
 		if err != nil {
 			strategyWarning("Error while building roots (Run command): " + err.Error() + "\nRoot: " + rootDir)
