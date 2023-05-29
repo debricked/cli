@@ -18,3 +18,7 @@ func (c ContextMock) Context() context.Context {
 func (c ContextMock) Done() <-chan struct{} {
 	return c.ctx.Done()
 }
+
+func (c ContextMock) Err() error {
+	return context.DeadlineExceeded
+}
