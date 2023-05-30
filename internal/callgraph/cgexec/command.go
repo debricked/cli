@@ -18,6 +18,7 @@ type ICommand interface {
 	SetStdout(*bytes.Buffer)
 	GetArgs() []string
 	GetDir() string
+	Signal(process *os.Process, signal os.Signal) error
 }
 
 type Command struct {
@@ -60,10 +61,13 @@ func (cmd Command) GetDir() string {
 	return cmd.osCmd.Dir
 }
 
+func (cmd Command) Signal(process *os.Process, signal os.Signal) error {
+	return process.Signal(signal)
+}
+
 func RunCommand(cmd ICommand, ctx IContext) error {
 	args := strings.Join(cmd.GetArgs(), " ")
 	var stdoutBuf, stderrBuf bytes.Buffer
-	cmd.SetStderr(&stderrBuf)
 	var err error
 	var outputCmd []byte
 	if ctx == nil {
@@ -75,6 +79,7 @@ func RunCommand(cmd ICommand, ctx IContext) error {
 		return err
 	}
 
+	cmd.SetStderr(&stderrBuf)
 	cmd.SetStdout(&stdoutBuf)
 
 	// Start the external process
@@ -108,7 +113,7 @@ func RunCommand(cmd ICommand, ctx IContext) error {
 		// Send a signal to the process to terminate
 		process := cmd.GetProcess()
 		if process != nil {
-			err := process.Signal(os.Interrupt)
+			err := cmd.Signal(process, os.Interrupt)
 			if err != nil {
 				return err
 			}

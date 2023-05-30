@@ -8,6 +8,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestNewArchive(t *testing.T) {
+	archive := NewArchive(".")
+	assert.NotNil(t, archive.fs)
+	assert.NotNil(t, archive.zip)
+
+}
+
+func TestNewArchiveWithStructs(t *testing.T) {
+	archive := NewArchiveWithStructs(".", FileSystem{}, Zip{})
+	assert.NotNil(t, archive.fs)
+	assert.NotNil(t, archive.zip)
+
+}
+
 func TestZipWMock(t *testing.T) {
 	fsMock := ioTestData.FileSystemMock{}
 	zipMock := ioTestData.ZipMock{}
