@@ -10,7 +10,7 @@ import (
 	conf "github.com/debricked/cli/internal/callgraph/config"
 	"github.com/debricked/cli/internal/callgraph/job"
 	"github.com/debricked/cli/internal/io"
-	ioWriter "github.com/debricked/cli/internal/io"
+	ioFs "github.com/debricked/cli/internal/io"
 )
 
 const (
@@ -28,7 +28,7 @@ type Job struct {
 	ctx        cgexec.IContext
 }
 
-func NewJob(dir string, files []string, cmdFactory ICmdFactory, writer ioWriter.IFileWriter, archive io.IArchive, config conf.IConfig, ctx cgexec.IContext) *Job {
+func NewJob(dir string, files []string, cmdFactory ICmdFactory, writer ioFs.IFileWriter, archive io.IArchive, config conf.IConfig, ctx cgexec.IContext) *Job {
 	return &Job{
 		BaseJob:    job.NewBaseJob(dir, files),
 		cmdFactory: cmdFactory,
@@ -63,14 +63,15 @@ func (j *Job) Run() {
 		j.runCopyDependencies(osCmd)
 
 	}
-	callgraph := Callgraph{
-		cmdFactory:       j.cmdFactory,
-		workingDirectory: workingDirectory,
-		targetClasses:    targetClasses,
-		targetDir:        targetDir,
-		outputName:       outputName,
-		ctx:              j.ctx,
-	}
+	callgraph := NewCallgraph(
+		j.cmdFactory,
+		workingDirectory,
+		targetClasses,
+		targetDir,
+		outputName,
+		ioFs.FileSystem{},
+		j.ctx,
+	)
 	j.SendStatus("generating call graph")
 	j.runCallGraph(&callgraph)
 

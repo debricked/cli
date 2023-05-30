@@ -1,28 +1,27 @@
 package testdata
 
 import (
+	"embed"
 	"io"
+	"io/fs"
 	"os"
 )
 
 type FileSystemMock struct {
-	file          *os.File
-	fileInfo      os.FileInfo
-	OpenError     error
-	StatError     error
-	ReadFileError error
-	CreateError   error
-	RemoveError   error
-	StatFileError error
-	WriteError    error
-}
-
-type IFile interface {
-	io.Closer
-	io.Reader
-	io.ReaderAt
-	io.Seeker
-	Stat() (os.FileInfo, error)
+	file             *os.File
+	fileInfo         os.FileInfo
+	fsFile           fs.File
+	OpenError        error
+	StatError        error
+	ReadFileError    error
+	CreateError      error
+	RemoveError      error
+	StatFileError    error
+	WriteError       error
+	MkdirTempError   error
+	FsOpenEmbedError error
+	FsReadAllError   error
+	FsWriteFileError error
 }
 
 func (fsm FileSystemMock) Open(path string) (*os.File, error) {
@@ -54,4 +53,26 @@ func (fsm FileSystemMock) CloseFile(file *os.File) {
 
 func (fsm FileSystemMock) WriteToWriter(_ io.Writer, bytes []byte) (int, error) {
 	return 0, fsm.WriteError
+}
+
+func (fsm FileSystemMock) MkdirTemp(pattern string) (string, error) {
+	return pattern, fsm.MkdirTempError
+}
+
+func (fsm FileSystemMock) RemoveAll(path string) {
+}
+
+func (fsm FileSystemMock) FsOpenEmbed(file embed.FS, path string) (fs.File, error) {
+	return fsm.fsFile, fsm.FsOpenEmbedError
+}
+
+func (fsm FileSystemMock) FsCloseFile(file fs.File) {
+}
+
+func (fsm FileSystemMock) FsReadAll(file fs.File) ([]byte, error) {
+	return []byte{}, fsm.FsReadAllError
+}
+
+func (fsm FileSystemMock) FsWriteFile(path string, bytes []byte, perm fs.FileMode) error {
+	return fsm.FsWriteFileError
 }
