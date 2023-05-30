@@ -28,9 +28,10 @@ func TestCreateFile(t *testing.T) {
 func TestOpen(t *testing.T) {
 	fn := fileNameFS + t.Name()
 	testFile, _ := filesystem.Create(fn)
-	defer deleteFile(t, testFile)
+	_ = testFile.Close()
 
-	_, err := filesystem.Open(fn)
+	openFile, err := filesystem.Open(fn)
+	defer deleteFile(t, openFile)
 
 	assert.NoError(t, err)
 }
@@ -71,7 +72,7 @@ func TestReadFile(t *testing.T) {
 func TestRemoveFile(t *testing.T) {
 	fn := fileNameFS + t.Name()
 	testFile, _ := filesystem.Create(fn)
-	defer testFile.Close()
+	_ = testFile.Close()
 
 	_, err := filesystem.Stat(fn)
 	assert.NoError(t, err)
