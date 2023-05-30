@@ -1,6 +1,8 @@
 package cgexec
 
 import (
+	"fmt"
+	"os"
 	"os/exec"
 	"testing"
 
@@ -9,27 +11,25 @@ import (
 	execTestdata "github.com/debricked/cli/internal/callgraph/cgexec/testdata"
 )
 
-func TestMakeCommandFailsWithContext(t *testing.T) {
-	path, _ := exec.LookPath("mvn")
+func TestMakeCommandWithContext(t *testing.T) {
+	cmdName := "echo"
+	path, _ := exec.LookPath(cmdName)
 	ctx, cancel := NewContext(100)
 	defer cancel()
 	osCmd := MakeCommand(".", path, []string{
-		"mvn",
+		"echo",
 		"package",
-		"-q",
-		"-DskipTests",
-		"-e",
 	}, ctx)
 	cmd := NewCommand(osCmd)
 	err := RunCommand(*cmd, ctx)
-	t.Log(err)
-	assert.Contains(t, err.Error(), "there is no POM in this directory")
+	assert.Nil(t, err)
 }
 
-func TestMakeCommandFailsWithNoContext(t *testing.T) {
-	path, _ := exec.LookPath("mvn")
+func TestMakeCommandWithNoContext(t *testing.T) {
+	cmdName := "echo"
+	path, _ := exec.LookPath(cmdName)
 	osCmd := MakeCommand(".", path, []string{
-		"mvn",
+		"echo",
 		"package",
 		"-q",
 		"-DskipTests",
@@ -37,8 +37,7 @@ func TestMakeCommandFailsWithNoContext(t *testing.T) {
 	}, nil)
 	cmd := NewCommand(osCmd)
 	err := RunCommand(*cmd, nil)
-	t.Log(err)
-	assert.Contains(t, err.Error(), "exec: Stderr already set")
+	assert.Nil(t, err)
 }
 
 func TestMakeCommandDeadlineExceeded(t *testing.T) {
@@ -60,6 +59,16 @@ func TestMakeCommandCancelled(t *testing.T) {
 	assert.Contains(t, err.Error(), "Timeout error: Set timeout duration for Callgraph jobs reached")
 }
 
+func TestMakeCommandCancelledInteruptedError(t *testing.T) {
+	ctx, _ := execTestdata.NewContextMockCancelled()
+	cmd := execTestdata.NewCommandMock()
+	cmd.Process = &os.Process{}
+	cmd.SignalError = fmt.Errorf("error")
+	err := RunCommand(cmd, ctx)
+	t.Log(err)
+	assert.Contains(t, err.Error(), "error")
+}
+
 func TestMakeCommandStartFailure(t *testing.T) {
 	ctx, _ := execTestdata.NewContextMock()
 	cmdConfig := execTestdata.NewCmdConfig()
@@ -69,10 +78,41 @@ func TestMakeCommandStartFailure(t *testing.T) {
 	assert.Contains(t, err.Error(), "test error")
 }
 
+func TestWaitExecutionFail(t *testing.T) {
+	ctx, _ := execTestdata.NewContextMock()
+	cmd := execTestdata.NewCommandMock()
+	cmd.WaitError = fmt.Errorf("error")
+	err := RunCommand(cmd, ctx)
+	t.Log(err)
+	assert.Contains(t, err.Error(), "error")
+}
+
+func TestNoContextCommandFail(t *testing.T) {
+	cmd := execTestdata.NewCommandMock()
+	cmd.CombinedOutputError = &exec.ExitError{}
+	err := RunCommand(cmd, nil)
+	t.Log(err)
+	assert.Contains(t, err.Error(), "executed in folder")
+}
+
 func TestMakeCommandSuccess(t *testing.T) {
 	ctx, _ := execTestdata.NewContextMock()
 	cmd := execTestdata.NewCommandMock()
 	err := RunCommand(cmd, ctx)
 	t.Log(err)
 	assert.Nil(t, err)
+}
+
+func TestCmdGetProcess(t *testing.T) {
+	cmd := NewCommand(exec.Command("echo", "GetProcess"))
+	process := cmd.GetProcess()
+
+	assert.Nil(t, process)
+}
+
+func TestCmdGetDir(t *testing.T) {
+	cmd := NewCommand(exec.Command("echo", "GetProcess"))
+	dir := cmd.GetDir()
+
+	assert.NotNil(t, dir)
 }

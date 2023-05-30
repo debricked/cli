@@ -11,12 +11,15 @@ type CmdFactoryMock struct {
 	MvnCopyDepErr    error
 	CallGraphGenName string
 	CallGraphGenErr  error
+	BuildMavenName   string
+	BuildMavenErr    error
 }
 
 func NewEchoCmdFactory() CmdFactoryMock {
 	return CmdFactoryMock{
 		MvnCopyDepName:   "echo",
 		CallGraphGenName: "echo",
+		BuildMavenName:   "echo",
 	}
 }
 
@@ -28,15 +31,6 @@ func (f CmdFactoryMock) MakeCallGraphGenerationCmd(_ string, _ string, _ string,
 	return exec.Command(f.CallGraphGenName, "CallGraphGen"), f.CallGraphGenErr
 }
 
-func (_ CmdFactoryMock) MakeBuildMavenCmd(workingDirectory string, ctx cgexec.IContext) (*exec.Cmd, error) {
-	// NOTE: mvn compile should work in theory and be faster
-	path, err := exec.LookPath("mvn")
-	args := []string{
-		"mvn",
-		"package",
-		"-q",
-		"-DskipTests",
-		"-e",
-	}
-	return cgexec.MakeCommand(workingDirectory, path, args, ctx), err
+func (f CmdFactoryMock) MakeBuildMavenCmd(workingDirectory string, ctx cgexec.IContext) (*exec.Cmd, error) {
+	return exec.Command(f.BuildMavenName, "BuildMaven"), f.BuildMavenErr
 }
