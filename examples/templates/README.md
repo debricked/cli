@@ -9,6 +9,7 @@ Here you can find multiple different templates as to how it can be used within y
 - [GitHub Actions](GitHub)
 - [GitLab CI/CD](GitLab)
 - [Travis CI](Travis)
+- [Jenkins](Jenkins)
 
 ## The dependency tree
 In order for us to analyze all dependencies in your project, their versions, and relations, files containing the resolved dependency trees have to be created prior to scanning. Those depend on the package manager used. If files containing the whole dependency tree are not uploaded, that can negatively affect speed and accuracy.
