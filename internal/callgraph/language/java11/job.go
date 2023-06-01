@@ -99,9 +99,11 @@ func (j *Job) runCallGraph(callgraph ICallgraph) {
 }
 
 func (j *Job) runPostProcess() {
-	outputNameZip := outputName + ".zip"
+	workingDirectory := j.GetDir()
+	outputFullPath := path.Join(workingDirectory, outputName)
+	outputFullPathZip := outputFullPath + ".zip"
 	j.SendStatus("zipping callgraph")
-	err := j.archive.ZipFile(outputName, outputNameZip)
+	err := j.archive.ZipFile(outputFullPath, outputFullPathZip)
 	if err != nil {
 		j.Errors().Critical(err)
 
@@ -109,7 +111,7 @@ func (j *Job) runPostProcess() {
 	}
 
 	j.SendStatus("base64 encoding zipped callgraph")
-	err = j.archive.B64(outputNameZip, outputName)
+	err = j.archive.B64(outputFullPathZip, outputFullPath)
 	if err != nil {
 		j.Errors().Critical(err)
 
@@ -117,7 +119,7 @@ func (j *Job) runPostProcess() {
 	}
 
 	j.SendStatus("cleanup")
-	err = j.archive.Cleanup(outputNameZip)
+	err = j.archive.Cleanup(outputFullPathZip)
 	if err != nil {
 		e, ok := err.(*os.PathError)
 		if ok && e.Err == syscall.ENOENT {

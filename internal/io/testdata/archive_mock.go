@@ -1,12 +1,19 @@
 package testdata
 
+import "strings"
+
 type ArchiveMock struct {
 	ZipFileError error
 	B64Error     error
 	CleanupError error
+	PathError    error
+	Dir          string
 }
 
 func (am ArchiveMock) ZipFile(sourceName string, targetName string) error {
+	if !strings.HasPrefix(sourceName, am.Dir) || !strings.HasPrefix(targetName, am.Dir) {
+		return am.PathError
+	}
 	return am.ZipFileError
 
 }
