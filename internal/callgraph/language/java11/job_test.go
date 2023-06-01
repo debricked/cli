@@ -121,7 +121,7 @@ func TestRunPostProcessMock(t *testing.T) {
 
 	fs := ioTestData.FileSystemMock{}
 	zip := ioTestData.ZipMock{}
-	archiveMock := io.NewArchiveWithStructs("dir", fs, zip)
+	archiveMock := io.NewArchiveWithStructs(dir, fs, zip)
 
 	j := NewJob(dir, files, cmdFactoryMock, fileWriterMock, archiveMock, config, ctx)
 	go jobTestdata.WaitStatus(j)
@@ -189,4 +189,23 @@ func TestRunPostProcessCleanupNoFileExistError(t *testing.T) {
 	j.runPostProcess()
 
 	assert.False(t, j.Errors().HasError())
+}
+
+func TestRunPostProcessFromRoot(t *testing.T) {
+	fileWriterMock := &ioTestData.FileWriterMock{}
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven")
+	ctx, _ := ctxTestdata.NewContextMock()
+
+	err := &os.PathError{}
+	err.Err = syscall.ENOENT
+	archiveMock := ioTestData.ArchiveMock{PathError: err, Dir: "."}
+
+	j := NewJob(dir, files, cmdFactoryMock, fileWriterMock, archiveMock, config, ctx)
+	go jobTestdata.WaitStatus(j)
+	j.runPostProcess()
+
+	jobErrors := j.Errors().GetAll()
+	assert.True(t, jobErrors[0] == err)
+
 }
