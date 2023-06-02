@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 
@@ -97,7 +98,7 @@ func TestGetGroups(t *testing.T) {
 	path := ""
 
 	exclusions := []string{"testdata/go/*.mod", "testdata/misc/**"}
-	excludedFiles := []string{"testdata/go/go.mod", "testdata/misc/requirements.txt"}
+	excludedFiles := []string{"testdata/go/go.mod", "testdata/misc/requirements.txt", "testdata/misc/Cargo.lock"}
 	const nbrOfGroups = 4
 
 	fileGroups, err := finder.GetGroups(path, exclusions, false, StrictAll)
@@ -117,6 +118,48 @@ func TestGetGroups(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestGetGroupsPIP(t *testing.T) {
+	setUp(true)
+	path := "testdata/pip"
+	const nbrOfGroups = 2
+
+	lockfileOnly := false
+	fileGroups, err := finder.GetGroups(path, []string{}, lockfileOnly, StrictAll)
+
+	assert.NoError(t, err)
+	assert.Equalf(t, nbrOfGroups, fileGroups.Size(), "failed to assert that %d groups were created. %d was found", nbrOfGroups, fileGroups.Size())
+
+	locksFound := make([]string, 0)
+	manifestsFound := make([]string, 0)
+	for _, fileGroup := range fileGroups.ToSlice() {
+		lockFiles := fileGroup.LockFiles
+		locksFound = append(locksFound, lockFiles...)
+		manifestFile := fileGroup.ManifestFile
+		manifestsFound = append(manifestsFound, manifestFile)
+	}
+	manifestsExpected := []string{"testdata/pip/requirements-dev.txt", "testdata/pip/requirements.txt"}
+	locksExpected := []string{"testdata/pip/requirements-dev.txt.pip.debricked.lock", "testdata/pip/requirements.txt.pip.debricked.lock"}
+	sort.Strings(manifestsExpected)
+	sort.Strings(locksExpected)
+	sort.Strings(manifestsFound)
+	sort.Strings(locksFound)
+	t.Logf("manifest files expected: %s", manifestsExpected)
+	t.Logf("manifest files found: %s, len: %d", manifestsFound, len(manifestsFound))
+	t.Logf("lock files expected: %s", manifestsExpected)
+	t.Logf("lock files found: %s, len: %d", locksFound, len(locksFound))
+	for i := range manifestsExpected {
+		found := strings.TrimSpace(manifestsFound[i])
+		expected := strings.TrimSpace(manifestsExpected[i])
+		assert.True(t, found == expected)
+	}
+	for i := range locksExpected {
+		found := strings.TrimSpace(locksFound[i])
+		expected := strings.TrimSpace(locksExpected[i])
+		assert.True(t, found == expected)
+	}
+
 }
 
 func TestExclude(t *testing.T) {

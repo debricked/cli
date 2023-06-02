@@ -2,6 +2,7 @@ package file
 
 import (
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -43,26 +44,62 @@ func (gs *Groups) Match(format *CompiledFormat, path string, lockfileOnly bool) 
 	return true
 }
 
+func matchLockToManifest(manifestGroup, lock string) bool {
+	var matchName bool
+	if strings.HasPrefix(manifestGroup, "composer") {
+		// Naive first implementation assuming projects use composer.json and composer.lock.
+		matchName = strings.HasPrefix(lock, "composer")
+	} else {
+		matchName = strings.HasPrefix(lock, manifestGroup)
+	}
+
+	return matchName
+}
+
+func matchManifestToLock(lockGroup, file string) bool {
+	var matchName bool
+	if strings.HasPrefix(lockGroup, "composer") {
+		// Naive first implementation assuming projects use composer.json and composer.lock.
+		matchName = strings.HasPrefix(file, "composer")
+	} else {
+		matchName = strings.HasPrefix(lockGroup, file)
+	}
+
+	return matchName
+}
+
 func (gs *Groups) matchExistingGroup(format *CompiledFormat, fileMatch bool, lockFileMatch bool, dir string, file string) bool {
 	for _, g := range gs.groups {
-		var groupDir string
-		if g.HasFile() {
-			groupDir, _ = filepath.Split(g.ManifestFile)
-		} else {
-			groupDir, _ = filepath.Split(g.LockFiles[0])
+		if format != g.CompiledFormat {
+			continue
 		}
+		var groupDir, manifestFile, lockFile string
+		var fileMatch, manifestMatchLock, lockMatchManifest bool
+		if g.HasFile() {
+			// Group has a manifest file.
+			// Check if the input file is a lock file for the manifest file.
+			groupDir, manifestFile = filepath.Split(g.ManifestFile)
+			lockMatchManifest = matchLockToManifest(manifestFile, file)
+		} else {
+			// Group does not have a manifest file.
+			// Check if the input file is a manifest file for an existing lock file.
+			groupDir, lockFile = filepath.Split(g.LockFiles[0])
+			manifestMatchLock = matchManifestToLock(lockFile, file)
 
-		matchesGroup := groupDir == dir && format == g.CompiledFormat && g.checkFilePathDependantCases(fileMatch, lockFileMatch, file)
-		if matchesGroup {
-			if fileMatch {
-				g.ManifestFile = dir + file
+		}
+		fileMatch = manifestMatchLock || lockMatchManifest
+		correctFilePath := g.checkFilePathDependantCases(fileMatch, lockFileMatch, file)
+		if !fileMatch || groupDir != dir || !correctFilePath {
+			continue
+		}
+		if manifestMatchLock {
+			g.ManifestFile = dir + file
 
-				return true
-			} else if lockFileMatch {
-				g.LockFiles = append(g.LockFiles, dir+file)
+			return true
+		} else if lockMatchManifest {
+			g.LockFiles = append(g.LockFiles, dir+file)
 
-				return true
-			}
+			return true
 		}
 	}
 
