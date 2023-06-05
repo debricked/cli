@@ -47,33 +47,26 @@ func (fileGroup *Group) GetAllFiles() []string {
 	return append(files, fileGroup.LockFiles...)
 }
 
-func (fileGroup *Group) checkFilePathDependantCases(fileMatch bool, lockFileMatch bool, file string) bool {
+func (fileGroup *Group) checkFilePathDependantCases(manifestFileMatch bool, lockFileMatch bool, fileName string) bool {
+	filePathDependantCases := fileGroup.getFilePathDependantCases()
 	if lockFileMatch {
-		filePathDependantCases := fileGroup.getFilePathDependantCases()
-		for _, c := range filePathDependantCases {
-			if strings.HasSuffix(file, c) {
-				fileBase, _ := strings.CutSuffix(file, c)
+		for _, suffix := range filePathDependantCases {
+			if strings.HasSuffix(fileName, suffix) {
+				fileBase, _ := strings.CutSuffix(fileName, suffix)
 
-				return len(fileGroup.ManifestFile) > 0 && (fileBase == filepath.Base(fileGroup.ManifestFile))
+				return fileBase == filepath.Base(fileGroup.ManifestFile) && len(fileGroup.ManifestFile) > 0
 			}
 		}
-
-		return true
-	}
-
-	if fileMatch {
-		filePathDependantCases := fileGroup.getFilePathDependantCases()
+	} else if manifestFileMatch {
 		for _, c := range filePathDependantCases {
 			for _, lockFile := range fileGroup.LockFiles {
 				if strings.HasSuffix(lockFile, c) {
 					lockFileBase, _ := strings.CutSuffix(lockFile, c)
 
-					return lockFileBase == file
+					return lockFileBase == fileName
 				}
 			}
 		}
-
-		return true
 	}
 
 	return true
@@ -83,4 +76,50 @@ func (fileGroup *Group) getFilePathDependantCases() []string {
 	return []string{
 		".pip.debricked.lock",
 	}
+}
+
+func (fileGroup *Group) matchLockFile(lockFile, dir string) bool {
+	if !fileGroup.HasFile() {
+
+		return false
+	}
+	groupDir, manifestFile := filepath.Split(fileGroup.ManifestFile)
+	if groupDir != dir {
+
+		return false
+	}
+
+	return matchFile(manifestFile, lockFile)
+}
+
+func (fileGroup *Group) matchManifestFile(manifestFile, dir string) bool {
+	if fileGroup.HasFile() {
+
+		return false
+	}
+	groupDir, lockFile := filepath.Split(fileGroup.LockFiles[0])
+	if groupDir != dir {
+
+		return false
+	}
+
+	return matchFile(manifestFile, lockFile)
+}
+
+func matchFile(manifestFile, lockFile string) bool {
+	var isPIP, isNPM bool
+	lockFile, isPIP = strings.CutSuffix(lockFile, ".pip.debricked.lock")
+	if isPIP {
+
+		return lockFile == manifestFile
+	}
+
+	lockFile, isNPM = strings.CutSuffix(lockFile, "-lock.json")
+	if isNPM {
+		manifestFile, _ = strings.CutSuffix(manifestFile, ".json")
+
+		return lockFile == manifestFile
+	}
+
+	return true
 }
