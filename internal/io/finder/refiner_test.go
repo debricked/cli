@@ -18,43 +18,73 @@ func TestConvertPathsToAbsPaths(t *testing.T) {
 }
 
 func TestMapFilesToDir(t *testing.T) {
-
 	dirs := []string{
-		"test" + string(os.PathSeparator),
-		"test2" + string(os.PathSeparator),
+		filepath.Join("foo/bar/tree/target/classfiles") + string(os.PathSeparator),
+		filepath.Join("foo/bar/tree/asd/hej/target/classfiles") + string(os.PathSeparator),
+		filepath.Join("foo/bar/tree/asd/fast/target/classfiles") + string(os.PathSeparator),
 	}
 	files := []string{
+		filepath.Join("foo/bar/tree/pom.xml"),
+		filepath.Join("foo/bar/tree/asd/fast/pom.xml"),
+	}
+	mapFiles := MapFilesToDir(files, dirs)
+	fmt.Println(dirs)
+	fmt.Println(files)
+	fmt.Println(mapFiles)
+
+	assert.Len(t, mapFiles[filepath.Join("foo/bar/tree/pom.xml")], 2)
+	assert.Len(t, mapFiles[filepath.Join("foo/bar/tree/asd/fast/pom.xml")], 1)
+}
+
+func TestFindPomFileMatch(t *testing.T) {
+
+	classDir := filepath.Join("foo/bar/tree/asd/hej/target/classfiles") + string(os.PathSeparator)
+	pomFiles := []string{
+		filepath.Join("foo/bar/tree/pom.xml"),
+		filepath.Join("foo/bar/tree/asd/fast/pom.xml"),
+	}
+	pomFileMatch, err := findPomFileMatch(classDir, pomFiles)
+
+	assert.Equal(t, filepath.Join("foo/bar/tree/pom.xml"), pomFileMatch)
+	assert.Nil(t, err)
+}
+
+func TestFindPomFileMatchDifficult(t *testing.T) {
+
+	classDir := filepath.Join("foo/bar/tree/asd/hej/target/classfiles") + string(os.PathSeparator)
+	pomFiles := []string{
+		filepath.Join("foo/bar/tree/pom.xml"),
+		filepath.Join("foo/bar/tree/asd/fast/pom.xml"),
+		filepath.Join("foo/bar/tree/asd/hej/pom.xml"),
+	}
+	pomFileMatch, err := findPomFileMatch(classDir, pomFiles)
+
+	assert.Equal(t, filepath.Join("foo/bar/tree/asd/hej/pom.xml"), pomFileMatch)
+	assert.Nil(t, err)
+}
+
+func TestFindPomFileMatchErr(t *testing.T) {
+
+	dirs := []string{"test" + string(os.PathSeparator), "test2" + string(os.PathSeparator)}
+	file := filepath.Join("gest", "asd")
+	dirMatch, err := findPomFileMatch(file, dirs)
+
+	assert.Equal(t, "", dirMatch)
+	assert.NotNil(t, err)
+}
+
+func TestMapFilesToDirNoFiles(t *testing.T) {
+
+	dirs := []string{
 		filepath.Join("test/asd"),
 		filepath.Join("test2/basd/qwe"),
 		filepath.Join("test2/test/asd"),
 		filepath.Join("test3/tes"),
 	}
-	mapFiles := MapFilesToDir(dirs, files)
-	fmt.Println(dirs)
-	fmt.Println(files)
+	files := []string{}
+	mapFiles := MapFilesToDir(files, dirs)
 
-	assert.Len(t, mapFiles["test"+string(os.PathSeparator)], 1)
-	assert.Len(t, mapFiles["test2"+string(os.PathSeparator)], 2)
-}
-
-func TestFindLongestDirMatch(t *testing.T) {
-
-	dirs := []string{"test" + string(os.PathSeparator), "test2" + string(os.PathSeparator)}
-	file := filepath.Join("test", "asd")
-	dirMatch, err := findLongestDirMatch(file, dirs)
-
-	assert.Equal(t, "test"+string(os.PathSeparator), dirMatch)
-	assert.Nil(t, err)
-}
-
-func TestFindLongestDirMatchErr(t *testing.T) {
-
-	dirs := []string{"test" + string(os.PathSeparator), "test2" + string(os.PathSeparator)}
-	file := filepath.Join("gest", "asd")
-	dirMatch, err := findLongestDirMatch(file, dirs)
-
-	assert.Equal(t, "", dirMatch)
-	assert.NotNil(t, err)
+	assert.Empty(t, mapFiles)
 }
 
 func TestMapFilesToEmptyDir(t *testing.T) {
@@ -66,7 +96,18 @@ func TestMapFilesToEmptyDir(t *testing.T) {
 		filepath.Join("test2/test/asd"),
 		filepath.Join("test3/tes"),
 	}
-	mapFiles := MapFilesToDir(dirs, files)
+	mapFiles := MapFilesToDir(files, dirs)
+
+	assert.Empty(t, mapFiles)
+}
+
+func TestMapFilesToDirNoMatches(t *testing.T) {
+
+	dirs := []string{"tset/pom.xml"}
+	files := []string{
+		filepath.Join("test/target/classes"),
+	}
+	mapFiles := MapFilesToDir(files, dirs)
 
 	assert.Empty(t, mapFiles)
 }
