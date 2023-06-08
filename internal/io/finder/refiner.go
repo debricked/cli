@@ -2,6 +2,7 @@ package finder
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -34,49 +35,44 @@ func ConvertPathsToAbsPaths(paths []string) ([]string, error) {
 	return absPaths, nil
 }
 
-func MapFilesToDir(dirs []string, files []string) map[string][]string {
-	dirToFilesMap := make(map[string][]string)
+// Matches class directories to closest root pom file and creates a map
+// with each root pom file pointing at a list of its related class directories
+func MapFilesToDir(rootPomFiles []string, classDirs []string) map[string][]string {
+	pomFileToClassDirsMap := make(map[string][]string)
 
-	if len(dirs) == 0 {
-		return dirToFilesMap
+	if len(rootPomFiles) == 0 {
+		return pomFileToClassDirsMap
 	}
 
-	for _, file := range files {
-		matchingDir, err := findLongestDirMatch(file, dirs)
+	for _, classDir := range classDirs {
+		matchingPomFile, err := findPomFileMatch(classDir, rootPomFiles)
 		if err != nil {
 			continue
 		}
 
-		if _, ok := dirToFilesMap[matchingDir]; !ok {
-			dirToFilesMap[matchingDir] = []string{}
+		if _, ok := pomFileToClassDirsMap[matchingPomFile]; !ok {
+			pomFileToClassDirsMap[matchingPomFile] = []string{}
 		}
-		dirToFilesMap[matchingDir] = append(dirToFilesMap[matchingDir], file)
+		pomFileToClassDirsMap[matchingPomFile] = append(pomFileToClassDirsMap[matchingPomFile], classDir)
 	}
 
-	return dirToFilesMap
+	return pomFileToClassDirsMap
 }
 
-func findLongestDirMatch(file string, dirs []string) (string, error) {
-	var matchingDir string
-	longestMatchLength := 0
+func findPomFileMatch(classDir string, pomFiles []string) (string, error) {
+	var matchingPomFile string
+	longestSeperatorMatch := 0
 	matched := false
 
-	for _, dir := range dirs {
-		matchLength := 0
-		longestSeperatorMatch := 0
-		for i := 0; i < len(file) && i < len(dir); i++ {
-			if file[i] != dir[i] {
-				break
+	for _, pomFile := range pomFiles {
+		pomFilePath := strings.TrimSuffix(pomFile, "pom.xml")
+		if strings.Contains(classDir, pomFilePath) {
+			numberSeparators := strings.Count(pomFilePath, string(os.PathSeparator))
+			if numberSeparators > longestSeperatorMatch {
+				matched = true
+				longestSeperatorMatch = numberSeparators
+				matchingPomFile = pomFile
 			}
-			matchLength++
-			if filepath.Separator == file[i] {
-				longestSeperatorMatch = matchLength
-			}
-		}
-		if longestSeperatorMatch > longestMatchLength {
-			longestMatchLength = longestSeperatorMatch
-			matchingDir = dir
-			matched = true
 		}
 	}
 
@@ -84,7 +80,7 @@ func findLongestDirMatch(file string, dirs []string) (string, error) {
 		return "", fmt.Errorf("No part of the path matches")
 	}
 
-	return matchingDir, nil
+	return matchingPomFile, nil
 }
 
 func GCDPath(paths []string) string {
