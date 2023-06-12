@@ -110,6 +110,7 @@ func matchFile(manifestFile, lockFile string) bool {
 	var isPIP, isNPM bool
 	lockFile, isPIP = strings.CutSuffix(lockFile, ".pip.debricked.lock")
 	if isPIP {
+		lockFile, _ = strings.CutPrefix(lockFile, ".")
 
 		return lockFile == manifestFile
 	}
