@@ -47,37 +47,6 @@ func (fileGroup *Group) GetAllFiles() []string {
 	return append(files, fileGroup.LockFiles...)
 }
 
-func (fileGroup *Group) checkFilePathDependantCases(manifestFileMatch bool, lockFileMatch bool, fileName string) bool {
-	filePathDependantCases := fileGroup.getFilePathDependantCases()
-	if lockFileMatch {
-		for _, suffix := range filePathDependantCases {
-			if strings.HasSuffix(fileName, suffix) {
-				fileBase, _ := strings.CutSuffix(fileName, suffix)
-
-				return fileBase == filepath.Base(fileGroup.ManifestFile) && len(fileGroup.ManifestFile) > 0
-			}
-		}
-	} else if manifestFileMatch {
-		for _, c := range filePathDependantCases {
-			for _, lockFile := range fileGroup.LockFiles {
-				if strings.HasSuffix(lockFile, c) {
-					lockFileBase, _ := strings.CutSuffix(lockFile, c)
-
-					return lockFileBase == fileName
-				}
-			}
-		}
-	}
-
-	return true
-}
-
-func (fileGroup *Group) getFilePathDependantCases() []string {
-	return []string{
-		".pip.debricked.lock",
-	}
-}
-
 func (fileGroup *Group) matchLockFile(lockFile, dir string) bool {
 	if !fileGroup.HasFile() {
 
