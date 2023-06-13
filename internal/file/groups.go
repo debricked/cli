@@ -19,21 +19,20 @@ func (gs *Groups) Match(format *CompiledFormat, path string, lockfileOnly bool) 
 	dir, file := filepath.Split(path)
 
 	// If it is not a match, return
-	fileMatch := !lockfileOnly && format.MatchFile(file)
+	manifestFileMatch := !lockfileOnly && format.MatchFile(file)
 	lockFileMatch := format.MatchLockFile(file)
 
-	if !fileMatch && !lockFileMatch {
+	if !manifestFileMatch && !lockFileMatch {
 		return false
 	}
 
-	matched := gs.matchExistingGroup(format, fileMatch, lockFileMatch, dir, file)
-	if matched {
+	if gs.groupExists(format, manifestFileMatch, lockFileMatch, dir, file) {
 		return true
 	}
 
 	// Create new Group
 	var newG *Group
-	if fileMatch {
+	if manifestFileMatch {
 		newG = NewGroup(path, format, []string{})
 	} else {
 		newG = NewGroup("", format, []string{path})
@@ -43,26 +42,20 @@ func (gs *Groups) Match(format *CompiledFormat, path string, lockfileOnly bool) 
 	return true
 }
 
-func (gs *Groups) matchExistingGroup(format *CompiledFormat, fileMatch bool, lockFileMatch bool, dir string, file string) bool {
+func (gs *Groups) groupExists(format *CompiledFormat, matchOnManifestFile bool, matchOnLockFile bool, dir string, file string) bool {
 	for _, g := range gs.groups {
-		var groupDir string
-		if g.HasFile() {
-			groupDir, _ = filepath.Split(g.ManifestFile)
-		} else {
-			groupDir, _ = filepath.Split(g.LockFiles[0])
+		if format != g.CompiledFormat {
+			continue
 		}
+		if matchOnLockFile && g.matchLockFile(file, dir) {
+			g.LockFiles = append(g.LockFiles, dir+file)
 
-		matchesGroup := groupDir == dir && format == g.CompiledFormat && g.checkFilePathDependantCases(fileMatch, lockFileMatch, file)
-		if matchesGroup {
-			if fileMatch {
-				g.ManifestFile = dir + file
+			return true
 
-				return true
-			} else if lockFileMatch {
-				g.LockFiles = append(g.LockFiles, dir+file)
+		} else if matchOnManifestFile && g.matchManifestFile(file, dir) {
+			g.ManifestFile = dir + file
 
-				return true
-			}
+			return true
 		}
 	}
 

@@ -148,3 +148,39 @@ func TestFilterGroupsByStrictness(t *testing.T) {
 		})
 	}
 }
+
+func TestMatchGroupsExpected(t *testing.T) {
+	setUp(true)
+
+	testData := map[string][]string{
+		"foo/bar/cloud/package.json":                        {"foo/bar/cloud/yarn.lock"},
+		"foo/bar/examples/test/requirements.txt":            {},
+		"foo/asd/requirements-test-dev.txt":                 {"foo/asd/.requirements-test-dev.txt.pip.debricked.lock"},
+		"foo/asd/requirements-test.txt":                     {"foo/asd/.requirements-test.txt.pip.debricked.lock"},
+		"foo/asd/requirements.txt":                          {"foo/asd/.requirements.txt.pip.debricked.lock"},
+		"foo/asd/requirements-api.txt":                      {},
+		"foo/asd/src/main/event_listeners/requirements.txt": {"foo/asd/src/main/event_listeners/.requirements.txt.pip.debricked.lock"},
+		"foo/asd/src/main/util/test/composer.json":          {},
+	}
+
+	var groups Groups
+	lockfileOnly := false
+	formats, _ := finder.GetSupportedFormats()
+	for key, values := range testData {
+		paths := append(values, key)
+		for _, path := range paths {
+			for _, format := range formats {
+				if groups.Match(format, path, lockfileOnly) {
+
+					break
+				}
+			}
+		}
+	}
+
+	for _, group := range groups.groups {
+		assert.Equal(t, testData[group.ManifestFile], group.LockFiles)
+	}
+
+	assert.Equal(t, len(testData), len(groups.groups))
+}
