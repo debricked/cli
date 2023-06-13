@@ -107,17 +107,10 @@ func (fileGroup *Group) matchManifestFile(manifestFile, dir string) bool {
 }
 
 func matchFile(manifestFile, lockFile string) bool {
-	var isPIP, isNPM bool
+	var isPIP bool
 	lockFile, isPIP = strings.CutSuffix(lockFile, ".pip.debricked.lock")
 	if isPIP {
 		lockFile, _ = strings.CutPrefix(lockFile, ".")
-
-		return lockFile == manifestFile
-	}
-
-	lockFile, isNPM = strings.CutSuffix(lockFile, "-lock.json")
-	if isNPM {
-		manifestFile, _ = strings.CutSuffix(manifestFile, ".json")
 
 		return lockFile == manifestFile
 	}
