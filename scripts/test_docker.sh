@@ -2,18 +2,24 @@
 
 type="$1"
 
+build_command()
+{
+    docker build -f build/docker/Dockerfile -t debricked/cli:$1 --target $1 .
+    docker build -f build/docker/debian.Dockerfile -t debricked/cli:$1-debian --target $1 .
+}
+
 case $type in
   "dev")
-    docker build -f build/docker/Dockerfile -t debricked/cli:dev --target dev .
+    build_command $type
     ;;
   "cli")
-    docker build -f build/docker/Dockerfile -t debricked/cli:latest --target cli .
+    build_command $type
     ;;
   "scan")
-    docker build -f build/docker/Dockerfile -t debricked/cli:scan --target scan .
+    build_command $type
     ;;
   "resolution")
-    docker build -f build/docker/Dockerfile -t debricked/cli:resolution --target resolution .
+    build_command $type
     ;;
   *)
     echo -e "Please use the following type dev, cli, scan. For example ./test_docker.sh dev"

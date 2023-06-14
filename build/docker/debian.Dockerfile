@@ -1,16 +1,17 @@
-FROM golang:1.20-alpine AS dev
+FROM golang:1.20-bullseye AS dev
 WORKDIR /cli
-RUN apk update \
-    && apk --no-cache --update add git build-base
+RUN apt -y update && apt -y upgrade && apt -y install git && \
+    apt -y clean && rm -rf /var/lib/apt/lists/*
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 COPY . .
 RUN go build -o debricked ./cmd/debricked
 ENTRYPOINT ["debricked"]
 
-FROM alpine:latest AS cli
+FROM debian:bullseye-slim AS cli
 ENV DEBRICKED_TOKEN=""
-RUN apk add --no-cache git
+RUN apt -y update && apt -y upgrade && apt -y install git && \
+    apt -y clean && rm -rf /var/lib/apt/lists/*
 WORKDIR /root/
 COPY --from=dev /cli/debricked /usr/bin/debricked
 
@@ -18,12 +19,20 @@ FROM cli AS scan
 ENTRYPOINT [ "debricked",  "scan" ]
 
 FROM cli AS resolution
-RUN apk --no-cache --update add \
-    openjdk8-jre \
+RUN echo "deb http://ftp.us.debian.org/debian testing-updates main" >> /etc/apt/sources.list && \
+    echo "deb http://ftp.us.debian.org/debian testing main" >> /etc/apt/sources.list && \
+    echo "Package: *" >> /etc/apt/preferences && \
+    echo "Pin: release a=testing" >> /etc/apt/preferences && \
+    echo "Pin-Priority: -2" >> /etc/apt/preferences
+
+RUN apt -y update && apt -y upgrade && apt -y install openjdk-11-jre \
+    wget \
+    unzip \
     python3 \
-    py3-scipy \
-    py3-pip \
-    go~=1.20
+    python3-scipy \
+    python3-pip && \
+    apt -y install -t testing golang-1.20 && \
+    apt -y clean && rm -rf /var/lib/apt/lists/*
 
 ENV MAVEN_VERSION 3.9.0
 ENV MAVEN_HOME /usr/lib/mvn

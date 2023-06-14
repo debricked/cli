@@ -18,26 +18,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          flavor: |
-            latest=${{ matrix.stage == 'cli' }}
-          images: |
-            debricked/cli
-            ghcr.io/debricked/cli
-          tags: |
-            type=semver,pattern={{version}},enable=${{ matrix.stage == 'cli' }}
-            type=semver,pattern={{major}}.{{minor}},enable=${{ matrix.stage == 'cli' }}
-            type=semver,pattern={{major}},enable=${{ matrix.stage == 'cli' }}
-            type=edge,enable=${{ matrix.stage == 'cli' }}
-            type=semver,pattern={{version}}-${{ matrix.stage }}
-            type=semver,pattern={{major}}.{{minor}}-${{ matrix.stage }}
-            type=semver,pattern={{major}}-${{ matrix.stage }}
-            type=raw,value=edge-${{ matrix.stage }}
-            type=raw,value=latest-${{ matrix.stage }}
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 
@@ -58,7 +38,27 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Docker meta
+        id: meta-alpine
+        uses: docker/metadata-action@v4
+        with:
+          flavor: |
+            latest=${{ matrix.stage == 'cli' }}
+          images: |
+            debricked/cli
+            ghcr.io/debricked/cli
+          tags: |
+            type=semver,pattern={{version}},enable=${{ matrix.stage == 'cli' }}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ matrix.stage == 'cli' }}
+            type=semver,pattern={{major}},enable=${{ matrix.stage == 'cli' }}
+            type=edge,enable=${{ matrix.stage == 'cli' }}
+            type=semver,pattern={{version}}-${{ matrix.stage }}
+            type=semver,pattern={{major}}.{{minor}}-${{ matrix.stage }}
+            type=semver,pattern={{major}}-${{ matrix.stage }}
+            type=raw,value=edge-${{ matrix.stage }}
+            type=raw,value=latest-${{ matrix.stage }}
+
+      - name: Build and push Alpine images
         uses: docker/build-push-action@v3
         with:
           context: .
@@ -66,5 +66,37 @@ jobs:
           target: ${{ matrix.stage }}
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta-alpine.outputs.tags }}
+          labels: ${{ steps.meta-alpine.outputs.labels }}
+
+      - name: Docker meta
+        id: meta-debian
+        uses: docker/metadata-action@v4
+        with:
+          flavor: |
+            latest=${{ matrix.stage == 'cli' }}
+            suffix="-debian",onlatest=true
+          images: |
+            debricked/cli
+            ghcr.io/debricked/cli
+          tags: |
+            type=semver,pattern={{version}},enable=${{ matrix.stage == 'cli' }}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ matrix.stage == 'cli' }}
+            type=semver,pattern={{major}},enable=${{ matrix.stage == 'cli' }}
+            type=edge,enable=${{ matrix.stage == 'cli' }}
+            type=semver,pattern={{version}}-${{ matrix.stage }}
+            type=semver,pattern={{major}}.{{minor}}-${{ matrix.stage }}
+            type=semver,pattern={{major}}-${{ matrix.stage }}
+            type=raw,value=edge-${{ matrix.stage }}
+            type=raw,value=latest-${{ matrix.stage }}
+
+      - name: Build and push Debian images
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: build/docker/debian.Dockerfile
+          target: ${{ matrix.stage }}
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-debian.outputs.tags }}
+          labels: ${{ steps.meta-debian.outputs.labels }}
