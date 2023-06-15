@@ -4,7 +4,7 @@ type="$1"
 
 build_command()
 {
-    docker build -f build/docker/Dockerfile -t debricked/cli:$1 --target $1 .
+    docker build -f build/docker/alpine.Dockerfile -t debricked/cli:$1 --target $1 .
     docker build -f build/docker/debian.Dockerfile -t debricked/cli:$1-debian --target $1 .
 }
 

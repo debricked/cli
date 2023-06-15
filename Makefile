@@ -20,16 +20,16 @@ test-e2e:
 
 .PHONY: test-e2e-docker
 docker-build-dev:
-	docker build -f build/docker/Dockerfile -t debricked/cli:dev --target dev .
+	docker build -f build/docker/alpine.Dockerfile -t debricked/cli:dev --target dev .
 
 .PHONY: docker-build-cli
 docker-build-cli:
-	docker build -f build/docker/Dockerfile -t debricked/cli:latest --target cli .
+	docker build -f build/docker/alpine.Dockerfile -t debricked/cli:latest --target cli .
 
 .PHONY: docker-build-scan
 docker-build-scan:
-	docker build -f build/docker/Dockerfile -t debricked/cli:scan --target scan .
+	docker build -f build/docker/alpine.Dockerfile -t debricked/cli:scan --target scan .
 
 .PHONY: docker-build-cli-resolution
 docker-build-cli-resolution:
-	docker build -f build/docker/Dockerfile -t debricked/cli:resolution --target resolution .
+	docker build -f build/docker/alpine.Dockerfile -t debricked/cli:resolution --target resolution .
