@@ -12,31 +12,12 @@ jobs:
     name: 'Push Docker images'
     strategy:
       matrix:
-        stage: [ 'cli', 'scan', 'resolution']
+        stage: ['cli', 'scan', 'resolution']
+        docker-os: ['alpine', 'debian']
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          flavor: |
-            latest=${{ matrix.stage == 'cli' }}
-          images: |
-            debricked/cli
-            ghcr.io/debricked/cli
-          tags: |
-            type=semver,pattern={{version}},enable=${{ matrix.stage == 'cli' }}
-            type=semver,pattern={{major}}.{{minor}},enable=${{ matrix.stage == 'cli' }}
-            type=semver,pattern={{major}},enable=${{ matrix.stage == 'cli' }}
-            type=edge,enable=${{ matrix.stage == 'cli' }}
-            type=semver,pattern={{version}}-${{ matrix.stage }}
-            type=semver,pattern={{major}}.{{minor}}-${{ matrix.stage }}
-            type=semver,pattern={{major}}-${{ matrix.stage }}
-            type=raw,value=edge-${{ matrix.stage }}
-            type=raw,value=latest-${{ matrix.stage }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -58,11 +39,32 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          flavor: |
+            latest=${{ matrix.stage == 'cli' }}
+            suffix=${{ matrix.docker-os == 'alpine' && '' || format('-{0}', matrix.docker-os) }},onlatest=${{ matrix.docker-os != 'alpine' }}
+          images: |
+            debricked/cli
+            ghcr.io/debricked/cli
+          tags: |
+            type=semver,pattern={{version}},enable=${{ matrix.stage == 'cli' }}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ matrix.stage == 'cli' }}
+            type=semver,pattern={{major}},enable=${{ matrix.stage == 'cli' }}
+            type=edge,enable=${{ matrix.stage == 'cli' }}
+            type=semver,pattern={{version}}-${{ matrix.stage }}
+            type=semver,pattern={{major}}.{{minor}}-${{ matrix.stage }}
+            type=semver,pattern={{major}}-${{ matrix.stage }}
+            type=raw,value=edge-${{ matrix.stage }}
+            type=raw,value=latest-${{ matrix.stage }}
+
+      - name: Build and push ${{ matrix.docker-os }} images
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: build/docker/Dockerfile
+          file: build/docker/${{ matrix.docker-os }}.Dockerfile
           target: ${{ matrix.stage }}
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: ${{ github.event_name != 'pull_request' }}
