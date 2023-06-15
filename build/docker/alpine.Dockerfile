@@ -38,4 +38,4 @@ ENV GRADLE_HOME /usr/lib/gradle
 ENV PATH $GRADLE_HOME/gradle-$GRADLE_VERSION/bin:$PATH
 RUN wget https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip && \
   unzip gradle-$GRADLE_VERSION-bin.zip -d $GRADLE_HOME && \
-  rm gradle-$GRADLE_VERSION-bin.zip \
+  rm gradle-$GRADLE_VERSION-bin.zip
