@@ -45,7 +45,7 @@ jobs:
         with:
           flavor: |
             latest=${{ matrix.stage == 'cli' }}
-            suffix=${{ matrix.docker-os == 'alpine' && '' || format('-{0}', matrix.docker-os) }},onlatest=${{ matrix.docker-os != 'alpine' }}
+            suffix=${{ matrix.docker-os != 'alpine' && format('-{0}', matrix.docker-os) || '' }},onlatest=${{ matrix.docker-os != 'alpine' }}
           images: |
             debricked/cli
             ghcr.io/debricked/cli
