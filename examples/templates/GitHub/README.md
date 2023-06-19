@@ -1,2 +1,3 @@
 # GitHub Actions
-- [Default template](debricked.yml)
+- [Default template using Docker image](debricked.yml)
+- [Default template without Docker](debricked-non-docker.yml)
