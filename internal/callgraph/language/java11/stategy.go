@@ -113,34 +113,46 @@ func buildProjects(s Strategy, roots []string) ([]string, error) {
 	spinnerManager.Start()
 	classDirs := []string{}
 	spinnerType := "Build Maven Project"
+	success := false || len(roots) == 0
+	errors := []string{}
 	for _, rootFile := range roots {
 		rootDir := filepath.Dir(rootFile)
 		spinner := spinnerManager.AddSpinner(spinnerType, rootDir)
 		osCmd, err := s.cmdFactory.MakeBuildMavenCmd(rootDir, s.ctx)
 		if err != nil {
-			strategyWarning("Error while building roots (Make command): " + err.Error() + "\nRoot: " + rootDir)
+			err := "Error while building roots (Make command): " + err.Error() + "\nRoot: " + rootDir
+			errors = append(errors, err)
 			spinner.Error()
 			tui.SetSpinnerMessage(spinner, spinnerType, rootDir, "fail")
-			spinnerManager.Stop()
 
-			return nil, err
+			continue
 		}
 		cmd := cgexec.NewCommand(osCmd)
 		err = cgexec.RunCommand(*cmd, s.ctx)
 
 		if err != nil {
-			strategyWarning("Error while building roots (Run command): " + err.Error() + "\nRoot: " + rootDir)
+			err := "Error while building roots (Make command): " + err.Error() + "\nRoot: " + rootDir
+			errors = append(errors, err)
 			spinner.Error()
 			tui.SetSpinnerMessage(spinner, spinnerType, rootDir, "fail")
-			spinnerManager.Stop()
 
-			return nil, err
+			continue
 		}
 		classDirs = append(classDirs, path.Join(rootDir, "target/classes"))
 		tui.SetSpinnerMessage(spinner, spinnerType, rootDir, "success")
 		spinner.Complete()
+		success = true
 	}
 	spinnerManager.Stop()
 
-	return classDirs, nil
+	if success {
+		return classDirs, nil
+	} else {
+		for _, err := range errors {
+			strategyWarning(err)
+		}
+
+		return classDirs, fmt.Errorf("Build failed for all projects, if already built disable the build flag")
+	}
+
 }
