@@ -8,6 +8,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: debricked/actions/scan@v3.0.1
+      - uses: debricked/actions@v3.0.2
         env:
           DEBRICKED_TOKEN: ${{ secrets.DEBRICKED_TOKEN }}
