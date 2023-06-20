@@ -38,8 +38,7 @@ jobs:
             echo "No value specified for CODESCENE_PASSWORD!"
             exit 1
           fi
-          # Perform analysis (temporarily disabled, remove this msg and uncomment after 15/6-23)
-          : '
+          # Perform analysis
           codescene-ci-cd.sh \
             --codescene-delta-analysis-url ${CODESCENE_DELTA_ANALYSIS_URL} \
             --codescene-user ${CODESCENE_USER} \
@@ -60,4 +59,3 @@ jobs:
             --github-repo ${GITHUB_REPOSITORY#*/} \
             --github-pull-request-id ${PR_NUMBER} \
             --log-result
-          '
