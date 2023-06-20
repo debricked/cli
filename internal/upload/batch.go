@@ -53,7 +53,7 @@ func (uploadBatch *uploadBatch) upload() error {
 			var err error
 			timeout := 0
 			if strings.HasSuffix(fileName, callgraphName) {
-				timeout = 30
+				timeout = 10 * 60
 			}
 			err = uploadBatch.uploadFile(f, timeout)
 
