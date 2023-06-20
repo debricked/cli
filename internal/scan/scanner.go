@@ -135,7 +135,7 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		configs := []config.IConfig{
 			config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven"),
 		}
-		timeout := 60
+		timeout := 60 * 60
 		path := options.Path
 		if path == "" {
 			path = "."
