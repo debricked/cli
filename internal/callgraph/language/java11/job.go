@@ -103,7 +103,7 @@ func (j *Job) runPostProcess() {
 	outputFullPath := path.Join(workingDirectory, outputName)
 	outputFullPathZip := outputFullPath + ".zip"
 	j.SendStatus("zipping callgraph")
-	err := j.archive.ZipFile(outputFullPath, outputFullPathZip)
+	err := j.archive.ZipFile(outputFullPath, outputFullPathZip, outputName)
 	if err != nil {
 		j.Errors().Critical(err)
 

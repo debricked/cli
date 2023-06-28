@@ -10,7 +10,7 @@ type ArchiveMock struct {
 	Dir          string
 }
 
-func (am ArchiveMock) ZipFile(sourceName string, targetName string) error {
+func (am ArchiveMock) ZipFile(sourceName string, targetName string, zipName string) error {
 	if !strings.HasPrefix(sourceName, am.Dir) || !strings.HasPrefix(targetName, am.Dir) {
 		return am.PathError
 	}
