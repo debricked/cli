@@ -6,7 +6,7 @@ import (
 )
 
 type IArchive interface {
-	ZipFile(sourceName string, targetName string) error
+	ZipFile(sourcePath string, targetPath string, zippedName string) error
 	B64(sourceName string, targetName string) error
 	Cleanup(targetName string) error
 }
@@ -31,17 +31,17 @@ func NewArchiveWithStructs(workingDirectory string, fs IFileSystem, zip IZip) *A
 	}
 }
 
-func (arc *Archive) ZipFile(sourceName string, targetName string) error {
+func (arc *Archive) ZipFile(sourcePath string, targetPath string, zippedName string) error {
 	fs := arc.fs
 	zip := arc.zip
 
-	sourceContent, err := fs.ReadFile(path.Join(arc.workingDirectory, sourceName))
+	sourceContent, err := fs.ReadFile(sourcePath)
 	if err != nil {
 
 		return err
 	}
 
-	zipFile, err := fs.Create(path.Join(arc.workingDirectory, targetName))
+	zipFile, err := fs.Create(targetPath)
 	if err != nil {
 
 		return err
@@ -63,7 +63,7 @@ func (arc *Archive) ZipFile(sourceName string, targetName string) error {
 		return err
 	}
 
-	header.Name = sourceName
+	header.Name = zippedName
 	header.Method = zip.GetDeflate()
 
 	fileWriter, err := zip.CreateHeader(zipWriter, header)

@@ -31,7 +31,7 @@ func TestZipWMock(t *testing.T) {
 		zip:              zipMock,
 	}
 
-	err := a.ZipFile("testdir", "targettest")
+	err := a.ZipFile("testdir", "targettest", "zippedName")
 	assert.Nil(t, err)
 }
 
@@ -44,7 +44,7 @@ func TestZipReadFileError(t *testing.T) {
 		zip:              zipMock,
 	}
 
-	err := a.ZipFile("testdir", "targettest")
+	err := a.ZipFile("testdir", "targettest", "zippedName")
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), "error")
 }
@@ -58,7 +58,7 @@ func TestZipCreateError(t *testing.T) {
 		zip:              zipMock,
 	}
 
-	err := a.ZipFile("testdir", "targettest")
+	err := a.ZipFile("testdir", "targettest", "zippedName")
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), "error")
 }
@@ -72,7 +72,7 @@ func TestStatFileError(t *testing.T) {
 		zip:              zipMock,
 	}
 
-	err := a.ZipFile("testdir", "targettest")
+	err := a.ZipFile("testdir", "targettest", "zippedName")
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), "error")
 }
@@ -86,7 +86,7 @@ func TestFileInfoError(t *testing.T) {
 		zip:              zipMock,
 	}
 
-	err := a.ZipFile("testdir", "targettest")
+	err := a.ZipFile("testdir", "targettest", "zippedName")
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), "error")
 }
@@ -100,7 +100,7 @@ func TestCreateHeaderError(t *testing.T) {
 		zip:              zipMock,
 	}
 
-	err := a.ZipFile("testdir", "targettest")
+	err := a.ZipFile("testdir", "targettest", "zippedName")
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), "error")
 }
@@ -114,7 +114,7 @@ func TestWriteToWriterError(t *testing.T) {
 		zip:              zipMock,
 	}
 
-	err := a.ZipFile("testdir", "targettest")
+	err := a.ZipFile("testdir", "targettest", "zippedName")
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), "error")
 }
