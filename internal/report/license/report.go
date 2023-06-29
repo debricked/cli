@@ -61,7 +61,7 @@ type commit struct {
 }
 
 func (r Reporter) getCommitId(hash string) (int, error) {
-	uri := fmt.Sprintf("/api/1.0/releases/by/name?name=%s", hash)
+	uri := fmt.Sprintf("/api/1.0/open/releases/by/name?name=%s", hash)
 	res, err := r.DebClient.Get(uri, "application/json")
 	if err != nil {
 		return 0, err
