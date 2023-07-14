@@ -10,7 +10,7 @@ import (
 )
 
 type IFactory interface {
-	Make(config conf.IConfig, paths []string, finder finder.IFinder, ctx cgexec.IContext) (IStrategy, error)
+	Make(config conf.IConfig, files []string, paths []string, exclusions []string, finder finder.IFinder, ctx cgexec.IContext) (IStrategy, error)
 }
 
 type Factory struct{}
@@ -19,11 +19,11 @@ func NewStrategyFactory() Factory {
 	return Factory{}
 }
 
-func (sf Factory) Make(config conf.IConfig, paths []string, finder finder.IFinder, ctx cgexec.IContext) (IStrategy, error) {
+func (sf Factory) Make(config conf.IConfig, files []string, paths []string, exclusions []string, finder finder.IFinder, ctx cgexec.IContext) (IStrategy, error) {
 	name := config.Language()
 	switch name {
 	case java.Name:
-		return java.NewStrategy(config, paths, finder, ctx), nil
+		return java.NewStrategy(config, files, paths, exclusions, finder, ctx), nil
 	default:
 		return nil, fmt.Errorf("failed to make strategy from %s", name)
 	}
