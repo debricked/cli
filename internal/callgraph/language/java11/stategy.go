@@ -18,6 +18,8 @@ type Strategy struct {
 	config     conf.IConfig
 	cmdFactory ICmdFactory
 	files      []string
+	paths      []string
+	exclusions []string
 	finder     finder.IFinder
 	ctx        cgexec.IContext
 }
@@ -50,15 +52,20 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 		return jobs, err
 	}
 
+	files := s.files
+
 	if s.config.Build() {
 		err = buildProjects(s, roots)
 		if err != nil {
 
 			return jobs, err
 		}
+
+		// If build, then we need to find the newly built files
+		files, _ = s.finder.FindFiles(s.paths, s.exclusions)
 	}
 
-	javaClassDirs, _ := s.finder.FindJavaClassDirs(s.files, true)
+	javaClassDirs, _ := s.finder.FindJavaClassDirs(files, false)
 	absRoots, _ := finder.ConvertPathsToAbsPaths(roots)
 	absClassDirs, _ := finder.ConvertPathsToAbsPaths(javaClassDirs)
 	rootClassMapping := finder.MapFilesToDir(absRoots, absClassDirs)
@@ -91,8 +98,8 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	return jobs, nil
 }
 
-func NewStrategy(config conf.IConfig, files []string, finder finder.IFinder, ctx cgexec.IContext) Strategy {
-	return Strategy{config, CmdFactory{}, files, finder, ctx}
+func NewStrategy(config conf.IConfig, files []string, paths []string, exclusions []string, finder finder.IFinder, ctx cgexec.IContext) Strategy {
+	return Strategy{config, CmdFactory{}, files, paths, exclusions, finder, ctx}
 }
 
 func strategyWarning(errMsg string) {
