@@ -1,7 +1,6 @@
 package java
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -78,9 +77,9 @@ func TestInvokeManyFilesWCorrectFilters(t *testing.T) {
 	jobs, _ := s.Invoke()
 	assert.Len(t, jobs, 1)
 	for _, job := range jobs {
-		file, _ := filepath.Abs("file-3/")
+		file, _ := filepath.Abs("file-3/test.class")
 		dir, _ := filepath.Abs("file-3/")
-		assert.Equal(t, job.GetFiles(), []string{file + string(os.PathSeparator)}) // Get files return gcd path
+		assert.Equal(t, job.GetFiles(), []string{file})
 		assert.Equal(t, job.GetDir(), dir)
 
 	}

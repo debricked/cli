@@ -8,7 +8,7 @@ import (
 
 type ICmdFactory interface {
 	MakeMvnCopyDependenciesCmd(workingDirectory string, targetDir string, ctx cgexec.IContext) (*exec.Cmd, error)
-	MakeCallGraphGenerationCmd(callgraphJarPath string, workingDirectory string, targetClasses string, dependencyClasses string, outputName string, ctx cgexec.IContext) (*exec.Cmd, error)
+	MakeCallGraphGenerationCmd(callgraphJarPath string, workingDirectory string, targetClasses []string, dependencyClasses string, outputName string, ctx cgexec.IContext) (*exec.Cmd, error)
 	MakeBuildMavenCmd(workingDirectory string, ctx cgexec.IContext) (*exec.Cmd, error)
 }
 
@@ -36,7 +36,7 @@ func (_ CmdFactory) MakeMvnCopyDependenciesCmd(
 func (_ CmdFactory) MakeCallGraphGenerationCmd(
 	callgraphJarPath string,
 	workingDirectory string,
-	targetClasses string,
+	targetClasses []string,
 	dependencyClasses string,
 	outputName string,
 	ctx cgexec.IContext,
@@ -46,12 +46,13 @@ func (_ CmdFactory) MakeCallGraphGenerationCmd(
 		"java",
 		"-jar",
 		callgraphJarPath,
-		"-u",
-		targetClasses,
 		"-l",
 		dependencyClasses,
 		"-f",
 		outputName,
+	}
+	for _, class := range targetClasses {
+		args = append(args, "-u", class)
 	}
 
 	return cgexec.MakeCommand(workingDirectory, path, args, ctx), err

@@ -18,14 +18,20 @@ func TestFindMavenRoots(t *testing.T) {
 }
 
 func TestFindJavaClassDirs(t *testing.T) {
-	files := []string{"test/asd/pom.xml", "test2/basd/qwe/asd.class", "test2/test/asd", "test3/tes"}
+	files := []string{"test/asd/pom.xml", "test2/basd/qwe/asd.class", "test2/test/asd", "test3/tes.jar"}
 	f := Finder{}
-	files, err := f.FindJavaClassDirs(files)
+	files, err := f.FindJavaClassDirs(files, false)
 
 	assert.Nil(t, err)
 	assert.Len(t, files, 1)
 	gt := filepath.Join("test2", "basd", "qwe")
 	assert.Equal(t, files[0], gt)
+
+	files = []string{"test/asd/pom.xml", "test2/basd/qwe/asd.class", "test2/test/asd", "test3/tes.jar"}
+	files, err = f.FindJavaClassDirs(files, true)
+
+	assert.Nil(t, err)
+	assert.Len(t, files, 2)
 }
 
 func TestFindFiles(t *testing.T) {

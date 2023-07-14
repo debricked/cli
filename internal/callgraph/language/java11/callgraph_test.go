@@ -13,7 +13,7 @@ func TestRunCallGraphWithSetupMock(t *testing.T) {
 
 	cmdMock := testdata.NewEchoCmdFactory()
 	fsMock := ioTestData.FileSystemMock{}
-	cg := NewCallgraph(cmdMock, ".", ".", ".", ".", fsMock, nil)
+	cg := NewCallgraph(cmdMock, ".", []string{"."}, ".", ".", fsMock, nil)
 
 	err := cg.RunCallGraphWithSetup()
 
@@ -23,7 +23,7 @@ func TestRunCallGraphWithSetupMock(t *testing.T) {
 func TestFsOpenEmbedError(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	fsMock := ioTestData.FileSystemMock{FsOpenEmbedError: fmt.Errorf("error")}
-	cg := NewCallgraph(cmdMock, ".", ".", ".", ".", fsMock, nil)
+	cg := NewCallgraph(cmdMock, ".", []string{"."}, ".", ".", fsMock, nil)
 
 	err := cg.RunCallGraphWithSetup()
 
@@ -33,7 +33,7 @@ func TestFsOpenEmbedError(t *testing.T) {
 func TestMkdirTempError(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	fsMock := ioTestData.FileSystemMock{MkdirTempError: fmt.Errorf("error")}
-	cg := NewCallgraph(cmdMock, ".", ".", ".", ".", fsMock, nil)
+	cg := NewCallgraph(cmdMock, ".", []string{"."}, ".", ".", fsMock, nil)
 
 	err := cg.RunCallGraphWithSetup()
 
@@ -43,7 +43,7 @@ func TestMkdirTempError(t *testing.T) {
 func TestReadAllError(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	fsMock := ioTestData.FileSystemMock{FsReadAllError: fmt.Errorf("error")}
-	cg := NewCallgraph(cmdMock, ".", ".", ".", ".", fsMock, nil)
+	cg := NewCallgraph(cmdMock, ".", []string{"."}, ".", ".", fsMock, nil)
 
 	err := cg.RunCallGraphWithSetup()
 
@@ -53,7 +53,7 @@ func TestReadAllError(t *testing.T) {
 func TestWriteFileError(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	fsMock := ioTestData.FileSystemMock{FsWriteFileError: fmt.Errorf("error")}
-	cg := NewCallgraph(cmdMock, ".", ".", ".", ".", fsMock, nil)
+	cg := NewCallgraph(cmdMock, ".", []string{"."}, ".", ".", fsMock, nil)
 
 	err := cg.RunCallGraphWithSetup()
 
@@ -63,7 +63,7 @@ func TestWriteFileError(t *testing.T) {
 func TestRunCallGraphMock(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	fsMock := ioTestData.FileSystemMock{}
-	cg := NewCallgraph(cmdMock, ".", ".", ".", ".", fsMock, nil)
+	cg := NewCallgraph(cmdMock, ".", []string{"."}, ".", ".", fsMock, nil)
 
 	err := cg.RunCallGraph(".")
 
@@ -74,7 +74,7 @@ func TestRunCallGraphErrorMock(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	cmdMock.CallGraphGenErr = fmt.Errorf("error")
 	fsMock := ioTestData.FileSystemMock{}
-	cg := NewCallgraph(cmdMock, ".", ".", ".", ".", fsMock, nil)
+	cg := NewCallgraph(cmdMock, ".", []string{"."}, ".", ".", fsMock, nil)
 
 	err := cg.RunCallGraph(".")
 

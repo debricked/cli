@@ -20,7 +20,7 @@ type Callgraph struct {
 	cmdFactory       ICmdFactory
 	filesystem       ioFs.IFileSystem
 	workingDirectory string
-	targetClasses    string
+	targetClasses    []string
 	targetDir        string
 	outputName       string
 	ctx              cgexec.IContext
@@ -29,7 +29,7 @@ type Callgraph struct {
 func NewCallgraph(
 	cmdFactory ICmdFactory,
 	workingDirectory string,
-	targetClasses string,
+	targetClasses []string,
 	targetDir string,
 	outputName string,
 	filesystem ioFs.IFileSystem,

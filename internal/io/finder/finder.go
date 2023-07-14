@@ -9,7 +9,7 @@ import (
 
 type IFinder interface {
 	FindMavenRoots(files []string) ([]string, error)
-	FindJavaClassDirs(files []string) ([]string, error)
+	FindJavaClassDirs(files []string, findJars bool) ([]string, error)
 	FindFiles(paths []string, exclusions []string) ([]string, error)
 }
 
@@ -23,19 +23,24 @@ func (f Finder) FindMavenRoots(files []string) ([]string, error) {
 	return rootFiles, nil
 }
 
-func (f Finder) FindJavaClassDirs(files []string) ([]string, error) {
-	filteredFiles := FilterFiles(files, "*.class")
-	dirsWithJarFiles := make(map[string]bool)
+func (f Finder) FindJavaClassDirs(files []string, findJars bool) ([]string, error) {
+	filteredFiles := FilterFiles(files, ".*\\.class")
+	dirsWithClassFiles := make(map[string]bool)
 	for _, file := range filteredFiles {
-		dirsWithJarFiles[filepath.Dir(file)] = true
+		dirsWithClassFiles[filepath.Dir(file)] = true
 	}
 
-	jarFiles := []string{}
-	for key := range dirsWithJarFiles {
-		jarFiles = append(jarFiles, key)
+	dirJarFiles := []string{}
+	for key := range dirsWithClassFiles {
+		dirJarFiles = append(dirJarFiles, key)
 	}
 
-	return jarFiles, nil
+	if findJars {
+		filteredJarFiles := FilterFiles(files, ".*\\.jar")
+		dirJarFiles = append(dirJarFiles, filteredJarFiles...)
+	}
+
+	return dirJarFiles, nil
 }
 
 func (f Finder) FindFiles(roots []string, exclusions []string) ([]string, error) {
