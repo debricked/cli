@@ -17,7 +17,7 @@ func NewEmptyFinderMock() FinderMock {
 	}
 }
 
-func (f FinderMock) FindJavaClassDirs(_ []string) ([]string, error) {
+func (f FinderMock) FindJavaClassDirs(_ []string, _ bool) ([]string, error) {
 	return f.FindJavaClassDirsNames, f.FindJavaClassDirsErr
 }
 

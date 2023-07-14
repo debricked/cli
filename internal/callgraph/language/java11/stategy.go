@@ -3,7 +3,6 @@ package java
 import (
 	"fmt"
 	"log"
-	"path"
 	"path/filepath"
 
 	"github.com/debricked/cli/internal/callgraph/cgexec"
@@ -19,6 +18,8 @@ type Strategy struct {
 	config     conf.IConfig
 	cmdFactory ICmdFactory
 	files      []string
+	paths      []string
+	exclusions []string
 	finder     finder.IFinder
 	ctx        cgexec.IContext
 }
@@ -51,21 +52,22 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 		return jobs, err
 	}
 
-	var classDirs []string
+	files := s.files
+
 	if s.config.Build() {
-		classDirs, err = buildProjects(s, roots)
+		err = buildProjects(s, roots)
 		if err != nil {
 
 			return jobs, err
 		}
-	} else {
-		classDirs = []string{}
+
+		// If build, then we need to find the newly built files
+		files, _ = s.finder.FindFiles(s.paths, s.exclusions)
 	}
 
-	javaClassDirs, _ := s.finder.FindJavaClassDirs(s.files)
-	classDirs = append(classDirs, javaClassDirs...)
+	javaClassDirs, _ := s.finder.FindJavaClassDirs(files, false)
 	absRoots, _ := finder.ConvertPathsToAbsPaths(roots)
-	absClassDirs, _ := finder.ConvertPathsToAbsPaths(classDirs)
+	absClassDirs, _ := finder.ConvertPathsToAbsPaths(javaClassDirs)
 	rootClassMapping := finder.MapFilesToDir(absRoots, absClassDirs)
 
 	foundRootsWoClasses := 0
@@ -79,11 +81,11 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	}
 	for rootFile, classDirs := range rootClassMapping {
 		// For each class paths dir within the root, find GCDPath as entrypoint
-		classDir := finder.GCDPath(classDirs)
+		// classDir := finder.GCDPath(classDirs)
 		rootDir := filepath.Dir(rootFile)
 		jobs = append(jobs, NewJob(
 			rootDir,
-			[]string{classDir},
+			classDirs,
 			s.cmdFactory,
 			io.FileWriter{},
 			io.NewArchive(rootDir),
@@ -96,8 +98,8 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	return jobs, nil
 }
 
-func NewStrategy(config conf.IConfig, files []string, finder finder.IFinder, ctx cgexec.IContext) Strategy {
-	return Strategy{config, CmdFactory{}, files, finder, ctx}
+func NewStrategy(config conf.IConfig, files []string, paths []string, exclusions []string, finder finder.IFinder, ctx cgexec.IContext) Strategy {
+	return Strategy{config, CmdFactory{}, files, paths, exclusions, finder, ctx}
 }
 
 func strategyWarning(errMsg string) {
@@ -108,10 +110,9 @@ func strategyWarning(errMsg string) {
 	log.SetOutput(defaultOutputWriter)
 }
 
-func buildProjects(s Strategy, roots []string) ([]string, error) {
+func buildProjects(s Strategy, roots []string) error {
 	spinnerManager := tui.NewSpinnerManager()
 	spinnerManager.Start()
-	classDirs := []string{}
 	spinnerType := "Build Maven Project"
 	success := false || len(roots) == 0
 	errors := []string{}
@@ -138,7 +139,6 @@ func buildProjects(s Strategy, roots []string) ([]string, error) {
 
 			continue
 		}
-		classDirs = append(classDirs, path.Join(rootDir, "target/classes"))
 		tui.SetSpinnerMessage(spinner, spinnerType, rootDir, "success")
 		spinner.Complete()
 		success = true
@@ -146,13 +146,13 @@ func buildProjects(s Strategy, roots []string) ([]string, error) {
 	spinnerManager.Stop()
 
 	if success {
-		return classDirs, nil
+		return nil
 	} else {
 		for _, err := range errors {
 			strategyWarning(err)
 		}
 
-		return classDirs, fmt.Errorf("Build failed for all projects, if already built disable the build flag")
+		return fmt.Errorf("Build failed for all projects, if already built disable the build flag")
 	}
 
 }

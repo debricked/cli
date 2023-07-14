@@ -42,9 +42,9 @@ func (j *Job) Run() {
 	workingDirectory := j.GetDir()
 	pmConfig := j.config.PackageManager()
 	targetDir := path.Join(workingDirectory, dependencyDir)
-	targetClasses := workingDirectory
+	targetClasses := []string{workingDirectory}
 	if len(j.GetFiles()) > 0 {
-		targetClasses = j.GetFiles()[0]
+		targetClasses = j.GetFiles()
 	}
 
 	// If folder doesn't exist, copy dependencies

@@ -59,7 +59,7 @@ func (g *Generator) Generate(paths []string, exclusions []string, configs []conf
 
 	var jobs []job.IJob
 	for _, config := range configs {
-		s, strategyErr := g.strategyFactory.Make(config, files, g.finder, ctx)
+		s, strategyErr := g.strategyFactory.Make(config, files, paths, exclusions, g.finder, ctx)
 		if strategyErr == nil {
 			newJobs, err := s.Invoke()
 			if err != nil {
