@@ -22,7 +22,7 @@ func TestMakeMvnCopyDependenciesCmd(t *testing.T) {
 
 func TestMakeCallGraphGenerationCmd(t *testing.T) {
 	jarPath := "jarpath"
-	targetClasses := "targetclasses"
+	targetClasses := []string{"targetclasses"}
 	dependencyClasses := "dependencypath"
 	outputName := ".outputName"
 	ctx, _ := ctxTestdata.NewContextMock()
@@ -34,7 +34,7 @@ func TestMakeCallGraphGenerationCmd(t *testing.T) {
 	assert.Contains(t, args, "java")
 	assert.Contains(t, args, "-jar")
 	assert.Contains(t, args, jarPath)
-	assert.Contains(t, args, targetClasses)
+	assert.Contains(t, args, targetClasses[0])
 	assert.Contains(t, args, dependencyClasses)
 	assert.Contains(t, args, outputName)
 }
