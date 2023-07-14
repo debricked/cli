@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
 func FilterFiles(files []string, pattern string) []string {
 	filteredFiles := []string{}
 	for _, file := range files {
-		matched, _ := filepath.Match(pattern, filepath.Base(file))
+		matched, _ := regexp.Match(pattern, []byte(filepath.Base(file)))
 		if matched {
 			filteredFiles = append(filteredFiles, file)
 		}
