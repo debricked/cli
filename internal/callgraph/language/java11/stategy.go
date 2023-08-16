@@ -91,6 +91,7 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 			io.NewArchive(rootDir),
 			s.config,
 			s.ctx,
+			io.FileSystem{},
 		),
 		)
 	}

@@ -26,15 +26,17 @@ type Job struct {
 	config     conf.IConfig
 	archive    io.IArchive
 	ctx        cgexec.IContext
+	fs         ioFs.IFileSystem
 }
 
-func NewJob(dir string, files []string, cmdFactory ICmdFactory, writer ioFs.IFileWriter, archive io.IArchive, config conf.IConfig, ctx cgexec.IContext) *Job {
+func NewJob(dir string, files []string, cmdFactory ICmdFactory, writer ioFs.IFileWriter, archive io.IArchive, config conf.IConfig, ctx cgexec.IContext, fs ioFs.IFileSystem) *Job {
 	return &Job{
 		BaseJob:    job.NewBaseJob(dir, files),
 		cmdFactory: cmdFactory,
 		config:     config,
 		archive:    archive,
 		ctx:        ctx,
+		fs:         fs,
 	}
 }
 
@@ -48,7 +50,7 @@ func (j *Job) Run() {
 	}
 
 	// If folder doesn't exist, copy dependencies
-	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
+	if _, err := j.fs.Stat(targetDir); j.fs.IsNotExist(err) {
 		var osCmd *exec.Cmd
 		if pmConfig == maven {
 			osCmd, err = j.cmdFactory.MakeMvnCopyDependenciesCmd(workingDirectory, targetDir, j.ctx)
@@ -61,7 +63,13 @@ func (j *Job) Run() {
 		}
 
 		j.runCopyDependencies(osCmd)
+		if j.Errors().HasError() {
+			// If error during copy to .debricked_call_graph, remove the folder
 
+			j.fs.RemoveAll(targetDir)
+
+			return
+		}
 	}
 	callgraph := NewCallgraph(
 		j.cmdFactory,
@@ -69,11 +77,15 @@ func (j *Job) Run() {
 		targetClasses,
 		targetDir,
 		outputName,
-		ioFs.FileSystem{},
+		j.fs,
 		j.ctx,
 	)
 	j.SendStatus("generating call graph")
 	j.runCallGraph(&callgraph)
+	if j.Errors().HasError() {
+
+		return
+	}
 
 	j.runPostProcess()
 }
@@ -83,8 +95,6 @@ func (j *Job) runCopyDependencies(osCmd *exec.Cmd) {
 	err := cgexec.RunCommand(*cmd, j.ctx)
 	if err != nil {
 		j.Errors().Critical(err)
-
-		return
 	}
 }
 
@@ -94,7 +104,6 @@ func (j *Job) runCallGraph(callgraph ICallgraph) {
 	if err != nil {
 		j.Errors().Critical(err)
 
-		return
 	}
 }
 

@@ -14,6 +14,7 @@ type IFileSystem interface {
 	ReadFile(path string) ([]byte, error)
 	Remove(path string) error
 	StatFile(file *os.File) (os.FileInfo, error)
+	IsNotExist(err error) bool
 	CloseFile(file *os.File)
 	WriteToWriter(writer io.Writer, content []byte) (int, error)
 	MkdirTemp(pattern string) (string, error)
@@ -36,6 +37,10 @@ func (_ FileSystem) Create(path string) (*os.File, error) {
 
 func (_ FileSystem) Stat(path string) (os.FileInfo, error) {
 	return os.Stat(path)
+}
+
+func (_ FileSystem) IsNotExist(err error) bool {
+	return os.IsNotExist(err)
 }
 
 func (_ FileSystem) StatFile(file *os.File) (os.FileInfo, error) {
