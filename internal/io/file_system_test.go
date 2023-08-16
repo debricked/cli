@@ -2,6 +2,7 @@ package io
 
 import (
 	"embed"
+	"fmt"
 	"os"
 	"testing"
 
@@ -57,6 +58,16 @@ func TestStatFile(t *testing.T) {
 	_, err := filesystem.StatFile(testFile)
 
 	assert.NoError(t, err)
+}
+
+func TestIsNotExist(t *testing.T) {
+	exists := filesystem.IsNotExist(nil)
+	assert.False(t, exists)
+	exists = filesystem.IsNotExist(fmt.Errorf("testError"))
+	assert.False(t, exists)
+
+	notExists := filesystem.IsNotExist(os.ErrNotExist)
+	assert.True(t, notExists)
 }
 
 func TestReadFile(t *testing.T) {

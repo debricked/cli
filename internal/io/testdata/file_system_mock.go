@@ -13,6 +13,7 @@ type FileSystemMock struct {
 	fsFile           fs.File
 	OpenError        error
 	StatError        error
+	IsNotExistBool   bool
 	ReadFileError    error
 	CreateError      error
 	RemoveError      error
@@ -46,6 +47,10 @@ func (fsm FileSystemMock) Remove(path string) error {
 
 func (fsm FileSystemMock) StatFile(file *os.File) (os.FileInfo, error) {
 	return fsm.fileInfo, fsm.StatFileError
+}
+
+func (fsm FileSystemMock) IsNotExist(err error) bool {
+	return fsm.IsNotExistBool
 }
 
 func (fsm FileSystemMock) CloseFile(file *os.File) {
