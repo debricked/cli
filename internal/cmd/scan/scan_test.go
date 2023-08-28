@@ -12,28 +12,44 @@ import (
 func TestNewScanCmd(t *testing.T) {
 	cmd := NewScanCmd(&scannerMock{})
 
-	viperKeys := viper.AllKeys()
-	flags := cmd.Flags()
 	flagAssertions := map[string]string{
-		RepositoryFlag:    "r",
-		CommitFlag:        "c",
-		BranchFlag:        "b",
-		CommitAuthorFlag:  "a",
-		RepositoryUrlFlag: "u",
-		IntegrationFlag:   "i",
+		RepositoryFlag:               "r",
+		CommitFlag:                   "c",
+		BranchFlag:                   "b",
+		CommitAuthorFlag:             "a",
+		RepositoryUrlFlag:            "u",
+		IntegrationFlag:              "i",
+		ExclusionFlag:                "e",
+		PassOnTimeOut:                "p",
+		NoResolveFlag:                "",
+		CallGraphFlag:                "",
+		CallGraphUploadTimeoutFlag:   "",
+		CallGraphGenerateTimeoutFlag: "",
 	}
+	flags := cmd.Flags()
 	for name, shorthand := range flagAssertions {
 		flag := flags.Lookup(name)
 		assert.NotNil(t, flag)
 		assert.Equalf(t, shorthand, flag.Shorthand, "failed to assert that %s flag shorthand %s was set correctly", name, shorthand)
+	}
 
+	var flagKeys = []string{
+		RepositoryFlag,
+		CommitFlag,
+		BranchFlag,
+		CommitAuthorFlag,
+		RepositoryUrlFlag,
+		IntegrationFlag,
+	}
+	viperKeys := viper.AllKeys()
+	for _, flagKey := range flagKeys {
 		match := false
 		for _, key := range viperKeys {
-			if key == name {
+			if key == flagKey {
 				match = true
 			}
 		}
-		assert.Truef(t, match, "failed to assert that %s was present", name)
+		assert.Truef(t, match, "failed to assert that %s was present", flagKey)
 	}
 }
 

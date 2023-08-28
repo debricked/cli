@@ -22,18 +22,22 @@ var exclusions = file.DefaultExclusions()
 var noResolve bool
 var passOnDowntime bool
 var callgraph bool
+var callgraphUploadTimeout int
+var callgraphGenerateTimeout int
 
 const (
-	RepositoryFlag    = "repository"
-	CommitFlag        = "commit"
-	BranchFlag        = "branch"
-	CommitAuthorFlag  = "author"
-	RepositoryUrlFlag = "repository-url"
-	IntegrationFlag   = "integration"
-	ExclusionFlag     = "exclusion"
-	NoResolveFlag     = "no-resolve"
-	PassOnTimeOut     = "pass-on-timeout"
-	CallGraphFlag     = "callgraph"
+	RepositoryFlag               = "repository"
+	CommitFlag                   = "commit"
+	BranchFlag                   = "branch"
+	CommitAuthorFlag             = "author"
+	RepositoryUrlFlag            = "repository-url"
+	IntegrationFlag              = "integration"
+	ExclusionFlag                = "exclusion"
+	NoResolveFlag                = "no-resolve"
+	PassOnTimeOut                = "pass-on-timeout"
+	CallGraphFlag                = "callgraph"
+	CallGraphUploadTimeoutFlag   = "callgraph-upload-timeout"
+	CallGraphGenerateTimeoutFlag = "callgraph-generate-timeout"
 )
 
 var scanCmdError error
@@ -85,6 +89,8 @@ $ debricked scan . `+exampleFlags)
 	cmd.Flags().BoolVar(&noResolve, NoResolveFlag, false, `disables resolution of manifest files that lack lock files. Resolving manifest files enables more accurate dependency scanning since the whole dependency tree will be analysed.
 For example, if there is a "go.mod" in the target path, its dependencies are going to get resolved onto a lock file, and latter scanned.`)
 	cmd.Flags().BoolVar(&callgraph, CallGraphFlag, false, `Enables callgraph generation during scan.`)
+	cmd.Flags().IntVar(&callgraphUploadTimeout, CallGraphUploadTimeoutFlag, 10*60, "Sets a timeout on callgraph upload")
+	cmd.Flags().IntVar(&callgraphGenerateTimeout, CallGraphGenerateTimeoutFlag, 60*60, "Sets a timeout on callgraph generation")
 
 	viper.MustBindEnv(RepositoryFlag)
 	viper.MustBindEnv(CommitFlag)
@@ -104,17 +110,19 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			path = args[0]
 		}
 		options := scan.DebrickedOptions{
-			Path:            path,
-			Resolve:         !viper.GetBool(NoResolveFlag),
-			Exclusions:      viper.GetStringSlice(ExclusionFlag),
-			RepositoryName:  viper.GetString(RepositoryFlag),
-			CommitName:      viper.GetString(CommitFlag),
-			BranchName:      viper.GetString(BranchFlag),
-			CommitAuthor:    viper.GetString(CommitAuthorFlag),
-			RepositoryUrl:   viper.GetString(RepositoryUrlFlag),
-			IntegrationName: viper.GetString(IntegrationFlag),
-			PassOnTimeOut:   viper.GetBool(PassOnTimeOut),
-			CallGraph:       viper.GetBool(CallGraphFlag),
+			Path:                     path,
+			Resolve:                  !viper.GetBool(NoResolveFlag),
+			Exclusions:               viper.GetStringSlice(ExclusionFlag),
+			RepositoryName:           viper.GetString(RepositoryFlag),
+			CommitName:               viper.GetString(CommitFlag),
+			BranchName:               viper.GetString(BranchFlag),
+			CommitAuthor:             viper.GetString(CommitAuthorFlag),
+			RepositoryUrl:            viper.GetString(RepositoryUrlFlag),
+			IntegrationName:          viper.GetString(IntegrationFlag),
+			PassOnTimeOut:            viper.GetBool(PassOnTimeOut),
+			CallGraph:                viper.GetBool(CallGraphFlag),
+			CallGraphUploadTimeout:   viper.GetInt(CallGraphUploadTimeoutFlag),
+			CallGraphGenerateTimeout: viper.GetInt(CallGraphGenerateTimeoutFlag),
 		}
 		if s != nil {
 			scanCmdError = (*s).Scan(options)
