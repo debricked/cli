@@ -42,18 +42,20 @@ type DebrickedScanner struct {
 }
 
 type DebrickedOptions struct {
-	Path            string
-	Resolve         bool
-	Fingerprint     bool
-	CallGraph       bool
-	Exclusions      []string
-	RepositoryName  string
-	CommitName      string
-	BranchName      string
-	CommitAuthor    string
-	RepositoryUrl   string
-	IntegrationName string
-	PassOnTimeOut   bool
+	Path                     string
+	Resolve                  bool
+	Fingerprint              bool
+	CallGraph                bool
+	Exclusions               []string
+	RepositoryName           string
+	CommitName               string
+	BranchName               string
+	CommitAuthor             string
+	RepositoryUrl            string
+	IntegrationName          string
+	PassOnTimeOut            bool
+	CallGraphUploadTimeout   int
+	CallGraphGenerateTimeout int
 }
 
 func NewDebrickedScanner(
@@ -174,7 +176,7 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		configs := []config.IConfig{
 			config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven"),
 		}
-		timeout := 60 * 60
+		timeout := options.CallGraphGenerateTimeout
 		path := options.Path
 		if path == "" {
 			path = "."
@@ -185,7 +187,12 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		}
 	}
 
-	uploaderOptions := upload.DebrickedOptions{FileGroups: fileGroups, GitMetaObject: gitMetaObject, IntegrationsName: options.IntegrationName}
+	uploaderOptions := upload.DebrickedOptions{
+		FileGroups:             fileGroups,
+		GitMetaObject:          gitMetaObject,
+		IntegrationsName:       options.IntegrationName,
+		CallGraphUploadTimeout: options.CallGraphUploadTimeout,
+	}
 	result, err := (*dScanner.uploader).Upload(uploaderOptions)
 	if err != nil {
 		return nil, err

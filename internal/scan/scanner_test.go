@@ -80,14 +80,16 @@ func TestScan(t *testing.T) {
 	// reset working directory that has been manipulated in scanner.Scan
 	defer resetWd(t, cwd)
 	opts := DebrickedOptions{
-		Path:            path,
-		Exclusions:      nil,
-		RepositoryName:  repositoryName,
-		CommitName:      "commit",
-		BranchName:      "",
-		CommitAuthor:    "",
-		RepositoryUrl:   "",
-		IntegrationName: "",
+		Path:                     path,
+		Exclusions:               nil,
+		RepositoryName:           repositoryName,
+		CommitName:               "commit",
+		BranchName:               "",
+		CommitAuthor:             "",
+		RepositoryUrl:            "",
+		IntegrationName:          "",
+		CallGraphUploadTimeout:   10 * 60,
+		CallGraphGenerateTimeout: 10 * 60,
 	}
 
 	rescueStdout := os.Stdout

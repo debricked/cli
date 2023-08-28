@@ -32,15 +32,16 @@ var (
 const callgraphName = ".debricked-call-graph"
 
 type uploadBatch struct {
-	client          *client.IDebClient
-	fileGroups      file.Groups
-	gitMetaObject   *git.MetaObject
-	integrationName string
-	ciUploadId      int
+	client           *client.IDebClient
+	fileGroups       file.Groups
+	gitMetaObject    *git.MetaObject
+	integrationName  string
+	ciUploadId       int
+	callGraphTimeout int
 }
 
-func newUploadBatch(client *client.IDebClient, fileGroups file.Groups, gitMetaObject *git.MetaObject, integrationName string) *uploadBatch {
-	return &uploadBatch{client: client, fileGroups: fileGroups, gitMetaObject: gitMetaObject, integrationName: integrationName, ciUploadId: 0}
+func newUploadBatch(client *client.IDebClient, fileGroups file.Groups, gitMetaObject *git.MetaObject, integrationName string, callGraphTimeout int) *uploadBatch {
+	return &uploadBatch{client: client, fileGroups: fileGroups, gitMetaObject: gitMetaObject, integrationName: integrationName, ciUploadId: 0, callGraphTimeout: callGraphTimeout}
 }
 
 // upload concurrently posts all file groups to Debricked
@@ -53,7 +54,7 @@ func (uploadBatch *uploadBatch) upload() error {
 			var err error
 			timeout := 0
 			if strings.HasSuffix(fileName, callgraphName) {
-				timeout = 10 * 60
+				timeout = uploadBatch.callGraphTimeout
 			}
 			err = uploadBatch.uploadFile(f, timeout)
 

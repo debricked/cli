@@ -11,9 +11,10 @@ import (
 type IOptions interface{}
 
 type DebrickedOptions struct {
-	FileGroups       file.Groups
-	GitMetaObject    git.MetaObject
-	IntegrationsName string
+	FileGroups             file.Groups
+	GitMetaObject          git.MetaObject
+	IntegrationsName       string
+	CallGraphUploadTimeout int
 }
 
 type IUploader interface {
@@ -34,7 +35,7 @@ func NewUploader(c client.IDebClient) (*Uploader, error) {
 
 func (uploader *Uploader) Upload(o IOptions) (*UploadResult, error) {
 	dOptions := o.(DebrickedOptions)
-	batch := newUploadBatch(uploader.client, dOptions.FileGroups, &dOptions.GitMetaObject, dOptions.IntegrationsName)
+	batch := newUploadBatch(uploader.client, dOptions.FileGroups, &dOptions.GitMetaObject, dOptions.IntegrationsName, dOptions.CallGraphUploadTimeout)
 
 	err := batch.upload()
 	if err != nil {

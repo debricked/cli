@@ -23,19 +23,23 @@ var noResolve bool
 var noFingerprint bool
 var passOnDowntime bool
 var callgraph bool
+var callgraphUploadTimeout int
+var callgraphGenerateTimeout int
 
 const (
-	RepositoryFlag    = "repository"
-	CommitFlag        = "commit"
-	BranchFlag        = "branch"
-	CommitAuthorFlag  = "author"
-	RepositoryUrlFlag = "repository-url"
-	IntegrationFlag   = "integration"
-	ExclusionFlag     = "exclusion"
-	NoResolveFlag     = "no-resolve"
-	FingerprintFlag   = "fingerprint"
-	PassOnTimeOut     = "pass-on-timeout"
-	CallGraphFlag     = "callgraph"
+	RepositoryFlag               = "repository"
+	CommitFlag                   = "commit"
+	BranchFlag                   = "branch"
+	CommitAuthorFlag             = "author"
+	RepositoryUrlFlag            = "repository-url"
+	IntegrationFlag              = "integration"
+	ExclusionFlag                = "exclusion"
+	NoResolveFlag                = "no-resolve"
+	FingerprintFlag              = "fingerprint"
+	PassOnTimeOut                = "pass-on-timeout"
+	CallGraphFlag                = "callgraph"
+	CallGraphUploadTimeoutFlag   = "callgraph-upload-timeout"
+	CallGraphGenerateTimeoutFlag = "callgraph-generate-timeout"
 )
 
 var scanCmdError error
@@ -91,6 +95,8 @@ For example, if there is a "go.mod" in the target path, its dependencies are goi
 	cmd.Flags().BoolVar(&noFingerprint, FingerprintFlag, false, "enables fingerprinting for undeclared component identification. Can be run as a standalone command [files fingerprint] with more granular options. [beta feature]")
 	cmd.Flags().MarkHidden(FingerprintFlag) //nolint:errcheck
 	cmd.Flags().BoolVar(&callgraph, CallGraphFlag, false, `Enables callgraph generation during scan.`)
+	cmd.Flags().IntVar(&callgraphUploadTimeout, CallGraphUploadTimeoutFlag, 10*60, "Sets a timeout on callgraph upload")
+	cmd.Flags().IntVar(&callgraphGenerateTimeout, CallGraphGenerateTimeoutFlag, 60*60, "Sets a timeout on callgraph generation")
 
 	viper.MustBindEnv(RepositoryFlag)
 	viper.MustBindEnv(CommitFlag)
@@ -110,18 +116,20 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			path = args[0]
 		}
 		options := scan.DebrickedOptions{
-			Path:            path,
-			Resolve:         !viper.GetBool(NoResolveFlag),
-			Fingerprint:     viper.GetBool(FingerprintFlag),
-			Exclusions:      viper.GetStringSlice(ExclusionFlag),
-			RepositoryName:  viper.GetString(RepositoryFlag),
-			CommitName:      viper.GetString(CommitFlag),
-			BranchName:      viper.GetString(BranchFlag),
-			CommitAuthor:    viper.GetString(CommitAuthorFlag),
-			RepositoryUrl:   viper.GetString(RepositoryUrlFlag),
-			IntegrationName: viper.GetString(IntegrationFlag),
-			PassOnTimeOut:   viper.GetBool(PassOnTimeOut),
-			CallGraph:       viper.GetBool(CallGraphFlag),
+			Path:                     path,
+			Resolve:                  !viper.GetBool(NoResolveFlag),
+			Fingerprint:              viper.GetBool(FingerprintFlag),
+			Exclusions:               viper.GetStringSlice(ExclusionFlag),
+			RepositoryName:           viper.GetString(RepositoryFlag),
+			CommitName:               viper.GetString(CommitFlag),
+			BranchName:               viper.GetString(BranchFlag),
+			CommitAuthor:             viper.GetString(CommitAuthorFlag),
+			RepositoryUrl:            viper.GetString(RepositoryUrlFlag),
+			IntegrationName:          viper.GetString(IntegrationFlag),
+			PassOnTimeOut:            viper.GetBool(PassOnTimeOut),
+			CallGraph:                viper.GetBool(CallGraphFlag),
+			CallGraphUploadTimeout:   viper.GetInt(CallGraphUploadTimeoutFlag),
+			CallGraphGenerateTimeout: viper.GetInt(CallGraphGenerateTimeoutFlag),
 		}
 		if s != nil {
 			scanCmdError = (*s).Scan(options)
