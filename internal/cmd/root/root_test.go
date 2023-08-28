@@ -31,7 +31,7 @@ func TestNewRootCmd(t *testing.T) {
 		}
 	}
 	assert.Truef(t, match, "failed to assert that flag was present: "+AccessTokenFlag)
-	assert.Len(t, viperKeys, 14)
+	assert.Len(t, viperKeys, 13)
 }
 
 func TestPreRun(t *testing.T) {

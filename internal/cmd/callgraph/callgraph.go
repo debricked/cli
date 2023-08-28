@@ -14,11 +14,13 @@ import (
 var exclusions = file.DefaultExclusions()
 
 const (
-	ExclusionFlag = "exclusion"
-	NoBuildFlag   = "no-build"
+	ExclusionFlag       = "exclusion"
+	NoBuildFlag         = "no-build"
+	GenerateTimeoutFlag = "generate-timeout"
 )
 
 var buildDisabled bool
+var generateTimeout int
 
 func NewCallgraphCmd(generator callgraph.IGenerator) *cobra.Command {
 	cmd := &cobra.Command{
@@ -47,9 +49,9 @@ Special Terms | Meaning
 
 Example: 
 $ debricked files resolve . `+exampleFlags)
-	cmd.Flags().BoolVarP(&buildDisabled, NoBuildFlag, "b", false, "Should not automatically build all source code in project to enable call graph generation.")
+	cmd.Flags().BoolVar(&buildDisabled, NoBuildFlag, false, "Should not automatically build all source code in project to enable call graph generation.")
+	cmd.Flags().IntVar(&generateTimeout, GenerateTimeoutFlag, 60*60, "Timeout generate callgraph")
 	viper.MustBindEnv(ExclusionFlag)
-	viper.MustBindEnv(NoBuildFlag)
 
 	return cmd
 }
@@ -63,7 +65,7 @@ func RunE(callgraph callgraph.IGenerator) func(_ *cobra.Command, args []string) 
 			conf.NewConfig("java", []string{}, map[string]string{}, !viper.GetBool(NoBuildFlag), "maven"),
 		}
 
-		err := callgraph.GenerateWithTimer(args, viper.GetStringSlice(ExclusionFlag), configs, 60*60)
+		err := callgraph.GenerateWithTimer(args, viper.GetStringSlice(ExclusionFlag), configs, viper.GetInt(GenerateTimeoutFlag))
 		// err := callgraph.Generate(args, viper.GetStringSlice(ExclusionFlag), configs, nil)
 
 		return err
