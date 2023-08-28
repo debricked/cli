@@ -20,8 +20,9 @@ func TestNewCallgraphCmd(t *testing.T) {
 
 	flags := cmd.Flags()
 	flagAssertions := map[string]string{
-		ExclusionFlag: "e",
-		NoBuildFlag:   "b",
+		ExclusionFlag:       "e",
+		NoBuildFlag:         "",
+		GenerateTimeoutFlag: "",
 	}
 	for name, shorthand := range flagAssertions {
 		flag := flags.Lookup(name)
@@ -31,7 +32,6 @@ func TestNewCallgraphCmd(t *testing.T) {
 
 	var flagKeys = []string{
 		ExclusionFlag,
-		NoBuildFlag,
 	}
 	viperKeys := viper.AllKeys()
 	for _, flagKey := range flagKeys {
