@@ -3,10 +3,10 @@
 type="$1"
 
 case $type in
-  "pip")
-    go test ./test/resolve/pip_test.go
+  "resolver")
+    go test -timeout 120s ./test/resolve/resolver_test.go  
     ;;
   *)
-    go test ./test/...
+    go test -timeout 120s ./test/...
     ;;
 esac
