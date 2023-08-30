@@ -52,6 +52,8 @@ $ debricked files resolve . `+exampleFlags)
 	cmd.Flags().BoolVar(&buildDisabled, NoBuildFlag, false, "Should not automatically build all source code in project to enable call graph generation.")
 	cmd.Flags().IntVar(&generateTimeout, GenerateTimeoutFlag, 60*60, "Timeout generate callgraph")
 	viper.MustBindEnv(ExclusionFlag)
+	viper.MustBindEnv(NoBuildFlag)
+	viper.MustBindEnv(GenerateTimeoutFlag)
 
 	return cmd
 }

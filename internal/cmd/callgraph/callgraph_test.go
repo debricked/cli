@@ -32,6 +32,8 @@ func TestNewCallgraphCmd(t *testing.T) {
 
 	var flagKeys = []string{
 		ExclusionFlag,
+		NoBuildFlag,
+		GenerateTimeoutFlag,
 	}
 	viperKeys := viper.AllKeys()
 	for _, flagKey := range flagKeys {
