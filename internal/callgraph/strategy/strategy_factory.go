@@ -5,8 +5,8 @@ import (
 
 	"github.com/debricked/cli/internal/callgraph/cgexec"
 	conf "github.com/debricked/cli/internal/callgraph/config"
+	"github.com/debricked/cli/internal/callgraph/finder"
 	java "github.com/debricked/cli/internal/callgraph/language/java11"
-	"github.com/debricked/cli/internal/io/finder"
 )
 
 type IFactory interface {

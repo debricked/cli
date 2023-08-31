@@ -7,9 +7,9 @@ import (
 
 	"github.com/debricked/cli/internal/callgraph/cgexec"
 	conf "github.com/debricked/cli/internal/callgraph/config"
+	"github.com/debricked/cli/internal/callgraph/finder"
 	"github.com/debricked/cli/internal/callgraph/job"
 	"github.com/debricked/cli/internal/io"
-	"github.com/debricked/cli/internal/io/finder"
 	"github.com/debricked/cli/internal/tui"
 	"github.com/fatih/color"
 )

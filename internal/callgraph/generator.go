@@ -5,9 +5,9 @@ import (
 
 	"github.com/debricked/cli/internal/callgraph/cgexec"
 	"github.com/debricked/cli/internal/callgraph/config"
+	"github.com/debricked/cli/internal/callgraph/finder"
 	"github.com/debricked/cli/internal/callgraph/job"
 	"github.com/debricked/cli/internal/callgraph/strategy"
-	"github.com/debricked/cli/internal/io/finder"
 	"github.com/debricked/cli/internal/tui"
 )
 
