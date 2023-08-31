@@ -12,7 +12,7 @@ test:
 
 .PHONY: test-e2e
 test-e2e:
-	bash scripts/test_e2e.sh
+	bash scripts/test_e2e.sh $(type)
 
 .PHONY: test-e2e-docker
 docker-build-dev:
