@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/debricked/cli/internal/callgraph/finder/maven"
+	"github.com/debricked/cli/internal/file"
 )
 
 type IFinder interface {
@@ -53,13 +54,13 @@ func (f Finder) FindFiles(roots []string, exclusions []string) ([]string, error)
 				return err
 			}
 
-			for _, dir := range exclusions {
-				if info.IsDir() && info.Name() == dir {
-					return filepath.SkipDir
-				}
+			excluded := file.Excluded(exclusions, path)
+
+			if info.IsDir() && excluded {
+				return filepath.SkipDir
 			}
 
-			if !info.IsDir() {
+			if !info.IsDir() && !excluded {
 				files[path] = true
 			}
 
