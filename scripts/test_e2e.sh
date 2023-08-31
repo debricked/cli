@@ -6,6 +6,9 @@ case $type in
   "pip")
     go test ./test/resolve/pip_test.go
     ;;
+  "maven")
+    go test -v ./test/callgraph/maven_test.go
+    ;;
   *)
     go test ./test/...
     ;;
