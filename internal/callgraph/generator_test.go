@@ -6,8 +6,8 @@ import (
 
 	ctxTestdata "github.com/debricked/cli/internal/callgraph/cgexec/testdata"
 	"github.com/debricked/cli/internal/callgraph/config"
+	"github.com/debricked/cli/internal/callgraph/finder/testdata"
 	strategyTestdata "github.com/debricked/cli/internal/callgraph/strategy/testdata"
-	"github.com/debricked/cli/internal/io/finder/testdata"
 	"github.com/stretchr/testify/assert"
 )
 
