@@ -25,7 +25,6 @@ RUN apk --no-cache --update add \
   py3-pip \
   go~=1.20 \
   nodejs \ 
-  npm \
   yarn
 
 ENV MAVEN_VERSION 3.9.2
