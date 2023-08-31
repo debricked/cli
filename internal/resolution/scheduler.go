@@ -46,7 +46,7 @@ func (scheduler *Scheduler) Schedule(jobs []job.IJob) (IResolution, error) {
 	})
 
 	for _, j := range jobs {
-		spinner := scheduler.spinnerManager.AddSpinner(resolving, j.GetFile())
+		spinner := scheduler.spinnerManager.AddSpinner(j.GetFile())
 		scheduler.queue <- queueItem{
 			job:     j,
 			spinner: spinner,

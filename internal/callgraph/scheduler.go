@@ -25,8 +25,6 @@ type Scheduler struct {
 	spinnerManager tui.ISpinnerManager
 }
 
-const callgraph = "Callgraph"
-
 func NewScheduler(workers int) *Scheduler {
 	return &Scheduler{workers: workers, waitGroup: sync.WaitGroup{}}
 }
@@ -38,7 +36,7 @@ func (scheduler *Scheduler) Schedule(jobs []job.IJob, ctx cgexec.IContext) (IGen
 
 	scheduler.queue = make(chan queueItem, len(jobs))
 	scheduler.waitGroup.Add(len(jobs))
-	scheduler.spinnerManager = tui.NewSpinnerManager()
+	scheduler.spinnerManager = tui.NewSpinnerManager("Calgraph", "waiting for worker")
 	scheduler.spinnerManager.Start()
 
 	for _, j := range jobs {
@@ -87,16 +85,16 @@ func (scheduler *Scheduler) Schedule(jobs []job.IJob, ctx cgexec.IContext) (IGen
 func (scheduler *Scheduler) updateStatus(item queueItem) {
 	for {
 		msg := <-item.job.ReceiveStatus()
-		tui.SetSpinnerMessage(item.spinner, callgraph, item.job.GetDir(), msg)
+		scheduler.spinnerManager.SetSpinnerMessage(item.spinner, item.job.GetDir(), msg)
 	}
 }
 
 func (scheduler *Scheduler) finish(item queueItem) {
 	if item.job.Errors().HasError() {
-		tui.SetSpinnerMessage(item.spinner, callgraph, item.job.GetDir(), "failed")
+		scheduler.spinnerManager.SetSpinnerMessage(item.spinner, item.job.GetDir(), "failed")
 		item.spinner.Error()
 	} else {
-		tui.SetSpinnerMessage(item.spinner, callgraph, item.job.GetDir(), "done")
+		scheduler.spinnerManager.SetSpinnerMessage(item.spinner, item.job.GetDir(), "done")
 		item.spinner.Complete()
 	}
 }

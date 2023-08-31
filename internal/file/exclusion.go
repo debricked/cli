@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/bmatcuk/doublestar/v4"
 )
 
 const debrickedExclusionEnvVar = "DEBRICKED_EXCLUSIONS"
@@ -45,4 +47,16 @@ func DefaultExclusionsFingerprint() []string {
 	output = append(output, EXCLUDED_DIRS_FINGERPRINT_RAW...)
 
 	return output
+}
+
+func Excluded(exclusions []string, path string) bool {
+	for _, exclusion := range exclusions {
+		ex := filepath.Clean(exclusion)
+		matched, _ := doublestar.PathMatch(ex, path)
+		if matched {
+			return true
+		}
+	}
+
+	return false
 }
