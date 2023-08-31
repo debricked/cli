@@ -5,8 +5,7 @@ import (
 )
 
 const (
-	yarn              = "yarn"
-	lockFileDelimiter = "***"
+	yarn = "yarn"
 )
 
 type Job struct {
@@ -35,7 +34,7 @@ func (j *Job) Install() bool {
 func (j *Job) Run() {
 	if j.install {
 
-		j.SendStatus("installing requirements")
+		j.SendStatus("installing dependencies")
 		_, err := j.runInstallCmd()
 		if err != nil {
 			j.Errors().Critical(err)
