@@ -1,7 +1,7 @@
 FROM golang:1.20-alpine AS dev
 WORKDIR /cli
 RUN apk update \
-    && apk --no-cache --update add git build-base
+  && apk --no-cache --update add git build-base
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 COPY . .
@@ -19,11 +19,14 @@ ENTRYPOINT [ "debricked",  "scan" ]
 
 FROM cli AS resolution
 RUN apk --no-cache --update add \
-    openjdk11-jre \
-    python3 \
-    py3-scipy \
-    py3-pip \
-    go~=1.20
+  openjdk11-jre \
+  python3 \
+  py3-scipy \
+  py3-pip \
+  go~=1.20 \
+  nodejs \ 
+  npm \
+  yarn
 
 ENV MAVEN_VERSION 3.9.2
 ENV MAVEN_HOME /usr/lib/mvn
