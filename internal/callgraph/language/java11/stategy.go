@@ -112,20 +112,20 @@ func strategyWarning(errMsg string) {
 }
 
 func buildProjects(s Strategy, roots []string) error {
-	spinnerManager := tui.NewSpinnerManager()
+	spinnerType := "building maven project"
+	spinnerManager := tui.NewSpinnerManager("Callgraph Build Project", spinnerType)
 	spinnerManager.Start()
-	spinnerType := "Build Maven Project"
 	success := false || len(roots) == 0
 	errors := []string{}
 	for _, rootFile := range roots {
 		rootDir := filepath.Dir(rootFile)
-		spinner := spinnerManager.AddSpinner(spinnerType, rootDir)
+		spinner := spinnerManager.AddSpinner(rootDir)
 		osCmd, err := s.cmdFactory.MakeBuildMavenCmd(rootDir, s.ctx)
 		if err != nil {
 			err := "Error while building roots (Make command): " + err.Error() + "\nRoot: " + rootDir
 			errors = append(errors, err)
 			spinner.Error()
-			tui.SetSpinnerMessage(spinner, spinnerType, rootDir, "fail")
+			spinnerManager.SetSpinnerMessage(spinner, rootDir, "fail")
 
 			continue
 		}
@@ -136,11 +136,11 @@ func buildProjects(s Strategy, roots []string) error {
 			err := "Error while building roots (Make command): " + err.Error() + "\nRoot: " + rootDir
 			errors = append(errors, err)
 			spinner.Error()
-			tui.SetSpinnerMessage(spinner, spinnerType, rootDir, "fail")
+			spinnerManager.SetSpinnerMessage(spinner, rootDir, "fail")
 
 			continue
 		}
-		tui.SetSpinnerMessage(spinner, spinnerType, rootDir, "success")
+		spinnerManager.SetSpinnerMessage(spinner, rootDir, "success")
 		spinner.Complete()
 		success = true
 	}

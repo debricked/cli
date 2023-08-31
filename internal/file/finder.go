@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/bmatcuk/doublestar/v4"
 	"github.com/debricked/cli/internal/client"
 )
 
@@ -95,16 +94,4 @@ func (finder *Finder) GetSupportedFormats() ([]*CompiledFormat, error) {
 	}
 
 	return compiledDependencyFileFormats, nil
-}
-
-func Excluded(exclusions []string, path string) bool {
-	for _, exclusion := range exclusions {
-		ex := filepath.Clean(exclusion)
-		matched, _ := doublestar.PathMatch(ex, path)
-		if matched {
-			return true
-		}
-	}
-
-	return false
 }

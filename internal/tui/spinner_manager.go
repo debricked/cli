@@ -12,7 +12,7 @@ import (
 )
 
 type ISpinnerManager interface {
-	AddSpinner(action string, file string) *ysmrr.Spinner
+	AddSpinner(file string) *ysmrr.Spinner
 	Start()
 	Stop()
 	SetSpinnerMessage(spinner *ysmrr.Spinner, filename string, message string)
@@ -28,7 +28,7 @@ func NewSpinnerManager(baseString string, spinnerStartMessage string) SpinnerMan
 	return SpinnerManager{ysmrr.NewSpinnerManager(ysmrr.WithSpinnerColor(colors.FgHiBlue)), baseString, spinnerStartMessage}
 }
 
-func (sm SpinnerManager) AddSpinner(action string, file string) *ysmrr.Spinner {
+func (sm SpinnerManager) AddSpinner(file string) *ysmrr.Spinner {
 	spinner := sm.spinnerManager.AddSpinner("")
 	sm.SetSpinnerMessage(spinner, file, sm.spinnerStartMessage)
 
