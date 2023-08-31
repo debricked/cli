@@ -62,7 +62,7 @@ func interpret(res *http.Response, request func() (*http.Response, error), debCl
 		return nil, NoResErr
 	} else if res.StatusCode == http.StatusUnauthorized {
 		errMsg := `Unauthorized. Specify access token. 
-Read more on https://debricked.com/docs/administration/access-tokens.html`
+Read more on https://portal.debricked.com/administration-47/how-do-i-generate-an-access-token-130`
 		if retry {
 			err := debClient.authenticate()
 			if err != nil {

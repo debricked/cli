@@ -33,7 +33,7 @@ Complete documentation is available at https://debricked.com/docs/integrations/c
 		"t",
 		"",
 		`Debricked access token. 
-Read more: https://debricked.com/docs/administration/access-tokens.html`,
+Read more: https://portal.debricked.com/administration-47/how-do-i-generate-an-access-token-130`,
 	)
 
 	var debClient = container.DebClient()
