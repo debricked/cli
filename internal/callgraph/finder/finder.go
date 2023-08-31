@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/debricked/cli/internal/io/finder/maven"
+	"github.com/debricked/cli/internal/callgraph/finder/maven"
 )
 
 type IFinder interface {

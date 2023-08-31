@@ -5,9 +5,9 @@ import (
 
 	"github.com/debricked/cli/internal/callgraph/cgexec"
 	"github.com/debricked/cli/internal/callgraph/config"
+	"github.com/debricked/cli/internal/callgraph/finder"
 	"github.com/debricked/cli/internal/callgraph/job"
 	"github.com/debricked/cli/internal/callgraph/job/testdata"
-	"github.com/debricked/cli/internal/io/finder"
 )
 
 type StrategyMock struct {
