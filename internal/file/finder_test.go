@@ -248,7 +248,7 @@ func TestExclude(t *testing.T) {
 func TestGetGroupsWithOnlyLockFiles(t *testing.T) {
 	setUp(true)
 	path := "testdata/misc"
-	const nbrOfGroups = 1
+	const nbrOfGroups = 2
 	fileGroups, err := finder.GetGroups(path, []string{"**/requirements*.txt", "**/composer.json", "**/composer.lock", "**/go.mod"}, false, StrictAll)
 	assert.NoError(t, err)
 	assert.Equalf(t, nbrOfGroups, fileGroups.Size(), "failed to assert that %d groups were created. %d was found", nbrOfGroups, fileGroups.Size())
@@ -305,7 +305,7 @@ func TestGetGroupsWithStrictFlag(t *testing.T) {
 			name:                   "StrictnessSetTo0",
 			strictness:             StrictAll,
 			testedGroupIndex:       3,
-			expectedNumberOfGroups: 10,
+			expectedNumberOfGroups: 11,
 			expectedManifestFile:   "composer.json",
 			expectedLockFiles:      []string{"composer.lock", "go.mod", "Cargo.lock", "requirements.txt.pip.debricked"},
 		},

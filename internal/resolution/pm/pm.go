@@ -5,6 +5,7 @@ import (
 	"github.com/debricked/cli/internal/resolution/pm/gradle"
 	"github.com/debricked/cli/internal/resolution/pm/maven"
 	"github.com/debricked/cli/internal/resolution/pm/pip"
+	npm "github.com/debricked/cli/internal/resolution/pm/yarn"
 )
 
 type IPm interface {
@@ -18,5 +19,6 @@ func Pms() []IPm {
 		gradle.NewPm(),
 		gomod.NewPm(),
 		pip.NewPm(),
+		npm.NewPm(),
 	}
 }

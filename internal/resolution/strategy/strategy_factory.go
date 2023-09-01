@@ -8,6 +8,7 @@ import (
 	"github.com/debricked/cli/internal/resolution/pm/gradle"
 	"github.com/debricked/cli/internal/resolution/pm/maven"
 	"github.com/debricked/cli/internal/resolution/pm/pip"
+	"github.com/debricked/cli/internal/resolution/pm/yarn"
 )
 
 type IFactory interface {
@@ -31,6 +32,8 @@ func (sf Factory) Make(pmFileBatch file.IBatch, paths []string) (IStrategy, erro
 		return gomod.NewStrategy(pmFileBatch.Files()), nil
 	case pip.Name:
 		return pip.NewStrategy(pmFileBatch.Files()), nil
+	case yarn.Name:
+		return yarn.NewStrategy(pmFileBatch.Files()), nil
 	default:
 		return nil, fmt.Errorf("failed to make strategy from %s", name)
 	}
