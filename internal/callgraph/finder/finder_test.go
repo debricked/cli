@@ -47,3 +47,23 @@ func TestFindFilesErr(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Empty(t, files)
 }
+
+func TestFindFilesExcluded(t *testing.T) {
+	f := Finder{}
+	project_path, _ := filepath.Abs("testdata/test_project")
+	files, err := f.FindFiles([]string{project_path}, nil)
+	assert.Nil(t, err)
+	assert.Len(t, files, 2)
+	files, err = f.FindFiles([]string{project_path}, []string{"**/excluded_folder/**"})
+	assert.Nil(t, err)
+	assert.Len(t, files, 1)
+	files, err = f.FindFiles([]string{project_path}, []string{"excluded_folder"})
+	assert.Nil(t, err)
+	assert.Len(t, files, 2)
+	files, err = f.FindFiles([]string{project_path}, []string{"**/excluded*/**"})
+	assert.Nil(t, err)
+	assert.Len(t, files, 1)
+	files, err = f.FindFiles([]string{project_path}, []string{"**/excluded_file.txt"})
+	assert.Nil(t, err)
+	assert.Len(t, files, 1)
+}
