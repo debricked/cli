@@ -62,3 +62,8 @@ RUN apt -y update && apt -y upgrade && apt -y install nodejs && \
     apt -y clean && rm -rf /var/lib/apt/lists/*
 RUN npm install -g npm@latest
 RUN npm install --global yarn
+
+
+RUN wget https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && dpkg -i packages-microsoft-prod.deb
+RUN rm packages-microsoft-prod.deb
+RUN apt -y update && apt -y upgrade && apt install -y dotnet-sdk-7.0
