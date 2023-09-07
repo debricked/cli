@@ -44,6 +44,7 @@ func (j *Job) Run() {
 			} else {
 				j.Errors().Critical(errors.New(string(output)))
 			}
+
 			return
 		}
 	}

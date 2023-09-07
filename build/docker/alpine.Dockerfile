@@ -42,21 +42,3 @@ ENV PATH $GRADLE_HOME/gradle-$GRADLE_VERSION/bin:$PATH
 RUN wget https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip && \
   unzip gradle-$GRADLE_VERSION-bin.zip -d $GRADLE_HOME && \
   rm gradle-$GRADLE_VERSION-bin.zip
-
-
-# ENV BIN_DIRECTORY /usr/bin
-# ENV DOTNET_DIRECTORY /usr/bin/dotnet
-
-# #Install dotnet
-# RUN apk add --no-cache --virtual build-dependencies curl \
-#   && curl -SL --output dotnet.tar.gz https://download.visualstudio.microsoft.com/download/pr/f8834fef-d2ab-4cf6-abc3-d8d79cfcde11/0ee05ef4af5fe324ce2977021bf9f340/dotnet-sdk-3.1.426-linux-musl-x64.tar.gz \
-#   && mkdir -p $DOTNET_DIRECTORY \
-#   && tar zxf dotnet.tar.gz -C $DOTNET_DIRECTORY \
-#   && chmod +x $DOTNET_DIRECTORY/dotnet \
-#   && rm dotnet.tar.gz \
-#   && apk del build-dependencies \
-#   && rm -r $DOTNET_DIRECTORY/packs $DOTNET_DIRECTORY/sdk/3.1.426/TestHost $DOTNET_DIRECTORY/sdk/3.1.426/Extensions \
-#   $DOTNET_DIRECTORY/sdk/3.1.426/FSharp $DOTNET_DIRECTORY/sdk/3.1.426/Roslyn
-
-
-

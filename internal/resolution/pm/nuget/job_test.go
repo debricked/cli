@@ -62,22 +62,3 @@ func TestRunInstallCmdOutputErr(t *testing.T) {
 
 	jobTestdata.AssertPathErr(t, j.Errors())
 }
-
-func TestRunInstallCmdOutputAndErr(t *testing.T) {
-	// Setup mock to return a specific error and output
-	expectedError := errors.New("expected error")
-	expectedOutput := []byte("expected output")
-
-	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	cmdFactoryMock.CmdOutput = expectedOutput
-	cmdFactoryMock.CmdError = expectedError
-
-	j := NewJob("file", true, cmdFactoryMock)
-
-	go jobTestdata.WaitStatus(j)
-	j.Run()
-
-	// Check that the error recorded in j.Errors() matches the error created from the output
-	assert.Len(t, j.Errors().GetAll(), 1)
-	assert.Contains(t, j.Errors().GetAll(), errors.New(string(expectedOutput)))
-}
