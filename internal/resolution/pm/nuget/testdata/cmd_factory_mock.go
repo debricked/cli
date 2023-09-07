@@ -23,11 +23,11 @@ func (f CmdFactoryMock) MakeInstallCmd(command string, file string) (*exec.Cmd, 
 
 	cmd := exec.Command(f.InstallCmdName)
 	if f.CmdError != nil {
-		cmd = exec.Command("sh", "-c", f.InstallCmdName+" && exit 1")
+		cmd = exec.Command("/bin/bash", "-c", f.InstallCmdName+" && exit 1")
 	}
 
 	if f.CmdOutput != nil {
-		cmd = exec.Command("sh", "-c", "echo -n \""+string(f.CmdOutput)+"\" && exit 1")
+		cmd = exec.Command("/bin/bash", "-c", "echo -n \""+string(f.CmdOutput)+"\" && exit 1")
 	}
 
 	return cmd, nil
