@@ -1,6 +1,8 @@
 package nuget
 
 const Name = "nuget"
+const CsprojRegex = `\.csproj$`
+const PackagesConfigRegex = `packages\.config$`
 
 type Pm struct {
 	name string
@@ -18,6 +20,7 @@ func (pm Pm) Name() string {
 
 func (Pm) Manifests() []string {
 	return []string{
-		`\.csproj$`,
+		CsprojRegex,
+		PackagesConfigRegex,
 	}
 }
