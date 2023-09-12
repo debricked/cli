@@ -94,9 +94,9 @@ $ debricked scan . `+exampleFlags)
 For example, if there is a "go.mod" in the target path, its dependencies are going to get resolved onto a lock file, and latter scanned.`)
 	cmd.Flags().BoolVar(&noFingerprint, FingerprintFlag, false, "enables fingerprinting for undeclared component identification. Can be run as a standalone command [files fingerprint] with more granular options. [beta feature]")
 	cmd.Flags().MarkHidden(FingerprintFlag) //nolint:errcheck
-	cmd.Flags().BoolVar(&callgraph, CallGraphFlag, false, `Enables callgraph generation during scan.`)
-	cmd.Flags().IntVar(&callgraphUploadTimeout, CallGraphUploadTimeoutFlag, 10*60, "Sets a timeout on callgraph upload")
-	cmd.Flags().IntVar(&callgraphGenerateTimeout, CallGraphGenerateTimeoutFlag, 60*60, "Sets a timeout on callgraph generation")
+	cmd.Flags().BoolVar(&callgraph, CallGraphFlag, false, `Enables call graph generation during scan.`)
+	cmd.Flags().IntVar(&callgraphUploadTimeout, CallGraphUploadTimeoutFlag, 10*60, "Set a timeout (in seconds) on call graph upload.")
+	cmd.Flags().IntVar(&callgraphGenerateTimeout, CallGraphGenerateTimeoutFlag, 60*60, "Set a timeout (in seconds) on call graph generation.")
 
 	viper.MustBindEnv(RepositoryFlag)
 	viper.MustBindEnv(CommitFlag)
