@@ -45,8 +45,7 @@ $ debricked callgraph
 	dirExclusionExample := filepath.Join("**", "node_modules", "**")
 	exampleFlags := fmt.Sprintf("-e \"%s\" -e \"%s\"", fileExclusionExample, dirExclusionExample)
 
-	cmd.Flags().StringArrayVarP(&exclusions, ExclusionFlag, "e", exclusions, 
-`The following terms are supported to exclude paths:
+	cmd.Flags().StringArrayVarP(&exclusions, ExclusionFlag, "e", exclusions, `The following terms are supported to exclude paths:
 Special Terms | Meaning
 ------------- | -------
 "*"           | matches any sequence of non-Separator characters 
