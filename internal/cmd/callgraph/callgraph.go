@@ -31,7 +31,7 @@ The command consists of two main parts: build and callgraph.
 Build: Build the project and resolve dependencies. In this step, all necessary .class files are created.
 Callgraph: Generate the static call graph using debricked Vulnerable Functionality.
 
-The full documentation is available here https://debricked.com/docs/integrations/cli.html#debricked-cli
+The full documentation is available here https://portal.debricked.com/debricked-cli-63/debricked-cli-documentation-298
 
 Example:
 $ debricked callgraph 
