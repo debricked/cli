@@ -215,6 +215,11 @@ func TestExclude(t *testing.T) {
 			exclusions:         []string{"**/yarn/**"},
 			expectedExclusions: []string{"yarn", "yarn.lock"},
 		},
+		{
+			name:               "TestDirectoryExclusionWithDoublestar",
+			exclusions:         []string{"testdata/test/**"},
+			expectedExclusions: []string{"test", "test-file"},
+		},
 	}
 
 	for _, c := range cases {
