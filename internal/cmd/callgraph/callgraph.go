@@ -26,10 +26,10 @@ func NewCallgraphCmd(generator callgraph.IGenerator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "callgraph [path]",
 		Short: "Generate a static call graph for the given directory and subdirectories",
-		Long: `Generate a static call graph for a project. If a directory is inputted all manifest files without a lock file are resolved. 
-The command consists of two main parts, Build and Callgraph. 
-Build: build the project and resolve dependencies. In this step, all necessary .class files are created.
-Callgraph: generate the static call graph using debricked Vulnerable Functionality.
+		Long: `Generate a static call graph for a project. If a directory is inputted, all manifest files without a lock file are resolved. 
+The command consists of two main parts: build and callgraph. 
+Build: Build the project and resolve dependencies. In this step, all necessary .class files are created.
+Callgraph: Generate the static call graph using debricked Vulnerable Functionality.
 
 The full documentation is available here https://debricked.com/docs/integrations/cli.html#debricked-cli
 
@@ -57,7 +57,7 @@ Special Terms | Meaning
 Example: 
 $ debricked files resolve . `+exampleFlags)
 	cmd.Flags().BoolVar(&buildDisabled, NoBuildFlag, false, `Do not automatically build all source code in the project to enable call graph generation.
-This option requires a pre-built project, for more detailed documentation on Vulnerable Functionality visit our portal: 
+This option requires a pre-built project. For more detailed documentation on Vulnerable Functionality, visit our portal: 
 https://portal.debricked.com/vulnerability-management-43/how-do-i-enable-the-vulnerable-functionality-246`)
 	cmd.Flags().IntVar(&generateTimeout, GenerateTimeoutFlag, 60*60, "Timeout (in seconds) on call graph generation.")
 
