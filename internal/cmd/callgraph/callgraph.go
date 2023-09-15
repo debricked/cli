@@ -26,8 +26,7 @@ func NewCallgraphCmd(generator callgraph.IGenerator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "callgraph [path]",
 		Short: "Generate a static call graph for the given directory and subdirectories",
-		Long: `Generate a static call graph for a project. If a directory is inputted, all manifest files without a lock file are resolved. 
-The command consists of two main parts: build and callgraph. 
+		Long: `Generate a static call graph for a project in the given directory. The command consists of two main parts: build and callgraph. 
 Build: Build the project and resolve dependencies. In this step, all necessary .class files are created.
 Callgraph: Generate the static call graph using debricked Vulnerable Functionality.
 
