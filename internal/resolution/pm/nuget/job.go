@@ -1,7 +1,7 @@
 package nuget
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/debricked/cli/internal/resolution/job"
 )
@@ -39,11 +39,7 @@ func (j *Job) Run() {
 		j.SendStatus("installing dependencies")
 		output, err := j.runInstallCmd()
 		if err != nil {
-			if output == nil {
-				j.Errors().Critical(err)
-			} else {
-				j.Errors().Critical(errors.New(string(output)))
-			}
+			j.Errors().Critical(fmt.Errorf("%s\n%s", output, err))
 
 			return
 		}

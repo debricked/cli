@@ -41,6 +41,7 @@ func TestInstall(t *testing.T) {
 
 func TestRunInstallCmdErr(t *testing.T) {
 	cmdErr := errors.New("cmd-error")
+	cmdErrGt := errors.New("\ncmd-error")
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	cmdFactoryMock.MakeInstallErr = cmdErr
 	j := NewJob("file", true, cmdFactoryMock)
@@ -48,8 +49,7 @@ func TestRunInstallCmdErr(t *testing.T) {
 	go jobTestdata.WaitStatus(j)
 	j.Run()
 
-	assert.Len(t, j.Errors().GetAll(), 1)
-	assert.Contains(t, j.Errors().GetAll(), cmdErr)
+	assert.Equal(t, j.Errors().GetAll()[0], cmdErrGt)
 }
 
 func TestRunInstallCmdOutputErr(t *testing.T) {
