@@ -29,6 +29,12 @@ func TestResolves(t *testing.T) {
 			lockFileName: ".requirements.txt.debricked.lock",
 			expectedFile: "testdata/pip/expected.lock",
 		},
+		{
+			name:         "basic .csproj",
+			manifestFile: "testdata/nuget/basic.csproj",
+			lockFileName: "packages.lock.json",
+			expectedFile: "testdata/nuget/packages-expected.lock.json",
+		},
 	}
 
 	for _, c := range cases {

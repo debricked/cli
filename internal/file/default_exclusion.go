@@ -7,5 +7,6 @@ func DefaultExclusions() []string {
 		filepath.Join("**", "node_modules", "**"),
 		filepath.Join("**", "vendor", "**"),
 		filepath.Join("**", ".git", "**"),
+		filepath.Join("**", "obj", "**"), // nuget
 	}
 }

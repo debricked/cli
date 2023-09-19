@@ -7,8 +7,10 @@ import (
 	"github.com/debricked/cli/internal/resolution/pm/gomod"
 	"github.com/debricked/cli/internal/resolution/pm/gradle"
 	"github.com/debricked/cli/internal/resolution/pm/maven"
+	"github.com/debricked/cli/internal/resolution/pm/nuget"
 	"github.com/debricked/cli/internal/resolution/pm/pip"
 	"github.com/debricked/cli/internal/resolution/pm/testdata"
+	"github.com/debricked/cli/internal/resolution/pm/yarn"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -31,6 +33,8 @@ func TestMake(t *testing.T) {
 		gradle.Name: gradle.NewStrategy(nil, nil),
 		gomod.Name:  gomod.NewStrategy(nil),
 		pip.Name:    pip.NewStrategy(nil),
+		yarn.Name:   yarn.NewStrategy(nil),
+		nuget.Name:  nuget.NewStrategy(nil),
 	}
 	f := NewStrategyFactory()
 	var batch file.IBatch
