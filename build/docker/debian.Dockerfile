@@ -64,6 +64,14 @@ RUN npm install -g npm@latest
 RUN npm install --global yarn
 
 
-RUN wget https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && dpkg -i packages-microsoft-prod.deb
-RUN rm packages-microsoft-prod.deb
-RUN apt -y update && apt -y upgrade && apt install -y dotnet-sdk-7.0
+# https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install
+# https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian
+# Package manager installs are only supported on the x64 architecture. Other architectures, such as Arm, must install .NET by some other means such as with Snap, an installer script, or through a manual binary installation.
+ENV DOTNET_ROOT /usr/lib/dotnet
+ENV DOTNET_MAJOR 7.0
+RUN wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
+RUN chmod u+x ./dotnet-install.sh
+RUN ./dotnet-install.sh --channel $DOTNET_MAJOR --install-dir $DOTNET_ROOT
+RUN rm ./dotnet-install.sh
+ENV PATH $DOTNET_ROOT:$PATH
+RUN dotnet --version
