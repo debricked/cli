@@ -31,6 +31,19 @@ type CmdFactory struct {
 	execPath IExecPath
 }
 
+var packagesConfigTemplate = `
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>{{.TargetFrameworks}}</TargetFrameworks>
+	</PropertyGroup>
+	<ItemGroup>
+	{{- range .Packages}}
+		<PackageReference Include="{{.ID}}" Version="{{.Version}}" />
+	{{- end}}
+	</ItemGroup>
+</Project>
+`
+
 func (cmdf CmdFactory) MakeInstallCmd(command string, file string) (*exec.Cmd, error) {
 
 	// If the file is a packages.config file, convert it to a .csproj file
@@ -86,7 +99,7 @@ func convertPackagesConfigToCsproj(filePath string) (string, error) {
 	}
 
 	targetFrameworksStr := collectUniqueTargetFrameworks(packages.Packages)
-	csprojContent, err := createCsprojContent(targetFrameworksStr, packages.Packages)
+	csprojContent, err := createCsprojContentWithTemplate(targetFrameworksStr, packages.Packages, packagesConfigTemplate)
 	if err != nil {
 		return "", err
 	}
@@ -137,19 +150,7 @@ func collectUniqueTargetFrameworks(packages []Package) string {
 	return strings.Join(targetFrameworks, ";")
 }
 
-func createCsprojContent(targetFrameworksStr string, packages []Package) (string, error) {
-	tmpl := `
-<Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<TargetFrameworks>{{.TargetFrameworks}}</TargetFrameworks>
-	</PropertyGroup>
-	<ItemGroup>
-	{{- range .Packages}}
-		<PackageReference Include="{{.ID}}" Version="{{.Version}}" />
-	{{- end}}
-	</ItemGroup>
-</Project>
-`
+func createCsprojContentWithTemplate(targetFrameworksStr string, packages []Package, tmpl string) (string, error) {
 	tmplParsed, err := template.New("csproj").Parse(tmpl)
 	if err != nil {
 		return "", err
@@ -168,6 +169,7 @@ func createCsprojContent(targetFrameworksStr string, packages []Package) (string
 }
 
 func writeContentToCsprojFile(newFilename string, content string) error {
+
 	csprojFile, err := os.Create(newFilename)
 	if err != nil {
 		return err
@@ -175,9 +177,6 @@ func writeContentToCsprojFile(newFilename string, content string) error {
 	defer csprojFile.Close()
 
 	_, err = csprojFile.WriteString(content)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
