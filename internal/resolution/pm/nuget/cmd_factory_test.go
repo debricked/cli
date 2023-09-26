@@ -12,10 +12,9 @@ import (
 )
 
 func TestMakeInstallCmd(t *testing.T) {
-	nugetCommand := "dotnet"
 	cmd, err := NewCmdFactory(
 		ExecPath{},
-	).MakeInstallCmd(nugetCommand, "file")
+	).MakeInstallCmd(nuget, "file")
 	assert.NoError(t, err)
 	assert.NotNil(t, cmd)
 	args := cmd.Args
@@ -24,10 +23,10 @@ func TestMakeInstallCmd(t *testing.T) {
 }
 
 func TestMakeInstallCmdPackagsConfig(t *testing.T) {
-	nugetCommand := "dotnet"
+
 	cmd, err := NewCmdFactory(
 		ExecPath{},
-	).MakeInstallCmd(nugetCommand, "testdata/valid/packages.config")
+	).MakeInstallCmd(nuget, "testdata/valid/packages.config")
 	assert.NoError(t, err)
 	assert.NotNil(t, cmd)
 	args := cmd.Args
@@ -64,7 +63,11 @@ func TestParsePackagesConfig(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				file.Chmod(0222) // write-only permissions
+				err = file.Chmod(0222) // write-only permissions
+				if err != nil {
+					t.Fatal(err)
+				}
+
 				return file.Name()
 			},
 			teardown: func() {
@@ -79,7 +82,11 @@ func TestParsePackagesConfig(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				file.WriteString("malformed xml content")
+				_, err = file.WriteString("malformed xml content")
+				if err != nil {
+					t.Fatal(err)
+				}
+
 				return file.Name()
 			},
 			teardown: func() {
@@ -91,6 +98,7 @@ func TestParsePackagesConfig(t *testing.T) {
 			name: "ReadALL error",
 			setup: func() string {
 				ioReadAllCsproj = MockReadAll
+
 				return "testdata/valid/packages.config"
 			},
 			teardown: func() {
@@ -101,6 +109,7 @@ func TestParsePackagesConfig(t *testing.T) {
 		{
 			name: "Valid packages.config",
 			setup: func() string {
+
 				return "testdata/valid/packages.config"
 			},
 			teardown: func() {
@@ -192,7 +201,11 @@ func TestWriteContentToCsprojFileErr(t *testing.T) {
 					panic(err)
 				}
 				file.Close()
-				os.Chmod("readonly.csproj", 0444) // Set file permissions to read-only
+				err = os.Chmod("readonly.csproj", 0444) // Set file permissions to read-only
+				if err != nil {
+					panic(err)
+				}
+
 			},
 			teardown: func() {
 				os.Remove("readonly.csproj") // Clean up the read-only file
@@ -285,18 +298,18 @@ func TestCreateCsprojContent(t *testing.T) {
 }
 
 func TestMakeInstallCmdBadPackagesConfigRegex(t *testing.T) {
-	nugetCommand := "dotnet"
+
 	cmd, err := CmdFactory{
 		execPath:          ExecPath{},
 		packageConfgRegex: "[",
-	}.MakeInstallCmd(nugetCommand, "file")
+	}.MakeInstallCmd(nuget, "file")
 
 	assert.Error(t, err)
 	assert.Nil(t, cmd)
 }
 
 func TestMakeInstallCmdNotAccessToFile(t *testing.T) {
-	nugetCommand := "dotnet"
+
 	tempDir, err := os.MkdirTemp("", "TestMakeInstallCmdNotAccessToFile")
 	if err != nil {
 		panic(err)
@@ -311,11 +324,15 @@ func TestMakeInstallCmdNotAccessToFile(t *testing.T) {
 	}
 	defer file.Close()
 
-	file.Chmod(0222) // write-only permissions
+	err = file.Chmod(0222) // write-only permissions
+
+	if err != nil {
+		panic(err)
+	}
 
 	_, err = NewCmdFactory(
 		ExecPath{},
-	).MakeInstallCmd(nugetCommand, file.Name())
+	).MakeInstallCmd(nuget, file.Name())
 
 	assert.Error(t, err)
 }
@@ -328,11 +345,11 @@ func (ExecPathErr) LookPath(file string) (string, error) {
 }
 
 func TestMakeInstallCmdExecPathError(t *testing.T) {
-	nugetCommand := "dotnet"
+
 	cmd, err := CmdFactory{
 		execPath:          ExecPathErr{},
 		packageConfgRegex: PackagesConfigRegex,
-	}.MakeInstallCmd(nugetCommand, "file")
+	}.MakeInstallCmd(nuget, "file")
 
 	assert.Error(t, err)
 	assert.Nil(t, cmd)
