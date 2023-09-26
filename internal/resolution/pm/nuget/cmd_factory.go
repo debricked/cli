@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -27,10 +28,6 @@ func (ExecPath) LookPath(file string) (string, error) {
 	return exec.LookPath(file)
 }
 
-type CmdFactory struct {
-	execPath IExecPath
-}
-
 var packagesConfigTemplate = `
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
@@ -44,17 +41,31 @@ var packagesConfigTemplate = `
 </Project>
 `
 
+type CmdFactory struct {
+	execPath               IExecPath
+	packageConfgRegex      string
+	packagesConfigTemplate string
+}
+
+func NewCmdFactory(execPath IExecPath) CmdFactory {
+	return CmdFactory{
+		execPath:               execPath,
+		packageConfgRegex:      PackagesConfigRegex,
+		packagesConfigTemplate: packagesConfigTemplate,
+	}
+}
+
 func (cmdf CmdFactory) MakeInstallCmd(command string, file string) (*exec.Cmd, error) {
 
 	// If the file is a packages.config file, convert it to a .csproj file
 	// check regex with PackagesConfigRegex
-	packageConfig, err := regexp.Compile(PackagesConfigRegex)
+	packageConfig, err := regexp.Compile(cmdf.packageConfgRegex)
 	if err != nil {
 		return nil, err
 	}
 
 	if packageConfig.MatchString(file) {
-		file, err = convertPackagesConfigToCsproj(file)
+		file, err = cmdf.convertPackagesConfigToCsproj(file)
 		if err != nil {
 			return nil, err
 		}
@@ -92,14 +103,14 @@ type Package struct {
 // that enables debricked to parse out transitive dependencies.
 // This may add some additional framework dependencies that will not show up if
 // we only scan the packages.config file.
-func convertPackagesConfigToCsproj(filePath string) (string, error) {
+func (cmdf CmdFactory) convertPackagesConfigToCsproj(filePath string) (string, error) {
 	packages, err := parsePackagesConfig(filePath)
 	if err != nil {
 		return "", err
 	}
 
 	targetFrameworksStr := collectUniqueTargetFrameworks(packages.Packages)
-	csprojContent, err := createCsprojContentWithTemplate(targetFrameworksStr, packages.Packages, packagesConfigTemplate)
+	csprojContent, err := cmdf.createCsprojContentWithTemplate(targetFrameworksStr, packages.Packages)
 	if err != nil {
 		return "", err
 	}
@@ -147,11 +158,12 @@ func collectUniqueTargetFrameworks(packages []Package) string {
 		}
 	}
 
+	sort.Strings(targetFrameworks) // Sort the targetFrameworks slice
+
 	return strings.Join(targetFrameworks, ";")
 }
-
-func createCsprojContentWithTemplate(targetFrameworksStr string, packages []Package, tmpl string) (string, error) {
-	tmplParsed, err := template.New("csproj").Parse(tmpl)
+func (cmdf CmdFactory) createCsprojContentWithTemplate(targetFrameworksStr string, packages []Package) (string, error) {
+	tmplParsed, err := template.New("csproj").Parse(cmdf.packagesConfigTemplate)
 	if err != nil {
 		return "", err
 	}

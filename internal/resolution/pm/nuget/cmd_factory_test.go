@@ -1,7 +1,9 @@
 package nuget
 
 import (
+	"errors"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,9 +11,9 @@ import (
 
 func TestMakeInstallCmd(t *testing.T) {
 	nugetCommand := "dotnet"
-	cmd, err := CmdFactory{
-		execPath: ExecPath{},
-	}.MakeInstallCmd(nugetCommand, "file")
+	cmd, err := NewCmdFactory(
+		ExecPath{},
+	).MakeInstallCmd(nugetCommand, "file")
 	assert.NoError(t, err)
 	assert.NotNil(t, cmd)
 	args := cmd.Args
@@ -21,9 +23,9 @@ func TestMakeInstallCmd(t *testing.T) {
 
 func TestMakeInstallCmdPackagsConfig(t *testing.T) {
 	nugetCommand := "dotnet"
-	cmd, err := CmdFactory{
-		execPath: ExecPath{},
-	}.MakeInstallCmd(nugetCommand, "testdata/valid/packages.config")
+	cmd, err := NewCmdFactory(
+		ExecPath{},
+	).MakeInstallCmd(nugetCommand, "testdata/valid/packages.config")
 	assert.NoError(t, err)
 	assert.NotNil(t, cmd)
 	args := cmd.Args
@@ -123,28 +125,6 @@ func TestWriteContentToCsprojFile(t *testing.T) {
 
 	// Cleanup: Remove the created file
 	if err := os.Remove(newFilename); err != nil {
-		t.Fatalf("Failed to remove test file: %v", err)
-	}
-}
-
-func TestConvertPackagesConfigToCsproj(t *testing.T) {
-	tests := []struct {
-		filePath  string
-		wantError bool
-	}{
-		{"testdata/valid/packages.config", false},
-		{"testdata/invalid/packages.config", true},
-	}
-
-	for _, tt := range tests {
-		_, err := convertPackagesConfigToCsproj(tt.filePath)
-		if (err != nil) != tt.wantError {
-			t.Errorf("convertPackagesConfigToCsproj(%q) = %v, want error: %v", tt.filePath, err, tt.wantError)
-		}
-	}
-
-	// Cleanup: Remove the created .csproj file
-	if err := os.Remove("testdata/valid/packages.config.csproj"); err != nil {
 		t.Fatalf("Failed to remove test file: %v", err)
 	}
 }
@@ -264,10 +244,125 @@ func TestCreateCsprojContent(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			_, err := createCsprojContentWithTemplate(test.targetFrameworksStr, test.packages, test.tmpl)
+			cmd := CmdFactory{
+				execPath:               ExecPath{},
+				packageConfgRegex:      PackagesConfigRegex,
+				packagesConfigTemplate: test.tmpl,
+			}
+			_, err := cmd.createCsprojContentWithTemplate(test.targetFrameworksStr, test.packages)
 			if (err != nil) != test.shouldFail {
 				t.Errorf("createCsprojContentWithTemplate() error = %v, shouldFail = %v", err, test.shouldFail)
 			}
 		})
+	}
+}
+
+func TestMakeInstallCmdBadPackagesConfigRegex(t *testing.T) {
+	nugetCommand := "dotnet"
+	cmd, err := CmdFactory{
+		execPath:          ExecPath{},
+		packageConfgRegex: "[",
+	}.MakeInstallCmd(nugetCommand, "file")
+
+	assert.Error(t, err)
+	assert.Nil(t, cmd)
+}
+
+func TestMakeInstallCmdNotAccessToFile(t *testing.T) {
+	nugetCommand := "dotnet"
+	tempDir, err := os.MkdirTemp("", "TestMakeInstallCmdNotAccessToFile")
+	if err != nil {
+		panic(err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	filePath := filepath.Join(tempDir, "packages.config")
+
+	file, err := os.Create(filePath)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	file.Chmod(0222) // write-only permissions
+
+	_, err = NewCmdFactory(
+		ExecPath{},
+	).MakeInstallCmd(nugetCommand, file.Name())
+
+	assert.Error(t, err)
+}
+
+type ExecPathErr struct {
+}
+
+func (ExecPathErr) LookPath(file string) (string, error) {
+	return "", errors.New("error")
+}
+
+func TestMakeInstallCmdExecPathError(t *testing.T) {
+	nugetCommand := "dotnet"
+	cmd, err := CmdFactory{
+		execPath:          ExecPathErr{},
+		packageConfgRegex: PackagesConfigRegex,
+	}.MakeInstallCmd(nugetCommand, "file")
+
+	assert.Error(t, err)
+	assert.Nil(t, cmd)
+}
+
+func TestConvertPackagesConfigToCsproj(t *testing.T) {
+	tests := []struct {
+		name                   string
+		filePath               string
+		wantError              bool
+		packagesConfigTemplate string
+		setup                  func() string // function to set up the test environment
+		teardown               func()        // function to clean up after the test
+	}{
+		{"Valid packages config", "testdata/valid/packages.config", false, packagesConfigTemplate, nil, nil},
+		{"Invalid packages config", "testdata/invalid/packages.config", true, packagesConfigTemplate, nil, nil},
+		{"Bad template", "testdata/valid/packages.config", true, "{{.TargetFramewo", nil, nil},
+		{"File without write premisions", "testdata/valid/packages.config", true, packagesConfigTemplate,
+			func() string {
+				filename := "testdata/valid/packages.config.csproj"
+				file, err := os.Create(filename)
+				if err != nil {
+					t.Fatal(err)
+				}
+				defer file.Close()
+				file.Chmod(0222) // write-only permissions
+				return file.Name()
+			},
+			nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.setup != nil {
+				tt.setup() // set up the environment for the test
+			}
+
+			if tt.teardown != nil {
+				defer tt.teardown() // clean up after the test
+			}
+
+			cmd := CmdFactory{
+				execPath:               ExecPath{},
+				packageConfgRegex:      PackagesConfigRegex,
+				packagesConfigTemplate: tt.packagesConfigTemplate,
+			}
+			_, err := cmd.convertPackagesConfigToCsproj(tt.filePath)
+			if (err != nil) != tt.wantError {
+				t.Errorf("convertPackagesConfigToCsproj(%q) = %v, want error: %v", tt.filePath, err, tt.wantError)
+			}
+
+		})
+	}
+
+	// Cleanup: Remove the created .csproj file
+	if err := os.Remove("testdata/valid/packages.config.csproj"); err != nil {
+		t.Fatalf("Failed to remove test file: %v", err)
 	}
 }
