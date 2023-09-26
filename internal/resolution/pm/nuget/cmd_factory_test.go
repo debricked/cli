@@ -2,6 +2,8 @@ package nuget
 
 import (
 	"errors"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -36,6 +38,10 @@ func TestMakeInstallCmdPackagsConfig(t *testing.T) {
 	if err := os.Remove("testdata/valid/packages.config.csproj"); err != nil {
 		t.Fatalf("Failed to remove test file: %v", err)
 	}
+}
+
+func MockReadAll(r io.Reader) ([]byte, error) {
+	return nil, fmt.Errorf("mock error")
 }
 func TestParsePackagesConfig(t *testing.T) {
 	tests := []struct {
@@ -80,6 +86,27 @@ func TestParsePackagesConfig(t *testing.T) {
 				os.Remove("malformed_file.config") // clean up the malformed file
 			},
 			shouldFail: true,
+		},
+		{
+			name: "ReadALL error",
+			setup: func() string {
+				ioReadAllCsproj = MockReadAll
+				return "testdata/valid/packages.config"
+			},
+			teardown: func() {
+				ioReadAllCsproj = io.ReadAll
+			},
+			shouldFail: true,
+		},
+		{
+			name: "Valid packages.config",
+			setup: func() string {
+				return "testdata/valid/packages.config"
+			},
+			teardown: func() {
+				fmt.Println("teardown")
+			},
+			shouldFail: false,
 		},
 	}
 
@@ -311,30 +338,29 @@ func TestMakeInstallCmdExecPathError(t *testing.T) {
 	assert.Nil(t, cmd)
 }
 
+// Define a mock function that always returns an error
+func mockCreate(name string) (*os.File, error) {
+	return nil, fmt.Errorf("mock error")
+}
 func TestConvertPackagesConfigToCsproj(t *testing.T) {
 	tests := []struct {
 		name                   string
 		filePath               string
 		wantError              bool
 		packagesConfigTemplate string
-		setup                  func() string // function to set up the test environment
-		teardown               func()        // function to clean up after the test
+		setup                  func() // function to set up the test environment
+		teardown               func() // function to clean up after the test
 	}{
 		{"Valid packages config", "testdata/valid/packages.config", false, packagesConfigTemplate, nil, nil},
 		{"Invalid packages config", "testdata/invalid/packages.config", true, packagesConfigTemplate, nil, nil},
 		{"Bad template", "testdata/valid/packages.config", true, "{{.TargetFramewo", nil, nil},
 		{"File without write premisions", "testdata/valid/packages.config", true, packagesConfigTemplate,
-			func() string {
-				filename := "testdata/valid/packages.config.csproj"
-				file, err := os.Create(filename)
-				if err != nil {
-					t.Fatal(err)
-				}
-				defer file.Close()
-				file.Chmod(0222) // write-only permissions
-				return file.Name()
+			func() {
+				osCreateCsproj = mockCreate
 			},
-			nil,
+			func() {
+				osCreateCsproj = os.Create
+			},
 		},
 	}
 

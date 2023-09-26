@@ -124,6 +124,8 @@ func (cmdf CmdFactory) convertPackagesConfigToCsproj(filePath string) (string, e
 	return newFilename, nil
 }
 
+var ioReadAllCsproj = io.ReadAll
+
 func parsePackagesConfig(filePath string) (*Packages, error) {
 	xmlFile, err := os.Open(filePath)
 	if err != nil {
@@ -131,7 +133,7 @@ func parsePackagesConfig(filePath string) (*Packages, error) {
 	}
 	defer xmlFile.Close()
 
-	byteValue, err := io.ReadAll(xmlFile)
+	byteValue, err := ioReadAllCsproj(xmlFile)
 	if err != nil {
 		return nil, err
 	}
@@ -180,9 +182,11 @@ func (cmdf CmdFactory) createCsprojContentWithTemplate(targetFrameworksStr strin
 	return tpl.String(), nil
 }
 
+var osCreateCsproj = os.Create
+
 func writeContentToCsprojFile(newFilename string, content string) error {
 
-	csprojFile, err := os.Create(newFilename)
+	csprojFile, err := osCreateCsproj(newFilename)
 	if err != nil {
 		return err
 	}
