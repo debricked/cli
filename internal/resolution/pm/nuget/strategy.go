@@ -14,9 +14,7 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 		jobs = append(jobs, NewJob(
 			file,
 			true,
-			CmdFactory{
-				execPath: ExecPath{},
-			},
+			NewCmdFactory(ExecPath{}),
 		),
 		)
 	}
