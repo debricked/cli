@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"testing"
@@ -140,7 +141,10 @@ func TestCollectUniqueTargetFrameworks(t *testing.T) {
 		{TargetFramework: "net46"},
 		{TargetFramework: "net45"},
 	}
-	got := collectUniqueTargetFrameworks(packages)
+	got, err := collectUniqueTargetFrameworks(packages, nuget)
+	if err != nil {
+		t.Errorf("collectUniqueTargetFrameworks() error = %v", err)
+	}
 	want := "net45;net46"
 	if got != want {
 		t.Errorf("collectUniqueTargetFrameworks() = %v, want %v", got, want)
@@ -359,6 +363,9 @@ func TestMakeInstallCmdExecPathError(t *testing.T) {
 func mockCreate(name string) (*os.File, error) {
 	return nil, fmt.Errorf("mock error")
 }
+
+var nugetCommand = nuget
+
 func TestConvertPackagesConfigToCsproj(t *testing.T) {
 	tests := []struct {
 		name                   string
@@ -379,6 +386,14 @@ func TestConvertPackagesConfigToCsproj(t *testing.T) {
 				osCreateCsproj = os.Create
 			},
 		},
+		{"Command does not exist", "testdata/missing_framework/packages.config", true, packagesConfigTemplate,
+			func() {
+				nugetCommand = "non-existent-command"
+			},
+			func() {
+				nugetCommand = nuget
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -396,7 +411,8 @@ func TestConvertPackagesConfigToCsproj(t *testing.T) {
 				packageConfgRegex:      PackagesConfigRegex,
 				packagesConfigTemplate: tt.packagesConfigTemplate,
 			}
-			_, err := cmd.convertPackagesConfigToCsproj(tt.filePath)
+			log.Println(nugetCommand)
+			_, err := cmd.convertPackagesConfigToCsproj(tt.filePath, nugetCommand)
 			if (err != nil) != tt.wantError {
 				t.Errorf("convertPackagesConfigToCsproj(%q) = %v, want error: %v", tt.filePath, err, tt.wantError)
 			}
@@ -407,5 +423,45 @@ func TestConvertPackagesConfigToCsproj(t *testing.T) {
 	// Cleanup: Remove the created .csproj file
 	if err := os.Remove("testdata/valid/packages.config.csproj"); err != nil {
 		t.Fatalf("Failed to remove test file: %v", err)
+	}
+}
+
+func TestGetDotnetVersion(t *testing.T) {
+	version, err := getDotnetVersion(nuget)
+	if err != nil {
+		t.Errorf("getDotnetVersion returned an error: %v", err)
+	}
+	if version == "" {
+		t.Errorf("getDotnetVersion returned an empty string")
+	}
+
+	// Test with a non-existent command
+	_, err = getDotnetVersion("non-existent-command")
+	if err == nil {
+		t.Errorf("getDotnetVersion did not return an error")
+	}
+}
+
+func TestGetDefaultFrameworkOfDotnetVersion(t *testing.T) {
+	tests := []struct {
+		version string
+		want    string
+	}{
+		{"7.0.100", "net7.0"},
+		{"6.0.100", "net6.0"},
+		{"5.0.100", "net5.0"},
+		{"3.1.100", "netcoreapp3.1"},
+		{"2.1.100", "netcoreapp2.1"},
+		{"1.1.100", "netcoreapp1.1"},
+		{"0.0.0", "net6.0"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.version, func(t *testing.T) {
+			got := getDefaultFrameworkOfDotnetVersion(tt.version)
+			if got != tt.want {
+				t.Errorf("getDefaultFrameworkOfDotnetVersion(%q) = %q, want %q", tt.version, got, tt.want)
+			}
+		})
 	}
 }

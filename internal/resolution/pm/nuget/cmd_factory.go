@@ -57,6 +57,12 @@ func NewCmdFactory(execPath IExecPath) CmdFactory {
 
 func (cmdf CmdFactory) MakeInstallCmd(command string, file string) (*exec.Cmd, error) {
 
+	path, err := cmdf.execPath.LookPath(command)
+
+	if err != nil {
+		return nil, err
+	}
+
 	// If the file is a packages.config file, convert it to a .csproj file
 	// check regex with PackagesConfigRegex
 	packageConfig, err := regexp.Compile(cmdf.packageConfgRegex)
@@ -65,16 +71,10 @@ func (cmdf CmdFactory) MakeInstallCmd(command string, file string) (*exec.Cmd, e
 	}
 
 	if packageConfig.MatchString(file) {
-		file, err = cmdf.convertPackagesConfigToCsproj(file)
+		file, err = cmdf.convertPackagesConfigToCsproj(file, command)
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	path, err := cmdf.execPath.LookPath(command)
-
-	if err != nil {
-		return nil, err
 	}
 
 	fileDir := filepath.Dir(file)
@@ -103,13 +103,16 @@ type Package struct {
 // that enables debricked to parse out transitive dependencies.
 // This may add some additional framework dependencies that will not show up if
 // we only scan the packages.config file.
-func (cmdf CmdFactory) convertPackagesConfigToCsproj(filePath string) (string, error) {
+func (cmdf CmdFactory) convertPackagesConfigToCsproj(filePath string, command string) (string, error) {
 	packages, err := parsePackagesConfig(filePath)
 	if err != nil {
 		return "", err
 	}
 
-	targetFrameworksStr := collectUniqueTargetFrameworks(packages.Packages)
+	targetFrameworksStr, err := collectUniqueTargetFrameworks(packages.Packages, command)
+	if err != nil {
+		return "", err
+	}
 	csprojContent, err := cmdf.createCsprojContentWithTemplate(targetFrameworksStr, packages.Packages)
 	if err != nil {
 		return "", err
@@ -125,6 +128,37 @@ func (cmdf CmdFactory) convertPackagesConfigToCsproj(filePath string) (string, e
 }
 
 var ioReadAllCsproj = io.ReadAll
+
+func getDotnetVersion(command string) (string, error) {
+	cmd := exec.Command(command, "--version")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(out.String()), nil
+}
+
+func getDefaultFrameworkOfDotnetVersion(dotnetVersion string) string {
+
+	if strings.HasPrefix(dotnetVersion, "7") {
+		return "net7.0"
+	} else if strings.HasPrefix(dotnetVersion, "6") {
+		return "net6.0"
+	} else if strings.HasPrefix(dotnetVersion, "5") {
+		return "net5.0"
+	} else if strings.HasPrefix(dotnetVersion, "3") {
+		return "netcoreapp3.1"
+	} else if strings.HasPrefix(dotnetVersion, "2") {
+		return "netcoreapp2.1"
+	} else if strings.HasPrefix(dotnetVersion, "1") {
+		return "netcoreapp1.1"
+	}
+
+	return "net6.0"
+}
 
 func parsePackagesConfig(filePath string) (*Packages, error) {
 	xmlFile, err := os.Open(filePath)
@@ -147,7 +181,7 @@ func parsePackagesConfig(filePath string) (*Packages, error) {
 	return &packages, nil
 }
 
-func collectUniqueTargetFrameworks(packages []Package) string {
+func collectUniqueTargetFrameworks(packages []Package, command string) (string, error) {
 	uniqueTargetFrameworks := make(map[string]struct{})
 	for _, pkg := range packages {
 		uniqueTargetFrameworks[pkg.TargetFramework] = struct{}{}
@@ -162,7 +196,16 @@ func collectUniqueTargetFrameworks(packages []Package) string {
 
 	sort.Strings(targetFrameworks) // Sort the targetFrameworks slice
 
-	return strings.Join(targetFrameworks, ";")
+	if len(targetFrameworks) == 0 {
+		dotnetVersion, err := getDotnetVersion(command)
+		if err != nil {
+			return "", err
+		}
+
+		targetFrameworks = append(targetFrameworks, getDefaultFrameworkOfDotnetVersion(dotnetVersion))
+	}
+
+	return strings.Join(targetFrameworks, ";"), nil
 }
 func (cmdf CmdFactory) createCsprojContentWithTemplate(targetFrameworksStr string, packages []Package) (string, error) {
 	tmplParsed, err := template.New("csproj").Parse(cmdf.packagesConfigTemplate)
