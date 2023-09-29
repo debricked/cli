@@ -5,16 +5,22 @@ import (
 )
 
 type CmdFactoryMock struct {
-	InstallCmdName string
-	MakeInstallErr error
+	InstallCmdName       string
+	MakeInstallErr       error
+	GetTempoCsprojReturn string
 }
 
 func NewEchoCmdFactory() CmdFactoryMock {
 	return CmdFactoryMock{
-		InstallCmdName: "echo",
+		InstallCmdName:       "echo",
+		GetTempoCsprojReturn: "",
 	}
 }
 
 func (f CmdFactoryMock) MakeInstallCmd(command string, file string) (*exec.Cmd, error) {
 	return exec.Command(f.InstallCmdName), f.MakeInstallErr
+}
+
+func (f CmdFactoryMock) GetTempoCsproj() string {
+	return f.GetTempoCsprojReturn
 }

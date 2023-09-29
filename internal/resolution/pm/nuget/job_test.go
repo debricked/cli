@@ -14,7 +14,7 @@ const (
 )
 
 func TestNewJob(t *testing.T) {
-	j := NewJob("file", false, CmdFactory{
+	j := NewJob("file", false, &CmdFactory{
 		execPath: ExecPath{},
 	})
 	assert.Equal(t, "file", j.GetFile())
@@ -29,6 +29,41 @@ func TestRunInstall(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.False(t, j.Errors().HasError())
+}
+
+func TestRunInstallPackagesConfig(t *testing.T) {
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	cmdFactoryMock.GetTempoCsprojReturn = "tempo.csproj"
+	j := NewJob("packages.config", false, cmdFactoryMock)
+
+	_, err := j.runInstallCmd()
+	assert.NoError(t, err)
+
+	assert.False(t, j.Errors().HasError())
+}
+
+func TestRunInstallPackagesConfigRemoveAllErr(t *testing.T) {
+
+	oldOsRemoveAll := osRemoveAll
+	cmdErr := errors.New("os-remove-all-error")
+	cmdErrGt := errors.New("\n\nos-remove-all-error")
+	osRemoveAll = func(path string) error {
+		return cmdErr
+	}
+
+	defer func() {
+		osRemoveAll = oldOsRemoveAll
+	}()
+
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	cmdFactoryMock.GetTempoCsprojReturn = "tempo.csproj"
+	j := NewJob("packages.config", true, cmdFactoryMock)
+
+	go jobTestdata.WaitStatus(j)
+	j.Run()
+
+	assert.Equal(t, j.Errors().GetAll()[0], cmdErrGt)
+
 }
 
 func TestInstall(t *testing.T) {
