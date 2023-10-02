@@ -88,6 +88,7 @@ func (cmdf *CmdFactory) MakeInstallCmd(command string, file string) (*exec.Cmd, 
 	}
 
 	fileDir := filepath.Dir(file)
+	file = filepath.Base(file)
 
 	return &exec.Cmd{
 		Path: path,
