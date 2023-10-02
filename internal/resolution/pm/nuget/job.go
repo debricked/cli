@@ -2,6 +2,7 @@ package nuget
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/debricked/cli/internal/resolution/job"
 )
@@ -38,6 +39,7 @@ func (j *Job) Run() {
 
 		j.SendStatus("installing dependencies")
 		output, err := j.runInstallCmd()
+		defer j.cleanupTempCsproj()
 		if err != nil {
 			j.Errors().Critical(fmt.Errorf("%s\n%s", output, err))
 
@@ -46,6 +48,8 @@ func (j *Job) Run() {
 	}
 
 }
+
+var osRemoveAll = os.RemoveAll
 
 func (j *Job) runInstallCmd() ([]byte, error) {
 
@@ -61,4 +65,16 @@ func (j *Job) runInstallCmd() ([]byte, error) {
 	}
 
 	return installCmdOutput, nil
+}
+
+func (j *Job) cleanupTempCsproj() {
+	// Cleanup of the temporary .csproj file (packages.config)
+	tempFile := j.cmdFactory.GetTempoCsproj()
+	if tempFile != "" {
+		// remove the packages.config.csproj file
+		err := osRemoveAll(tempFile)
+		if err != nil {
+			j.Errors().Critical(fmt.Errorf("failed to remove temporary .csproj file: %s", err))
+		}
+	}
 }

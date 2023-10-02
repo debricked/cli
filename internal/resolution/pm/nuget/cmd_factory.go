@@ -15,6 +15,7 @@ import (
 
 type ICmdFactory interface {
 	MakeInstallCmd(command string, file string) (*exec.Cmd, error)
+	GetTempoCsproj() string
 }
 
 type IExecPath interface {
@@ -45,17 +46,29 @@ type CmdFactory struct {
 	execPath               IExecPath
 	packageConfgRegex      string
 	packagesConfigTemplate string
+	tempoCsproj            string
 }
 
-func NewCmdFactory(execPath IExecPath) CmdFactory {
-	return CmdFactory{
+func NewCmdFactory(execPath IExecPath) *CmdFactory {
+	return &CmdFactory{
 		execPath:               execPath,
 		packageConfgRegex:      PackagesConfigRegex,
 		packagesConfigTemplate: packagesConfigTemplate,
+		tempoCsproj:            "",
 	}
 }
 
-func (cmdf CmdFactory) MakeInstallCmd(command string, file string) (*exec.Cmd, error) {
+func (cmdf *CmdFactory) GetTempoCsproj() string {
+	return cmdf.tempoCsproj
+}
+
+func (cmdf *CmdFactory) MakeInstallCmd(command string, file string) (*exec.Cmd, error) {
+
+	path, err := cmdf.execPath.LookPath(command)
+
+	if err != nil {
+		return nil, err
+	}
 
 	// If the file is a packages.config file, convert it to a .csproj file
 	// check regex with PackagesConfigRegex
@@ -64,25 +77,26 @@ func (cmdf CmdFactory) MakeInstallCmd(command string, file string) (*exec.Cmd, e
 		return nil, err
 	}
 
+	fileLockName := "packages.lock.json"
 	if packageConfig.MatchString(file) {
-		file, err = cmdf.convertPackagesConfigToCsproj(file)
+		file, err = cmdf.convertPackagesConfigToCsproj(file, command)
+		cmdf.tempoCsproj = file
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	path, err := cmdf.execPath.LookPath(command)
-
-	if err != nil {
-		return nil, err
+		fileLockName = ".packages.config.nuget.debricked.lock"
 	}
 
 	fileDir := filepath.Dir(file)
+	file = filepath.Base(file)
 
 	return &exec.Cmd{
 		Path: path,
 		Args: []string{command, "restore",
+			file,
 			"--use-lock-file",
+			"--lock-file-path",
+			fileLockName,
 		},
 		Dir: fileDir,
 	}, err
@@ -103,19 +117,22 @@ type Package struct {
 // that enables debricked to parse out transitive dependencies.
 // This may add some additional framework dependencies that will not show up if
 // we only scan the packages.config file.
-func (cmdf CmdFactory) convertPackagesConfigToCsproj(filePath string) (string, error) {
+func (cmdf *CmdFactory) convertPackagesConfigToCsproj(filePath string, command string) (string, error) {
 	packages, err := parsePackagesConfig(filePath)
 	if err != nil {
 		return "", err
 	}
 
-	targetFrameworksStr := collectUniqueTargetFrameworks(packages.Packages)
+	targetFrameworksStr, err := collectUniqueTargetFrameworks(packages.Packages, command)
+	if err != nil {
+		return "", err
+	}
 	csprojContent, err := cmdf.createCsprojContentWithTemplate(targetFrameworksStr, packages.Packages)
 	if err != nil {
 		return "", err
 	}
 
-	newFilename := filePath + ".csproj"
+	newFilename := filePath + ".nuget.debricked.csproj.temp"
 	err = writeContentToCsprojFile(newFilename, csprojContent)
 	if err != nil {
 		return "", err
@@ -124,7 +141,49 @@ func (cmdf CmdFactory) convertPackagesConfigToCsproj(filePath string) (string, e
 	return newFilename, nil
 }
 
+func (cmdf *CmdFactory) createCsprojContentWithTemplate(targetFrameworksStr string, packages []Package) (string, error) {
+	tmplParsed, err := template.New("csproj").Parse(cmdf.packagesConfigTemplate)
+	if err != nil {
+		return "", err
+	}
+
+	var tpl bytes.Buffer
+	err = tmplParsed.Execute(&tpl, map[string]interface{}{
+		"TargetFrameworks": targetFrameworksStr,
+		"Packages":         packages,
+	})
+	if err != nil {
+		return tpl.String(), err
+	}
+
+	return tpl.String(), nil
+}
+
 var ioReadAllCsproj = io.ReadAll
+
+func getDotnetVersion(command string) (string, error) {
+	cmd := exec.Command(command, "--version")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(out.String()), nil
+}
+
+// getDefaultFrameworkOfDotnetVersion returns the default target framework for a given version of .NET.
+func getDefaultFrameworkOfDotnetVersion(dotnetVersion string) string {
+	switch {
+	case strings.HasPrefix(dotnetVersion, "7"):
+		return "net7.0"
+	case strings.HasPrefix(dotnetVersion, "6"):
+		return "net6.0"
+	default:
+		return "net6.0"
+	}
+}
 
 func parsePackagesConfig(filePath string) (*Packages, error) {
 	xmlFile, err := os.Open(filePath)
@@ -147,7 +206,7 @@ func parsePackagesConfig(filePath string) (*Packages, error) {
 	return &packages, nil
 }
 
-func collectUniqueTargetFrameworks(packages []Package) string {
+func collectUniqueTargetFrameworks(packages []Package, command string) (string, error) {
 	uniqueTargetFrameworks := make(map[string]struct{})
 	for _, pkg := range packages {
 		uniqueTargetFrameworks[pkg.TargetFramework] = struct{}{}
@@ -162,24 +221,16 @@ func collectUniqueTargetFrameworks(packages []Package) string {
 
 	sort.Strings(targetFrameworks) // Sort the targetFrameworks slice
 
-	return strings.Join(targetFrameworks, ";")
-}
-func (cmdf CmdFactory) createCsprojContentWithTemplate(targetFrameworksStr string, packages []Package) (string, error) {
-	tmplParsed, err := template.New("csproj").Parse(cmdf.packagesConfigTemplate)
-	if err != nil {
-		return "", err
+	if len(targetFrameworks) == 0 {
+		dotnetVersion, err := getDotnetVersion(command)
+		if err != nil {
+			return "", err
+		}
+
+		targetFrameworks = append(targetFrameworks, getDefaultFrameworkOfDotnetVersion(dotnetVersion))
 	}
 
-	var tpl bytes.Buffer
-	err = tmplParsed.Execute(&tpl, map[string]interface{}{
-		"TargetFrameworks": targetFrameworksStr,
-		"Packages":         packages,
-	})
-	if err != nil {
-		return "", err
-	}
-
-	return tpl.String(), nil
+	return strings.Join(targetFrameworks, ";"), nil
 }
 
 var osCreateCsproj = os.Create
