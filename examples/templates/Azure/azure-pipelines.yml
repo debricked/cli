@@ -1,5 +1,5 @@
 jobs:
-- job: debricked
+- job: debricked_scan
   displayName: Debricked scan
   pool:
     vmImage: 'ubuntu-latest'
