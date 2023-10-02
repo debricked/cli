@@ -39,7 +39,7 @@ func (j *Job) Run() {
 
 		j.SendStatus("installing dependencies")
 		output, err := j.runInstallCmd()
-		defer j.cleanupTempoCsproj()
+		defer j.cleanupTempCsproj()
 		if err != nil {
 			j.Errors().Critical(fmt.Errorf("%s\n%s", output, err))
 
@@ -67,7 +67,7 @@ func (j *Job) runInstallCmd() ([]byte, error) {
 	return installCmdOutput, nil
 }
 
-func (j *Job) cleanupTempoCsproj() {
+func (j *Job) cleanupTempCsproj() {
 	// Cleanup of the temporary .csproj file (packages.config)
 	tempFile := j.cmdFactory.GetTempoCsproj()
 	if tempFile != "" {
