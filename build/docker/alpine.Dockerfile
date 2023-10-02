@@ -24,7 +24,7 @@ RUN apk --no-cache --update add \
   py3-scipy \
   py3-pip \
   go~=1.20 \
-  nodejs \ 
+  nodejs \
   yarn \
   dotnet7-sdk
 
