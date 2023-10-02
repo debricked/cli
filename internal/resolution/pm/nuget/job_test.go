@@ -46,7 +46,7 @@ func TestRunInstallPackagesConfigRemoveAllErr(t *testing.T) {
 
 	oldOsRemoveAll := osRemoveAll
 	cmdErr := errors.New("os-remove-all-error")
-	cmdErrGt := errors.New("\n\nos-remove-all-error")
+	cmdErrGt := errors.New("failed to remove temporary .csproj file: os-remove-all-error")
 	osRemoveAll = func(path string) error {
 		return cmdErr
 	}
@@ -61,8 +61,8 @@ func TestRunInstallPackagesConfigRemoveAllErr(t *testing.T) {
 
 	go jobTestdata.WaitStatus(j)
 	j.Run()
-
-	assert.Equal(t, j.Errors().GetAll()[0], cmdErrGt)
+	errors := j.Errors().GetAll()
+	assert.Equal(t, errors[0], cmdErrGt)
 
 }
 

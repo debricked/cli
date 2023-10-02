@@ -39,6 +39,7 @@ func (j *Job) Run() {
 
 		j.SendStatus("installing dependencies")
 		output, err := j.runInstallCmd()
+		defer j.cleanupTempoCsproj()
 		if err != nil {
 			j.Errors().Critical(fmt.Errorf("%s\n%s", output, err))
 
@@ -63,15 +64,17 @@ func (j *Job) runInstallCmd() ([]byte, error) {
 		return installCmdOutput, j.GetExitError(err)
 	}
 
+	return installCmdOutput, nil
+}
+
+func (j *Job) cleanupTempoCsproj() {
 	// Cleanup of the temporary .csproj file (packages.config)
 	tempFile := j.cmdFactory.GetTempoCsproj()
 	if tempFile != "" {
 		// remove the packages.config.csproj file
-		err = osRemoveAll(tempFile)
+		err := osRemoveAll(tempFile)
 		if err != nil {
-			return installCmdOutput, j.GetExitError(err)
+			j.Errors().Critical(fmt.Errorf("failed to remove temporary .csproj file: %s", err))
 		}
 	}
-
-	return installCmdOutput, nil
 }

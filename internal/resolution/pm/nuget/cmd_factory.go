@@ -80,10 +80,10 @@ func (cmdf *CmdFactory) MakeInstallCmd(command string, file string) (*exec.Cmd, 
 	fileLockName := "packages.lock.json"
 	if packageConfig.MatchString(file) {
 		file, err = cmdf.convertPackagesConfigToCsproj(file, command)
+		cmdf.tempoCsproj = file
 		if err != nil {
 			return nil, err
 		}
-		cmdf.tempoCsproj = file
 		fileLockName = ".packages.config.nuget.debricked.lock"
 	}
 
@@ -152,7 +152,7 @@ func (cmdf *CmdFactory) createCsprojContentWithTemplate(targetFrameworksStr stri
 		"Packages":         packages,
 	})
 	if err != nil {
-		return "", err
+		return tpl.String(), err
 	}
 
 	return tpl.String(), nil
