@@ -35,7 +35,11 @@ RUN apt -y update && apt -y upgrade && apt -y install openjdk-11-jre \
     gnupg \
     python3-pip && \
     apt -y install -t testing golang-1.20 && \
-    apt -y clean && rm -rf /var/lib/apt/lists/*
+    apt -y clean && rm -rf /var/lib/apt/lists/* && \
+    # Symlink pip3 to pip, we assume that "pip" works in CLI
+    ln -sf /usr/bin/pip3 /usr/bin/pip && \
+    # Symlink go binary to bin directory which is in path
+    ln -s /usr/lib/go-1.20/bin/go /usr/bin/go
 
 RUN mkdir -p /etc/apt/keyrings
 
