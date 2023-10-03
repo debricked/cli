@@ -80,6 +80,7 @@ RUN apt -y update && apt -y upgrade && apt -y install openjdk-11-jre \
 
 RUN dotnet --version
 
+# Put copy at the end to speedup Docker build by caching previous RUNs and run those concurrently
 COPY --from=dev /cli/debricked /usr/bin/debricked
 
 ENTRYPOINT [ "debricked",  "scan" ]
