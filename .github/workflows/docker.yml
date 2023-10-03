@@ -7,10 +7,13 @@ on:
     tags:
       - 'v*'
   pull_request:
+    paths:
+      - '**.Dockerfile'
+      - '.github/workflows/docker.yaml'
 
 jobs:
   push:
-    name: 'Push Docker images'
+    name: 'Build and (conditionally) push Docker images'
     strategy:
       matrix:
         stage: ['cli', 'scan', 'resolution']
