@@ -6,10 +6,14 @@ on:
       - main
     tags:
       - 'v*'
+  pull_request:
+    paths:
+      - '**.Dockerfile'
+      - '.github/workflows/docker.yaml'
 
 jobs:
   push:
-    name: 'Push Docker images'
+    name: 'Build and (conditionally) push Docker images'
     strategy:
       matrix:
         stage: ['cli', 'scan', 'resolution']
@@ -20,20 +24,21 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to DockerHub
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -41,7 +46,7 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           flavor: |
             latest=${{ matrix.stage == 'cli' }}
@@ -61,7 +66,7 @@ jobs:
             type=raw,value=latest-${{ matrix.stage }}
 
       - name: Build and push ${{ matrix.docker-os }} images
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: build/docker/${{ matrix.docker-os }}.Dockerfile
@@ -70,3 +75,5 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -10,10 +10,6 @@ lint:
 test:
 	bash scripts/test_cli.sh
 
-.PHONY: test-docker
-test-docker:
-	bash scripts/test_docker.sh cli
-
 .PHONY: test-e2e
 test-e2e:
 	bash scripts/test_e2e.sh
