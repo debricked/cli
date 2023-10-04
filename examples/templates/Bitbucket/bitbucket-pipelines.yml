@@ -5,7 +5,7 @@ image:
 
 definitions:
   pipelines:
-    Debricked: &Debricked
+    debricked-scan: &debricked-scan
       - step:
           name: "Debricked Scan"
           script:
@@ -16,4 +16,4 @@ definitions:
             
 pipelines:
   default:
-    - <<: *Debricked
+    - <<: *debricked-scan
