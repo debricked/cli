@@ -226,10 +226,12 @@ func (uploadBatch *uploadBatch) initUpload() ([]string, error) {
 		return files, nil
 	}
 
+	var entryFile string
+	var err error
 	for len(files) > 0 {
-		entryFile := files[0]
+		entryFile = files[0]
 		files = files[1:]
-		err := uploadBatch.uploadFile(entryFile)
+		err = uploadBatch.uploadFile(entryFile)
 		if err == nil {
 			printSuccessfulUpload(entryFile)
 
@@ -237,7 +239,9 @@ func (uploadBatch *uploadBatch) initUpload() ([]string, error) {
 		}
 	}
 
-	return files, errors.New("failed to initialize a scan due to badly formatted files")
+	errStr := fmt.Sprintf("failed to initialize a scan due to badly formatted files, initial upload file %s got the following error: %s", entryFile, err.Error())
+
+	return files, errors.New(errStr)
 }
 
 type uploadedFile struct {
