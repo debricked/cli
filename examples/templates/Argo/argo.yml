@@ -22,7 +22,7 @@ spec:
               repo: "{{inputs.parameters.git-url}}"
       container:
         name: 'debricked-scan'
-        image: debricked/cli
+        image: debricked/cli:1-resolution-debian
         workingDir: /repository
         command:
           - debricked scan
