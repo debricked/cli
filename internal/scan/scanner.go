@@ -29,16 +29,18 @@ type IScanner interface {
 type IOptions interface{}
 
 type DebrickedScanner struct {
-	client    *client.IDebClient
-	finder    file.IFinder
-	uploader  *upload.IUploader
-	ciService ci.IService
-	resolver  resolution.IResolver
+	client      *client.IDebClient
+	finder      file.IFinder
+	uploader    *upload.IUploader
+	ciService   ci.IService
+	resolver    resolution.IResolver
+	fingerprint file.IFingerprint
 }
 
 type DebrickedOptions struct {
 	Path            string
 	Resolve         bool
+	Fingerprint     bool
 	Exclusions      []string
 	RepositoryName  string
 	CommitName      string
@@ -55,6 +57,7 @@ func NewDebrickedScanner(
 	uploader upload.IUploader,
 	ciService ci.IService,
 	resolver resolution.IResolver,
+	fingerprint file.IFingerprint,
 ) *DebrickedScanner {
 	return &DebrickedScanner{
 		c,
@@ -62,6 +65,7 @@ func NewDebrickedScanner(
 		&uploader,
 		ciService,
 		resolver,
+		fingerprint,
 	}
 }
 
@@ -123,6 +127,14 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		if resErr != nil {
 			return nil, resErr
 		}
+	}
+
+	if options.Fingerprint {
+		fingerprints, err := dScanner.fingerprint.FingerprintFiles(options.Path, file.DefaultExclusionsFingerprint())
+		if err != nil {
+			return nil, err
+		}
+		fingerprints.ToFile(file.OutputFileNameFingerprints)
 	}
 
 	fileGroups, err := dScanner.finder.GetGroups(options.Path, options.Exclusions, false, file.StrictAll)

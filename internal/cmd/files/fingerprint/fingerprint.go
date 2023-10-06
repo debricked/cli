@@ -12,14 +12,13 @@ import (
 var exclusions = file.DefaultExclusionsFingerprint()
 
 const (
-	ExclusionFlag  = "exclusion-fingerprint"
-	OutputFileName = ".debricked.fingerprints.wfp"
+	ExclusionFlag = "exclusion-fingerprint"
 )
 
 func NewFingerprintCmd(fingerprinter file.IFingerprint) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fingerprint [path]",
-		Short: "Fingerprint files for identification in a given path and writes it to " + OutputFileName,
+		Short: "Fingerprint files for identification in a given path and writes it to " + file.OutputFileNameFingerprints,
 		Long: `Fingerprint files for identification in a given path. 
 This hashes all files and matches them against the Debricked knowledge base.`,
 		PreRun: func(cmd *cobra.Command, _ []string) {
@@ -65,7 +64,7 @@ func RunE(f file.IFingerprint) func(_ *cobra.Command, args []string) error {
 			return err
 		}
 
-		output.ToFile(OutputFileName)
+		output.ToFile(file.OutputFileNameFingerprints)
 
 		return nil
 	}

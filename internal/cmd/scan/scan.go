@@ -20,6 +20,7 @@ var repositoryUrl string
 var integrationName string
 var exclusions = file.DefaultExclusions()
 var noResolve bool
+var noFingerprint bool
 var passOnDowntime bool
 
 const (
@@ -31,6 +32,7 @@ const (
 	IntegrationFlag   = "integration"
 	ExclusionFlag     = "exclusion"
 	NoResolveFlag     = "no-resolve"
+	NoFingerprintFlag = "no-fingerprint"
 	PassOnTimeOut     = "pass-on-timeout"
 )
 
@@ -82,7 +84,7 @@ $ debricked scan . `+exampleFlags)
 	cmd.Flags().BoolVarP(&passOnDowntime, PassOnTimeOut, "p", false, "pass scan if there is a service access timeout")
 	cmd.Flags().BoolVar(&noResolve, NoResolveFlag, false, `disables resolution of manifest files that lack lock files. Resolving manifest files enables more accurate dependency scanning since the whole dependency tree will be analysed.
 For example, if there is a "go.mod" in the target path, its dependencies are going to get resolved onto a lock file, and latter scanned.`)
-
+	cmd.Flags().BoolVar(&noFingerprint, NoFingerprintFlag, false, "disables fingerprinting for undeclared component identification. Can be run as a standalone command with more granular options.")
 	viper.MustBindEnv(RepositoryFlag)
 	viper.MustBindEnv(CommitFlag)
 	viper.MustBindEnv(BranchFlag)
@@ -103,6 +105,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 		options := scan.DebrickedOptions{
 			Path:            path,
 			Resolve:         !viper.GetBool(NoResolveFlag),
+			Fingerprint:     !viper.GetBool(NoFingerprintFlag),
 			Exclusions:      viper.GetStringSlice(ExclusionFlag),
 			RepositoryName:  viper.GetString(RepositoryFlag),
 			CommitName:      viper.GetString(CommitFlag),

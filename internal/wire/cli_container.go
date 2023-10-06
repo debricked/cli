@@ -75,6 +75,7 @@ func (cc *CliContainer) wire() error {
 		cc.uploader,
 		cc.ciService,
 		cc.resolver,
+		cc.fingerprinter,
 	)
 
 	cc.licenseReporter = licenseReport.Reporter{DebClient: cc.debClient}

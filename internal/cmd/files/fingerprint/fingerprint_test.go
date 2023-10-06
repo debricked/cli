@@ -44,7 +44,7 @@ func TestNewFingerprintCmd(t *testing.T) {
 
 func TestRunE(t *testing.T) {
 	defer func() {
-		os.Remove(OutputFileName)
+		os.Remove(file.OutputFileNameFingerprints)
 	}()
 	fingerprintMock := testdata.NewFingerprintMock()
 	runE := RunE(fingerprintMock)

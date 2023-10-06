@@ -37,6 +37,10 @@ var ECLUDED_FILES = []string{
 	"thumbs.db", "babel.config.js", "license.txt", "license.md", "copying.lib", "makefile",
 }
 
+const (
+	OutputFileNameFingerprints = ".debricked.fingerprints.wfp"
+)
+
 func isExcludedFile(filename string) bool {
 
 	filenameLower := strings.ToLower(filename)

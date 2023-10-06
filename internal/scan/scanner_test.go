@@ -52,7 +52,8 @@ func TestNewDebrickedScanner(t *testing.T) {
 	var finder file.IFinder
 	var uploader upload.IUploader
 	var resolver resolution.IResolver
-	s := NewDebrickedScanner(&debClient, finder, uploader, cis, resolver)
+	var fingerprint file.IFingerprint
+	s := NewDebrickedScanner(&debClient, finder, uploader, cis, resolver, fingerprint)
 
 	assert.NotNil(t, s)
 }
@@ -120,7 +121,7 @@ func TestScan(t *testing.T) {
 
 func TestScanFailingMetaObject(t *testing.T) {
 	var debClient client.IDebClient = testdata.NewDebClientMock()
-	scanner := NewDebrickedScanner(&debClient, nil, nil, ciService, nil)
+	scanner := NewDebrickedScanner(&debClient, nil, nil, ciService, nil, nil)
 	cwd, _ := os.Getwd()
 	path := testdataNpm
 	opts := DebrickedOptions{
@@ -167,7 +168,7 @@ func TestScanFailingNoFiles(t *testing.T) {
 
 func TestScanBadOpts(t *testing.T) {
 	var c client.IDebClient
-	scanner := NewDebrickedScanner(&c, nil, nil, nil, nil)
+	scanner := NewDebrickedScanner(&c, nil, nil, nil, nil, nil)
 	var opts IOptions
 
 	err := scanner.Scan(opts)
@@ -226,7 +227,7 @@ func TestScanEmptyResult(t *testing.T) {
 
 func TestScanInCiWithPathSet(t *testing.T) {
 	var debClient client.IDebClient = testdata.NewDebClientMock()
-	scanner := NewDebrickedScanner(&debClient, nil, nil, ciService, nil)
+	scanner := NewDebrickedScanner(&debClient, nil, nil, ciService, nil, nil)
 	cwd, _ := os.Getwd()
 	defer resetWd(t, cwd)
 	path := testdataNpm
@@ -508,7 +509,7 @@ func TestScanServiceDowntime(t *testing.T) {
 
 	var ciService ci.IService = ci.NewService(nil)
 
-	scanner := NewDebrickedScanner(&debClient, finder, nil, ciService, nil)
+	scanner := NewDebrickedScanner(&debClient, finder, nil, ciService, nil, nil)
 
 	path := testdataNpm
 	repositoryName := path
@@ -606,7 +607,7 @@ func makeScanner(clientMock *testdata.DebClientMock, resolverMock *resolveTestda
 
 	var cis ci.IService = ci.NewService(nil)
 
-	return NewDebrickedScanner(&debClient, finder, uploader, cis, resolverMock)
+	return NewDebrickedScanner(&debClient, finder, uploader, cis, resolverMock, nil)
 }
 
 func cleanUpResolution(t *testing.T, resolverMock resolveTestdata.ResolverMock) {
@@ -614,4 +615,43 @@ func cleanUpResolution(t *testing.T, resolverMock resolveTestdata.ResolverMock) 
 	if err != nil {
 		t.Error(err)
 	}
+}
+
+func TestScanWithFingerprint(t *testing.T) {
+	clientMock := testdata.NewDebClientMock()
+	addMockedFormatsResponse(clientMock, "yarn\\.lock")
+	addMockedFileUploadResponse(clientMock)
+	addMockedFinishResponse(clientMock, http.StatusNoContent)
+	addMockedStatusResponse(clientMock, http.StatusOK, 100)
+
+	resolverMock := resolveTestdata.ResolverMock{}
+	resolverMock.SetFiles([]string{"yarn.lock"})
+
+	scanner := makeScanner(clientMock, &resolverMock)
+	scanner.fingerprint = file.NewFingerprinter()
+
+	cwd, _ := os.Getwd()
+	defer resetWd(t, cwd)
+	// Clean up resolution must be done before wd reset, otherwise files cannot be deleted
+	defer cleanUpResolution(t, resolverMock)
+
+	path := testdataNpm
+	repositoryName := path
+	commitName := "testdata/npm-commit"
+	opts := DebrickedOptions{
+		Path:            path,
+		Resolve:         true,
+		Fingerprint:     true,
+		Exclusions:      nil,
+		RepositoryName:  repositoryName,
+		CommitName:      commitName,
+		BranchName:      "",
+		CommitAuthor:    "",
+		RepositoryUrl:   "",
+		IntegrationName: "",
+	}
+	err := scanner.Scan(opts)
+	assert.NoError(t, err)
+	cwd, _ = os.Getwd()
+	assert.Contains(t, cwd, path)
 }
