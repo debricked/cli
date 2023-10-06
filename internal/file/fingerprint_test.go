@@ -53,7 +53,7 @@ func TestFingerprintFiles(t *testing.T) {
 	assert.NotNil(t, fingerprints)
 	assert.NotEmpty(t, fingerprints)
 	assert.Equal(t, 1, fingerprints.Len())
-	assert.Equal(t, "files=72214db4e1e543018d1bafe86ea3b444,21,testdata/fingerprinter/testfile.py", fingerprints.Entries[0].ToString())
+	assert.Equal(t, "file=72214db4e1e543018d1bafe86ea3b444,21,testdata/fingerprinter/testfile.py", fingerprints.Entries[0].ToString())
 
 	// Test no file
 	fingerprints, err = fingerprinter.FingerprintFiles("", []string{})
@@ -65,7 +65,7 @@ func TestFingerprintFiles(t *testing.T) {
 
 func TestFileFingerprintToString(t *testing.T) {
 	fileFingerprint := FileFingerprint{path: "path", contentLength: 10, fingerprint: []byte("fingerprint")}
-	assert.Equal(t, "files=66696e6765727072696e74,10,path", fileFingerprint.ToString())
+	assert.Equal(t, "file=66696e6765727072696e74,10,path", fileFingerprint.ToString())
 }
 
 func TestComputeMD5(t *testing.T) {

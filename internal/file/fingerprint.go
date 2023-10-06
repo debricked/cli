@@ -83,7 +83,7 @@ type FileFingerprint struct {
 }
 
 func (f FileFingerprint) ToString() string {
-	return fmt.Sprintf("files=%x,%d,%s", f.fingerprint, f.contentLength, f.path)
+	return fmt.Sprintf("file=%x,%d,%s", f.fingerprint, f.contentLength, f.path)
 }
 
 func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string) (Fingerprints, error) {
