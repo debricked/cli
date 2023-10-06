@@ -47,6 +47,10 @@ func (cc *CliContainer) wire() error {
 	}
 	cc.finder = finder
 
+	fingerprinter := file.NewFingerprinter()
+
+	cc.fingerprinter = fingerprinter
+
 	uploader, err := upload.NewUploader(cc.debClient)
 	if err != nil {
 		return wireErr(err)
@@ -83,6 +87,7 @@ type CliContainer struct {
 	retryClient           *retryablehttp.Client
 	debClient             client.IDebClient
 	finder                file.IFinder
+	fingerprinter         file.IFingerprint
 	uploader              upload.IUploader
 	ciService             ci.IService
 	scanner               scan.IScanner
@@ -116,6 +121,10 @@ func (cc *CliContainer) LicenseReporter() licenseReport.Reporter {
 
 func (cc *CliContainer) VulnerabilityReporter() vulnerabilityReport.Reporter {
 	return cc.vulnerabilityReporter
+}
+
+func (cc *CliContainer) Fingerprinter() file.IFingerprint {
+	return cc.fingerprinter
 }
 
 func wireErr(err error) error {

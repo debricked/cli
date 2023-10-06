@@ -40,7 +40,7 @@ Read more: https://portal.debricked.com/administration-47/how-do-i-generate-an-a
 	debClient.SetAccessToken(&accessToken)
 
 	rootCmd.AddCommand(report.NewReportCmd(container.LicenseReporter(), container.VulnerabilityReporter()))
-	rootCmd.AddCommand(files.NewFilesCmd(container.Finder()))
+	rootCmd.AddCommand(files.NewFilesCmd(container.Finder(), container.Fingerprinter()))
 	rootCmd.AddCommand(scan.NewScanCmd(container.Scanner()))
 	rootCmd.AddCommand(resolve.NewResolveCmd(container.Resolver()))
 
