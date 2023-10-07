@@ -21,6 +21,7 @@ func TestDefaultExclusionsFingerprint(t *testing.T) {
 		filepath.Join("**", "nbproject", "**"),
 		filepath.Join("**", "nbbuild", "**"),
 		filepath.Join("**", "nbdist", "**"),
+		filepath.Join("**", "node_modules", "**"),
 		filepath.Join("**", "__pycache__", "**"),
 		filepath.Join("**", "venv", "**"),
 		filepath.Join("**", "_yardoc", "**"),

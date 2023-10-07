@@ -11,7 +11,7 @@ func TestNewFilesCmd(t *testing.T) {
 	finder, _ := file.NewFinder(nil)
 	cmd := NewFilesCmd(finder, nil)
 	commands := cmd.Commands()
-	nbrOfCommands := 1
+	nbrOfCommands := 2
 	assert.Lenf(t, commands, nbrOfCommands, "failed to assert that there were %d sub commands connected", nbrOfCommands)
 }
 
