@@ -438,7 +438,8 @@ func TestMapEnvToOptions(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			MapEnvToOptions(&c.opts, c.env)
+			cCopy := c
+			MapEnvToOptions(&cCopy.opts, c.env)
 			assert.Equal(t, c.template.Path, c.opts.Path)
 			assert.Nil(t, c.opts.Exclusions)
 			assert.Equal(t, c.template.RepositoryName, c.opts.RepositoryName)
@@ -483,7 +484,8 @@ func TestSetWorkingDirectory(t *testing.T) {
 	cwd, _ := os.Getwd()
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			err := SetWorkingDirectory(&c.opts)
+			cCopy := c
+			err := SetWorkingDirectory(&cCopy.opts)
 			defer resetWd(t, cwd)
 
 			if len(c.errMessages) > 0 {

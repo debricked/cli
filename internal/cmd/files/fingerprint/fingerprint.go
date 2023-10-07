@@ -53,25 +53,17 @@ func RunE(f file.IFingerprint) func(_ *cobra.Command, args []string) error {
 			path = args[0]
 		}
 
-		err := AssertFlagsAreValid()
-		if err != nil {
-			return err
-		}
-
 		output, err := f.FingerprintFiles(path, exclusions)
 
 		if err != nil {
 			return err
 		}
 
-		output.ToFile(file.OutputFileNameFingerprints)
+		err = output.ToFile(file.OutputFileNameFingerprints)
+		if err != nil {
+			return err
+		}
 
 		return nil
 	}
-}
-
-func AssertFlagsAreValid() error {
-	// TODO: Add flag validation here
-
-	return nil
 }

@@ -11,8 +11,9 @@ func DefaultExclusions() []string {
 	}
 }
 
-var EXCLUDED_DIRS_FINGERPRINT = []string{"nbproject", "nbbuild", "nbdist",
-	"__pycache__", "venv", "_yardoc", "eggs",
+var EXCLUDED_DIRS_FINGERPRINT = []string{
+	"nbproject", "nbbuild", "nbdist", "node_modules",
+	"__pycache__", "venv", "_yardoc", "eggs", "venv",
 	"wheels", "htmlcov", "__pypackages__", ".egg-info"}
 
 func DefaultExclusionsFingerprint() []string {

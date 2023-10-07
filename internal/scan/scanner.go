@@ -134,7 +134,11 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		if err != nil {
 			return nil, err
 		}
-		fingerprints.ToFile(file.OutputFileNameFingerprints)
+		err = fingerprints.ToFile(file.OutputFileNameFingerprints)
+		if err != nil {
+			return nil, err
+		}
+
 	}
 
 	fileGroups, err := dScanner.finder.GetGroups(options.Path, options.Exclusions, false, file.StrictAll)

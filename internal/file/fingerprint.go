@@ -2,7 +2,7 @@ package file
 
 import (
 	"bufio"
-	"crypto/md5"
+	"crypto/md5" // #nosec
 	"fmt"
 	"io"
 	"os"
@@ -112,11 +112,10 @@ func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string) (
 				// Skip directories, fileInfo.IsDir() is not reliable enough
 				if err != nil && !strings.Contains(err.Error(), "is a directory") {
 					return err
-				} else if err != nil {
-					return nil
+				} else if err == nil {
+					fingerprints.Append(fingerprint)
 				}
 
-				fingerprints.Append(fingerprint)
 			}
 
 			return nil
@@ -133,7 +132,7 @@ func computeMD5(filename string) (FileFingerprint, error) {
 	}
 	defer file.Close()
 
-	hash := md5.New()
+	hash := md5.New() // #nosec
 	if _, err := io.Copy(hash, file); err != nil {
 		return FileFingerprint{}, err
 	}
