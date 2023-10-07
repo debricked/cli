@@ -13,14 +13,20 @@ func DefaultExclusions() []string {
 
 var EXCLUDED_DIRS_FINGERPRINT = []string{
 	"nbproject", "nbbuild", "nbdist", "node_modules",
-	"__pycache__", "venv", "_yardoc", "eggs",
-	"wheels", "htmlcov", "__pypackages__", ".egg-info"}
+	"__pycache__", "_yardoc", "eggs",
+	"wheels", "htmlcov", "__pypackages__"}
+
+var EXCLUDED_DIRS_FINGERPRINT_RAW = []string{"**/*.egg-info/**", "**/*venv/**"}
 
 func DefaultExclusionsFingerprint() []string {
 	output := []string{}
 
 	for _, pattern := range EXCLUDED_DIRS_FINGERPRINT {
 		output = append(output, filepath.Join("**", pattern, "**"))
+	}
+
+	for _, pattern := range EXCLUDED_DIRS_FINGERPRINT_RAW {
+		output = append(output, pattern)
 	}
 
 	return output

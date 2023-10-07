@@ -46,7 +46,7 @@ func (cmdf CmdFactory) MakeCreateVenvCmd(fpath string) (*exec.Cmd, error) {
 
 	return &exec.Cmd{
 		Path: python,
-		Args: []string{pythonCommand, "-m", "venv", fpath, "--clear", "--system-site-packages"},
+		Args: []string{pythonCommand, "-m", "venv", fpath, "--clear"}, //"--system-site-packages"
 	}, nil
 }
 
