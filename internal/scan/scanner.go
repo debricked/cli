@@ -121,24 +121,41 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 	return nil
 }
 
-func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject git.MetaObject) (*upload.UploadResult, error) {
+func (dScanner *DebrickedScanner) scanResolve(options DebrickedOptions) error {
 	if options.Resolve {
 		_, resErr := dScanner.resolver.Resolve([]string{options.Path}, options.Exclusions)
 		if resErr != nil {
-			return nil, resErr
+			return resErr
 		}
 	}
 
+	return nil
+}
+
+func (dScanner *DebrickedScanner) scanFingerprint(options DebrickedOptions) error {
 	if options.Fingerprint {
 		fingerprints, err := dScanner.fingerprint.FingerprintFiles(options.Path, file.DefaultExclusionsFingerprint())
 		if err != nil {
-			return nil, err
+			return err
 		}
 		err = fingerprints.ToFile(file.OutputFileNameFingerprints)
-		if err != nil {
-			return nil, err
-		}
 
+		return err
+	}
+
+	return nil
+}
+
+func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject git.MetaObject) (*upload.UploadResult, error) {
+
+	err := dScanner.scanResolve(options)
+	if err != nil {
+		return nil, err
+	}
+
+	err = dScanner.scanFingerprint(options)
+	if err != nil {
+		return nil, err
 	}
 
 	fileGroups, err := dScanner.finder.GetGroups(options.Path, options.Exclusions, false, file.StrictAll)

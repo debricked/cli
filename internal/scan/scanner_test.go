@@ -307,135 +307,138 @@ func TestScanWithResolveErr(t *testing.T) {
 	assert.ErrorIs(t, err, resolutionErr)
 }
 
-func TestMapEnvToOptions(t *testing.T) {
-	dOptionsTemplate := DebrickedOptions{
-		Path:            "path",
-		Exclusions:      nil,
-		RepositoryName:  "repository",
-		CommitName:      "commit",
-		BranchName:      "branch",
-		CommitAuthor:    "author",
-		RepositoryUrl:   "url",
-		IntegrationName: "CLI",
-	}
+// TestScanWithResolveErr tests that the scan is not aborted if the resolution fails
+var dOptionsTemplate = DebrickedOptions{
+	Path:            "path",
+	Exclusions:      nil,
+	RepositoryName:  "repository",
+	CommitName:      "commit",
+	BranchName:      "branch",
+	CommitAuthor:    "author",
+	RepositoryUrl:   "url",
+	IntegrationName: "CLI",
+}
 
-	cases := []struct {
-		name     string
-		template DebrickedOptions
-		opts     DebrickedOptions
-		env      env.Env
-	}{
-		{
-			name:     "No env",
-			template: dOptionsTemplate,
-			opts:     dOptionsTemplate,
-			env: env.Env{
-				Repository:    "",
-				Commit:        "",
-				Branch:        "",
-				Author:        "",
-				RepositoryUrl: "",
-				Integration:   "",
-				Filepath:      "",
-			},
+var cases = []struct {
+	name     string
+	template DebrickedOptions
+	opts     DebrickedOptions
+	env      env.Env
+}{
+	{
+		name:     "No env",
+		template: dOptionsTemplate,
+		opts:     dOptionsTemplate,
+		env: env.Env{
+			Repository:    "",
+			Commit:        "",
+			Branch:        "",
+			Author:        "",
+			RepositoryUrl: "",
+			Integration:   "",
+			Filepath:      "",
 		},
-		{
-			name: "CI env set",
-			template: DebrickedOptions{
-				Path:            "env-path",
-				Exclusions:      nil,
-				RepositoryName:  "env-repository",
-				CommitName:      "env-commit",
-				BranchName:      "env-branch",
-				CommitAuthor:    "author",
-				RepositoryUrl:   "env-url",
-				IntegrationName: github.Integration,
-			},
-			opts: DebrickedOptions{
-				Path:            "",
-				Exclusions:      nil,
-				RepositoryName:  "",
-				CommitName:      "",
-				BranchName:      "",
-				CommitAuthor:    "author",
-				RepositoryUrl:   "",
-				IntegrationName: "CLI",
-			},
-			env: env.Env{
-				Repository:    "env-repository",
-				Commit:        "env-commit",
-				Branch:        "env-branch",
-				Author:        "env-author",
-				RepositoryUrl: "env-url",
-				Integration:   github.Integration,
-				Filepath:      "env-path",
-			},
+	},
+	{
+		name: "CI env set",
+		template: DebrickedOptions{
+			Path:            "env-path",
+			Exclusions:      nil,
+			RepositoryName:  "env-repository",
+			CommitName:      "env-commit",
+			BranchName:      "env-branch",
+			CommitAuthor:    "author",
+			RepositoryUrl:   "env-url",
+			IntegrationName: github.Integration,
 		},
-		{
-			name: "CI env set without directory path",
-			template: DebrickedOptions{
-				Path:            "input-path",
-				Exclusions:      nil,
-				RepositoryName:  "env-repository",
-				CommitName:      "env-commit",
-				BranchName:      "env-branch",
-				CommitAuthor:    "author",
-				RepositoryUrl:   "env-url",
-				IntegrationName: github.Integration,
-			},
-			opts: DebrickedOptions{
-				Path:            "input-path",
-				Exclusions:      nil,
-				RepositoryName:  "",
-				CommitName:      "",
-				BranchName:      "",
-				CommitAuthor:    "author",
-				RepositoryUrl:   "",
-				IntegrationName: "CLI",
-			},
-			env: env.Env{
-				Repository:    "env-repository",
-				Commit:        "env-commit",
-				Branch:        "env-branch",
-				Author:        "env-author",
-				RepositoryUrl: "env-url",
-				Integration:   github.Integration,
-				Filepath:      "",
-			},
+		opts: DebrickedOptions{
+			Path:            "",
+			Exclusions:      nil,
+			RepositoryName:  "",
+			CommitName:      "",
+			BranchName:      "",
+			CommitAuthor:    "author",
+			RepositoryUrl:   "",
+			IntegrationName: "CLI",
 		},
-		{
-			name: "CI env set with directory path",
-			template: DebrickedOptions{
-				Path:            "input-path",
-				Exclusions:      nil,
-				RepositoryName:  "env-repository",
-				CommitName:      "env-commit",
-				BranchName:      "env-branch",
-				CommitAuthor:    "author",
-				RepositoryUrl:   "env-url",
-				IntegrationName: github.Integration,
-			},
-			opts: DebrickedOptions{
-				Path:            "input-path",
-				Exclusions:      nil,
-				RepositoryName:  "",
-				CommitName:      "",
-				BranchName:      "",
-				CommitAuthor:    "author",
-				RepositoryUrl:   "",
-				IntegrationName: "CLI",
-			},
-			env: env.Env{
-				Repository:    "env-repository",
-				Commit:        "env-commit",
-				Branch:        "env-branch",
-				Author:        "env-author",
-				RepositoryUrl: "env-url",
-				Integration:   github.Integration,
-				Filepath:      "env-path",
-			},
+		env: env.Env{
+			Repository:    "env-repository",
+			Commit:        "env-commit",
+			Branch:        "env-branch",
+			Author:        "env-author",
+			RepositoryUrl: "env-url",
+			Integration:   github.Integration,
+			Filepath:      "env-path",
 		},
-	}
+	},
+	{
+		name: "CI env set without directory path",
+		template: DebrickedOptions{
+			Path:            "input-path",
+			Exclusions:      nil,
+			RepositoryName:  "env-repository",
+			CommitName:      "env-commit",
+			BranchName:      "env-branch",
+			CommitAuthor:    "author",
+			RepositoryUrl:   "env-url",
+			IntegrationName: github.Integration,
+		},
+		opts: DebrickedOptions{
+			Path:            "input-path",
+			Exclusions:      nil,
+			RepositoryName:  "",
+			CommitName:      "",
+			BranchName:      "",
+			CommitAuthor:    "author",
+			RepositoryUrl:   "",
+			IntegrationName: "CLI",
+		},
+		env: env.Env{
+			Repository:    "env-repository",
+			Commit:        "env-commit",
+			Branch:        "env-branch",
+			Author:        "env-author",
+			RepositoryUrl: "env-url",
+			Integration:   github.Integration,
+			Filepath:      "",
+		},
+	},
+	{
+		name: "CI env set with directory path",
+		template: DebrickedOptions{
+			Path:            "input-path",
+			Exclusions:      nil,
+			RepositoryName:  "env-repository",
+			CommitName:      "env-commit",
+			BranchName:      "env-branch",
+			CommitAuthor:    "author",
+			RepositoryUrl:   "env-url",
+			IntegrationName: github.Integration,
+		},
+		opts: DebrickedOptions{
+			Path:            "input-path",
+			Exclusions:      nil,
+			RepositoryName:  "",
+			CommitName:      "",
+			BranchName:      "",
+			CommitAuthor:    "author",
+			RepositoryUrl:   "",
+			IntegrationName: "CLI",
+		},
+		env: env.Env{
+			Repository:    "env-repository",
+			Commit:        "env-commit",
+			Branch:        "env-branch",
+			Author:        "env-author",
+			RepositoryUrl: "env-url",
+			Integration:   github.Integration,
+			Filepath:      "env-path",
+		},
+	},
+}
+
+func TestMapEnvToOptions(t *testing.T) {
+
 	for _, co := range cases {
 		c := co
 		t.Run(c.name, func(t *testing.T) {

@@ -4,10 +4,12 @@ import (
 	"bufio"
 	"crypto/md5" // #nosec
 	"fmt"
-	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/debricked/cli/internal/tui"
 )
 
 var EXCLUDED_EXT = []string{
@@ -43,6 +45,12 @@ const (
 
 func isExcludedFile(filename string) bool {
 
+	return isExcludedByExtension(filename) ||
+		isExcludedByFilename(filename) ||
+		isExcludedByEnding(filename)
+}
+
+func isExcludedByExtension(filename string) bool {
 	filenameLower := strings.ToLower(filename)
 	for _, format := range EXCLUDED_EXT {
 		if filepath.Ext(filenameLower) == format {
@@ -50,12 +58,22 @@ func isExcludedFile(filename string) bool {
 		}
 	}
 
+	return false
+}
+
+func isExcludedByFilename(filename string) bool {
+	filenameLower := strings.ToLower(filename)
 	for _, file := range ECLUDED_FILES {
 		if filenameLower == file {
 			return true
 		}
 	}
 
+	return false
+}
+
+func isExcludedByEnding(filename string) bool {
+	filenameLower := strings.ToLower(filename)
 	for _, ending := range EXCLUDED_FILE_ENDINGS {
 		if strings.HasSuffix(filenameLower, ending) {
 			return true
@@ -70,10 +88,13 @@ type IFingerprint interface {
 }
 
 type Fingerprinter struct {
+	spinnerManager tui.ISpinnerManager
 }
 
 func NewFingerprinter() *Fingerprinter {
-	return &Fingerprinter{}
+	return &Fingerprinter{
+		spinnerManager: tui.NewSpinnerManager("Fingerprinting", "0"),
+	}
 }
 
 type FileFingerprint struct {
@@ -83,61 +104,93 @@ type FileFingerprint struct {
 }
 
 func (f FileFingerprint) ToString() string {
-	return fmt.Sprintf("file=%x,%d,%s", f.fingerprint, f.contentLength, f.path)
+	// Replace backslashes with forward slashes to make the path platform independent
+	path := strings.ReplaceAll(f.path, "\\", "/")
+
+	return fmt.Sprintf("file=%x,%d,%s", f.fingerprint, f.contentLength, path)
 }
-
 func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string) (Fingerprints, error) {
-
+	log.Println("Warning: Fingerprinting is beta and may not work as expected.")
 	if len(rootPath) == 0 {
 		rootPath = filepath.Base("")
 	}
 
 	fingerprints := Fingerprints{}
 
-	// Traverse files to find dependency file groups
-	err := filepath.Walk(
-		rootPath,
-		func(path string, fileInfo os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			if !fileInfo.IsDir() && !excluded(exclusions, path) {
+	f.spinnerManager.Start()
+	spinnerMessage := "files processed"
+	spinner := f.spinnerManager.AddSpinner(spinnerMessage)
 
-				if isExcludedFile(path) {
-					return nil
-				}
+	nbFiles := 0
 
-				fingerprint, err := computeMD5(path)
+	err := filepath.Walk(rootPath, func(path string, fileInfo os.FileInfo, err error) error {
+		nbFiles++
 
-				// Skip directories, fileInfo.IsDir() is not reliable enough
-				if err != nil && !strings.Contains(err.Error(), "is a directory") {
-					return err
-				} else if err == nil {
-					fingerprints.Append(fingerprint)
-				}
+		if err != nil {
+			return err
+		}
 
-			}
-
+		if !shouldProcessFile(fileInfo, exclusions, path) {
 			return nil
-		},
-	)
+		}
+
+		fingerprint, err := computeMD5(path)
+		if err != nil {
+			return err
+		}
+
+		fingerprints.Append(fingerprint)
+
+		if nbFiles%100 == 0 {
+			f.spinnerManager.SetSpinnerMessage(spinner, spinnerMessage, fmt.Sprintf("%d", nbFiles))
+		}
+
+		return nil
+	})
+
+	f.spinnerManager.SetSpinnerMessage(spinner, spinnerMessage, fmt.Sprintf("%d", nbFiles))
+
+	if err != nil {
+		spinner.Error()
+	} else {
+		spinner.Complete()
+	}
+
+	f.spinnerManager.Stop()
 
 	return fingerprints, err
 }
 
+func shouldProcessFile(fileInfo os.FileInfo, exclusions []string, path string) bool {
+	if fileInfo.IsDir() {
+		return false
+	}
+
+	if excluded(exclusions, path) {
+		return false
+	}
+
+	if isExcludedFile(path) {
+		return false
+	}
+
+	return true
+}
+
 func computeMD5(filename string) (FileFingerprint, error) {
-	file, err := os.Open(filename)
+	data, err := os.ReadFile(filename)
 	if err != nil {
 		return FileFingerprint{}, err
 	}
-	defer file.Close()
 
 	hash := md5.New() // #nosec
-	if _, err := io.Copy(hash, file); err != nil {
+
+	if _, err := hash.Write(data); err != nil {
 		return FileFingerprint{}, err
 	}
 
-	contentLength, err := file.Seek(0, 2)
+	contentLength := int64(len(data))
+
 	if err != nil {
 		return FileFingerprint{}, err
 	}

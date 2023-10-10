@@ -10,12 +10,19 @@ import (
 )
 
 func TestNewSpinnerManager(t *testing.T) {
-	spinnerManager := NewSpinnerManager()
+	spinnerManager := NewSpinnerManager(
+		"Resolving",
+		"waiting for worker",
+	)
+
 	assert.NotNil(t, spinnerManager)
 }
 
 func TestSetSpinnerMessage(t *testing.T) {
-	spinnerManager := NewSpinnerManager()
+	spinnerManager := NewSpinnerManager(
+		"Resolving",
+		"waiting for worker",
+	)
 	message := "test"
 	spinner := spinnerManager.AddSpinner(message)
 	assert.Contains(t, spinner.GetMessage(), fmt.Sprintf("Resolving %s: waiting for worker", color.YellowString(message)))
@@ -23,12 +30,15 @@ func TestSetSpinnerMessage(t *testing.T) {
 	fileName := "file-name"
 	message = "new test message"
 
-	SetSpinnerMessage(spinner, fileName, message)
+	spinnerManager.SetSpinnerMessage(spinner, fileName, message)
 	assert.Contains(t, spinner.GetMessage(), fmt.Sprintf("Resolving %s: %s", color.YellowString(fileName), message))
 }
 
 func TestSetSpinnerMessageLongFilenameParts(t *testing.T) {
-	spinnerManager := NewSpinnerManager()
+	spinnerManager := NewSpinnerManager(
+		"Resolving",
+		"waiting for worker",
+	)
 	longFilenameParts := []string{
 		"directory",
 		"sub-directory################################################################",
@@ -43,7 +53,10 @@ func TestSetSpinnerMessageLongFilenameParts(t *testing.T) {
 }
 
 func TestSetSpinnerMessageLongFilenameManyDirs(t *testing.T) {
-	spinnerManager := NewSpinnerManager()
+	spinnerManager := NewSpinnerManager(
+		"Resolving",
+		"waiting for worker",
+	)
 	longFilenameParts := []string{
 		"directory",
 		"sub-directory",
@@ -70,7 +83,11 @@ func TestSetSpinnerMessageLongFilenameManyDirs(t *testing.T) {
 }
 
 func TestStartStop(t *testing.T) {
-	spinnerManager := NewSpinnerManager()
+	spinnerManager := NewSpinnerManager(
+		"Resolving",
+		"waiting for worker",
+	)
+
 	spinnerManager.Start()
 	spinnerManager.Stop()
 }

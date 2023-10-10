@@ -25,9 +25,7 @@ func DefaultExclusionsFingerprint() []string {
 		output = append(output, filepath.Join("**", pattern, "**"))
 	}
 
-	for _, pattern := range EXCLUDED_DIRS_FINGERPRINT_RAW {
-		output = append(output, pattern)
-	}
+	output = append(output, EXCLUDED_DIRS_FINGERPRINT_RAW...)
 
 	return output
 }

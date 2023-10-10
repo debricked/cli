@@ -63,6 +63,17 @@ func TestFingerprintFiles(t *testing.T) {
 
 }
 
+func TestFingerprintFilesBackslash(t *testing.T) {
+	fingerprint := FileFingerprint{
+		path:          "testdata\\fingerprinter\\testfile.py",
+		contentLength: 21,
+		fingerprint:   []byte{114, 33, 77, 180, 225, 229, 67, 1, 141, 27, 175, 232, 110, 163, 180, 68, 68, 68, 68, 68, 68},
+	}
+
+	assert.Equal(t, "file=72214db4e1e543018d1bafe86ea3b4444444444444,21,testdata/fingerprinter/testfile.py", fingerprint.ToString())
+
+}
+
 func TestFileFingerprintToString(t *testing.T) {
 	fileFingerprint := FileFingerprint{path: "path", contentLength: 10, fingerprint: []byte("fingerprint")}
 	assert.Equal(t, "file=66696e6765727072696e74,10,path", fileFingerprint.ToString())

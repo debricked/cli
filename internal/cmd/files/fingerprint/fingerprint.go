@@ -16,11 +16,13 @@ const (
 )
 
 func NewFingerprintCmd(fingerprinter file.IFingerprint) *cobra.Command {
+
+	short := fmt.Sprintf("Fingerprint files for identification in a given path and writes it to %s. [beta feature]", file.OutputFileNameFingerprints)
+	long := fmt.Sprintf("Fingerprint files for identification in a given path and writes it to %s. [beta feature]\nThis hashes all files and matches them against the Debricked knowledge base.", file.OutputFileNameFingerprints)
 	cmd := &cobra.Command{
 		Use:   "fingerprint [path]",
-		Short: "Fingerprint files for identification in a given path and writes it to " + file.OutputFileNameFingerprints,
-		Long: `Fingerprint files for identification in a given path. 
-This hashes all files and matches them against the Debricked knowledge base.`,
+		Short: short,
+		Long:  long,
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			_ = viper.BindPFlags(cmd.Flags())
 		},

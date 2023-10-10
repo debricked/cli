@@ -33,7 +33,7 @@ func (scheduler *Scheduler) Schedule(jobs []job.IJob) (IResolution, error) {
 	scheduler.queue = make(chan queueItem, len(jobs))
 	scheduler.waitGroup.Add(len(jobs))
 
-	scheduler.spinnerManager = tui.NewSpinnerManager()
+	scheduler.spinnerManager = tui.NewSpinnerManager("Resolving", "waiting for worker")
 
 	for w := 1; w <= scheduler.workers; w++ {
 		go scheduler.worker()
@@ -75,16 +75,16 @@ func (scheduler *Scheduler) worker() {
 func (scheduler *Scheduler) updateStatus(item queueItem) {
 	for {
 		msg := <-item.job.ReceiveStatus()
-		tui.SetSpinnerMessage(item.spinner, item.job.GetFile(), msg)
+		scheduler.spinnerManager.SetSpinnerMessage(item.spinner, item.job.GetFile(), msg)
 	}
 }
 
 func (scheduler *Scheduler) finish(item queueItem) {
 	if item.job.Errors().HasError() {
-		tui.SetSpinnerMessage(item.spinner, item.job.GetFile(), "failed")
+		scheduler.spinnerManager.SetSpinnerMessage(item.spinner, item.job.GetFile(), "failed")
 		item.spinner.Error()
 	} else {
-		tui.SetSpinnerMessage(item.spinner, item.job.GetFile(), "done")
+		scheduler.spinnerManager.SetSpinnerMessage(item.spinner, item.job.GetFile(), "done")
 		item.spinner.Complete()
 	}
 }
