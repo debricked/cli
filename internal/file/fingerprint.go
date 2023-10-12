@@ -34,7 +34,7 @@ var EXCLUDED_EXT = []string{
 var EXCLUDED_FILE_ENDINGS = []string{"-doc", "changelog", "config", "copying", "license", "authors", "news", "licenses", "notice",
 	"readme", "swiftdoc", "texidoc", "todo", "version", "ignore", "manifest", "sqlite", "sqlite3"}
 
-var ECLUDED_FILES = []string{
+var EXCLUDED_FILES = []string{
 	"gradlew", "gradlew.bat", "mvnw", "mvnw.cmd", "gradle-wrapper.jar", "maven-wrapper.jar",
 	"thumbs.db", "babel.config.js", "license.txt", "license.md", "copying.lib", "makefile",
 }
@@ -63,7 +63,7 @@ func isExcludedByExtension(filename string) bool {
 
 func isExcludedByFilename(filename string) bool {
 	filenameLower := strings.ToLower(filename)
-	for _, file := range ECLUDED_FILES {
+	for _, file := range EXCLUDED_FILES {
 		if filenameLower == file {
 			return true
 		}
@@ -104,8 +104,7 @@ type FileFingerprint struct {
 }
 
 func (f FileFingerprint) ToString() string {
-	// Replace backslashes with forward slashes to make the path platform independent
-	path := strings.ReplaceAll(f.path, "\\", "/")
+	path := filepath.ToSlash(f.path)
 
 	return fmt.Sprintf("file=%x,%d,%s", f.fingerprint, f.contentLength, path)
 }
@@ -161,6 +160,15 @@ func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string) (
 	return fingerprints, err
 }
 
+func isSymlink(filename string) (bool, error) {
+	info, err := os.Lstat(filename)
+	if err != nil {
+		return false, err
+	}
+
+	return info.Mode()&os.ModeSymlink != 0, nil
+}
+
 func shouldProcessFile(fileInfo os.FileInfo, exclusions []string, path string) bool {
 	if fileInfo.IsDir() {
 		return false
@@ -174,7 +182,12 @@ func shouldProcessFile(fileInfo os.FileInfo, exclusions []string, path string) b
 		return false
 	}
 
-	return true
+	isSymlink, err := isSymlink(path)
+	if err != nil {
+		return false
+	}
+
+	return !isSymlink
 }
 
 func computeMD5(filename string) (FileFingerprint, error) {

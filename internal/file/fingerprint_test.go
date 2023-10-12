@@ -3,6 +3,7 @@ package file
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -38,6 +39,43 @@ func TestIsExcludedFile(t *testing.T) {
 	assert.False(t, isExcludedFile("file.jar"), "Expected .jar to not be excluded")
 }
 
+func TestShouldProcessFile(t *testing.T) {
+	// Create a temporary directory to use for testing
+	tempDir, err := os.MkdirTemp("", "should-process-file-test")
+	if err != nil {
+		t.Fatalf("Failed to create temporary directory: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Create a test file and a symbolic link to the file in the temporary directory
+	testFile := filepath.Join(tempDir, "test.py")
+	if err := os.WriteFile(testFile, []byte("test"), 0600); err != nil {
+		t.Fatalf("Failed to create test file %s: %v", testFile, err)
+	}
+	testLink := filepath.Join(tempDir, "test-link.py")
+	if err := os.Symlink(testFile, testLink); err != nil {
+		t.Fatalf("Failed to create symbolic link %s: %v", testLink, err)
+	}
+
+	// Test with a regular file
+	fileInfo, err := os.Stat(testFile)
+	if err != nil {
+		t.Fatalf("Failed to get file info for %s: %v", testFile, err)
+	}
+	if !shouldProcessFile(fileInfo, []string{}, testFile) {
+		t.Errorf("Expected shouldProcessFile to return true for %s, but it returned false", testFile)
+	}
+
+	// Test with a symbolic link
+	linkInfo, err := os.Stat(testLink)
+	if err != nil {
+		t.Fatalf("Failed to get file info for %s: %v", testLink, err)
+	}
+	if shouldProcessFile(linkInfo, []string{}, testLink) {
+		t.Errorf("Expected shouldProcessFile to return false for %s, but it returned true", testLink)
+	}
+}
+
 func TestNewFingerprinter(t *testing.T) {
 	assert.NotNil(t, NewFingerprinter())
 }
@@ -64,13 +102,27 @@ func TestFingerprintFiles(t *testing.T) {
 }
 
 func TestFingerprintFilesBackslash(t *testing.T) {
+
+	tempDir, err := os.MkdirTemp("", "slash-test")
+	if err != nil {
+		t.Fatalf("Failed to create temporary directory: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+	testFile := filepath.Join(tempDir, "testfile.py")
+
+	testFileSlashes := filepath.ToSlash(testFile)
+
 	fingerprint := FileFingerprint{
-		path:          "testdata\\fingerprinter\\testfile.py",
+		path:          testFile,
 		contentLength: 21,
 		fingerprint:   []byte{114, 33, 77, 180, 225, 229, 67, 1, 141, 27, 175, 232, 110, 163, 180, 68, 68, 68, 68, 68, 68},
 	}
 
-	assert.Equal(t, "file=72214db4e1e543018d1bafe86ea3b4444444444444,21,testdata/fingerprinter/testfile.py", fingerprint.ToString())
+	assert.Equal(t, fmt.Sprintf("file=72214db4e1e543018d1bafe86ea3b4444444444444,21,%s", testFileSlashes), fingerprint.ToString())
+
+	// Make sure it only contains "/" and not "\"
+	assert.NotContains(t, fingerprint.ToString(), "\\")
+	assert.Contains(t, fingerprint.ToString(), "/")
 
 }
 
