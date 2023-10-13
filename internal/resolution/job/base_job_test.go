@@ -2,6 +2,7 @@ package job
 
 import (
 	"errors"
+	"fmt"
 	"os/exec"
 	"testing"
 
@@ -32,6 +33,29 @@ func TestReceiveStatus(t *testing.T) {
 
 	statusChan := j.ReceiveStatus()
 	assert.NotNil(t, statusChan)
+}
+
+func TestFmtError(t *testing.T) {
+	j := BaseJob{
+		file:   testFile,
+		errs:   nil,
+		status: make(chan string),
+	}
+	statusMsg := "statusMsg"
+	go func() {
+		status := <-j.ReceiveStatus()
+		assert.Equal(t, "statusMsg", status)
+	}()
+
+	j.SendStatus(statusMsg)
+
+	errorMsg := fmt.Errorf("statusMsg error: test-error")
+	formattedError := j.FmtError(fmt.Errorf("test-error"), nil)
+	assert.Equal(t, errorMsg, formattedError)
+
+	errorMsg = fmt.Errorf("statusMsg output: test\nstatusMsg error: test-error")
+	formattedError = j.FmtError(fmt.Errorf("test-error"), []byte("test"))
+	assert.Equal(t, errorMsg, formattedError)
 }
 
 func TestErrors(t *testing.T) {

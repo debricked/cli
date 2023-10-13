@@ -67,14 +67,14 @@ func (j *Job) Run() {
 			j.SendStatus("removing venv")
 			err := j.pipCleaner.RemoveAll(j.venvPath)
 			if err != nil {
-				j.Errors().Critical(err)
+				j.Errors().Critical(j.FmtError(err, nil))
 			}
 		}()
 
 		j.SendStatus("creating venv")
-		_, err := j.runCreateVenvCmd()
+		output, err := j.runCreateVenvCmd()
 		if err != nil {
-			j.Errors().Critical(err)
+			j.Errors().Critical(j.FmtError(err, output))
 
 			return
 		}
@@ -82,7 +82,7 @@ func (j *Job) Run() {
 		j.SendStatus("installing requirements")
 		_, err = j.runInstallCmd()
 		if err != nil {
-			j.Errors().Critical(err)
+			j.Errors().Critical(j.FmtError(err, nil))
 
 			return
 		}
@@ -90,7 +90,7 @@ func (j *Job) Run() {
 
 	err := j.writeLockContent()
 	if err != nil {
-		j.Errors().Critical(err)
+		j.Errors().Critical(j.FmtError(err, nil))
 
 		return
 	}
@@ -147,7 +147,7 @@ func (j *Job) runCreateVenvCmd() ([]byte, error) {
 
 	createVenvCmdOutput, err := createVenvCmd.Output()
 	if err != nil {
-		return nil, j.GetExitError(err)
+		return createVenvCmdOutput, j.GetExitError(err)
 	}
 
 	return createVenvCmdOutput, nil
