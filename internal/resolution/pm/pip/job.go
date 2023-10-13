@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/debricked/cli/internal/resolution/job"
@@ -151,7 +152,11 @@ func (j *Job) runCreateVenvCmd() ([]byte, error) {
 func (j *Job) runInstallCmd() ([]byte, error) {
 	var command string
 	if j.venvPath != "" {
-		command = filepath.Join(j.venvPath, "bin", pip)
+		binDir := "bin"
+		if runtime.GOOS == "windows" {
+			binDir = "Scripts"
+		}
+		command = filepath.Join(j.venvPath, binDir, pip)
 	} else {
 		command = pip
 	}

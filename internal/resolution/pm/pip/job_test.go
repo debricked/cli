@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -194,6 +196,28 @@ func TestRunInstall(t *testing.T) {
 	j := NewJob("file", false, cmdFactoryMock, fileWriterMock, nil)
 
 	_, err := j.runInstallCmd()
+	assert.NoError(t, err)
+
+	assert.False(t, j.Errors().HasError())
+}
+
+func TestRunInstallWVenvPath(t *testing.T) {
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	fileWriterMock := &writerTestdata.FileWriterMock{}
+	j := NewJob("file", false, cmdFactoryMock, fileWriterMock, nil)
+	j.venvPath = "test-path"
+
+	_, err := j.runInstallCmd()
+
+	var expectedPath string
+	if runtime.GOOS == "windows" {
+		expectedPath = "test-path/Scripts/pip"
+	} else {
+		expectedPath = "test-path/bin/pip"
+	}
+
+	expectedPath = filepath.FromSlash(expectedPath)
+	assert.Equal(t, expectedPath, j.pipCommand)
 	assert.NoError(t, err)
 
 	assert.False(t, j.Errors().HasError())
