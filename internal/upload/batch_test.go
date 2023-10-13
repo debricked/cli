@@ -102,6 +102,8 @@ func TestInitUploadBadFile(t *testing.T) {
 
 	assert.Empty(t, files)
 	assert.ErrorContains(t, err, "failed to initialize a scan due to badly formatted files")
+	assert.ErrorContains(t, err, "testdata/misc/requirements.txt")
+	assert.ErrorContains(t, err, "tried to upload empty file")
 }
 
 func TestInitUpload(t *testing.T) {
