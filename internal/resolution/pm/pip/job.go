@@ -61,6 +61,9 @@ func (j *Job) Install() bool {
 func (j *Job) Run() {
 	if j.install {
 		defer func() {
+			if j.venvPath == "" {
+				return
+			}
 			j.SendStatus("removing venv")
 			err := j.pipCleaner.RemoveAll(j.venvPath)
 			if err != nil {
