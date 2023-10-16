@@ -296,3 +296,33 @@ func TestRunCleanErr(t *testing.T) {
 	assert.Len(t, j.Errors().GetAll(), 1)
 	assert.Contains(t, j.Errors().GetAll(), CleanErr)
 }
+
+var wasCalled bool
+
+type pipCleanerMockCalled struct {
+	WasCalled bool
+}
+
+func (p pipCleanerMockCalled) RemoveAll(_ string) error {
+	wasCalled = true
+
+	return nil
+}
+
+func TestErrorStillClean(t *testing.T) {
+	cmdErr := errors.New("cmd-error")
+	cmdFactoryMock := testdata.NewEchoCmdFactory()
+	cmdFactoryMock.MakeInstallErr = cmdErr
+	fileWriterMock := &writerTestdata.FileWriterMock{}
+
+	wasCalled = false
+	cleaner := pipCleanerMockCalled{}
+	j := NewJob("file", true, cmdFactoryMock, fileWriterMock, cleaner)
+
+	go jobTestdata.WaitStatus(j)
+	j.Run()
+
+	assert.Len(t, j.Errors().GetAll(), 1)
+	assert.Contains(t, j.Errors().GetAll(), cmdErr)
+	assert.True(t, wasCalled)
+}
