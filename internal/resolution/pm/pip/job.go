@@ -60,6 +60,17 @@ func (j *Job) Install() bool {
 
 func (j *Job) Run() {
 	if j.install {
+		defer func() {
+			if j.venvPath == "" {
+				return
+			}
+			j.SendStatus("removing venv")
+			err := j.pipCleaner.RemoveAll(j.venvPath)
+			if err != nil {
+				j.Errors().Critical(err)
+			}
+		}()
+
 		j.SendStatus("creating venv")
 		_, err := j.runCreateVenvCmd()
 		if err != nil {
@@ -84,13 +95,6 @@ func (j *Job) Run() {
 		return
 	}
 
-	if j.install {
-		j.SendStatus("removing venv")
-		err = j.pipCleaner.RemoveAll(j.venvPath)
-		if err != nil {
-			j.Errors().Critical(err)
-		}
-	}
 }
 
 func (j *Job) writeLockContent() error {
