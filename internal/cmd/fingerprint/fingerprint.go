@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/debricked/cli/internal/file"
+	"github.com/debricked/cli/internal/fingerprint"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -15,10 +16,10 @@ const (
 	ExclusionFlag = "exclusion-fingerprint"
 )
 
-func NewFingerprintCmd(fingerprinter file.IFingerprint) *cobra.Command {
+func NewFingerprintCmd(fingerprinter fingerprint.IFingerprint) *cobra.Command {
 
-	short := fmt.Sprintf("Fingerprint files for identification in a given path and writes it to %s. [beta feature]", file.OutputFileNameFingerprints)
-	long := fmt.Sprintf("Fingerprint files for identification in a given path and writes it to %s. [beta feature]\nThis hashes all files and matches them against the Debricked knowledge base.", file.OutputFileNameFingerprints)
+	short := "Fingerprints files to match against the Debricked knowledge base. [beta feature]"
+	long := fmt.Sprintf("Fingerprint files for identification in a given path and writes it to %s. [beta feature]\nThis hashes all files and matches them against the Debricked knowledge base.", fingerprint.OutputFileNameFingerprints)
 	cmd := &cobra.Command{
 		Use:   "fingerprint [path]",
 		Short: short,
@@ -48,7 +49,7 @@ $ debricked files fingerprint . `+exampleFlags)
 	return cmd
 }
 
-func RunE(f file.IFingerprint) func(_ *cobra.Command, args []string) error {
+func RunE(f fingerprint.IFingerprint) func(_ *cobra.Command, args []string) error {
 	return func(_ *cobra.Command, args []string) error {
 		path := ""
 		if len(args) > 0 {
@@ -61,7 +62,7 @@ func RunE(f file.IFingerprint) func(_ *cobra.Command, args []string) error {
 			return err
 		}
 
-		err = output.ToFile(file.OutputFileNameFingerprints)
+		err = output.ToFile(fingerprint.OutputFileNameFingerprints)
 		if err != nil {
 			return err
 		}

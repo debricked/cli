@@ -10,6 +10,7 @@ import (
 	"github.com/debricked/cli/internal/ci/env"
 	"github.com/debricked/cli/internal/client"
 	"github.com/debricked/cli/internal/file"
+	"github.com/debricked/cli/internal/fingerprint"
 	"github.com/debricked/cli/internal/git"
 	"github.com/debricked/cli/internal/resolution"
 	"github.com/debricked/cli/internal/tui"
@@ -34,7 +35,7 @@ type DebrickedScanner struct {
 	uploader    *upload.IUploader
 	ciService   ci.IService
 	resolver    resolution.IResolver
-	fingerprint file.IFingerprint
+	fingerprint fingerprint.IFingerprint
 }
 
 type DebrickedOptions struct {
@@ -57,7 +58,7 @@ func NewDebrickedScanner(
 	uploader upload.IUploader,
 	ciService ci.IService,
 	resolver resolution.IResolver,
-	fingerprint file.IFingerprint,
+	fingerprint fingerprint.IFingerprint,
 ) *DebrickedScanner {
 	return &DebrickedScanner{
 		c,
@@ -138,7 +139,7 @@ func (dScanner *DebrickedScanner) scanFingerprint(options DebrickedOptions) erro
 		if err != nil {
 			return err
 		}
-		err = fingerprints.ToFile(file.OutputFileNameFingerprints)
+		err = fingerprints.ToFile(fingerprint.OutputFileNameFingerprints)
 
 		return err
 	}

@@ -1,4 +1,4 @@
-package file
+package fingerprint
 
 import (
 	"fmt"
@@ -71,9 +71,16 @@ func TestShouldProcessFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get file info for %s: %v", testLink, err)
 	}
+
 	if shouldProcessFile(linkInfo, []string{}, testLink) {
 		t.Errorf("Expected shouldProcessFile to return false for %s, but it returned true", testLink)
 	}
+
+	// Test Excluded
+	if shouldProcessFile(fileInfo, []string{"**/test.py"}, testFile) {
+		t.Errorf("Expected shouldProcessFile to return true for %s, but it returned false", testFile)
+	}
+
 }
 
 func TestNewFingerprinter(t *testing.T) {

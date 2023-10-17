@@ -1,4 +1,4 @@
-package file
+package fingerprint
 
 import (
 	"bufio"
@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/debricked/cli/internal/file"
 	"github.com/debricked/cli/internal/tui"
 )
 
@@ -174,7 +175,7 @@ func shouldProcessFile(fileInfo os.FileInfo, exclusions []string, path string) b
 		return false
 	}
 
-	if excluded(exclusions, path) {
+	if file.Excluded(exclusions, path) {
 		return false
 	}
 

@@ -4,14 +4,14 @@ import (
 	"os"
 	"testing"
 
-	"github.com/debricked/cli/internal/file"
-	"github.com/debricked/cli/internal/file/testdata"
+	"github.com/debricked/cli/internal/fingerprint"
+	"github.com/debricked/cli/internal/fingerprint/testdata"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewFingerprintCmd(t *testing.T) {
-	var f file.IFingerprint
+	var f fingerprint.IFingerprint
 	cmd := NewFingerprintCmd(f)
 
 	commands := cmd.Commands()
@@ -44,7 +44,7 @@ func TestNewFingerprintCmd(t *testing.T) {
 
 func TestRunE(t *testing.T) {
 	defer func() {
-		os.Remove(file.OutputFileNameFingerprints)
+		os.Remove(fingerprint.OutputFileNameFingerprints)
 	}()
 	fingerprintMock := testdata.NewFingerprintMock()
 	runE := RunE(fingerprintMock)

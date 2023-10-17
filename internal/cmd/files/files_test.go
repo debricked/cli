@@ -9,13 +9,13 @@ import (
 
 func TestNewFilesCmd(t *testing.T) {
 	finder, _ := file.NewFinder(nil)
-	cmd := NewFilesCmd(finder, nil)
+	cmd := NewFilesCmd(finder)
 	commands := cmd.Commands()
-	nbrOfCommands := 2
+	nbrOfCommands := 1
 	assert.Lenf(t, commands, nbrOfCommands, "failed to assert that there were %d sub commands connected", nbrOfCommands)
 }
 
 func TestPreRun(t *testing.T) {
-	cmd := NewFilesCmd(nil, nil)
+	cmd := NewFilesCmd(nil)
 	cmd.PreRun(cmd, nil)
 }

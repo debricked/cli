@@ -49,7 +49,7 @@ func (finder *Finder) GetGroups(rootPath string, exclusions []string, lockfileOn
 			if err != nil {
 				return err
 			}
-			if !fileInfo.IsDir() && !excluded(exclusions, path) {
+			if !fileInfo.IsDir() && !Excluded(exclusions, path) {
 				for _, format := range formats {
 					if groups.Match(format, path, lockfileOnly) {
 
@@ -97,7 +97,7 @@ func (finder *Finder) GetSupportedFormats() ([]*CompiledFormat, error) {
 	return compiledDependencyFileFormats, nil
 }
 
-func excluded(exclusions []string, path string) bool {
+func Excluded(exclusions []string, path string) bool {
 	for _, exclusion := range exclusions {
 		ex := filepath.Clean(exclusion)
 		matched, _ := doublestar.PathMatch(ex, path)

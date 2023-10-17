@@ -6,6 +6,7 @@ import (
 	"github.com/debricked/cli/internal/ci"
 	"github.com/debricked/cli/internal/client"
 	"github.com/debricked/cli/internal/file"
+	"github.com/debricked/cli/internal/fingerprint"
 	licenseReport "github.com/debricked/cli/internal/report/license"
 	vulnerabilityReport "github.com/debricked/cli/internal/report/vulnerability"
 	"github.com/debricked/cli/internal/resolution"
@@ -47,7 +48,7 @@ func (cc *CliContainer) wire() error {
 	}
 	cc.finder = finder
 
-	fingerprinter := file.NewFingerprinter()
+	fingerprinter := fingerprint.NewFingerprinter()
 
 	cc.fingerprinter = fingerprinter
 
@@ -88,7 +89,7 @@ type CliContainer struct {
 	retryClient           *retryablehttp.Client
 	debClient             client.IDebClient
 	finder                file.IFinder
-	fingerprinter         file.IFingerprint
+	fingerprinter         fingerprint.IFingerprint
 	uploader              upload.IUploader
 	ciService             ci.IService
 	scanner               scan.IScanner
@@ -124,7 +125,7 @@ func (cc *CliContainer) VulnerabilityReporter() vulnerabilityReport.Reporter {
 	return cc.vulnerabilityReporter
 }
 
-func (cc *CliContainer) Fingerprinter() file.IFingerprint {
+func (cc *CliContainer) Fingerprinter() fingerprint.IFingerprint {
 	return cc.fingerprinter
 }
 

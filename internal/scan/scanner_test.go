@@ -26,6 +26,7 @@ import (
 	"github.com/debricked/cli/internal/client"
 	"github.com/debricked/cli/internal/client/testdata"
 	"github.com/debricked/cli/internal/file"
+	"github.com/debricked/cli/internal/fingerprint"
 	"github.com/debricked/cli/internal/git"
 	"github.com/debricked/cli/internal/resolution"
 	resolveTestdata "github.com/debricked/cli/internal/resolution/testdata"
@@ -52,7 +53,7 @@ func TestNewDebrickedScanner(t *testing.T) {
 	var finder file.IFinder
 	var uploader upload.IUploader
 	var resolver resolution.IResolver
-	var fingerprint file.IFingerprint
+	var fingerprint fingerprint.IFingerprint
 	s := NewDebrickedScanner(&debClient, finder, uploader, cis, resolver, fingerprint)
 
 	assert.NotNil(t, s)
@@ -633,7 +634,7 @@ func TestScanWithFingerprint(t *testing.T) {
 	resolverMock.SetFiles([]string{"yarn.lock"})
 
 	scanner := makeScanner(clientMock, &resolverMock)
-	scanner.fingerprint = file.NewFingerprinter()
+	scanner.fingerprint = fingerprint.NewFingerprinter()
 
 	cwd, _ := os.Getwd()
 	defer resetWd(t, cwd)
