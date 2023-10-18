@@ -226,7 +226,7 @@ func TestExclude(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			var excludedFiles []string
 			for _, file := range files {
-				if excluded(c.exclusions, file) {
+				if Excluded(c.exclusions, file) {
 					excludedFiles = append(excludedFiles, file)
 				}
 			}

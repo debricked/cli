@@ -10,6 +10,7 @@ import (
 	"github.com/debricked/cli/internal/ci/env"
 	"github.com/debricked/cli/internal/client"
 	"github.com/debricked/cli/internal/file"
+	"github.com/debricked/cli/internal/fingerprint"
 	"github.com/debricked/cli/internal/git"
 	"github.com/debricked/cli/internal/resolution"
 	"github.com/debricked/cli/internal/tui"
@@ -29,16 +30,18 @@ type IScanner interface {
 type IOptions interface{}
 
 type DebrickedScanner struct {
-	client    *client.IDebClient
-	finder    file.IFinder
-	uploader  *upload.IUploader
-	ciService ci.IService
-	resolver  resolution.IResolver
+	client      *client.IDebClient
+	finder      file.IFinder
+	uploader    *upload.IUploader
+	ciService   ci.IService
+	resolver    resolution.IResolver
+	fingerprint fingerprint.IFingerprint
 }
 
 type DebrickedOptions struct {
 	Path            string
 	Resolve         bool
+	Fingerprint     bool
 	Exclusions      []string
 	RepositoryName  string
 	CommitName      string
@@ -55,6 +58,7 @@ func NewDebrickedScanner(
 	uploader upload.IUploader,
 	ciService ci.IService,
 	resolver resolution.IResolver,
+	fingerprint fingerprint.IFingerprint,
 ) *DebrickedScanner {
 	return &DebrickedScanner{
 		c,
@@ -62,6 +66,7 @@ func NewDebrickedScanner(
 		&uploader,
 		ciService,
 		resolver,
+		fingerprint,
 	}
 }
 
@@ -117,12 +122,41 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 	return nil
 }
 
-func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject git.MetaObject) (*upload.UploadResult, error) {
+func (dScanner *DebrickedScanner) scanResolve(options DebrickedOptions) error {
 	if options.Resolve {
 		_, resErr := dScanner.resolver.Resolve([]string{options.Path}, options.Exclusions)
 		if resErr != nil {
-			return nil, resErr
+			return resErr
 		}
+	}
+
+	return nil
+}
+
+func (dScanner *DebrickedScanner) scanFingerprint(options DebrickedOptions) error {
+	if options.Fingerprint {
+		fingerprints, err := dScanner.fingerprint.FingerprintFiles(options.Path, file.DefaultExclusionsFingerprint())
+		if err != nil {
+			return err
+		}
+		err = fingerprints.ToFile(fingerprint.OutputFileNameFingerprints)
+
+		return err
+	}
+
+	return nil
+}
+
+func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject git.MetaObject) (*upload.UploadResult, error) {
+
+	err := dScanner.scanResolve(options)
+	if err != nil {
+		return nil, err
+	}
+
+	err = dScanner.scanFingerprint(options)
+	if err != nil {
+		return nil, err
 	}
 
 	fileGroups, err := dScanner.finder.GetGroups(options.Path, options.Exclusions, false, file.StrictAll)

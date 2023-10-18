@@ -15,19 +15,22 @@ type ISpinnerManager interface {
 	AddSpinner(file string) *ysmrr.Spinner
 	Start()
 	Stop()
+	SetSpinnerMessage(spinner *ysmrr.Spinner, filename string, message string)
 }
 
 type SpinnerManager struct {
-	spinnerManager ysmrr.SpinnerManager
+	spinnerManager      ysmrr.SpinnerManager
+	baseString          string
+	spinnerStartMessage string
 }
 
-func NewSpinnerManager() SpinnerManager {
-	return SpinnerManager{ysmrr.NewSpinnerManager(ysmrr.WithSpinnerColor(colors.FgHiBlue))}
+func NewSpinnerManager(baseString string, spinnerStartMessage string) SpinnerManager {
+	return SpinnerManager{ysmrr.NewSpinnerManager(ysmrr.WithSpinnerColor(colors.FgHiBlue)), baseString, spinnerStartMessage}
 }
 
 func (sm SpinnerManager) AddSpinner(file string) *ysmrr.Spinner {
 	spinner := sm.spinnerManager.AddSpinner("")
-	SetSpinnerMessage(spinner, file, "waiting for worker")
+	sm.SetSpinnerMessage(spinner, file, sm.spinnerStartMessage)
 
 	return spinner
 }
@@ -40,7 +43,7 @@ func (sm SpinnerManager) Stop() {
 	sm.spinnerManager.Stop()
 }
 
-func SetSpinnerMessage(spinner *ysmrr.Spinner, filename string, message string) {
+func (sm SpinnerManager) SetSpinnerMessage(spinner *ysmrr.Spinner, filename string, message string) {
 	const maxNumberOfChars = 50
 	truncatedFilename := filename
 	if len(truncatedFilename) > maxNumberOfChars {
@@ -60,5 +63,5 @@ func SetSpinnerMessage(spinner *ysmrr.Spinner, filename string, message string) 
 
 	}
 	file := color.YellowString(truncatedFilename)
-	spinner.UpdateMessage(fmt.Sprintf("Resolving %s: %s", file, message))
+	spinner.UpdateMessage(fmt.Sprintf("%s %s: %s", sm.baseString, file, message))
 }

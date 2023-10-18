@@ -26,6 +26,7 @@ import (
 	"github.com/debricked/cli/internal/client"
 	"github.com/debricked/cli/internal/client/testdata"
 	"github.com/debricked/cli/internal/file"
+	"github.com/debricked/cli/internal/fingerprint"
 	"github.com/debricked/cli/internal/git"
 	"github.com/debricked/cli/internal/resolution"
 	resolveTestdata "github.com/debricked/cli/internal/resolution/testdata"
@@ -52,7 +53,8 @@ func TestNewDebrickedScanner(t *testing.T) {
 	var finder file.IFinder
 	var uploader upload.IUploader
 	var resolver resolution.IResolver
-	s := NewDebrickedScanner(&debClient, finder, uploader, cis, resolver)
+	var fingerprint fingerprint.IFingerprint
+	s := NewDebrickedScanner(&debClient, finder, uploader, cis, resolver, fingerprint)
 
 	assert.NotNil(t, s)
 }
@@ -120,7 +122,7 @@ func TestScan(t *testing.T) {
 
 func TestScanFailingMetaObject(t *testing.T) {
 	var debClient client.IDebClient = testdata.NewDebClientMock()
-	scanner := NewDebrickedScanner(&debClient, nil, nil, ciService, nil)
+	scanner := NewDebrickedScanner(&debClient, nil, nil, ciService, nil, nil)
 	cwd, _ := os.Getwd()
 	path := testdataNpm
 	opts := DebrickedOptions{
@@ -167,7 +169,7 @@ func TestScanFailingNoFiles(t *testing.T) {
 
 func TestScanBadOpts(t *testing.T) {
 	var c client.IDebClient
-	scanner := NewDebrickedScanner(&c, nil, nil, nil, nil)
+	scanner := NewDebrickedScanner(&c, nil, nil, nil, nil, nil)
 	var opts IOptions
 
 	err := scanner.Scan(opts)
@@ -226,7 +228,7 @@ func TestScanEmptyResult(t *testing.T) {
 
 func TestScanInCiWithPathSet(t *testing.T) {
 	var debClient client.IDebClient = testdata.NewDebClientMock()
-	scanner := NewDebrickedScanner(&debClient, nil, nil, ciService, nil)
+	scanner := NewDebrickedScanner(&debClient, nil, nil, ciService, nil, nil)
 	cwd, _ := os.Getwd()
 	defer resetWd(t, cwd)
 	path := testdataNpm
@@ -306,136 +308,140 @@ func TestScanWithResolveErr(t *testing.T) {
 	assert.ErrorIs(t, err, resolutionErr)
 }
 
-func TestMapEnvToOptions(t *testing.T) {
-	dOptionsTemplate := DebrickedOptions{
-		Path:            "path",
-		Exclusions:      nil,
-		RepositoryName:  "repository",
-		CommitName:      "commit",
-		BranchName:      "branch",
-		CommitAuthor:    "author",
-		RepositoryUrl:   "url",
-		IntegrationName: "CLI",
-	}
+// TestScanWithResolveErr tests that the scan is not aborted if the resolution fails
+var dOptionsTemplate = DebrickedOptions{
+	Path:            "path",
+	Exclusions:      nil,
+	RepositoryName:  "repository",
+	CommitName:      "commit",
+	BranchName:      "branch",
+	CommitAuthor:    "author",
+	RepositoryUrl:   "url",
+	IntegrationName: "CLI",
+}
 
-	cases := []struct {
-		name     string
-		template DebrickedOptions
-		opts     DebrickedOptions
-		env      env.Env
-	}{
-		{
-			name:     "No env",
-			template: dOptionsTemplate,
-			opts:     dOptionsTemplate,
-			env: env.Env{
-				Repository:    "",
-				Commit:        "",
-				Branch:        "",
-				Author:        "",
-				RepositoryUrl: "",
-				Integration:   "",
-				Filepath:      "",
-			},
+var cases = []struct {
+	name     string
+	template DebrickedOptions
+	opts     DebrickedOptions
+	env      env.Env
+}{
+	{
+		name:     "No env",
+		template: dOptionsTemplate,
+		opts:     dOptionsTemplate,
+		env: env.Env{
+			Repository:    "",
+			Commit:        "",
+			Branch:        "",
+			Author:        "",
+			RepositoryUrl: "",
+			Integration:   "",
+			Filepath:      "",
 		},
-		{
-			name: "CI env set",
-			template: DebrickedOptions{
-				Path:            "env-path",
-				Exclusions:      nil,
-				RepositoryName:  "env-repository",
-				CommitName:      "env-commit",
-				BranchName:      "env-branch",
-				CommitAuthor:    "author",
-				RepositoryUrl:   "env-url",
-				IntegrationName: github.Integration,
-			},
-			opts: DebrickedOptions{
-				Path:            "",
-				Exclusions:      nil,
-				RepositoryName:  "",
-				CommitName:      "",
-				BranchName:      "",
-				CommitAuthor:    "author",
-				RepositoryUrl:   "",
-				IntegrationName: "CLI",
-			},
-			env: env.Env{
-				Repository:    "env-repository",
-				Commit:        "env-commit",
-				Branch:        "env-branch",
-				Author:        "env-author",
-				RepositoryUrl: "env-url",
-				Integration:   github.Integration,
-				Filepath:      "env-path",
-			},
+	},
+	{
+		name: "CI env set",
+		template: DebrickedOptions{
+			Path:            "env-path",
+			Exclusions:      nil,
+			RepositoryName:  "env-repository",
+			CommitName:      "env-commit",
+			BranchName:      "env-branch",
+			CommitAuthor:    "author",
+			RepositoryUrl:   "env-url",
+			IntegrationName: github.Integration,
 		},
-		{
-			name: "CI env set without directory path",
-			template: DebrickedOptions{
-				Path:            "input-path",
-				Exclusions:      nil,
-				RepositoryName:  "env-repository",
-				CommitName:      "env-commit",
-				BranchName:      "env-branch",
-				CommitAuthor:    "author",
-				RepositoryUrl:   "env-url",
-				IntegrationName: github.Integration,
-			},
-			opts: DebrickedOptions{
-				Path:            "input-path",
-				Exclusions:      nil,
-				RepositoryName:  "",
-				CommitName:      "",
-				BranchName:      "",
-				CommitAuthor:    "author",
-				RepositoryUrl:   "",
-				IntegrationName: "CLI",
-			},
-			env: env.Env{
-				Repository:    "env-repository",
-				Commit:        "env-commit",
-				Branch:        "env-branch",
-				Author:        "env-author",
-				RepositoryUrl: "env-url",
-				Integration:   github.Integration,
-				Filepath:      "",
-			},
+		opts: DebrickedOptions{
+			Path:            "",
+			Exclusions:      nil,
+			RepositoryName:  "",
+			CommitName:      "",
+			BranchName:      "",
+			CommitAuthor:    "author",
+			RepositoryUrl:   "",
+			IntegrationName: "CLI",
 		},
-		{
-			name: "CI env set with directory path",
-			template: DebrickedOptions{
-				Path:            "input-path",
-				Exclusions:      nil,
-				RepositoryName:  "env-repository",
-				CommitName:      "env-commit",
-				BranchName:      "env-branch",
-				CommitAuthor:    "author",
-				RepositoryUrl:   "env-url",
-				IntegrationName: github.Integration,
-			},
-			opts: DebrickedOptions{
-				Path:            "input-path",
-				Exclusions:      nil,
-				RepositoryName:  "",
-				CommitName:      "",
-				BranchName:      "",
-				CommitAuthor:    "author",
-				RepositoryUrl:   "",
-				IntegrationName: "CLI",
-			},
-			env: env.Env{
-				Repository:    "env-repository",
-				Commit:        "env-commit",
-				Branch:        "env-branch",
-				Author:        "env-author",
-				RepositoryUrl: "env-url",
-				Integration:   github.Integration,
-				Filepath:      "env-path",
-			},
+		env: env.Env{
+			Repository:    "env-repository",
+			Commit:        "env-commit",
+			Branch:        "env-branch",
+			Author:        "env-author",
+			RepositoryUrl: "env-url",
+			Integration:   github.Integration,
+			Filepath:      "env-path",
 		},
-	}
-	for _, c := range cases {
+	},
+	{
+		name: "CI env set without directory path",
+		template: DebrickedOptions{
+			Path:            "input-path",
+			Exclusions:      nil,
+			RepositoryName:  "env-repository",
+			CommitName:      "env-commit",
+			BranchName:      "env-branch",
+			CommitAuthor:    "author",
+			RepositoryUrl:   "env-url",
+			IntegrationName: github.Integration,
+		},
+		opts: DebrickedOptions{
+			Path:            "input-path",
+			Exclusions:      nil,
+			RepositoryName:  "",
+			CommitName:      "",
+			BranchName:      "",
+			CommitAuthor:    "author",
+			RepositoryUrl:   "",
+			IntegrationName: "CLI",
+		},
+		env: env.Env{
+			Repository:    "env-repository",
+			Commit:        "env-commit",
+			Branch:        "env-branch",
+			Author:        "env-author",
+			RepositoryUrl: "env-url",
+			Integration:   github.Integration,
+			Filepath:      "",
+		},
+	},
+	{
+		name: "CI env set with directory path",
+		template: DebrickedOptions{
+			Path:            "input-path",
+			Exclusions:      nil,
+			RepositoryName:  "env-repository",
+			CommitName:      "env-commit",
+			BranchName:      "env-branch",
+			CommitAuthor:    "author",
+			RepositoryUrl:   "env-url",
+			IntegrationName: github.Integration,
+		},
+		opts: DebrickedOptions{
+			Path:            "input-path",
+			Exclusions:      nil,
+			RepositoryName:  "",
+			CommitName:      "",
+			BranchName:      "",
+			CommitAuthor:    "author",
+			RepositoryUrl:   "",
+			IntegrationName: "CLI",
+		},
+		env: env.Env{
+			Repository:    "env-repository",
+			Commit:        "env-commit",
+			Branch:        "env-branch",
+			Author:        "env-author",
+			RepositoryUrl: "env-url",
+			Integration:   github.Integration,
+			Filepath:      "env-path",
+		},
+	},
+}
+
+func TestMapEnvToOptions(t *testing.T) {
+
+	for _, co := range cases {
+		c := co
 		t.Run(c.name, func(t *testing.T) {
 			MapEnvToOptions(&c.opts, c.env)
 			assert.Equal(t, c.template.Path, c.opts.Path)
@@ -480,7 +486,8 @@ func TestSetWorkingDirectory(t *testing.T) {
 		},
 	}
 	cwd, _ := os.Getwd()
-	for _, c := range cases {
+	for _, co := range cases {
+		c := co
 		t.Run(c.name, func(t *testing.T) {
 			err := SetWorkingDirectory(&c.opts)
 			defer resetWd(t, cwd)
@@ -508,7 +515,7 @@ func TestScanServiceDowntime(t *testing.T) {
 
 	var ciService ci.IService = ci.NewService(nil)
 
-	scanner := NewDebrickedScanner(&debClient, finder, nil, ciService, nil)
+	scanner := NewDebrickedScanner(&debClient, finder, nil, ciService, nil, nil)
 
 	path := testdataNpm
 	repositoryName := path
@@ -606,7 +613,7 @@ func makeScanner(clientMock *testdata.DebClientMock, resolverMock *resolveTestda
 
 	var cis ci.IService = ci.NewService(nil)
 
-	return NewDebrickedScanner(&debClient, finder, uploader, cis, resolverMock)
+	return NewDebrickedScanner(&debClient, finder, uploader, cis, resolverMock, nil)
 }
 
 func cleanUpResolution(t *testing.T, resolverMock resolveTestdata.ResolverMock) {
@@ -614,4 +621,43 @@ func cleanUpResolution(t *testing.T, resolverMock resolveTestdata.ResolverMock) 
 	if err != nil {
 		t.Error(err)
 	}
+}
+
+func TestScanWithFingerprint(t *testing.T) {
+	clientMock := testdata.NewDebClientMock()
+	addMockedFormatsResponse(clientMock, "yarn\\.lock")
+	addMockedFileUploadResponse(clientMock)
+	addMockedFinishResponse(clientMock, http.StatusNoContent)
+	addMockedStatusResponse(clientMock, http.StatusOK, 100)
+
+	resolverMock := resolveTestdata.ResolverMock{}
+	resolverMock.SetFiles([]string{"yarn.lock"})
+
+	scanner := makeScanner(clientMock, &resolverMock)
+	scanner.fingerprint = fingerprint.NewFingerprinter()
+
+	cwd, _ := os.Getwd()
+	defer resetWd(t, cwd)
+	// Clean up resolution must be done before wd reset, otherwise files cannot be deleted
+	defer cleanUpResolution(t, resolverMock)
+
+	path := testdataNpm
+	repositoryName := path
+	commitName := "testdata/npm-commit"
+	opts := DebrickedOptions{
+		Path:            path,
+		Resolve:         true,
+		Fingerprint:     true,
+		Exclusions:      nil,
+		RepositoryName:  repositoryName,
+		CommitName:      commitName,
+		BranchName:      "",
+		CommitAuthor:    "",
+		RepositoryUrl:   "",
+		IntegrationName: "",
+	}
+	err := scanner.Scan(opts)
+	assert.NoError(t, err)
+	cwd, _ = os.Getwd()
+	assert.Contains(t, cwd, path)
 }
