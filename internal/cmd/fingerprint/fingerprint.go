@@ -21,9 +21,10 @@ func NewFingerprintCmd(fingerprinter fingerprint.IFingerprint) *cobra.Command {
 	short := "Fingerprints files to match against the Debricked knowledge base. [beta feature]"
 	long := fmt.Sprintf("Fingerprint files for identification in a given path and writes it to %s. [beta feature]\nThis hashes all files and matches them against the Debricked knowledge base.", fingerprint.OutputFileNameFingerprints)
 	cmd := &cobra.Command{
-		Use:   "fingerprint [path]",
-		Short: short,
-		Long:  long,
+		Use:    "fingerprint [path]",
+		Short:  short,
+		Hidden: true,
+		Long:   long,
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			_ = viper.BindPFlags(cmd.Flags())
 		},

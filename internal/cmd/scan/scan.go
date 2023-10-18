@@ -85,6 +85,8 @@ $ debricked scan . `+exampleFlags)
 	cmd.Flags().BoolVar(&noResolve, NoResolveFlag, false, `disables resolution of manifest files that lack lock files. Resolving manifest files enables more accurate dependency scanning since the whole dependency tree will be analysed.
 For example, if there is a "go.mod" in the target path, its dependencies are going to get resolved onto a lock file, and latter scanned.`)
 	cmd.Flags().BoolVar(&noFingerprint, FingerprintFlag, false, "enables fingerprinting for undeclared component identification. Can be run as a standalone command [files fingerprint] with more granular options. [beta feature]")
+	cmd.Flags().MarkHidden(FingerprintFlag) //nolint:errcheck
+
 	viper.MustBindEnv(RepositoryFlag)
 	viper.MustBindEnv(CommitFlag)
 	viper.MustBindEnv(BranchFlag)
