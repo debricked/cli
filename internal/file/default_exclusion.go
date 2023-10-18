@@ -1,14 +1,27 @@
 package file
 
-import "path/filepath"
+import (
+	"os"
+	"path/filepath"
+	"strings"
+)
+
+const debrickedExclusionEnvVar = "DEBRICKED_EXCLUSIONS"
 
 func DefaultExclusions() []string {
-	return []string{
+	defaultValues := []string{
 		filepath.Join("**", "node_modules", "**"),
 		filepath.Join("**", "vendor", "**"),
 		filepath.Join("**", ".git", "**"),
 		filepath.Join("**", "obj", "**"), // nuget
 	}
+
+	envValue := os.Getenv(debrickedExclusionEnvVar)
+	if envValue != "" {
+		defaultValues = strings.Split(envValue, ",")
+	}
+
+	return defaultValues
 }
 
 var EXCLUDED_DIRS_FINGERPRINT = []string{
