@@ -18,7 +18,7 @@ var branchName string
 var commitAuthor string
 var repositoryUrl string
 var integrationName string
-var exclusions = file.DefaultExclusions()
+var exclusions = file.Exclusions()
 var noResolve bool
 var noFingerprint bool
 var passOnDowntime bool
@@ -78,6 +78,8 @@ Special Terms | Meaning
 "?"           | matches any single non-Separator character
 "[class]"     | matches any single non-Separator character against a class of characters ([see "character classes"])
 "{alt1,...}"  | matches a sequence of characters if one of the comma-separated alternatives matches
+
+Exclude flags could alternatively be set using DEBRICKED_EXCLUSIONS="path1,path2,path3".
 
 Examples: 
 $ debricked scan . `+exampleFlags)
