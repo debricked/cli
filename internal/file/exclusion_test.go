@@ -114,7 +114,7 @@ func TestExclude(t *testing.T) {
 		{
 			name:               "FileExclusionWithDoublestar",
 			exclusions:         []string{"**/composer.json"},
-			expectedExclusions: []string{"composer.json"},
+			expectedExclusions: []string{"composer.json", "composer.json"}, // Two composer.json files in testdata folder
 		},
 		{
 			name:               "DirectoryExclusion",
@@ -129,7 +129,7 @@ func TestExclude(t *testing.T) {
 		{
 			name:               "ExtensionExclusionWithWildcardAndDoublestar",
 			exclusions:         []string{"**/*.mod"},
-			expectedExclusions: []string{"go.mod"},
+			expectedExclusions: []string{"go.mod", "go.mod"}, // Two go.mod files in testdata folder
 		},
 		{
 			name:               "DirectoryExclusionWithDoublestar",

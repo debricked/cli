@@ -25,8 +25,6 @@ type Scheduler struct {
 	spinnerManager tui.ISpinnerManager
 }
 
-const resolving = "Resolving"
-
 func NewScheduler(workers int) *Scheduler {
 	return &Scheduler{workers: workers, waitGroup: sync.WaitGroup{}}
 }

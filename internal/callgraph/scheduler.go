@@ -40,7 +40,7 @@ func (scheduler *Scheduler) Schedule(jobs []job.IJob, ctx cgexec.IContext) (IGen
 	scheduler.spinnerManager.Start()
 
 	for _, j := range jobs {
-		spinner := scheduler.spinnerManager.AddSpinner(callgraph, j.GetDir())
+		spinner := scheduler.spinnerManager.AddSpinner(j.GetDir())
 		scheduler.queue <- queueItem{
 			job:     j,
 			spinner: spinner,
