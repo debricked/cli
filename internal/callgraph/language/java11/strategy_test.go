@@ -1,12 +1,14 @@
 package java
 
 import (
+	"fmt"
 	"path/filepath"
 	"testing"
 
 	ctxTestdata "github.com/debricked/cli/internal/callgraph/cgexec/testdata"
 	"github.com/debricked/cli/internal/callgraph/config"
 	"github.com/debricked/cli/internal/callgraph/finder/testdata"
+	javaTestdata "github.com/debricked/cli/internal/callgraph/language/java11/testdata"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -83,4 +85,20 @@ func TestInvokeManyFilesWCorrectFilters(t *testing.T) {
 		assert.Equal(t, job.GetDir(), dir)
 
 	}
+}
+
+func TestBuildProjectsError(t *testing.T) {
+	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, false, "maven")
+	finder := testdata.NewEmptyFinderMock()
+	testFiles := []string{"file-1", "file-2", "file-3"}
+	finder.FindMavenRootsNames = []string{"file-3/pom.xml"}
+	finder.FindJavaClassDirsNames = []string{"file-3/test.class"}
+	ctx, _ := ctxTestdata.NewContextMock()
+	s := NewStrategy(conf, testFiles, testFiles, []string{"test"}, finder, ctx)
+	factoryMock := javaTestdata.NewEchoCmdFactory()
+	factoryMock.BuildMavenErr = fmt.Errorf("build-error")
+	s.cmdFactory = factoryMock
+	err := buildProjects(s, []string{"file-3/pom.xml"})
+
+	assert.NotNil(t, err)
 }

@@ -9,8 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const resolving = "Resolving"
-
 func TestNewSpinnerManager(t *testing.T) {
 	spinnerManager := NewSpinnerManager(
 		"Resolving",
