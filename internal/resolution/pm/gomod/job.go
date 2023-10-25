@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	fileName = ".gomod.debricked.lock"
+	fileName = "gomod.debricked.lock"
 )
 
 type Job struct {

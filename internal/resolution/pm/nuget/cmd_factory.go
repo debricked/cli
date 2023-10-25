@@ -13,6 +13,9 @@ import (
 	"strings"
 )
 
+const packagesConfigLockfile = "packages.config.nuget.debricked.lock"
+const nugetLockfile = "packages.lock.json"
+
 type ICmdFactory interface {
 	MakeInstallCmd(command string, file string) (*exec.Cmd, error)
 	GetTempoCsproj() string
@@ -77,14 +80,14 @@ func (cmdf *CmdFactory) MakeInstallCmd(command string, file string) (*exec.Cmd, 
 		return nil, err
 	}
 
-	fileLockName := "packages.lock.json"
+	fileLockName := nugetLockfile
 	if packageConfig.MatchString(file) {
 		file, err = cmdf.convertPackagesConfigToCsproj(file, command)
 		cmdf.tempoCsproj = file
 		if err != nil {
 			return nil, err
 		}
-		fileLockName = ".packages.config.nuget.debricked.lock"
+		fileLockName = packagesConfigLockfile
 	}
 
 	fileDir := filepath.Dir(file)
