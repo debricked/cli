@@ -29,7 +29,7 @@ var (
 	InitScanErr          = errors.New("failed to initialize a scan")
 )
 
-const callgraphName = ".debricked-call-graph"
+const callgraphName = "debricked-call-graph"
 
 type uploadBatch struct {
 	client           *client.IDebClient
