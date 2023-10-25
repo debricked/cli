@@ -17,7 +17,7 @@
 project via the command prompt. 
 
 This readme is specific for the use case of scanning Open Source with Debricked through [Fortify on Demand](https://www.microfocus.com/en-us/cyberres/application-security/fortify-on-demand). 
-If you are interested in the readme for Debricked standalone, it can be found [here](https://github.com/CarlTern/cli/blob/main/README.md).
+If you are interested in the readme for Debricked standalone, it can be found [here](README.md).
 <br/>
 <br/>
 <a href="https://github.com/viktigpetterr/debricked-go-cli/actions/workflows/test.yml">
