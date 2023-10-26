@@ -37,7 +37,7 @@ func TestResolves(t *testing.T) {
 			manifestFile:   "testdata/npm/package.json",
 			lockFileName:   "yarn.lock",
 			expectedFile:   "testdata/npm/yarn-expected.lock",
-			packageManager: "yarn",
+			packageManager: "npm",
 		},
 		{
 			name:           "basic requirements.txt",
@@ -48,9 +48,16 @@ func TestResolves(t *testing.T) {
 		},
 		{
 			name:           "basic .csproj",
-			manifestFile:   "testdata/nuget/basic.csproj",
+			manifestFile:   "testdata/nuget/csproj/basic.csproj",
 			lockFileName:   "packages.lock.json",
-			expectedFile:   "testdata/nuget/packages-expected.lock.json",
+			expectedFile:   "testdata/nuget/csproj/packages-expected.lock.json",
+			packageManager: "nuget",
+		},
+		{
+			name:           "basic packages.config",
+			manifestFile:   "testdata/nuget/packagesconfig/packages.config",
+			lockFileName:   "packages.config.nuget.debricked.lock",
+			expectedFile:   "testdata/nuget/packagesconfig/packages.config.expected.lock",
 			packageManager: "nuget",
 		},
 	}
