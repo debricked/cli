@@ -51,6 +51,9 @@ jobs:
           path: coverage.html
           retention-days: 2
 
+      - name: E2E - resolve
+        run: bash scripts/test_e2e.sh
+
       - name: E2E - scan
         run: go run cmd/debricked/main.go scan internal/file/testdata/misc  -e requirements.txt -t ${{ secrets.DEBRICKED_TOKEN }} -r debricked/cli-test -c E2E-test-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}
 
