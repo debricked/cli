@@ -141,7 +141,7 @@ func TestGetGroupsPIP(t *testing.T) {
 		manifestsFound = append(manifestsFound, manifestFile)
 	}
 	manifestsExpected := []string{"testdata/pip/requirements-dev.txt", "testdata/pip/requirements.txt", "testdata/pip/requirements.test.txt"}
-	locksExpected := []string{"testdata/pip/requirements-dev.txt.pip.debricked.lock", "testdata/pip/.requirements.txt.pip.debricked.lock"}
+	locksExpected := []string{"testdata/pip/requirements-dev.txt.pip.debricked.lock", "testdata/pip/requirements.txt.pip.debricked.lock"}
 	sort.Strings(manifestsExpected)
 	sort.Strings(locksExpected)
 	sort.Strings(manifestsFound)

@@ -97,10 +97,10 @@ func TestGroupMatchFile(t *testing.T) {
 	var match bool
 	match = matchFile("package.json", "package-lock.json")
 	assert.Equal(t, match, true)
-	match = matchFile("requirements.txt", ".requirements.txt.pip.debricked.lock")
+	match = matchFile("requirements.txt", "requirements.txt.pip.debricked.lock")
 	assert.Equal(t, match, true)
 	match = matchFile("requirements.txt", "requirements.txt.pip.debricked.lock")
 	assert.Equal(t, match, true)
-	match = matchFile("requirements-test.txt", ".requirements.txt.pip.debricked.lock")
+	match = matchFile("requirements-test.txt", "requirements.txt.pip.debricked.lock")
 	assert.Equal(t, match, false)
 }

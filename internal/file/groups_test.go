@@ -157,9 +157,9 @@ func TestMatchGroupsExpected(t *testing.T) {
 		"foo/bar/examples/test/requirements.txt":            {},
 		"foo/asd/requirements-test-dev.txt":                 {"foo/asd/.requirements-test-dev.txt.pip.debricked.lock"},
 		"foo/asd/requirements-test.txt":                     {"foo/asd/.requirements-test.txt.pip.debricked.lock"},
-		"foo/asd/requirements.txt":                          {"foo/asd/.requirements.txt.pip.debricked.lock"},
+		"foo/asd/requirements.txt":                          {"foo/asd/requirements.txt.pip.debricked.lock"},
 		"foo/asd/requirements-api.txt":                      {},
-		"foo/asd/src/main/event_listeners/requirements.txt": {"foo/asd/src/main/event_listeners/.requirements.txt.pip.debricked.lock"},
+		"foo/asd/src/main/event_listeners/requirements.txt": {"foo/asd/src/main/event_listeners/requirements.txt.pip.debricked.lock"},
 		"foo/asd/src/main/util/test/composer.json":          {},
 	}
 
