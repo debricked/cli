@@ -26,7 +26,7 @@ func TestResolves(t *testing.T) {
 		{
 			name:         "basic requirements.txt",
 			manifestFile: "testdata/pip/requirements.txt",
-			lockFileName: ".requirements.txt.debricked.lock",
+			lockFileName: "requirements.txt.debricked.lock",
 			expectedFile: "testdata/pip/expected.lock",
 		},
 		{
