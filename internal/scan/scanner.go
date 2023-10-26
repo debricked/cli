@@ -167,11 +167,6 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		return nil, err
 	}
 
-	fileGroups, err := dScanner.finder.GetGroups(options.Path, options.Exclusions, false, file.StrictAll)
-	if err != nil {
-		return nil, err
-	}
-
 	if options.CallGraph {
 		configs := []config.IConfig{
 			config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven"),
@@ -185,6 +180,11 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		if resErr != nil {
 			return nil, resErr
 		}
+	}
+
+	fileGroups, err := dScanner.finder.GetGroups(options.Path, options.Exclusions, false, file.StrictAll)
+	if err != nil {
+		return nil, err
 	}
 
 	uploaderOptions := upload.DebrickedOptions{
