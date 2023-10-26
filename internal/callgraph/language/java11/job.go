@@ -17,7 +17,7 @@ const (
 	maven         = "maven"
 	gradle        = "gradle"
 	dependencyDir = ".debrickedTmpFolder"
-	outputName    = ".debricked-call-graph"
+	outputName    = "debricked-call-graph"
 )
 
 type Job struct {
