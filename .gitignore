@@ -9,7 +9,7 @@ dist/
 /gomod.debricked.lock
 /.env
 test/resolve/testdata/pip/requirements.txt.venv/
-test/resolve/testdata/pip/requirements.txt.debricked.lock
+test/resolve/testdata/pip/requirements.txt.pip.debricked.lock
 internal/cmd/scan/testdata/npm/yarn.lock
 internal/resolution/pm/gradle/.gradle-init-script.debricked.groovy
 test/resolve/testdata/npm/yarn.lock

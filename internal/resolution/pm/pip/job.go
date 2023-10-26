@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	lockFileExtension = "pip.debricked.lock"
+	lockFileExtension = ".pip.debricked.lock"
 	pip               = "pip"
 	lockFileDelimiter = "***"
 )
@@ -115,7 +115,7 @@ func (j *Job) writeLockContent() error {
 		return err
 	}
 
-	lockFileName := fmt.Sprintf(".%s%s", filepath.Base(j.GetFile()), lockFileExtension)
+	lockFileName := fmt.Sprintf("%s%s", filepath.Base(j.GetFile()), lockFileExtension)
 	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.GetFile(), lockFileName))
 	if err != nil {
 		return err

@@ -1,2 +1,8 @@
 pandas==1.5.1
+numpy==1.24.2
+pip==22.0.4
+python-dateutil==2.8.2
+pytz==2022.7.1
+setuptools==58.1.0
+six==1.16.0
 # comment
