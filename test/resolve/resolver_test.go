@@ -60,6 +60,13 @@ func TestResolves(t *testing.T) {
 			expectedFile:   "testdata/nuget/packagesconfig/packages.config.expected.lock",
 			packageManager: "nuget",
 		},
+		{
+			name:           "basic go.mod",
+			manifestFile:   "testdata/gomod/go.mod",
+			lockFileName:   "gomod.debricked.lock",
+			expectedFile:   "testdata/gomod/expected.lock",
+			packageManager: "gomod",
+		},
 	}
 
 	for _, cT := range cases {

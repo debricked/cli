@@ -18,3 +18,4 @@ test/resolve/testdata/nuget/packagesconfig/packages.config.nuget.debricked.lock
 test/resolve/testdata/nuget/**/obj
 debricked.fingerprints.wfp
 test/resolve/testdata/nuget/csproj/obj/basic.csproj.nuget.g.props
+test/resolve/testdata/gomod/gomod.debricked.lock
