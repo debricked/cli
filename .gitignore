@@ -11,7 +11,7 @@ dist/
 test/resolve/testdata/pip/requirements.txt.venv/
 test/resolve/testdata/pip/requirements.txt.debricked.lock
 internal/cmd/scan/testdata/npm/yarn.lock
-internal/resolution/pm/gradle/gradle-init-script.debricked.groovy
+internal/resolution/pm/gradle/.gradle-init-script.debricked.groovy
 test/resolve/testdata/npm/yarn.lock
 test/resolve/testdata/nuget/packages.lock.json
 test/resolve/testdata/nuget/obj

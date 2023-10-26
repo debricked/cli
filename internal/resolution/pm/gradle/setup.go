@@ -15,8 +15,8 @@ import (
 
 const (
 	initGradle               = "gradle"
-	multiProjectFilename     = "debricked.multiprojects.txt"
-	gradleInitScriptFileName = "gradle-init-script.debricked.groovy"
+	multiProjectFilename     = ".debricked.multiprojects.txt"
+	gradleInitScriptFileName = ".gradle-init-script.debricked.groovy"
 )
 
 //go:embed gradle-init/gradle-init-script.groovy
