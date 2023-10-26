@@ -94,6 +94,10 @@ func TestResolves(t *testing.T) {
 				expectedString = removeLines(expectedString, "Location: ")
 				actualString = removeLines(actualString, "Location: ")
 
+			} else if c.packageManager == "nuget" {
+				// Remove hashes as that is different on different OS
+				expectedString = removeLines(expectedString, "        \"contentHash\":")
+				actualString = removeLines(actualString, "        \"contentHash\":")
 			}
 			assert.Equal(t, expectedString, actualString)
 		})
