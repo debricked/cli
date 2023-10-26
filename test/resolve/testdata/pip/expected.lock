@@ -5,11 +5,13 @@ python-dateutil==2.8.2
 pytz==2022.7.1
 setuptools==58.1.0
 six==1.16.0
+certifi==2023.7.22
 # comment
 
 ***
 Package         Version
---------------- --------
+--------------- ---------
+certifi         2023.7.22
 numpy           1.24.2
 pandas          1.5.1
 pip             22.0.4
@@ -19,6 +21,17 @@ setuptools      58.1.0
 six             1.16.0
 
 ***
+Name: certifi
+Version: 2023.7.22
+Summary: Python package for providing Mozilla's CA Bundle.
+Home-page: https://github.com/certifi/python-certifi
+Author: Kenneth Reitz
+Author-email: me@kennethreitz.com
+License: MPL-2.0
+Location: /cli/test/resolve/testdata/pip/requirements.txt.venv/lib/python3.9/site-packages
+Requires: 
+Required-by: 
+---
 Name: numpy
 Version: 1.24.2
 Summary: Fundamental package for array computing in Python
@@ -26,7 +39,7 @@ Home-page: https://www.numpy.org
 Author: Travis E. Oliphant et al.
 Author-email: 
 License: BSD-3-Clause
-Location: /home/nilszeilon/Programming/cli/test/testdata/pip/requirements.txt.venv/lib/python3.9/site-packages
+Location: /cli/test/resolve/testdata/pip/requirements.txt.venv/lib/python3.9/site-packages
 Requires: 
 Required-by: pandas
 ---
@@ -37,7 +50,7 @@ Home-page: https://pandas.pydata.org
 Author: The Pandas Development Team
 Author-email: pandas-dev@python.org
 License: BSD-3-Clause
-Location: /home/nilszeilon/Programming/cli/test/testdata/pip/requirements.txt.venv/lib/python3.9/site-packages
+Location: /cli/test/resolve/testdata/pip/requirements.txt.venv/lib/python3.9/site-packages
 Requires: numpy, python-dateutil, pytz
 Required-by: 
 ---
@@ -48,7 +61,7 @@ Home-page: https://pip.pypa.io/
 Author: The pip developers
 Author-email: distutils-sig@python.org
 License: MIT
-Location: /home/nilszeilon/Programming/cli/test/testdata/pip/requirements.txt.venv/lib/python3.9/site-packages
+Location: /cli/test/resolve/testdata/pip/requirements.txt.venv/lib/python3.9/site-packages
 Requires: 
 Required-by: 
 ---
@@ -59,7 +72,7 @@ Home-page: https://github.com/dateutil/dateutil
 Author: Gustavo Niemeyer
 Author-email: gustavo@niemeyer.net
 License: Dual License
-Location: /home/nilszeilon/Programming/cli/test/testdata/pip/requirements.txt.venv/lib/python3.9/site-packages
+Location: /cli/test/resolve/testdata/pip/requirements.txt.venv/lib/python3.9/site-packages
 Requires: six
 Required-by: pandas
 ---
@@ -70,7 +83,7 @@ Home-page: http://pythonhosted.org/pytz
 Author: Stuart Bishop
 Author-email: stuart@stuartbishop.net
 License: MIT
-Location: /home/nilszeilon/Programming/cli/test/testdata/pip/requirements.txt.venv/lib/python3.9/site-packages
+Location: /cli/test/resolve/testdata/pip/requirements.txt.venv/lib/python3.9/site-packages
 Requires: 
 Required-by: pandas
 ---
@@ -81,7 +94,7 @@ Home-page: https://github.com/pypa/setuptools
 Author: Python Packaging Authority
 Author-email: distutils-sig@python.org
 License: UNKNOWN
-Location: /home/nilszeilon/Programming/cli/test/testdata/pip/requirements.txt.venv/lib/python3.9/site-packages
+Location: /cli/test/resolve/testdata/pip/requirements.txt.venv/lib/python3.9/site-packages
 Requires: 
 Required-by: 
 ---
@@ -92,6 +105,6 @@ Home-page: https://github.com/benjaminp/six
 Author: Benjamin Peterson
 Author-email: benjamin@python.org
 License: MIT
-Location: /home/nilszeilon/Programming/cli/test/testdata/pip/requirements.txt.venv/lib/python3.9/site-packages
+Location: /cli/test/resolve/testdata/pip/requirements.txt.venv/lib/python3.9/site-packages
 Requires: 
 Required-by: python-dateutil
