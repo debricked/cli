@@ -56,8 +56,8 @@ Special Terms | Meaning
 Example: 
 $ debricked files resolve . `+exampleFlags)
 	cmd.Flags().BoolVar(&buildDisabled, NoBuildFlag, false, `Do not automatically build all source code in the project to enable call graph generation.
-This option requires a pre-built project. For more detailed documentation on Vulnerable Functionality, visit our portal: 
-https://portal.debricked.com/vulnerability-management-43/how-do-i-enable-the-vulnerable-functionality-246`)
+This option requires a pre-built project. For more detailed documentation on the callgraph generation, visit our portal:
+https://portal.debricked.com/debricked-cli-63/debricked-cli-documentation-298?tid=298&fid=63#callgraph`)
 	cmd.Flags().IntVar(&generateTimeout, GenerateTimeoutFlag, 60*60, "Timeout (in seconds) on call graph generation.")
 
 	viper.MustBindEnv(ExclusionFlag)
