@@ -7,6 +7,10 @@ import (
 	"github.com/debricked/cli/internal/resolution/job"
 )
 
+const (
+	lockFileExtension = "maven.debricked.lock"
+)
+
 type Job struct {
 	job.BaseJob
 	cmdFactory ICmdFactory

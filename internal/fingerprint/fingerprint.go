@@ -41,7 +41,7 @@ var EXCLUDED_FILES = []string{
 }
 
 const (
-	OutputFileNameFingerprints = ".debricked.fingerprints.wfp"
+	OutputFileNameFingerprints = "debricked.fingerprints.wfp"
 )
 
 func isExcludedFile(filename string) bool {

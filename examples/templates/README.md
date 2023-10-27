@@ -16,9 +16,10 @@ In order for us to analyze all dependencies in your project, their versions, and
 
 **Example 1:** If npm is used in your project you will have a `package.json` file, but in order for us to scan all your dependencies we need either `package-lock.json` or `yarn.lock` as well.
 
-**Example 2:** If Maven is used in your project you will have a `pom.xml` file, but in order for us to resolve all your dependencies we need a second file, as Maven does not offer a lock file system. Instead, Maven dependency:tree plugin can be used to create a file called `.maven.debricked.lock`
+**Example 2:** If Maven is used in your project you will have a `pom.xml` file, but in order for us to resolve all your dependencies we need a second file, as Maven does not offer a lock file system. Instead, Maven dependency:tree plugin can be used to create a file called `
+maven.debricked.lock`
 
 ## Debricked CLI dependency resolution
 In all templates the manifest file resolution is enabled by default. That means Debricked CLI will attempt to resolve manifest files that belong to package managers that does not offer lock file systems.  
-For example, if a `pom.xml` is found by Debricked CLI it will attempt to create `.maven.debricked.lock` automatically.
+For example, if a `pom.xml` is found by Debricked CLI it will attempt to create `maven.debricked.lock` automatically.
 To disable manifest file resolution, add the flag `--no-resolve`.

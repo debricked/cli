@@ -13,6 +13,6 @@ allprojects {
 
 allprojects {
     task debrickedAllDeps(type: DependencyReportTask) {
-        outputFile = file('./.gradle.debricked.lock')
+        outputFile = file('./gradle.debricked.lock')
     }
 }

@@ -42,7 +42,7 @@ func TestMakeInstallCmdPackagsConfig(t *testing.T) {
 	assert.Contains(t, args, "restore")
 	assert.Contains(t, args, "--use-lock-file")
 	assert.Contains(t, args, "--lock-file-path")
-	assert.Contains(t, args, ".packages.config.nuget.debricked.lock")
+	assert.Contains(t, args, "packages.config.nuget.debricked.lock")
 
 	// Cleanup: Remove the created .csproj file
 	if err := os.Remove("testdata/valid/packages.config.nuget.debricked.csproj.temp"); err != nil {

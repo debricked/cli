@@ -16,7 +16,7 @@ func (_ CmdFactory) MakeDependencyTreeCmd(workingDirectory string) (*exec.Cmd, e
 		Args: []string{
 			"mvn",
 			"dependency:tree",
-			"-DoutputFile=.maven.debricked.lock",
+			"-DoutputFile=" + lockFileExtension,
 			"-DoutputType=tgf",
 			"--fail-at-end",
 		},
