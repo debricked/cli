@@ -53,6 +53,8 @@ Special Terms | Meaning
 "[class]"     | matches any single non-Separator character against a class of characters ([see "character classes"])
 "{alt1,...}"  | matches a sequence of characters if one of the comma-separated alternatives matches
 
+Exclude flags could alternatively be set using DEBRICKED_EXCLUSIONS="path1,path2,path3".
+
 Example: 
 $ debricked files resolve . `+exampleFlags)
 	cmd.Flags().BoolVar(&buildDisabled, NoBuildFlag, false, `Do not automatically build all source code in the project to enable call graph generation.
@@ -75,7 +77,6 @@ func RunE(callgraph callgraph.IGenerator) func(_ *cobra.Command, args []string) 
 		}
 
 		err := callgraph.GenerateWithTimer(args, viper.GetStringSlice(ExclusionFlag), configs, viper.GetInt(GenerateTimeoutFlag))
-		// err := callgraph.Generate(args, viper.GetStringSlice(ExclusionFlag), configs, nil)
 
 		return err
 	}

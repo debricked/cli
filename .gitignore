@@ -21,5 +21,4 @@ test/resolve/testdata/nuget/obj
 test/resolve/testdata/nuget/**/obj
 debricked.fingerprints.wfp
 test/resolve/testdata/gomod/gomod.debricked.lock
-.debricked.fingerprints.wfp
 /mvnproj/target
