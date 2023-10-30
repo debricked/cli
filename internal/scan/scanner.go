@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/debricked/cli/internal/callgraph"
+	"github.com/debricked/cli/internal/callgraph/config"
 	"github.com/debricked/cli/internal/ci"
 	"github.com/debricked/cli/internal/ci/env"
 	"github.com/debricked/cli/internal/client"
@@ -36,20 +38,24 @@ type DebrickedScanner struct {
 	ciService   ci.IService
 	resolver    resolution.IResolver
 	fingerprint fingerprint.IFingerprint
+	callgraph   callgraph.IGenerator
 }
 
 type DebrickedOptions struct {
-	Path            string
-	Resolve         bool
-	Fingerprint     bool
-	Exclusions      []string
-	RepositoryName  string
-	CommitName      string
-	BranchName      string
-	CommitAuthor    string
-	RepositoryUrl   string
-	IntegrationName string
-	PassOnTimeOut   bool
+	Path                     string
+	Resolve                  bool
+	Fingerprint              bool
+	CallGraph                bool
+	Exclusions               []string
+	RepositoryName           string
+	CommitName               string
+	BranchName               string
+	CommitAuthor             string
+	RepositoryUrl            string
+	IntegrationName          string
+	PassOnTimeOut            bool
+	CallGraphUploadTimeout   int
+	CallGraphGenerateTimeout int
 }
 
 func NewDebrickedScanner(
@@ -59,6 +65,7 @@ func NewDebrickedScanner(
 	ciService ci.IService,
 	resolver resolution.IResolver,
 	fingerprint fingerprint.IFingerprint,
+	callgraph callgraph.IGenerator,
 ) *DebrickedScanner {
 	return &DebrickedScanner{
 		c,
@@ -67,6 +74,7 @@ func NewDebrickedScanner(
 		ciService,
 		resolver,
 		fingerprint,
+		callgraph,
 	}
 }
 
@@ -159,12 +167,32 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		return nil, err
 	}
 
+	if options.CallGraph {
+		configs := []config.IConfig{
+			config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven"),
+		}
+		timeout := options.CallGraphGenerateTimeout
+		path := options.Path
+		if path == "" {
+			path = "."
+		}
+		resErr := dScanner.callgraph.GenerateWithTimer([]string{path}, options.Exclusions, configs, timeout)
+		if resErr != nil {
+			return nil, resErr
+		}
+	}
+
 	fileGroups, err := dScanner.finder.GetGroups(options.Path, options.Exclusions, false, file.StrictAll)
 	if err != nil {
 		return nil, err
 	}
 
-	uploaderOptions := upload.DebrickedOptions{FileGroups: fileGroups, GitMetaObject: gitMetaObject, IntegrationsName: options.IntegrationName}
+	uploaderOptions := upload.DebrickedOptions{
+		FileGroups:             fileGroups,
+		GitMetaObject:          gitMetaObject,
+		IntegrationsName:       options.IntegrationName,
+		CallGraphUploadTimeout: options.CallGraphUploadTimeout,
+	}
 	result, err := (*dScanner.uploader).Upload(uploaderOptions)
 	if err != nil {
 		return nil, err

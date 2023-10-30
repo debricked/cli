@@ -64,4 +64,5 @@ func (sm SpinnerManager) SetSpinnerMessage(spinner *ysmrr.Spinner, filename stri
 	}
 	file := color.YellowString(truncatedFilename)
 	spinner.UpdateMessage(fmt.Sprintf("%s %s: %s", sm.baseString, file, message))
+
 }

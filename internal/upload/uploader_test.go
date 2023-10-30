@@ -40,7 +40,7 @@ func TestUpload(t *testing.T) {
 	g := file.NewGroup("testdata/yarn/package.json", nil, []string{"testdata/yarn/yarn.lock"})
 	groups := file.Groups{}
 	groups.Add(*g)
-	uploaderOptions := DebrickedOptions{FileGroups: groups, GitMetaObject: *metaObject, IntegrationsName: "CLI"}
+	uploaderOptions := DebrickedOptions{FileGroups: groups, GitMetaObject: *metaObject, IntegrationsName: "CLI", CallGraphUploadTimeout: 10 * 60}
 	result, err := uploader.Upload(uploaderOptions)
 
 	assert.NoError(t, err)
@@ -81,7 +81,7 @@ func TestUploadPollingError(t *testing.T) {
 	g := file.NewGroup("testdata/yarn/package.json", nil, []string{"testdata/yarn/yarn.lock"})
 	groups := file.Groups{}
 	groups.Add(*g)
-	uploaderOptions := DebrickedOptions{FileGroups: groups, GitMetaObject: *metaObject, IntegrationsName: "CLI"}
+	uploaderOptions := DebrickedOptions{FileGroups: groups, GitMetaObject: *metaObject, IntegrationsName: "CLI", CallGraphUploadTimeout: 10 * 60}
 	result, err := uploader.Upload(uploaderOptions)
 
 	assert.NoError(t, err)
@@ -90,7 +90,7 @@ func TestUploadPollingError(t *testing.T) {
 
 type debClientMock struct{}
 
-func (mock *debClientMock) Post(uri string, _ string, _ *bytes.Buffer) (*http.Response, error) {
+func (mock *debClientMock) Post(uri string, _ string, _ *bytes.Buffer, _ int) (*http.Response, error) {
 	res := &http.Response{
 		Status:           "",
 		StatusCode:       http.StatusOK,

@@ -31,6 +31,7 @@ func TestSetSpinnerMessage(t *testing.T) {
 	message = "new test message"
 
 	spinnerManager.SetSpinnerMessage(spinner, fileName, message)
+
 	assert.Contains(t, spinner.GetMessage(), fmt.Sprintf("Resolving %s: %s", color.YellowString(fileName), message))
 }
 

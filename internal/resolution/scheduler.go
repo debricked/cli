@@ -85,6 +85,7 @@ func (scheduler *Scheduler) finish(item queueItem) {
 		item.spinner.Error()
 	} else {
 		scheduler.spinnerManager.SetSpinnerMessage(item.spinner, item.job.GetFile(), "done")
+
 		item.spinner.Complete()
 	}
 }
