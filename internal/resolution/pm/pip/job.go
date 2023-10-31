@@ -10,6 +10,7 @@ import (
 	"github.com/debricked/cli/internal/resolution/job"
 	"github.com/debricked/cli/internal/resolution/pm/util"
 	"github.com/debricked/cli/internal/resolution/pm/writer"
+	internalOs "github.com/debricked/cli/internal/runtime/os"
 )
 
 const (
@@ -157,7 +158,7 @@ func (j *Job) runInstallCmd() ([]byte, error) {
 	var command string
 	if j.venvPath != "" {
 		binDir := "bin"
-		if runtime.GOOS == "windows" {
+		if runtime.GOOS == internalOs.Windows {
 			binDir = "Scripts"
 		}
 		command = filepath.Join(j.venvPath, binDir, pip)

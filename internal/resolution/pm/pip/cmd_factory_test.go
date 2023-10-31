@@ -2,6 +2,7 @@ package pip
 
 import (
 	"errors"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -86,12 +87,16 @@ func TestMakeInstallCmd(t *testing.T) {
 
 func TestMakeCatCmd(t *testing.T) {
 	fileName := "test-file"
+	expectedCommand := "cat"
+	if runtime.GOOS == "windows" {
+		expectedCommand = "type"
+	}
 	cmd, _ := CmdFactory{
 		execPath: ExecPath{},
 	}.MakeCatCmd(fileName)
 	assert.NotNil(t, cmd)
 	args := cmd.Args
-	assert.Contains(t, args, "cat")
+	assert.Contains(t, args, expectedCommand)
 	assert.Contains(t, args, fileName)
 }
 func TestMakeListCmd(t *testing.T) {
