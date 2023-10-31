@@ -124,8 +124,6 @@ func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string) (
 	nbFiles := 0
 
 	err := filepath.Walk(rootPath, func(path string, fileInfo os.FileInfo, err error) error {
-		nbFiles++
-
 		if err != nil {
 			return err
 		}
@@ -134,6 +132,7 @@ func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string) (
 			return nil
 		}
 
+		nbFiles++
 		fingerprint, err := computeMD5(path)
 		if err != nil {
 			return err
