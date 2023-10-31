@@ -21,4 +21,8 @@ test/resolve/testdata/nuget/obj
 test/resolve/testdata/nuget/**/obj
 debricked.fingerprints.wfp
 test/resolve/testdata/gomod/gomod.debricked.lock
+test/resolve/testdata/maven/maven.debricked.lock
+test/resolve/testdata/gradle/*/**
+**.gradle-init-script.debricked.groovy
+test/resolve/testdata/gradle/gradle.debricked.lock
 /mvnproj/target

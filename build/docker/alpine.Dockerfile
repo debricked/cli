@@ -36,6 +36,7 @@ RUN wget https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zi
   unzip gradle-$GRADLE_VERSION-bin.zip -d $GRADLE_HOME && \
   rm gradle-$GRADLE_VERSION-bin.zip
 
+# g++ needed to compile python packages with C dependencies (numpy, scipy, etc.)
 RUN apk --no-cache --update add \
   openjdk11-jre \
   python3 \
@@ -44,7 +45,8 @@ RUN apk --no-cache --update add \
   go~=1.20 \
   nodejs \
   yarn \
-  dotnet7-sdk
+  dotnet7-sdk \
+  g++ 
 
 RUN dotnet --version
 
