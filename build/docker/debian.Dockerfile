@@ -68,13 +68,14 @@ RUN echo "deb http://ftp.us.debian.org/debian testing-updates main" >> /etc/apt/
 
 RUN apt -y update && apt -y upgrade && apt -y install openjdk-11-jre \
     python3 \
-    python3-scipy \
+    python3-venv \
     ca-certificates \
     python3-pip && \
     apt -y install -t testing golang-1.20 && \
     apt -y clean && rm -rf /var/lib/apt/lists/* && \
     # Symlink pip3 to pip, we assume that "pip" works in CLI
     ln -sf /usr/bin/pip3 /usr/bin/pip && \
+    ln -sf /usr/bin/python3 /usr/bin/python && \
     # Symlink go binary to bin directory which is in path
     ln -s /usr/lib/go-1.20/bin/go /usr/bin/go
 

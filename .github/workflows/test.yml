@@ -51,6 +51,10 @@ jobs:
           path: coverage.html
           retention-days: 2
 
+      - name: E2E - resolve
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: bash scripts/test_e2e.sh resolver
+
       - name: E2E - scan
         run: go run cmd/debricked/main.go scan internal/file/testdata/misc  -e requirements.txt -t ${{ secrets.DEBRICKED_TOKEN }} -r debricked/cli-test -c E2E-test-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}
 
@@ -96,6 +100,38 @@ jobs:
       - name: Callgraph E2E
         run: ./scripts/test_e2e_callgraph_java_version.sh ${{matrix.java}}
     
+  docker-resolve: 
+    name: Docker E2E Resolve
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        docker-os: ['alpine', 'debian']
+    steps:
+      - uses: actions/checkout@v3
+
+      # Pull from debian and re-tag to match cache
+      - name: Pull Image; Debian
+        if: ${{ matrix.docker-os == 'debian' }}
+        run: docker pull debricked/cli:latest-resolution-debian || true
+  
+      - name: Pull Image; Alpine
+        if: ${{ matrix.docker-os == 'alpine' }}
+        run: docker pull debricked/cli:latest-resolution || true
+        
+      - name: Build Docker image
+        if: ${{ matrix.docker-os == 'debian' }}
+        run: docker build -f build/docker/${{ matrix.docker-os }}.Dockerfile -t debricked/cli:resolution-test --cache-from	debricked/cli:latest-resolution-debian --target resolution .
+
+      - name: Build Docker image
+        if: ${{ matrix.docker-os == 'alpine' }}
+        run: docker build -f build/docker/${{ matrix.docker-os }}.Dockerfile -t debricked/cli:resolution-test --cache-from	debricked/cli:latest-resolution --target resolution .
+
+      - name: Resolve with Docker
+        run: docker run -v $(pwd):/root debricked/cli:resolution-test debricked resolve test/resolve
+      
+      - name: Test if resolved
+        run: bash test/checkFilesResolved.sh 
+
   golangci:
     name: Lint
     runs-on: ubuntu-latest
