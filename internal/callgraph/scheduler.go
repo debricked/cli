@@ -36,7 +36,7 @@ func (scheduler *Scheduler) Schedule(jobs []job.IJob, ctx cgexec.IContext) (IGen
 
 	scheduler.queue = make(chan queueItem, len(jobs))
 	scheduler.waitGroup.Add(len(jobs))
-	scheduler.spinnerManager = tui.NewSpinnerManager("Calgraph", "waiting for worker")
+	scheduler.spinnerManager = tui.NewSpinnerManager("Callgraph", "waiting for worker")
 	scheduler.spinnerManager.Start()
 
 	for _, j := range jobs {
