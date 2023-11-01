@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/debricked/cli/internal/resolution/pm/writer"
+	internalOs "github.com/debricked/cli/internal/runtime/os"
 )
 
 const (
@@ -43,7 +44,7 @@ type Setup struct {
 func NewGradleSetup() *Setup {
 	groovyScriptPath, _ := filepath.Abs(gradleInitScriptFileName)
 	gradlewOsName := "gradlew"
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == internalOs.Windows {
 		gradlewOsName = "gradlew.bat"
 	}
 

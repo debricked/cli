@@ -2,7 +2,10 @@ package pip
 
 import (
 	"os/exec"
+	"runtime"
 	"strings"
+
+	"github.com/debricked/cli/internal/runtime/os"
 )
 
 type ICmdFactory interface {
@@ -60,11 +63,17 @@ func (cmdf CmdFactory) MakeInstallCmd(command string, file string) (*exec.Cmd, e
 }
 
 func (cmdf CmdFactory) MakeCatCmd(file string) (*exec.Cmd, error) {
-	path, err := cmdf.execPath.LookPath("cat")
+	command := "cat"
+	args := []string{command}
+	if runtime.GOOS == os.Windows {
+		command = "powershell.exe"
+		args = []string{command, "type"}
+	}
+	path, err := cmdf.execPath.LookPath(command)
 
 	return &exec.Cmd{
 		Path: path,
-		Args: []string{"cat", file},
+		Args: append(args, file),
 	}, err
 }
 
