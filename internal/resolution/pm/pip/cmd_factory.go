@@ -64,14 +64,16 @@ func (cmdf CmdFactory) MakeInstallCmd(command string, file string) (*exec.Cmd, e
 
 func (cmdf CmdFactory) MakeCatCmd(file string) (*exec.Cmd, error) {
 	command := "cat"
+	args := []string{command}
 	if runtime.GOOS == os.Windows {
-		command = "type"
+		command = "powershell.exe"
+		args = append(args, "type")
 	}
 	path, err := cmdf.execPath.LookPath(command)
 
 	return &exec.Cmd{
 		Path: path,
-		Args: []string{command, file},
+		Args: append(args, file),
 	}, err
 }
 
