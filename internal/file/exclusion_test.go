@@ -165,3 +165,22 @@ func TestExclude(t *testing.T) {
 		})
 	}
 }
+
+func TestIncluded(t *testing.T) {
+	inclusions := InclusionsExperience()
+	testCases := []struct {
+		path     string
+		expected bool
+	}{
+		{"foo/bar/test.go", true},
+		{"test.go", true},
+		{"foo/bar/test.txt", false},
+	}
+
+	for _, tc := range testCases {
+		result := Included(inclusions, tc.path)
+		if result != tc.expected {
+			t.Errorf("Included(%q) = %v; want %v", tc.path, result, tc.expected)
+		}
+	}
+}

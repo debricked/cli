@@ -151,3 +151,36 @@ func FindCommitHash(repository *git.Repository) (string, error) {
 
 	return c.Hash.String(), nil
 }
+
+func FindAllTrackedFiles(repository *git.Repository) ([]string, error) {
+	var files []string
+
+	// Get the HEAD reference to start from the latest commit.
+	ref, err := repository.Head()
+	if err != nil {
+		return nil, fmt.Errorf("could not get HEAD reference: %w", err)
+	}
+
+	// Get the commit object from the HEAD reference.
+	commit, err := repository.CommitObject(ref.Hash())
+	if err != nil {
+		return nil, fmt.Errorf("could not get commit from HEAD reference: %w", err)
+	}
+
+	// Get the tree from the commit.
+	tree, err := commit.Tree()
+	if err != nil {
+		return nil, fmt.Errorf("could not get tree from commit: %w", err)
+	}
+
+	// Walk the tree.
+	err = tree.Files().ForEach(func(f *object.File) error {
+		files = append(files, f.Name)
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error walking the tree: %w", err)
+	}
+
+	return files, nil
+}

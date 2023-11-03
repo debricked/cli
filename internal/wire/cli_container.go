@@ -9,6 +9,7 @@ import (
 	callgraphStrategy "github.com/debricked/cli/internal/callgraph/strategy"
 	"github.com/debricked/cli/internal/ci"
 	"github.com/debricked/cli/internal/client"
+	"github.com/debricked/cli/internal/experience"
 	"github.com/debricked/cli/internal/file"
 	"github.com/debricked/cli/internal/fingerprint"
 	licenseReport "github.com/debricked/cli/internal/report/license"
@@ -95,6 +96,8 @@ func (cc *CliContainer) wire() error {
 	cc.licenseReporter = licenseReport.Reporter{DebClient: cc.debClient}
 	cc.vulnerabilityReporter = vulnerabilityReport.Reporter{DebClient: cc.debClient}
 
+	cc.expereience = experience.NewExperience(cc.finder)
+
 	return nil
 }
 
@@ -116,6 +119,7 @@ type CliContainer struct {
 	cgFinder              finder.IFinder
 	cgScheduler           callgraph.IScheduler
 	cgStrategyFactory     callgraphStrategy.IFactory
+	expereience           experience.IExperience
 }
 
 func (cc *CliContainer) DebClient() client.IDebClient {
@@ -152,4 +156,8 @@ func (cc *CliContainer) Fingerprinter() fingerprint.IFingerprint {
 
 func wireErr(err error) error {
 	return fmt.Errorf("failed to wire with cli-container. Error %s", err)
+}
+
+func (cc *CliContainer) Expereince() experience.IExperience {
+	return cc.expereience
 }
