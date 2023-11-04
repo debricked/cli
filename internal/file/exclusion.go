@@ -63,18 +63,16 @@ func Excluded(exclusions []string, path string) bool {
 
 func InclusionsExperience() []string {
 	return []string{
-		"**/*.go",
+		".go",
+		".java",
 	}
 }
 
 func Included(inclusions []string, path string) bool {
-	for _, exclusion := range inclusions {
-		ex := filepath.Clean(exclusion)
-		matched, _ := doublestar.PathMatch(ex, path)
-		if matched {
+	for _, ex := range inclusions {
+		if strings.HasSuffix(path, ex) {
 			return true
 		}
 	}
-
 	return false
 }

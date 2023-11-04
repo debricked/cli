@@ -7,6 +7,7 @@ import (
 
 	"github.com/debricked/cli/internal/file"
 	"github.com/debricked/cli/internal/git"
+	"github.com/debricked/cli/internal/tui"
 )
 
 var OutputFileNameExperience = "debricked.experience.json"
@@ -16,17 +17,18 @@ type IExperience interface {
 }
 
 type ExperienceCalculator struct {
-	finder file.IFinder
+	finder         file.IFinder
+	spinnerManager tui.ISpinnerManager
 }
 
 func NewExperience(finder file.IFinder) *ExperienceCalculator {
 	return &ExperienceCalculator{
-		finder: finder,
+		finder:         finder,
+		spinnerManager: tui.NewSpinnerManager("Calculating OSS-Experience", "0"),
 	}
 }
 
 func (e *ExperienceCalculator) CalculateExperience(rootPath string, exclusions []string) (*Experiences, error) {
-	log.Println("Calculating experience...")
 
 	repo, repoErr := git.FindRepository(rootPath)
 	if repoErr != nil {
@@ -40,7 +42,7 @@ func (e *ExperienceCalculator) CalculateExperience(rootPath string, exclusions [
 		return nil, err
 	}
 
-	log.Println("Blamed files:", len(blames))
+	log.Println("Blamed files: ", len(blames))
 	return nil, nil
 }
 

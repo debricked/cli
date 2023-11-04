@@ -14,7 +14,7 @@ func NewExperienceCmd(experienceCalculator experience.IExperience) *cobra.Comman
 
 	short := "Experience calculator uses git blame and call graphs to calculate who has written code with what open source. [beta feature]"
 	cmd := &cobra.Command{
-		Use:    "experience [path]",
+		Use:    "xp [path]",
 		Short:  short,
 		Hidden: false,
 		Long:   short, //TODO: Add long description
