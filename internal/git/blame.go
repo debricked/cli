@@ -3,7 +3,9 @@ package git
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -27,6 +29,30 @@ func NewBlamer(repository *git.Repository) *Blamer {
 		repository: repository,
 		inclusions: file.InclusionsExperience(),
 	}
+}
+
+type BlameFiles struct {
+	Files []BlameFile
+}
+
+func (b *BlameFiles) ToFile(outputFile string) error {
+
+	file, err := os.Create(outputFile)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	for _, blameFile := range b.Files {
+		for _, line := range blameFile.Lines {
+			_, err := file.WriteString(fmt.Sprintf("%s,%d,%s,%s\n", blameFile.Path, line.LineNumber, line.Author.Name, line.Author.Email))
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 type BlameFile struct {
@@ -86,7 +112,7 @@ func gitBlameFile(filePath string) ([]BlameLine, error) {
 	return blameLines, nil
 }
 
-func (b *Blamer) BlamAllFiles() ([]BlameFile, error) {
+func (b *Blamer) BlamAllFiles() (*BlameFiles, error) {
 	files, err := FindAllTrackedFiles(b.repository)
 	if err != nil {
 		return nil, err
@@ -142,11 +168,14 @@ func (b *Blamer) BlamAllFiles() ([]BlameFile, error) {
 		blameFiles = append(blameFiles, bf)
 	}
 
-	// for err := range errChan {
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// }
+	for err := range errChan {
+		if err != nil {
+			return nil, err
+		}
+	}
 
-	return blameFiles, nil
+	return &BlameFiles{
+		Files: blameFiles,
+	}, nil
+
 }

@@ -42,7 +42,8 @@ func (e *ExperienceCalculator) CalculateExperience(rootPath string, exclusions [
 		return nil, err
 	}
 
-	log.Println("Blamed files: ", len(blames))
+	log.Println("Blamed files: ", len(blames.Files))
+	blames.ToFile("blames.txt")
 	return nil, nil
 }
 
