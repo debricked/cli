@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -161,4 +162,81 @@ func TestFingerprintsToFile(t *testing.T) {
 	err = fingerprints.ToFile(dir + "/fingerprints.wfp")
 	assert.NoError(t, err)
 
+}
+
+func TestShouldUnzip(t *testing.T) {
+	tests := []struct {
+		name     string
+		filename string
+		want     bool
+	}{
+		{
+			name:     "Should unzip .jar file",
+			filename: "test.jar",
+			want:     true,
+		},
+		{
+			name:     "Should unzip .nupkg file",
+			filename: "test.nupkg",
+			want:     true,
+		},
+		{
+			name:     "Should not unzip .txt file",
+			filename: "test.txt",
+			want:     false,
+		},
+		{
+			name:     "Should not unzip .go file",
+			filename: "test.go",
+			want:     false,
+		},
+		{
+			name:     "Should pick up .jar file in nested folder",
+			filename: "deep/folder/test.jar",
+			want:     true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := shouldUnzip(tt.filename); got != tt.want {
+				t.Errorf("shouldUnzip() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestInMemFingerprintingCompressedContent(t *testing.T) {
+	tests := []struct {
+		name     string
+		path     string
+		expected int
+		suffix   string
+	}{
+		{
+			name:     "Jar",
+			path:     "testdata/zipfile/jar",
+			expected: 5,
+			suffix:   "log4j:log4j-api-2.18.0.jar",
+		},
+		{
+			name:     "Nupkg",
+			path:     "testdata/zipfile/nupkg",
+			expected: 22,
+			suffix:   "newtonsoft.json.13.0.3.nupkg",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fingerprinter := NewFingerprinter()
+			fingerprints, err := fingerprinter.FingerprintFiles(tt.path, []string{})
+			assert.NoError(t, err)
+			assert.NotNil(t, fingerprints)
+			assert.NotEmpty(t, fingerprints)
+			assert.Equal(t, tt.expected, fingerprints.Len())
+			lastRow := fingerprints.Entries[len(fingerprints.Entries)-1]
+			assert.True(t, strings.HasSuffix(lastRow.ToString(), tt.suffix))
+		})
+	}
 }

@@ -1,9 +1,11 @@
 package fingerprint
 
 import (
+	"archive/zip"
 	"bufio"
 	"crypto/md5" // #nosec
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -109,6 +111,7 @@ func (f FileFingerprint) ToString() string {
 
 	return fmt.Sprintf("file=%x,%d,%s", f.fingerprint, f.contentLength, path)
 }
+
 func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string) (Fingerprints, error) {
 	log.Println("Warning: Fingerprinting is beta and may not work as expected.")
 	if len(rootPath) == 0 {
@@ -132,12 +135,21 @@ func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string) (
 			return nil
 		}
 
+		// Scan the contents of compressed files
+		// such as .jar and .nupkg
+		if shouldUnzip(path) {
+			fingerprintsZip, err := inMemFingerprintingCompressedContent(path, exclusions)
+			if err != nil {
+				return err
+			}
+			fingerprints.Entries = append(fingerprints.Entries, fingerprintsZip...)
+			nbFiles += len(fingerprintsZip)
+		}
 		nbFiles++
 		fingerprint, err := computeMD5(path)
 		if err != nil {
 			return err
 		}
-
 		fingerprints.Append(fingerprint)
 
 		if nbFiles%100 == 0 {
@@ -184,6 +196,12 @@ func shouldProcessFile(fileInfo os.FileInfo, exclusions []string, path string) b
 
 	isSymlink, err := isSymlink(path)
 	if err != nil {
+		// If we get a "not a directory" error, we can assume it's not a symlink
+		// otherwise, we don't know, so we return false
+		return strings.HasSuffix(err.Error(), "not a directory")
+	}
+
+	if isSymlink {
 		return false
 	}
 
@@ -245,4 +263,54 @@ func (f *Fingerprints) ToFile(ouputFile string) error {
 
 func (f *Fingerprints) Append(fingerprint FileFingerprint) {
 	f.Entries = append(f.Entries, fingerprint)
+}
+
+var filesToUnzip = []string{".jar", ".nupkg"}
+
+func shouldUnzip(filename string) bool {
+	for _, file := range filesToUnzip {
+		if filepath.Ext(filename) == file {
+			return true
+		}
+	}
+
+	return false
+}
+
+func inMemFingerprintingCompressedContent(filename string, exclusions []string) ([]FileFingerprint, error) {
+
+	r, err := zip.OpenReader(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+
+	fingerprints := []FileFingerprint{}
+
+	for _, f := range r.File {
+		longFileNmae := fmt.Sprintf("%s/%s", filename, f.Name)
+
+		if !shouldProcessFile(f.FileInfo(), exclusions, longFileNmae) {
+			continue
+		}
+		rc, err := f.Open()
+		if err != nil {
+			return nil, err
+		}
+		hasher := md5.New()
+		_, err = io.Copy(hasher, rc)
+		if err != nil {
+			return nil, err
+		}
+
+		fingerprints = append(fingerprints, FileFingerprint{
+			path:          longFileNmae,
+			contentLength: int64(f.UncompressedSize64),
+			fingerprint:   hasher.Sum(nil),
+		})
+
+		rc.Close()
+	}
+
+	return fingerprints, nil
 }
