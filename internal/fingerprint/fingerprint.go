@@ -297,8 +297,8 @@ func inMemFingerprintingCompressedContent(filename string, exclusions []string) 
 		if err != nil {
 			return nil, err
 		}
-		hasher := md5.New()
-		_, err = io.Copy(hasher, rc)
+		hasher := md5.New()          // #nosec
+		_, err = io.Copy(hasher, rc) // #nosec
 		if err != nil {
 			return nil, err
 		}
