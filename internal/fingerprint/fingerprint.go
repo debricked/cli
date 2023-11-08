@@ -29,7 +29,7 @@ var EXCLUDED_EXT = []string{
 	".rst", ".scss", ".sha", ".sha1", ".sha2", ".sha256", ".sln", ".spec", ".sql",
 	".sub", ".svg", ".svn-base", ".tab", ".template", ".test", ".tex", ".tiff",
 	".toml", ".ttf", ".txt", ".utf-8", ".vim", ".wav", ".whl", ".woff", ".woff2", ".xht",
-	".xhtml", ".xls", ".xlsx", ".xml", ".xpm", ".xsd", ".xul", ".yaml", ".yml", ".wfp",
+	".xhtml", ".xls", ".xlsx", ".xpm", ".xsd", ".xul", ".yaml", ".yml", ".wfp",
 	".editorconfig", ".dotcover", ".pid", ".lcov", ".egg", ".manifest", ".cache", ".coverage", ".cover",
 	".gem", ".lst", ".pickle", ".pdb", ".gml", ".pot", ".plt",
 }
