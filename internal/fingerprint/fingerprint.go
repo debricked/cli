@@ -131,31 +131,19 @@ func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string) (
 			return err
 		}
 
-		if !shouldProcessFile(fileInfo, exclusions, path) {
-			return nil
-		}
-
-		// Scan the contents of compressed files
-		// such as .jar and .nupkg
-		if shouldUnzip(path) {
-			fingerprintsZip, err := inMemFingerprintingCompressedContent(path, exclusions)
-			if err != nil {
-				return err
-			}
-			fingerprints.Entries = append(fingerprints.Entries, fingerprintsZip...)
-			nbFiles += len(fingerprintsZip)
-		}
-		nbFiles++
-		fingerprint, err := computeMD5(path)
+		fingerprintsZip, err := computeMD5ForFileAndZip(fileInfo, path, exclusions)
 		if err != nil {
 			return err
 		}
-		fingerprints.Append(fingerprint)
+		if len(fingerprintsZip) != 0 {
+			fingerprints.Entries = append(fingerprints.Entries, fingerprintsZip...)
 
-		if nbFiles%100 == 0 {
-			f.spinnerManager.SetSpinnerMessage(spinner, spinnerMessage, fmt.Sprintf("%d", nbFiles))
+			nbFiles += len(fingerprintsZip)
+
+			if nbFiles%100 == 0 {
+				f.spinnerManager.SetSpinnerMessage(spinner, spinnerMessage, fmt.Sprintf("%d", nbFiles))
+			}
 		}
-
 		return nil
 	})
 
@@ -170,6 +158,32 @@ func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string) (
 	f.spinnerManager.Stop()
 
 	return fingerprints, err
+}
+
+func computeMD5ForFileAndZip(fileInfo os.FileInfo, path string, exclusions []string) ([]FileFingerprint, error) {
+	fingerprints := []FileFingerprint{}
+
+	if !shouldProcessFile(fileInfo, exclusions, path) {
+		return fingerprints, nil
+	}
+
+	// Scan the contents of compressed files
+	// such as .jar and .nupkg
+	if shouldUnzip(path) {
+		fingerprintsZip, err := inMemFingerprintingCompressedContent(path, exclusions)
+		if err != nil {
+			return nil, err
+		}
+		fingerprints = append(fingerprints, fingerprintsZip...)
+	}
+	fingerprint, err := computeMD5(path)
+	if err != nil {
+		return nil, err
+	}
+
+	fingerprints = append(fingerprints, fingerprint)
+
+	return fingerprints, nil
 }
 
 func isSymlink(filename string) (bool, error) {
