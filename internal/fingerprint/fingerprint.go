@@ -201,10 +201,6 @@ func shouldProcessFile(fileInfo os.FileInfo, exclusions []string, path string) b
 		return strings.HasSuffix(err.Error(), "not a directory")
 	}
 
-	if isSymlink {
-		return false
-	}
-
 	return !isSymlink
 }
 

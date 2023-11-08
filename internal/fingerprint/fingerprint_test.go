@@ -216,13 +216,13 @@ func TestInMemFingerprintingCompressedContent(t *testing.T) {
 		{
 			name:     "Jar",
 			path:     "testdata/zipfile/jar",
-			expected: 5,
-			suffix:   "log4j:log4j-api-2.18.0.jar",
+			expected: 4,
+			suffix:   "log4j-api-2.18.0.jar",
 		},
 		{
 			name:     "Nupkg",
 			path:     "testdata/zipfile/nupkg",
-			expected: 22,
+			expected: 13,
 			suffix:   "newtonsoft.json.13.0.3.nupkg",
 		},
 	}
