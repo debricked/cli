@@ -196,6 +196,8 @@ func isSymlink(filename string) (bool, error) {
 	return info.Mode()&os.ModeSymlink != 0, nil
 }
 
+var isSymlinkFunc = isSymlink
+
 func shouldProcessFile(fileInfo os.FileInfo, exclusions []string, path string) bool {
 	if fileInfo.IsDir() {
 		return false
@@ -209,7 +211,7 @@ func shouldProcessFile(fileInfo os.FileInfo, exclusions []string, path string) b
 		return false
 	}
 
-	isSymlink, err := isSymlink(path)
+	isSymlink, err := isSymlinkFunc(path)
 	if err != nil {
 		// Handle error with reading inmem files in windows
 		if strings.HasSuffix(err.Error(), "The system cannot find the path specified.") {

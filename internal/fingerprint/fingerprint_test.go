@@ -40,6 +40,12 @@ func TestIsExcludedFile(t *testing.T) {
 	assert.False(t, isExcludedFile("file.jar"), "Expected .jar to not be excluded")
 }
 
+var errorString = "mock error"
+
+// Test errors in symlink
+func mockSymlink(filename string) (bool, error) {
+	return false, fmt.Errorf(errorString)
+}
 func TestShouldProcessFile(t *testing.T) {
 	// Create a temporary directory to use for testing
 	tempDir, err := os.MkdirTemp("", "should-process-file-test")
@@ -80,6 +86,22 @@ func TestShouldProcessFile(t *testing.T) {
 	// Test Excluded
 	if shouldProcessFile(fileInfo, []string{"**/test.py"}, testFile) {
 		t.Errorf("Expected shouldProcessFile to return true for %s, but it returned false", testFile)
+	}
+
+	isSymlinkFunc = mockSymlink
+
+	if shouldProcessFile(fileInfo, []string{}, testFile) {
+		t.Errorf("Expected shouldProcessFile to return false for %s, but it returned true", testFile)
+	}
+
+	errorString = "The system cannot find the path specified."
+	if !shouldProcessFile(fileInfo, []string{}, testFile) {
+		t.Errorf("Expected shouldProcessFile to return true for %s, but it returned false", testFile)
+	}
+
+	errorString = "not a directory"
+	if !shouldProcessFile(fileInfo, []string{}, testFile) {
+		t.Errorf("Expected shouldProcessFile to return false for %s, but it returned true", testFile)
 	}
 
 }
