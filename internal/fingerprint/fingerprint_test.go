@@ -141,11 +141,11 @@ func TestFileFingerprintToString(t *testing.T) {
 
 func TestComputeMD5(t *testing.T) {
 	// Test file not found
-	_, err := computeMD5("testdata/fingerprinter/testfile-not-found.py")
+	_, err := computeMD5ForFile("testdata/fingerprinter/testfile-not-found.py")
 	assert.Error(t, err)
 
 	// Test file found
-	entry, err := computeMD5("testdata/fingerprinter/testfile.py")
+	entry, err := computeMD5ForFile("testdata/fingerprinter/testfile.py")
 	assert.NoError(t, err)
 	entryS := fmt.Sprintf("%x", entry.fingerprint)
 	assert.Equal(t, "72214db4e1e543018d1bafe86ea3b444", entryS)

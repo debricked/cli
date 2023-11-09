@@ -144,6 +144,7 @@ func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string) (
 				f.spinnerManager.SetSpinnerMessage(spinner, spinnerMessage, fmt.Sprintf("%d", nbFiles))
 			}
 		}
+
 		return nil
 	})
 
@@ -176,7 +177,7 @@ func computeMD5ForFileAndZip(fileInfo os.FileInfo, path string, exclusions []str
 		}
 		fingerprints = append(fingerprints, fingerprintsZip...)
 	}
-	fingerprint, err := computeMD5(path)
+	fingerprint, err := computeMD5ForFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +219,7 @@ func shouldProcessFile(fileInfo os.FileInfo, exclusions []string, path string) b
 	return !isSymlink
 }
 
-func computeMD5(filename string) (FileFingerprint, error) {
+func computeMD5ForFile(filename string) (FileFingerprint, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return FileFingerprint{}, err
@@ -298,9 +299,9 @@ func inMemFingerprintingCompressedContent(filename string, exclusions []string) 
 	fingerprints := []FileFingerprint{}
 
 	for _, f := range r.File {
-		longFileNmae := fmt.Sprintf("%s/%s", filename, f.Name)
+		longFileName := filepath.Join(filename, f.Name) // Use filepath.Join for compatibility
 
-		if !shouldProcessFile(f.FileInfo(), exclusions, longFileNmae) {
+		if !shouldProcessFile(f.FileInfo(), exclusions, longFileName) {
 			continue
 		}
 		rc, err := f.Open()
@@ -310,11 +311,12 @@ func inMemFingerprintingCompressedContent(filename string, exclusions []string) 
 		hasher := md5.New()          // #nosec
 		_, err = io.Copy(hasher, rc) // #nosec
 		if err != nil {
+			rc.Close()
 			return nil, err
 		}
 
 		fingerprints = append(fingerprints, FileFingerprint{
-			path:          longFileNmae,
+			path:          longFileName,
 			contentLength: int64(f.UncompressedSize64),
 			fingerprint:   hasher.Sum(nil),
 		})
