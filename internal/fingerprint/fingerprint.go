@@ -211,6 +211,10 @@ func shouldProcessFile(fileInfo os.FileInfo, exclusions []string, path string) b
 
 	isSymlink, err := isSymlink(path)
 	if err != nil {
+		// Handle error with reading inmem files in windows
+		if strings.HasSuffix(err.Error(), "The system cannot find the path specified.") {
+			return true
+		}
 		// If we get a "not a directory" error, we can assume it's not a symlink
 		// otherwise, we don't know, so we return false
 		return strings.HasSuffix(err.Error(), "not a directory")
