@@ -305,7 +305,10 @@ func inMemFingerprintingCompressedContent(filename string, exclusions []string) 
 	fingerprints := []FileFingerprint{}
 
 	for _, f := range r.File {
-		longFileName := filepath.Join(filename, f.Name) // Use filepath.Join for compatibility
+		if filepath.IsAbs(f.Name) || strings.HasPrefix(f.Name, "..") {
+			continue
+		}
+		longFileName := filepath.Join(filename, f.Name) // #nosec
 
 		if !shouldProcessFile(f.FileInfo(), exclusions, longFileName) {
 			continue
@@ -318,6 +321,7 @@ func inMemFingerprintingCompressedContent(filename string, exclusions []string) 
 		_, err = io.Copy(hasher, rc) // #nosec
 		if err != nil {
 			rc.Close()
+
 			return nil, err
 		}
 
