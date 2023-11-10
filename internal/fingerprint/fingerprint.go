@@ -1,9 +1,11 @@
 package fingerprint
 
 import (
+	"archive/zip"
 	"bufio"
 	"crypto/md5" // #nosec
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -27,7 +29,7 @@ var EXCLUDED_EXT = []string{
 	".rst", ".scss", ".sha", ".sha1", ".sha2", ".sha256", ".sln", ".spec", ".sql",
 	".sub", ".svg", ".svn-base", ".tab", ".template", ".test", ".tex", ".tiff",
 	".toml", ".ttf", ".txt", ".utf-8", ".vim", ".wav", ".whl", ".woff", ".woff2", ".xht",
-	".xhtml", ".xls", ".xlsx", ".xml", ".xpm", ".xsd", ".xul", ".yaml", ".yml", ".wfp",
+	".xhtml", ".xls", ".xlsx", ".xpm", ".xsd", ".xul", ".yaml", ".yml", ".wfp",
 	".editorconfig", ".dotcover", ".pid", ".lcov", ".egg", ".manifest", ".cache", ".coverage", ".cover",
 	".gem", ".lst", ".pickle", ".pdb", ".gml", ".pot", ".plt",
 }
@@ -109,6 +111,7 @@ func (f FileFingerprint) ToString() string {
 
 	return fmt.Sprintf("file=%x,%d,%s", f.fingerprint, f.contentLength, path)
 }
+
 func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string) (Fingerprints, error) {
 	log.Println("Warning: Fingerprinting is beta and may not work as expected.")
 	if len(rootPath) == 0 {
@@ -128,20 +131,18 @@ func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string) (
 			return err
 		}
 
-		if !shouldProcessFile(fileInfo, exclusions, path) {
-			return nil
-		}
-
-		nbFiles++
-		fingerprint, err := computeMD5(path)
+		fingerprintsZip, err := computeMD5ForFileAndZip(fileInfo, path, exclusions)
 		if err != nil {
 			return err
 		}
+		if len(fingerprintsZip) != 0 {
+			fingerprints.Entries = append(fingerprints.Entries, fingerprintsZip...)
 
-		fingerprints.Append(fingerprint)
+			nbFiles += len(fingerprintsZip)
 
-		if nbFiles%100 == 0 {
-			f.spinnerManager.SetSpinnerMessage(spinner, spinnerMessage, fmt.Sprintf("%d", nbFiles))
+			if nbFiles%100 == 0 {
+				f.spinnerManager.SetSpinnerMessage(spinner, spinnerMessage, fmt.Sprintf("%d", nbFiles))
+			}
 		}
 
 		return nil
@@ -160,6 +161,32 @@ func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string) (
 	return fingerprints, err
 }
 
+func computeMD5ForFileAndZip(fileInfo os.FileInfo, path string, exclusions []string) ([]FileFingerprint, error) {
+	fingerprints := []FileFingerprint{}
+
+	if !shouldProcessFile(fileInfo, exclusions, path) {
+		return fingerprints, nil
+	}
+
+	// Scan the contents of compressed files
+	// such as .jar and .nupkg
+	if shouldUnzip(path) {
+		fingerprintsZip, err := inMemFingerprintingCompressedContent(path, exclusions)
+		if err != nil {
+			return nil, err
+		}
+		fingerprints = append(fingerprints, fingerprintsZip...)
+	}
+	fingerprint, err := computeMD5ForFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	fingerprints = append(fingerprints, fingerprint)
+
+	return fingerprints, nil
+}
+
 func isSymlink(filename string) (bool, error) {
 	info, err := os.Lstat(filename)
 	if err != nil {
@@ -168,6 +195,8 @@ func isSymlink(filename string) (bool, error) {
 
 	return info.Mode()&os.ModeSymlink != 0, nil
 }
+
+var isSymlinkFunc = isSymlink
 
 func shouldProcessFile(fileInfo os.FileInfo, exclusions []string, path string) bool {
 	if fileInfo.IsDir() {
@@ -182,15 +211,21 @@ func shouldProcessFile(fileInfo os.FileInfo, exclusions []string, path string) b
 		return false
 	}
 
-	isSymlink, err := isSymlink(path)
+	isSymlink, err := isSymlinkFunc(path)
 	if err != nil {
-		return false
+		// Handle error with reading inmem files in windows
+		if strings.HasSuffix(err.Error(), "The system cannot find the path specified.") {
+			return true
+		}
+		// If we get a "not a directory" error, we can assume it's not a symlink
+		// otherwise, we don't know, so we return false
+		return strings.HasSuffix(err.Error(), "not a directory")
 	}
 
 	return !isSymlink
 }
 
-func computeMD5(filename string) (FileFingerprint, error) {
+func computeMD5ForFile(filename string) (FileFingerprint, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return FileFingerprint{}, err
@@ -223,8 +258,10 @@ func (f *Fingerprints) Len() int {
 	return len(f.Entries)
 }
 
+var osCreate = os.Create
+
 func (f *Fingerprints) ToFile(ouputFile string) error {
-	file, err := os.Create(ouputFile)
+	file, err := osCreate(ouputFile)
 	if err != nil {
 		return err
 	}
@@ -243,6 +280,57 @@ func (f *Fingerprints) ToFile(ouputFile string) error {
 
 }
 
-func (f *Fingerprints) Append(fingerprint FileFingerprint) {
-	f.Entries = append(f.Entries, fingerprint)
+var filesToUnzip = []string{".jar", ".nupkg"}
+
+func shouldUnzip(filename string) bool {
+	for _, file := range filesToUnzip {
+		if filepath.Ext(filename) == file {
+			return true
+		}
+	}
+
+	return false
+}
+
+func inMemFingerprintingCompressedContent(filename string, exclusions []string) ([]FileFingerprint, error) {
+
+	r, err := zip.OpenReader(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+
+	fingerprints := []FileFingerprint{}
+
+	for _, f := range r.File {
+		if filepath.IsAbs(f.Name) || strings.HasPrefix(f.Name, "..") {
+			continue
+		}
+		longFileName := filepath.Join(filename, f.Name) // #nosec
+
+		if !shouldProcessFile(f.FileInfo(), exclusions, longFileName) {
+			continue
+		}
+		rc, err := f.Open()
+		if err != nil {
+			return nil, err
+		}
+		hasher := md5.New()          // #nosec
+		_, err = io.Copy(hasher, rc) // #nosec
+		if err != nil {
+			rc.Close()
+
+			return nil, err
+		}
+
+		fingerprints = append(fingerprints, FileFingerprint{
+			path:          longFileName,
+			contentLength: int64(f.UncompressedSize64),
+			fingerprint:   hasher.Sum(nil),
+		})
+
+		rc.Close()
+	}
+
+	return fingerprints, nil
 }
