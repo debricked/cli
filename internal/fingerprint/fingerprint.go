@@ -258,8 +258,10 @@ func (f *Fingerprints) Len() int {
 	return len(f.Entries)
 }
 
+var osCreate = os.Create
+
 func (f *Fingerprints) ToFile(ouputFile string) error {
-	file, err := os.Create(ouputFile)
+	file, err := osCreate(ouputFile)
 	if err != nil {
 		return err
 	}
@@ -276,10 +278,6 @@ func (f *Fingerprints) ToFile(ouputFile string) error {
 
 	return nil
 
-}
-
-func (f *Fingerprints) Append(fingerprint FileFingerprint) {
-	f.Entries = append(f.Entries, fingerprint)
 }
 
 var filesToUnzip = []string{".jar", ".nupkg"}
