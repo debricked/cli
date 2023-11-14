@@ -46,7 +46,8 @@ RUN apk --no-cache --update add \
   nodejs \
   yarn \
   dotnet7-sdk \
-  g++ 
+  g++ \
+  curl
 
 RUN dotnet --version
 
