@@ -2,7 +2,6 @@ package tui
 
 import (
 	"bytes"
-	"errors"
 	"os"
 	"testing"
 
@@ -31,7 +30,7 @@ func TestRenderNoJobs(t *testing.T) {
 func TestRenderWarningJob(t *testing.T) {
 	var listBuffer bytes.Buffer
 
-	warningErr := errors.New("warning-message")
+	warningErr := job.NewBaseJobError("warning-message")
 	jobMock := testdata.NewJobMock("file")
 	jobMock.Errors().Warning(warningErr)
 	errList := NewJobsErrorList(&listBuffer, []job.IJob{jobMock})
@@ -53,7 +52,7 @@ func TestRenderWarningJob(t *testing.T) {
 func TestRenderCriticalJob(t *testing.T) {
 	var listBuffer bytes.Buffer
 
-	warningErr := errors.New("critical-message")
+	warningErr := job.NewBaseJobError("critical-message")
 	jobMock := testdata.NewJobMock("file")
 	jobMock.Errors().Critical(warningErr)
 	errList := NewJobsErrorList(&listBuffer, []job.IJob{jobMock})
@@ -77,10 +76,10 @@ func TestRenderCriticalAndWarningJob(t *testing.T) {
 
 	jobMock := testdata.NewJobMock("manifest-file")
 
-	warningErr := errors.New("warning-message")
+	warningErr := job.NewBaseJobError("warning-message")
 	jobMock.Errors().Warning(warningErr)
 
-	criticalErr := errors.New("critical-message")
+	criticalErr := job.NewBaseJobError("critical-message")
 	jobMock.Errors().Critical(criticalErr)
 
 	errList := NewJobsErrorList(&listBuffer, []job.IJob{jobMock})
@@ -106,7 +105,7 @@ func TestRenderCriticalAndWorkingJob(t *testing.T) {
 
 	jobWithErrMock := testdata.NewJobMock("manifest-file")
 
-	criticalErr := errors.New("critical-message")
+	criticalErr := job.NewBaseJobError("critical-message")
 	jobWithErrMock.Errors().Critical(criticalErr)
 
 	jobWorkingMock := testdata.NewJobMock("working-manifest-file")

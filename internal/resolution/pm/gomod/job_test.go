@@ -6,6 +6,7 @@ import (
 
 	jobTestdata "github.com/debricked/cli/internal/resolution/job/testdata"
 	"github.com/debricked/cli/internal/resolution/pm/gomod/testdata"
+	"github.com/debricked/cli/internal/resolution/pm/util"
 	"github.com/debricked/cli/internal/resolution/pm/writer"
 	writerTestdata "github.com/debricked/cli/internal/resolution/pm/writer/testdata"
 	"github.com/stretchr/testify/assert"
@@ -27,7 +28,7 @@ func TestRunGraphCmdErr(t *testing.T) {
 
 	j.Run()
 
-	assert.Contains(t, j.Errors().GetCriticalErrors(), cmdErr)
+	assert.Contains(t, j.Errors().GetCriticalErrors(), util.NewPMJobError(cmdErr.Error()))
 }
 
 func TestRunCmdOutputErr(t *testing.T) {
@@ -53,7 +54,7 @@ func TestRunListCmdErr(t *testing.T) {
 	j.Run()
 
 	assert.Len(t, j.Errors().GetAll(), 1)
-	assert.Contains(t, j.Errors().GetAll(), cmdErr)
+	assert.Contains(t, j.Errors().GetAll(), util.NewPMJobError(cmdErr.Error()))
 }
 
 func TestRunListCmdOutputErr(t *testing.T) {
@@ -79,7 +80,7 @@ func TestRunCreateErr(t *testing.T) {
 	j.Run()
 
 	assert.Len(t, j.Errors().GetAll(), 1)
-	assert.Contains(t, j.Errors().GetAll(), createErr)
+	assert.Contains(t, j.Errors().GetAll(), util.NewPMJobError(createErr.Error()))
 }
 
 func TestRunWriteErr(t *testing.T) {
@@ -93,7 +94,7 @@ func TestRunWriteErr(t *testing.T) {
 	j.Run()
 
 	assert.Len(t, j.Errors().GetAll(), 1)
-	assert.Contains(t, j.Errors().GetAll(), writeErr)
+	assert.Contains(t, j.Errors().GetAll(), util.NewPMJobError(writeErr.Error()))
 }
 
 func TestRunCloseErr(t *testing.T) {
@@ -107,7 +108,7 @@ func TestRunCloseErr(t *testing.T) {
 	j.Run()
 
 	assert.Len(t, j.Errors().GetAll(), 1)
-	assert.Contains(t, j.Errors().GetAll(), closeErr)
+	assert.Contains(t, j.Errors().GetAll(), util.NewPMJobError(closeErr.Error()))
 }
 
 func TestRun(t *testing.T) {

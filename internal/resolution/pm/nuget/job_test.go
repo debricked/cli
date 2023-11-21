@@ -6,6 +6,7 @@ import (
 
 	jobTestdata "github.com/debricked/cli/internal/resolution/job/testdata"
 	"github.com/debricked/cli/internal/resolution/pm/nuget/testdata"
+	"github.com/debricked/cli/internal/resolution/pm/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -62,7 +63,7 @@ func TestRunInstallPackagesConfigRemoveAllErr(t *testing.T) {
 	go jobTestdata.WaitStatus(j)
 	j.Run()
 	errors := j.Errors().GetAll()
-	assert.Equal(t, errors[0], cmdErrGt)
+	assert.Equal(t, errors[0], util.NewPMJobError(cmdErrGt.Error()))
 
 }
 
@@ -84,7 +85,7 @@ func TestRunInstallCmdErr(t *testing.T) {
 	go jobTestdata.WaitStatus(j)
 	j.Run()
 
-	assert.Equal(t, j.Errors().GetAll()[0], cmdErrGt)
+	assert.Equal(t, j.Errors().GetAll()[0], util.NewPMJobError(cmdErrGt.Error()))
 }
 
 func TestRunInstallCmdOutputErr(t *testing.T) {

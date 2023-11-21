@@ -19,9 +19,9 @@ func MakePathFromManifestFile(siblingFile string, fileName string) string {
 	return fmt.Sprintf("%s%s%s", dir, string(os.PathSeparator), fileName)
 }
 
-func CloseFile(job job.IJob, fileWriter writer.IFileWriter, file *os.File) {
+func CloseFile(j job.IJob, fileWriter writer.IFileWriter, file *os.File) {
 	err := fileWriter.Close(file)
 	if err != nil {
-		job.Errors().Critical(err)
+		j.Errors().Critical(NewPMJobError(err.Error()))
 	}
 }

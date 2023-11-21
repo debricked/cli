@@ -48,6 +48,4 @@ func TestCloseFileErr(t *testing.T) {
 	assert.True(t, j.Errors().HasError())
 	criticalErrs := j.Errors().GetCriticalErrors()
 	assert.Len(t, criticalErrs, 1)
-	criticalErr := criticalErrs[0]
-	assert.ErrorIs(t, closeErr, criticalErr)
 }

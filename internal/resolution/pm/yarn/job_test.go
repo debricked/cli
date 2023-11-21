@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	jobTestdata "github.com/debricked/cli/internal/resolution/job/testdata"
+	"github.com/debricked/cli/internal/resolution/pm/util"
 	"github.com/debricked/cli/internal/resolution/pm/yarn/testdata"
 	"github.com/stretchr/testify/assert"
 )
@@ -49,7 +50,7 @@ func TestRunInstallCmdErr(t *testing.T) {
 	j.Run()
 
 	assert.Len(t, j.Errors().GetAll(), 1)
-	assert.Contains(t, j.Errors().GetAll(), cmdErr)
+	assert.Contains(t, j.Errors().GetAll(), util.NewPMJobError(cmdErr.Error()))
 }
 
 func TestRunInstallCmdOutputErr(t *testing.T) {

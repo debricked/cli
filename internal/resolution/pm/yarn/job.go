@@ -2,6 +2,7 @@ package yarn
 
 import (
 	"github.com/debricked/cli/internal/resolution/job"
+	"github.com/debricked/cli/internal/resolution/pm/util"
 )
 
 const (
@@ -37,7 +38,8 @@ func (j *Job) Run() {
 		j.SendStatus("installing dependencies")
 		_, err := j.runInstallCmd()
 		if err != nil {
-			j.Errors().Critical(err)
+			jobError := util.NewPMJobError(err.Error())
+			j.Errors().Critical(jobError)
 
 			return
 		}

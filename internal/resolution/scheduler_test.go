@@ -1,7 +1,6 @@
 package resolution
 
 import (
-	"errors"
 	"sort"
 	"testing"
 
@@ -70,7 +69,7 @@ func TestSchedule(t *testing.T) {
 func TestScheduleJobErr(t *testing.T) {
 	s := NewScheduler(10)
 	jobMock := testdata.NewJobMock("")
-	jobErr := errors.New("job-error")
+	jobErr := job.NewBaseJobError("job-error")
 	jobMock.SetErr(jobErr)
 	res, err := s.Schedule([]job.IJob{jobMock})
 	assert.NoError(t, err)

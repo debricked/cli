@@ -1,7 +1,6 @@
 package resolution
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/debricked/cli/internal/resolution/job"
@@ -45,7 +44,7 @@ func TestHasError(t *testing.T) {
 	assert.False(t, res.HasErr())
 
 	jobMock := testdata.NewJobMock("")
-	jobMock.SetErr(errors.New("error"))
+	jobMock.SetErr(job.NewBaseJobError("error"))
 	res.jobs = append(res.jobs, jobMock)
 	assert.True(t, res.HasErr())
 }

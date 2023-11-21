@@ -1,10 +1,10 @@
 package maven
 
 import (
-	"errors"
 	"path/filepath"
 
 	"github.com/debricked/cli/internal/resolution/job"
+	"github.com/debricked/cli/internal/resolution/pm/util"
 )
 
 const (
@@ -27,7 +27,7 @@ func (j *Job) Run() {
 	workingDirectory := filepath.Dir(filepath.Clean(j.GetFile()))
 	cmd, err := j.cmdFactory.MakeDependencyTreeCmd(workingDirectory)
 	if err != nil {
-		j.Errors().Critical(err)
+		j.Errors().Critical(util.NewPMJobError(err.Error()))
 
 		return
 	}
@@ -36,9 +36,9 @@ func (j *Job) Run() {
 	output, err = cmd.Output()
 	if err != nil {
 		if output == nil {
-			j.Errors().Critical(err)
+			j.Errors().Critical(util.NewPMJobError(err.Error()))
 		} else {
-			j.Errors().Critical(errors.New(string(output)))
+			j.Errors().Critical(util.NewPMJobError(string(output)))
 		}
 	}
 }

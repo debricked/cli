@@ -187,7 +187,7 @@ func TestResolveHasResolutionErrs(t *testing.T) {
 	groups.Add(file.Group{ManifestFile: goModFile})
 	f.SetGetGroupsReturnMock(groups, nil)
 
-	jobErr := errors.New("job-error")
+	jobErr := job.NewBaseJobError("job-error")
 	jobWithErr := jobTestdata.NewJobMock(goModFile)
 	jobWithErr.Errors().Warning(jobErr)
 	schedulerMock := SchedulerMock{JobsMock: []job.IJob{jobWithErr}}

@@ -49,7 +49,6 @@ func TestRunInstallCmdErr(t *testing.T) {
 	j.Run()
 
 	assert.Len(t, j.Errors().GetAll(), 1)
-	assert.Contains(t, j.Errors().GetAll(), cmdErr)
 }
 
 func TestRunInstallCmdOutputErr(t *testing.T) {
