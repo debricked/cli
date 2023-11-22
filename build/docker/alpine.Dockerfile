@@ -51,5 +51,27 @@ RUN apk --no-cache --update add \
 
 RUN dotnet --version
 
+RUN echo 'https://dl-cdn.alpinelinux.org/alpine/v3.14/community' >> /etc/apk/repositories
+RUN echo 'https://dl-cdn.alpinelinux.org/alpine/v3.14/main' >> /etc/apk/repositories
+RUN apk --update --no-cache add \
+    php \
+    php-json \
+    php-openssl \
+    php-curl \
+    php-dom \
+    php-mbstring \
+    php-xml \
+    php-phar \
+    php-tokenizer \
+    php-xmlwriter \
+    php-session \
+    php-ctype
+
+RUN php -v
+
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
+
+RUN php -v && composer --version
+
 # Put copy at the end to speedup Docker build by caching previous RUNs and run those concurrently
 COPY --from=dev /cli/debricked /usr/bin/debricked

@@ -81,5 +81,26 @@ RUN apt -y update && apt -y upgrade && apt -y install openjdk-11-jre \
 
 RUN dotnet --version
 
+RUN apt -y update && apt -y upgrade && apt -y install \
+    php \
+    php-json \
+    php-openssl \
+    php-curl \
+    php-dom \
+    php-mbstring \
+    php-xml \
+    php-phar \
+    php-tokenizer \
+    php-xmlwriter \
+    php-simplexml \
+    php-xmlreader \
+    php-session \
+    php-ctype && \
+    apt -y clean && rm -rf /var/lib/apt/lists/*
+
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
+
+RUN php -v && composer --version
+
 # Put copy at the end to speedup Docker build by caching previous RUNs and run those concurrently
 COPY --from=dev /cli/debricked /usr/bin/debricked
