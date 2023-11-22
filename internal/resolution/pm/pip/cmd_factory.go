@@ -58,7 +58,7 @@ func (cmdf CmdFactory) MakeInstallCmd(command string, file string) (*exec.Cmd, e
 
 	return &exec.Cmd{
 		Path: path,
-		Args: []string{command, "install", "--dry-run", "-r", file},
+		Args: []string{command, "install", "-r", file},
 	}, err
 }
 
