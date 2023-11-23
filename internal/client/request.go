@@ -85,6 +85,20 @@ func newRequest(method string, url string, jwtToken string, format string, body 
 func interpret(res *http.Response, request func() (*http.Response, error), debClient *DebClient, retry bool) (*http.Response, error) {
 	if res == nil {
 		return nil, NoResErr
+	} else if res.StatusCode == http.StatusForbidden {
+		errMsg := `Unauthorized. You don't have the necessary access to perform this action. 
+Contact your debricked company admin or repository admin to request proper access.
+For enterprise user: https://portal.debricked.com/administration-47/how-do-i-generate-an-access-token-130`
+		if retry {
+			err := debClient.authenticate()
+			if err != nil {
+				return nil, errors.New(errMsg)
+			}
+
+			return request()
+		}
+		return nil, errors.New(errMsg)
+
 	} else if res.StatusCode == http.StatusUnauthorized {
 		errMsg := `Unauthorized. Specify access token. 
 Read more on https://portal.debricked.com/administration-47/how-do-i-generate-an-access-token-130`
