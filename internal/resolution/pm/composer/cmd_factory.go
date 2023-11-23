@@ -1,6 +1,7 @@
 package composer
 
 import (
+	"os"
 	"os/exec"
 	"path/filepath"
 )
@@ -41,5 +42,6 @@ func (cmdf CmdFactory) MakeInstallCmd(command string, file string) (*exec.Cmd, e
 			"--no-audit",             // We don't want to run an audit
 		},
 		Dir: fileDir,
+		Env: os.Environ(),
 	}, err
 }

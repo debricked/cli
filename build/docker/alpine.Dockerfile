@@ -51,25 +51,18 @@ RUN apk --no-cache --update add \
 
 RUN dotnet --version
 
-RUN echo 'https://dl-cdn.alpinelinux.org/alpine/v3.14/community' >> /etc/apk/repositories
-RUN echo 'https://dl-cdn.alpinelinux.org/alpine/v3.14/main' >> /etc/apk/repositories
-RUN apk --update --no-cache add \
-    php \
-    php-json \
-    php-openssl \
-    php-curl \
-    php-dom \
-    php-mbstring \
-    php-xml \
-    php-phar \
-    php-tokenizer \
-    php-xmlwriter \
-    php-session \
-    php-ctype
+RUN apk add --no-cache \
+    git \
+    php82 \
+    php82-curl \
+    php82-mbstring \
+    php82-openssl \
+    php82-phar \
+    && ln -s /usr/bin/php82 /usr/bin/php
 
-RUN php -v
-
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
+RUN apk add --no-cache --virtual build-dependencies curl && \
+    curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
+    && apk del build-dependencies
 
 RUN php -v && composer --version
 
