@@ -44,7 +44,7 @@ func TestUploadWithBadFiles(t *testing.T) {
 	output := buf.String()
 
 	assert.Empty(t, output)
-	assert.ErrorContains(t, err, "failed to initialize a scan due to badly formatted files")
+	assert.ErrorContains(t, err, "Failed to initialize a scan for")
 }
 
 func TestInitAnalysisWithoutAnyFiles(t *testing.T) {
@@ -101,7 +101,7 @@ func TestInitUploadBadFile(t *testing.T) {
 	files, err := batch.initUpload()
 
 	assert.Empty(t, files)
-	assert.ErrorContains(t, err, "failed to initialize a scan due to badly formatted files")
+	assert.ErrorContains(t, err, "Failed to initialize a scan for")
 	assert.ErrorContains(t, err, "testdata/misc/requirements.txt")
 	assert.ErrorContains(t, err, "tried to upload empty file")
 }
