@@ -18,6 +18,12 @@ func TestResolves(t *testing.T) {
 		packageManager string
 	}{
 		{
+			name:           "basic composer.json",
+			manifestFile:   "testdata/composer/composer.json",
+			lockFileName:   "composer.lock",
+			packageManager: "composer",
+		},
+		{
 			name:           "basic package.json",
 			manifestFile:   "testdata/npm/package.json",
 			lockFileName:   "yarn.lock",

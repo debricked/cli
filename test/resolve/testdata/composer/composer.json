@@ -1,0 +1,14 @@
+{
+  "name": "debricked/test",
+  "require": {
+    "php": ">=8.2.0",
+    "ext-curl": "*",
+    "ext-dom": "*",
+    "doctrine/annotations": "^2.0",
+    "justinrainbow/json-schema": "^5.2",
+    "psr/log": "^1.0.1"
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^1.4.3"
+  }
+}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/debricked/cli/internal/resolution/file"
+	"github.com/debricked/cli/internal/resolution/pm/composer"
 	"github.com/debricked/cli/internal/resolution/pm/gomod"
 	"github.com/debricked/cli/internal/resolution/pm/gradle"
 	"github.com/debricked/cli/internal/resolution/pm/maven"
@@ -37,6 +38,8 @@ func (sf Factory) Make(pmFileBatch file.IBatch, paths []string) (IStrategy, erro
 		return yarn.NewStrategy(pmFileBatch.Files()), nil
 	case nuget.Name:
 		return nuget.NewStrategy(pmFileBatch.Files()), nil
+	case composer.Name:
+		return composer.NewStrategy(pmFileBatch.Files()), nil
 	default:
 		return nil, fmt.Errorf("failed to make strategy from %s", name)
 	}
