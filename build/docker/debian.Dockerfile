@@ -81,11 +81,11 @@ RUN apt -y update && apt -y upgrade && apt -y install openjdk-11-jre \
 
 RUN dotnet --version
 
-RUN apt update
-
-RUN apt install lsb-release apt-transport-https ca-certificates software-properties-common -y && \
+RUN apt update && \
+    apt install lsb-release apt-transport-https ca-certificates software-properties-common -y && \
     curl -o /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
-    sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
+    sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list' && \
+    apt -y clean && rm -rf /var/lib/apt/lists/*
 
 RUN apt -y update && apt -y install \
     php8.2 \
