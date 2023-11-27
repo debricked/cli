@@ -11,8 +11,8 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.2
 	github.com/jedib0t/go-pretty/v6 v6.4.6
 	github.com/schollz/progressbar/v3 v3.13.1
-	github.com/spf13/cobra v1.7.0
-	github.com/spf13/viper v1.15.0
+	github.com/spf13/cobra v1.8.0
+	github.com/spf13/viper v1.17.0
 	github.com/stretchr/testify v1.8.2
 	github.com/vifraa/gopom v0.2.1
 )
