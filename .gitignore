@@ -12,6 +12,7 @@ dist/
 test/resolve/testdata/pip/requirements.txt.venv/
 test/resolve/testdata/pip/requirements.txt.pip.debricked.lock
 internal/cmd/scan/testdata/npm/yarn.lock
+internal/file/embedded/supported_formats.json
 internal/resolution/pm/gradle/.gradle-init-script.debricked.groovy
 internal/callgraph/language/java11/testdata/mvnproj/target
 test/resolve/testdata/npm/yarn.lock
