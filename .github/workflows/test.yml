@@ -35,6 +35,10 @@ jobs:
           restore-keys: |
             ${{ matrix.os }}-go
 
+      - name: Download embeddings
+        run: |
+          ./scripts/download.sh
+
       - name: Build
         run: |
           go generate
@@ -87,8 +91,13 @@ jobs:
           restore-keys: |
             ${{ matrix.os }}-go
 
+      - name: Download embeddings
+        run: |
+          ./scripts/download.sh
+
       - name: Build
         run: |
+          ./scripts/download.sh
           go generate
           go build -v ./...
 
