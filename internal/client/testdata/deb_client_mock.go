@@ -52,9 +52,9 @@ func (mock *DebClientMock) Post(uri string, format string, body *bytes.Buffer, t
 	return mock.realDebClient.Post(uri, format, body, timeout)
 }
 
-func (mock *DebClientMock) SetAccessToken(_ *string) {
+func (mock *DebClientMock) SetAccessToken(_ *string) {}
 
-}
+func (mock *DebClientMock) ConfigureClientSettings(retry bool, timeout int) {}
 
 type MockResponse struct {
 	StatusCode   int

@@ -30,6 +30,7 @@ import (
 	"github.com/debricked/cli/internal/file"
 	"github.com/debricked/cli/internal/fingerprint"
 	"github.com/debricked/cli/internal/git"
+	ioFs "github.com/debricked/cli/internal/io"
 	"github.com/debricked/cli/internal/resolution"
 	resolveTestdata "github.com/debricked/cli/internal/resolution/testdata"
 	"github.com/debricked/cli/internal/upload"
@@ -516,7 +517,7 @@ func TestScanServiceDowntime(t *testing.T) {
 	clientMock.SetServiceUp(false)
 	debClient = clientMock
 	var finder file.IFinder
-	finder, _ = file.NewFinder(debClient)
+	finder, _ = file.NewFinder(debClient, ioFs.FileSystem{})
 
 	var ciService ci.IService = ci.NewService(nil)
 
@@ -611,7 +612,7 @@ func makeScanner(clientMock *testdata.DebClientMock, resolverMock *resolveTestda
 	var debClient client.IDebClient = clientMock
 
 	var finder file.IFinder
-	finder, _ = file.NewFinder(debClient)
+	finder, _ = file.NewFinder(debClient, ioFs.FileSystem{})
 
 	var uploader upload.IUploader
 	uploader, _ = upload.NewUploader(debClient)

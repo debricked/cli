@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/debricked/cli/internal/client/testdata"
+	ioFs "github.com/debricked/cli/internal/io"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -55,21 +56,23 @@ func (mock *debClientMock) Get(_ string, _ string) (*http.Response, error) {
 
 func (mock *debClientMock) SetAccessToken(_ *string) {}
 
+func (mock *debClientMock) ConfigureClientSettings(retry bool, timeout int) {}
+
 var finder *Finder
 
 func setUp(auth bool) {
-	finder, _ = NewFinder(&debClientMock{})
+	finder, _ = NewFinder(&debClientMock{}, ioFs.FileSystem{})
 	authorized = auth
 }
 
 func TestNewFinder(t *testing.T) {
-	finder, err := NewFinder(nil)
+	finder, err := NewFinder(nil, ioFs.FileSystem{})
 
 	assert.NotNil(t, err)
 	assert.Nil(t, finder)
 	assert.ErrorContains(t, err, "client is nil")
 
-	finder, err = NewFinder(testdata.NewDebClientMock())
+	finder, err = NewFinder(testdata.NewDebClientMock(), ioFs.FileSystem{})
 	assert.Nil(t, err)
 	assert.NotNil(t, finder)
 }
@@ -85,12 +88,15 @@ func TestGetSupportedFormats(t *testing.T) {
 	}
 }
 
-func TestGetSupportedFormatsFailed(t *testing.T) {
+func TestGetSupportedFormatsEndpointUnaccessible(t *testing.T) {
 	setUp(false)
 	formats, err := finder.GetSupportedFormats()
-	assert.Error(t, err)
-	assert.ErrorContains(t, err, "failed to fetch supported formats")
-	assert.Empty(t, formats)
+	assert.NoError(t, err)
+	assert.GreaterOrEqual(t, len(formats), 1)
+	for _, format := range formats {
+		hasContent := format.ManifestFileRegex != nil || len(format.LockFileRegexes) > 0
+		assert.True(t, hasContent, "failed to assert that format had content")
+	}
 }
 
 func TestGetGroups(t *testing.T) {
