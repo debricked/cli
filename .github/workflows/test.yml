@@ -36,7 +36,9 @@ jobs:
             ${{ matrix.os }}-go
 
       - name: Build
-        run: go build -v ./...
+        run: |
+          go generate
+          go build -v ./...
 
       - name: Test
         run: bash scripts/test_cli.sh
@@ -86,7 +88,9 @@ jobs:
             ${{ matrix.os }}-go
 
       - name: Build
-        run: go build -v ./...
+        run: |
+          go generate
+          go build -v ./...
 
       - name: Set up Java ${{matrix.java}}
         uses: actions/setup-java@v3
