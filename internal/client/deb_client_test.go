@@ -138,12 +138,12 @@ func TestPost(t *testing.T) {
 		bytes.NewBuffer(jsonData),
 		0,
 	)
-	if err != nil {
-		t.Fatal("failed to assert that no client error occurred. Error:", err)
+	if !strings.Contains(err.Error(), "Forbidden. You don't have the necessary access to perform this action.") {
+		t.Fatal("failed to assert that client throws forbidden error", err)
 	}
-	defer res.Body.Close()
-	if res.StatusCode != http.StatusForbidden {
-		t.Error("failed to assert that status code was 403")
+	if res != nil {
+		t.Error("res should be nil with forbidden")
+		defer res.Body.Close()
 	}
 }
 
@@ -163,12 +163,12 @@ func TestPostWithTimeout(t *testing.T) {
 		bytes.NewBuffer(jsonData),
 		10,
 	)
-	if err != nil {
-		t.Fatal("failed to assert that no client error occurred. Error:", err)
+	if !strings.Contains(err.Error(), "Forbidden. You don't have the necessary access to perform this action.") {
+		t.Fatal("failed to assert that client throws forbidden error", err)
 	}
-	defer res.Body.Close()
-	if res.StatusCode != http.StatusForbidden {
-		t.Error("failed to assert that status code was 403")
+	if res != nil {
+		t.Error("res should be nil with forbidden")
+		defer res.Body.Close()
 	}
 }
 
