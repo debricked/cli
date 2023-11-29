@@ -81,5 +81,22 @@ RUN apt -y update && apt -y upgrade && apt -y install openjdk-11-jre \
 
 RUN dotnet --version
 
+RUN apt update -y && \
+    apt install lsb-release apt-transport-https ca-certificates software-properties-common -y && \
+    curl -o /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
+    sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list' && \
+    apt -y clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt -y update && apt -y install \
+    php8.2 \
+    php8.2-curl \
+    php8.2-mbstring \
+    php8.2-phar && \
+    apt -y clean && rm -rf /var/lib/apt/lists/*
+
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
+
+RUN php -v && composer --version
+
 # Put copy at the end to speedup Docker build by caching previous RUNs and run those concurrently
 COPY --from=dev /cli/debricked /usr/bin/debricked

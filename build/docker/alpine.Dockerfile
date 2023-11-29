@@ -46,9 +46,25 @@ RUN apk --no-cache --update add \
   nodejs \
   yarn \
   dotnet7-sdk \
-  g++ 
+  g++ \
+  curl
 
 RUN dotnet --version
+
+RUN apk add --no-cache \
+    git \
+    php82 \
+    php82-curl \
+    php82-mbstring \
+    php82-openssl \
+    php82-phar \
+    && ln -s /usr/bin/php82 /usr/bin/php
+
+RUN apk add --no-cache --virtual build-dependencies curl && \
+    curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
+    && apk del build-dependencies
+
+RUN php -v && composer --version
 
 # Put copy at the end to speedup Docker build by caching previous RUNs and run those concurrently
 COPY --from=dev /cli/debricked /usr/bin/debricked
