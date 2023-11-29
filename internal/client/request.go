@@ -87,8 +87,8 @@ func interpret(res *http.Response, request func() (*http.Response, error), debCl
 		return nil, NoResErr
 	} else if res.StatusCode == http.StatusForbidden {
 		errMsg := `Forbidden. You don't have the necessary access to perform this action. 
-Contact your Debricked company admin or repository admin to request proper access.
-For enterprise user: https://portal.debricked.com/administration-47/how-do-i-use-role-based-access-control-324`
+		Make sure your access token has proper access https://portal.debricked.com/administration-47/how-do-i-generate-an-access-token-130
+		For enterprise users: Contact your Debricked company admin or repository admin to request proper access https://portal.debricked.com/administration-47/how-do-i-use-role-based-access-control-324`
 
 		return nil, errors.New(errMsg)
 	} else if res.StatusCode == http.StatusUnauthorized {
