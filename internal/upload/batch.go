@@ -256,7 +256,7 @@ func (uploadBatch *uploadBatch) initUpload() ([]string, error) {
 		}
 	}
 
-	errStr := fmt.Sprintf("failed to initialize a scan due to badly formatted files, initial upload file %s got the following error: %s", entryFile, err.Error())
+	errStr := fmt.Sprintf("Failed to initialize a scan for %s. Got the following error: %s", entryFile, err.Error())
 
 	return files, errors.New(errStr)
 }
