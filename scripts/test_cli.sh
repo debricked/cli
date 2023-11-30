@@ -4,6 +4,16 @@ RED='\033[0;31m'
 SET='\033[0m'
 set -e
 
+# Check for file/embedded/supported_formats.json
+if [ ! -f "internal/file/embedded/supported_formats.json" ]; then
+  echo "internal/file/embedded/supported_formats.json does not exist, running fetch_supported_formats.sh"
+  sh ./scripts/fetch_supported_formats.sh
+  if [ ! -f "internal/file/embedded/supported_formats.json" ]; then
+    echo -e "${RED}internal/file/embedded/supported_formats.json does not exist after running fetch_supported_formats.sh${SET}"
+    exit 1
+  fi
+fi
+
 go test -cover -coverprofile=coverage.out ./internal/...
 
 echo -e "\nChecking test coverage threshold..."
