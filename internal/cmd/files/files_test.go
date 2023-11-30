@@ -4,11 +4,12 @@ import (
 	"testing"
 
 	"github.com/debricked/cli/internal/file"
+	"github.com/debricked/cli/internal/io"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewFilesCmd(t *testing.T) {
-	finder, _ := file.NewFinder(nil)
+	finder, _ := file.NewFinder(nil, io.FileSystem{})
 	cmd := NewFilesCmd(finder)
 	commands := cmd.Commands()
 	nbrOfCommands := 1

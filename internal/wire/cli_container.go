@@ -11,6 +11,7 @@ import (
 	"github.com/debricked/cli/internal/client"
 	"github.com/debricked/cli/internal/file"
 	"github.com/debricked/cli/internal/fingerprint"
+	"github.com/debricked/cli/internal/io"
 	licenseReport "github.com/debricked/cli/internal/report/license"
 	vulnerabilityReport "github.com/debricked/cli/internal/report/vulnerability"
 	"github.com/debricked/cli/internal/resolution"
@@ -46,7 +47,7 @@ var cliContainer *CliContainer
 func (cc *CliContainer) wire() error {
 	cc.retryClient = client.NewRetryClient()
 	cc.debClient = client.NewDebClient(nil, cc.retryClient)
-	finder, err := file.NewFinder(cc.debClient)
+	finder, err := file.NewFinder(cc.debClient, io.FileSystem{})
 	if err != nil {
 		return wireErr(err)
 	}

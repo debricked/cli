@@ -7,6 +7,8 @@ import (
 	"github.com/debricked/cli/internal/wire"
 )
 
+//go:generate sh ../../scripts/fetch_supported_formats.sh
+
 var version string // Set at compile time
 
 func main() {

@@ -1,8 +1,10 @@
 package file
 
 import (
+	"embed"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -10,7 +12,15 @@ import (
 	"path/filepath"
 
 	"github.com/debricked/cli/internal/client"
+	ioFs "github.com/debricked/cli/internal/io"
+	"github.com/fatih/color"
 )
+
+//go:embed embedded/supported_formats.json
+var supportedFormats embed.FS
+
+const SupportedFormatsFallbackFilePath = "embedded/supported_formats.json"
+const SupportedFormatsUri = "/api/1.0/open/files/supported-formats"
 
 type IFinder interface {
 	GetGroups(rootPath string, exclusions []string, lockfileOnly bool, strictness int) (Groups, error)
@@ -18,15 +28,16 @@ type IFinder interface {
 }
 
 type Finder struct {
-	debClient client.IDebClient
+	debClient  client.IDebClient
+	filesystem ioFs.IFileSystem
 }
 
-func NewFinder(c client.IDebClient) (*Finder, error) {
+func NewFinder(c client.IDebClient, fs ioFs.IFileSystem) (*Finder, error) {
 	if c == nil {
 		return nil, errors.New("client is nil")
 	}
 
-	return &Finder{c}, nil
+	return &Finder{c, fs}, nil
 }
 
 // GetGroups return all file groups in specified path recursively.
@@ -68,15 +79,11 @@ func (finder *Finder) GetGroups(rootPath string, exclusions []string, lockfileOn
 
 // GetSupportedFormats returns all supported dependency file formats
 func (finder *Finder) GetSupportedFormats() ([]*CompiledFormat, error) {
-	res, err := finder.debClient.Get("/api/1.0/open/files/supported-formats", "application/json")
+	body, err := finder.GetSupportedFormatsJson()
 	if err != nil {
 		return nil, err
 	}
-	if res.StatusCode != http.StatusOK {
-		return nil, errors.New("failed to fetch supported formats")
-	}
-	defer res.Body.Close()
-	body, _ := io.ReadAll(res.Body)
+
 	var formats []*Format
 	err = json.Unmarshal(body, &formats)
 	if err != nil {
@@ -94,4 +101,36 @@ func (finder *Finder) GetSupportedFormats() ([]*CompiledFormat, error) {
 	}
 
 	return compiledDependencyFileFormats, nil
+}
+
+func (finder *Finder) GetSupportedFormatsJson() ([]byte, error) {
+	finder.debClient.ConfigureClientSettings(false, 5)
+	defer finder.debClient.ConfigureClientSettings(true, 15)
+
+	res, err := finder.debClient.Get(SupportedFormatsUri, "application/json")
+
+	if err != nil || res.StatusCode != http.StatusOK {
+		fmt.Printf("%s Unable to get supported formats from the server. Using cached data instead.\n", color.YellowString("⚠️"))
+
+		return finder.GetSupportedFormatsFallbackJson()
+	}
+
+	defer res.Body.Close()
+
+	return io.ReadAll(res.Body)
+}
+
+func (finder *Finder) GetSupportedFormatsFallbackJson() ([]byte, error) {
+	jsonFile, err := finder.filesystem.FsOpenEmbed(supportedFormats, SupportedFormatsFallbackFilePath)
+	if err != nil {
+		return nil, err
+	}
+	defer finder.filesystem.FsCloseFile(jsonFile)
+
+	jsonData, err := finder.filesystem.FsReadAll(jsonFile)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonData, nil
 }

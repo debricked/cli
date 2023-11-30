@@ -45,16 +45,16 @@ func (mock *DebClientMock) Get(uri string, format string) (*http.Response, error
 func (mock *DebClientMock) Post(uri string, format string, body *bytes.Buffer, timeout int) (*http.Response, error) {
 	response, err := mock.popResponse(mock.RemoveQueryParamsFromUri(uri))
 
-	if response != nil {
+	if response != nil || !mock.serviceUp {
 		return response, err
 	}
 
 	return mock.realDebClient.Post(uri, format, body, timeout)
 }
 
-func (mock *DebClientMock) SetAccessToken(_ *string) {
+func (mock *DebClientMock) SetAccessToken(_ *string) {}
 
-}
+func (mock *DebClientMock) ConfigureClientSettings(retry bool, timeout int) {}
 
 type MockResponse struct {
 	StatusCode   int

@@ -15,6 +15,7 @@ import (
 )
 
 var NoResErr = errors.New("failed to get response. Check out the Debricked status page: https://status.debricked.com/")
+var SupportedFormatsFallbackError = errors.New("get supported formats from the server. Using cached data instead")
 
 func get(uri string, debClient *DebClient, retry bool, format string) (*http.Response, error) {
 	request, err := newRequest("GET", *debClient.host+uri, debClient.jwtToken, format, nil)
@@ -35,6 +36,14 @@ func post(uri string, debClient *DebClient, contentType string, body *bytes.Buff
 		return nil, err
 	}
 	request.Header.Add("Content-Type", contentType)
+
+	if debClient.timeout > 0 {
+		timeoutDuration := time.Duration(debClient.timeout) * time.Second
+		ctx, cancel := context.WithTimeout(request.Context(), timeoutDuration)
+		defer cancel()
+		request = request.WithContext(ctx)
+	}
+
 	res, err := debClient.httpClient.Do(request)
 	if err != nil {
 		return nil, err

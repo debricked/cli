@@ -3,6 +3,8 @@ WORKDIR /cli
 RUN apt -y update && apt -y upgrade && apt -y install git && \
     apt -y clean && rm -rf /var/lib/apt/lists/*
 COPY go.mod go.sum ./
+RUN mkdir -p internal/file/embedded && \
+    wget -O internal/file/embedded/supported_formats.json https://debricked.com/api/1.0/open/files/supported-formats
 RUN go mod download && go mod verify
 COPY . .
 RUN go build -o debricked ./cmd/debricked
