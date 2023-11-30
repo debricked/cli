@@ -540,6 +540,7 @@ func TestScanServiceDowntime(t *testing.T) {
 	output, _ := io.ReadAll(r)
 	os.Stdout = rescueStdout
 
+	assert.ErrorContains(t, err, client.NoResErr.Error())
 	assert.Contains(t, string(output), client.SupportedFormatsFallbackError.Error())
 	resetWd(t, cwd)
 
