@@ -56,7 +56,7 @@ Special Terms | Meaning
 Exclude flags could alternatively be set using DEBRICKED_EXCLUSIONS="path1,path2,path3".
 
 Example: 
-$ debricked files resolve . `+exampleFlags)
+$ debricked callgraph . `+exampleFlags)
 	cmd.Flags().BoolVar(&buildDisabled, NoBuildFlag, false, `Do not automatically build all source code in the project to enable call graph generation.
 This option requires a pre-built project. For more detailed documentation on the callgraph generation, visit our portal:
 https://portal.debricked.com/debricked-cli-63/debricked-cli-documentation-298?tid=298&fid=63#callgraph`)

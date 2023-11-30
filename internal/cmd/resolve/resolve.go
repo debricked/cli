@@ -18,11 +18,11 @@ const (
 
 func NewResolveCmd(resolver resolution.IResolver) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "resolve [path]",
+		Use:   "resolve [path] [path2] [path3] [path...]",
 		Short: "Resolve manifest files",
 		Long: `Resolve manifest files. If a directory is inputted all manifest files without a lock file are resolved.
 Example:
-$ debricked files resolve go.mod pkg/
+$ debricked resolve go.mod pkg/
 `,
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			_ = viper.BindPFlags(cmd.Flags())
@@ -44,7 +44,7 @@ Special Terms | Meaning
 Exclude flags could alternatively be set using DEBRICKED_EXCLUSIONS="path1,path2,path3".
 
 Example: 
-$ debricked files resolve . `+exampleFlags)
+$ debricked resolve . `+exampleFlags)
 
 	viper.MustBindEnv(ExclusionFlag)
 
