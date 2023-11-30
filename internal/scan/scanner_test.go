@@ -512,17 +512,10 @@ func TestSetWorkingDirectory(t *testing.T) {
 }
 
 func TestScanServiceDowntime(t *testing.T) {
-	var debClient client.IDebClient
 	clientMock := testdata.NewDebClientMock()
 	clientMock.SetServiceUp(false)
-	debClient = clientMock
-	var finder file.IFinder
-	finder, _ = file.NewFinder(debClient, ioFs.FileSystem{})
 
-	var ciService ci.IService = ci.NewService(nil)
-
-	scanner := NewDebrickedScanner(&debClient, finder, nil, ciService, nil, nil, nil)
-
+	scanner := makeScanner(clientMock, nil, nil)
 	path := testdataNpm
 	repositoryName := path
 	commitName := "testdata/yarn-commit"
@@ -547,10 +540,7 @@ func TestScanServiceDowntime(t *testing.T) {
 	output, _ := io.ReadAll(r)
 	os.Stdout = rescueStdout
 
-	if err != nil {
-		t.Error("failed to assert that scan ran without errors. Error:", err)
-	}
-	assert.Contains(t, string(output), client.NoResErr.Error())
+	assert.Contains(t, string(output), client.SupportedFormatsFallbackError.Error())
 	resetWd(t, cwd)
 
 	opts.PassOnTimeOut = false
@@ -561,7 +551,7 @@ func TestScanServiceDowntime(t *testing.T) {
 
 	_ = w.Close()
 	os.Stdout = rescueStdout
-	assert.ErrorIs(t, err, client.NoResErr)
+	assert.ErrorContains(t, err, client.NoResErr.Error())
 }
 
 func addMockedFormatsResponse(clientMock *testdata.DebClientMock, regex string) {

@@ -15,6 +15,7 @@ import (
 )
 
 var NoResErr = errors.New("failed to get response. Check out the Debricked status page: https://status.debricked.com/")
+var SupportedFormatsFallbackError = errors.New("get supported formats from the server. Using cached data instead")
 
 func get(uri string, debClient *DebClient, retry bool, format string) (*http.Response, error) {
 	request, err := newRequest("GET", *debClient.host+uri, debClient.jwtToken, format, nil)
