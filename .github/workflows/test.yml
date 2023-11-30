@@ -36,7 +36,9 @@ jobs:
             ${{ matrix.os }}-go
 
       - name: Pull Supported Formats
-        run: go generate -v -x
+        run: |
+          cd cmd/debricked
+          go generate -v -x
 
       - name: Build
         run: go build -v ./...
@@ -89,7 +91,9 @@ jobs:
             ${{ matrix.os }}-go
 
       - name: Pull Supported Formats
-        run: go generate -v -x
+        run: |
+          cd cmd/debricked
+          go generate -v -x
 
       - name: Build
         run: go build -v ./...
