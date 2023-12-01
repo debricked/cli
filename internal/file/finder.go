@@ -104,7 +104,7 @@ func (finder *Finder) GetSupportedFormats() ([]*CompiledFormat, error) {
 }
 
 func (finder *Finder) GetSupportedFormatsJson() ([]byte, error) {
-	finder.debClient.ConfigureClientSettings(false, 5)
+	finder.debClient.ConfigureClientSettings(false, 3)
 	defer finder.debClient.ConfigureClientSettings(true, 15)
 
 	res, err := finder.debClient.Get(SupportedFormatsUri, "application/json")
