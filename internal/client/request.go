@@ -37,7 +37,7 @@ func getWithTimeout(uri string, debClient *DebClient, retry bool, format string,
 		return nil, err
 	}
 
-	timeoutDuration := time.Duration(debClient.timeout) * time.Second
+	timeoutDuration := time.Duration(timeout) * time.Second
 	ctx, cancel := context.WithTimeout(request.Context(), timeoutDuration)
 	defer cancel()
 	request = request.WithContext(ctx)

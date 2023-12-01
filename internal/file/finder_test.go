@@ -24,7 +24,7 @@ func (mock *debClientMock) Post(_ string, _ string, _ *bytes.Buffer, _ int) (*ht
 
 var authorized bool
 
-func (mock *debClientMock) Get(_ string, _ string) (*http.Response, error) {
+func (mock *debClientMock) Get(_ string, _ string, _ int) (*http.Response, error) {
 	var statusCode int
 	var body io.ReadCloser = nil
 	if authorized {
@@ -55,8 +55,6 @@ func (mock *debClientMock) Get(_ string, _ string) (*http.Response, error) {
 }
 
 func (mock *debClientMock) SetAccessToken(_ *string) {}
-
-func (mock *debClientMock) ConfigureClientSettings(retry bool, timeout int) {}
 
 var finder *Finder
 

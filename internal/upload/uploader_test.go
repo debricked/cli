@@ -123,7 +123,7 @@ func (mock *debClientMock) Post(uri string, _ string, _ *bytes.Buffer, _ int) (*
 
 var progress = 50
 
-func (mock *debClientMock) Get(_ string, _ string) (*http.Response, error) {
+func (mock *debClientMock) Get(_ string, _ string, _ int) (*http.Response, error) {
 	res := &http.Response{
 		Status:           "",
 		StatusCode:       http.StatusOK,
@@ -151,5 +151,3 @@ func (mock *debClientMock) Get(_ string, _ string) (*http.Response, error) {
 }
 
 func (mock *debClientMock) SetAccessToken(_ *string) {}
-
-func (mock *debClientMock) ConfigureClientSettings(retry bool, timeout int) {}
