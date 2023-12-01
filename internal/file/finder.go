@@ -104,10 +104,10 @@ func (finder *Finder) GetSupportedFormats() ([]*CompiledFormat, error) {
 }
 
 func (finder *Finder) GetSupportedFormatsJson() ([]byte, error) {
-	finder.debClient.ConfigureClientSettings(false, 3)
-	defer finder.debClient.ConfigureClientSettings(true, 15)
+	//finder.debClient.ConfigureClientSettings(false, 3)
+	//defer finder.debClient.ConfigureClientSettings(true, 15)
 
-	res, err := finder.debClient.Get(SupportedFormatsUri, "application/json")
+	res, err := finder.debClient.Get(SupportedFormatsUri, "application/json", 3)
 
 	if err != nil || res.StatusCode != http.StatusOK {
 		fmt.Printf("%s Unable to get supported formats from the server. Using cached data instead.\n", color.YellowString("⚠️"))

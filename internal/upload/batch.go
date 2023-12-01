@@ -200,7 +200,7 @@ func (uploadBatch *uploadBatch) wait() (*UploadResult, error) {
 	var resultStatus *UploadResult
 	uri := fmt.Sprintf("/api/1.0/open/ci/upload/status?ciUploadId=%s", strconv.Itoa(uploadBatch.ciUploadId))
 	for !bar.IsFinished() {
-		res, err := (*uploadBatch.client).Get(uri, "application/json")
+		res, err := (*uploadBatch.client).Get(uri, "application/json", 0)
 		if err != nil {
 			return nil, err
 		}

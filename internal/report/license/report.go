@@ -37,7 +37,7 @@ func (r Reporter) Order(args report.IOrderArgs) error {
 	}
 
 	uri := fmt.Sprintf("/api/1.0/open/licenses/get-licenses?order=asc&sortColumn=name&generateExcel=1&commitId=%d&email=%s", commitId, orderArgs.Email)
-	res, err := r.DebClient.Get(uri, "application/json")
+	res, err := r.DebClient.Get(uri, "application/json", 0)
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ type commit struct {
 
 func (r Reporter) getCommitId(hash string) (int, error) {
 	uri := fmt.Sprintf("/api/1.0/open/releases/by/name?name=%s", hash)
-	res, err := r.DebClient.Get(uri, "application/json")
+	res, err := r.DebClient.Get(uri, "application/json", 0)
 	if err != nil {
 		return 0, err
 	}

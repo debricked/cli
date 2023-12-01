@@ -84,7 +84,7 @@ func TestClientUnauthorized(t *testing.T) {
 	})
 	client = NewDebClient(&tkn, clientMock)
 
-	res, err := client.Get("/api/1.0/open/user-profile/is-admin", "application/json")
+	res, err := client.Get("/api/1.0/open/user-profile/is-admin", "application/json", 0)
 	if err == nil {
 		t.Error("failed to assert client error")
 		defer res.Body.Close()
@@ -104,7 +104,7 @@ func TestGet(t *testing.T) {
 	})
 	client = NewDebClient(&tkn, clientMock)
 
-	res, err := client.Get("/api/1.0/open/user-profile/is-admin", "application/json")
+	res, err := client.Get("/api/1.0/open/user-profile/is-admin", "application/json", 0)
 	if err != nil {
 		t.Fatal("failed to assert that no client error occurred. Error:", err)
 	}

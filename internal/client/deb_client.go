@@ -13,7 +13,7 @@ type IDebClient interface {
 	// Post makes a POST request to one of Debricked's API endpoints
 	Post(uri string, contentType string, body *bytes.Buffer, timeout int) (*http.Response, error)
 	// Get makes a GET request to one of Debricked's API endpoints
-	Get(uri string, format string) (*http.Response, error)
+	Get(uri string, format string, timeout int) (*http.Response, error)
 	SetAccessToken(accessToken *string)
 	ConfigureClientSettings(retry bool, timeout int)
 }
@@ -51,7 +51,11 @@ func (debClient *DebClient) Post(uri string, contentType string, body *bytes.Buf
 	return post(uri, debClient, contentType, body, true)
 }
 
-func (debClient *DebClient) Get(uri string, format string) (*http.Response, error) {
+func (debClient *DebClient) Get(uri string, format string, timeout int) (*http.Response, error) {
+	if timeout > 0 {
+		return getWithTimeout(uri, debClient, false, format, timeout)
+	}
+
 	return get(uri, debClient, debClient.retry, format)
 }
 

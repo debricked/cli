@@ -23,12 +23,24 @@ func get(uri string, debClient *DebClient, retry bool, format string) (*http.Res
 		return nil, err
 	}
 
-	if debClient.timeout > 0 {
-		timeoutDuration := time.Duration(debClient.timeout) * time.Second
-		ctx, cancel := context.WithTimeout(request.Context(), timeoutDuration)
-		defer cancel()
-		request = request.WithContext(ctx)
+	res, _ := debClient.httpClient.Do(request)
+	req := func() (*http.Response, error) {
+		return get(uri, debClient, false, format)
 	}
+
+	return interpret(res, req, debClient, retry)
+}
+
+func getWithTimeout(uri string, debClient *DebClient, retry bool, format string, timeout int) (*http.Response, error) {
+	request, err := newRequest("GET", *debClient.host+uri, debClient.jwtToken, format, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	timeoutDuration := time.Duration(debClient.timeout) * time.Second
+	ctx, cancel := context.WithTimeout(request.Context(), timeoutDuration)
+	defer cancel()
+	request = request.WithContext(ctx)
 
 	res, _ := debClient.httpClient.Do(request)
 	req := func() (*http.Response, error) {
