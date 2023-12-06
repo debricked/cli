@@ -151,5 +151,3 @@ func (mock *debClientMock) Get(_ string, _ string) (*http.Response, error) {
 }
 
 func (mock *debClientMock) SetAccessToken(_ *string) {}
-
-func (mock *debClientMock) ConfigureClientSettings(retry bool, timeout int) {}

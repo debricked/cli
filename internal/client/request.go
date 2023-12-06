@@ -37,13 +37,6 @@ func post(uri string, debClient *DebClient, contentType string, body *bytes.Buff
 	}
 	request.Header.Add("Content-Type", contentType)
 
-	if debClient.timeout > 0 {
-		timeoutDuration := time.Duration(debClient.timeout) * time.Second
-		ctx, cancel := context.WithTimeout(request.Context(), timeoutDuration)
-		defer cancel()
-		request = request.WithContext(ctx)
-	}
-
 	res, err := debClient.httpClient.Do(request)
 	if err != nil {
 		return nil, err
