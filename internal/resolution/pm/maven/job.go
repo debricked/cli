@@ -1,11 +1,12 @@
 package maven
 
 import (
-	"github.com/debricked/cli/internal/resolution/job"
-	"github.com/debricked/cli/internal/resolution/pm/util"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/debricked/cli/internal/resolution/job"
+	"github.com/debricked/cli/internal/resolution/pm/util"
 )
 
 const (
@@ -68,6 +69,7 @@ func (j *Job) handleError(cmdErr job.IError) {
 		if regex.MatchString(cmdErr.Error()) {
 			cmdErr = j.addDocumentation(expression, regex, cmdErr)
 			j.Errors().Critical(cmdErr)
+
 			return
 		}
 	}
@@ -78,58 +80,82 @@ func (j *Job) handleError(cmdErr job.IError) {
 func (j *Job) addDocumentation(expr string, regex *regexp.Regexp, cmdErr job.IError) job.IError {
 	switch {
 	case expr == nonParseablePomErrRegex:
-		matches := regex.FindAllStringSubmatch(cmdErr.Error(), 1)
-		message := "the POM file for errors"
-		if len(matches) > 0 && len(matches[0]) > 1 {
-			message = matches[0][1]
-		}
-
-		cmdErr.SetDocumentation(
-			strings.Join(
-				[]string{
-					"Failed to build Maven dependency tree.",
-					"Your POM file is not valid.",
-					"Please check",
-					message,
-				}, " "),
-		)
+		cmdErr = j.addNonParseablePomErrorDocumentation(regex, cmdErr)
 	case expr == networkUnreachableErrRegex:
-		cmdErr.SetDocumentation(
-			strings.Join(
-				[]string{
-					"We weren't able to retrieve one or more plugin descriptor(s).",
-					"Please check your Internet connection and try again.",
-				}, " "),
-		)
+		cmdErr = j.addNetworkUnreachableErrorDocumentation(cmdErr)
 	case expr == invalidVersionErrRegex:
-		matches := regex.FindAllStringSubmatch(cmdErr.Error(), 1)
-		message := "the POM file for errors"
-		if len(matches) > 0 && len(matches[0]) > 1 {
-			message = matches[0][1]
-		}
-
-		cmdErr.SetDocumentation(
-			strings.Join(
-				[]string{
-					"There is an error in dependencies:",
-					message,
-				}, " "),
-		)
+		cmdErr = j.addInvalidVersionErrorDocumentation(regex, cmdErr)
 	case expr == dependenciesResolveErrRegex:
-		matches := regex.FindAllStringSubmatch(cmdErr.Error(), 1)
-		message := "the POM file for errors"
-		if len(matches) > 0 && len(matches[0]) > 1 {
-			message = matches[0][1]
-		}
-
-		cmdErr.SetDocumentation(
-			strings.Join(
-				[]string{
-					message,
-					"\nTry to run `mvn dependency:tree -e` to get more details",
-				}, " "),
-		)
+		cmdErr = j.addDependenciesResolveErrorDocumentation(regex, cmdErr)
 	}
+
+	return cmdErr
+}
+
+func (j *Job) addNonParseablePomErrorDocumentation(regex *regexp.Regexp, cmdErr job.IError) job.IError {
+	matches := regex.FindAllStringSubmatch(cmdErr.Error(), 1)
+	message := "the POM file for errors"
+	if len(matches) > 0 && len(matches[0]) > 1 {
+		message = matches[0][1]
+	}
+
+	cmdErr.SetDocumentation(
+		strings.Join(
+			[]string{
+				"Failed to build Maven dependency tree.",
+				"Your POM file is not valid.",
+				"Please check",
+				message,
+			}, " "),
+	)
+
+	return cmdErr
+}
+
+func (j *Job) addNetworkUnreachableErrorDocumentation(cmdErr job.IError) job.IError {
+	cmdErr.SetDocumentation(
+		strings.Join(
+			[]string{
+				"We weren't able to retrieve one or more plugin descriptor(s).",
+				"Please check your Internet connection and try again.",
+			}, " "),
+	)
+
+	return cmdErr
+}
+
+func (j *Job) addInvalidVersionErrorDocumentation(regex *regexp.Regexp, cmdErr job.IError) job.IError {
+	matches := regex.FindAllStringSubmatch(cmdErr.Error(), 1)
+	message := ""
+	if len(matches) > 0 && len(matches[0]) > 1 {
+		message = matches[0][1]
+	}
+
+	cmdErr.SetDocumentation(
+		strings.Join(
+			[]string{
+				"There is an error in dependencies:",
+				message,
+			}, " "),
+	)
+
+	return cmdErr
+}
+
+func (j *Job) addDependenciesResolveErrorDocumentation(regex *regexp.Regexp, cmdErr job.IError) job.IError {
+	matches := regex.FindAllStringSubmatch(cmdErr.Error(), 1)
+	message := "An error occurred during dependencies resolve"
+	if len(matches) > 0 && len(matches[0]) > 1 {
+		message = matches[0][1]
+	}
+
+	cmdErr.SetDocumentation(
+		strings.Join(
+			[]string{
+				message,
+				"\nTry to run `mvn dependency:tree -e` to get more details",
+			}, " "),
+	)
 
 	return cmdErr
 }
