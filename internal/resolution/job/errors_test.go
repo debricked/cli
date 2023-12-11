@@ -33,6 +33,27 @@ func TestCritical(t *testing.T) {
 	assert.Contains(t, errors.criticalErrs, critical)
 }
 
+func TestAppend(t *testing.T) {
+	errors := NewErrors("")
+
+	critical1 := NewBaseJobError("critical")
+	critical1.SetIsCritical(true)
+	errors.Append(critical1)
+
+	critical2 := NewBaseJobError("another critical")
+	errors.Append(critical2)
+
+	warning := NewBaseJobError("warning")
+	warning.SetIsCritical(false)
+	errors.Append(warning)
+
+	assert.Len(t, errors.warningErrs, 1)
+	assert.Len(t, errors.criticalErrs, 2)
+	assert.Contains(t, errors.criticalErrs, critical1)
+	assert.Contains(t, errors.criticalErrs, critical2)
+	assert.Contains(t, errors.warningErrs, warning)
+}
+
 func TestGetWarningErrors(t *testing.T) {
 	errors := NewErrors("")
 	warning := NewBaseJobError("error")

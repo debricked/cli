@@ -20,15 +20,46 @@ func TestNewJob(t *testing.T) {
 }
 
 func TestRunCmdErr(t *testing.T) {
-	cmdErr := errors.New("cmd-error")
-	j := NewJob("file", "dir", "nil", "nil", testdata.CmdFactoryMock{Err: cmdErr}, writer.FileWriter{})
+	cases := []struct {
+		error string
+		doc   string
+	}{
+		{
+			error: "cmd-error",
+			doc:   "No specific documentation for this problem yet, please report it to us! :)",
+		},
+		{
+			error: "* What went wrong:\nCould not open init remapped class cache for 60sdrkd1iuvns7c8vzs3hv858 (/home/asus/.gradle/caches/5.4/scripts-remapped/_gradle_init_script_debricked_9ll3l6asw7d59x4iljlnzgcpd/60sdrkd1iuvns7c8vzs3hv858/inita22655f7e805aaeb10a177dc56aa75ac).\n> Could not open init generic class cache for initialization script '/home/asus/Projects/playground/gradle-retrolambda/.gradle-init-script.debricked.groovy' (/home/asus/.gradle/caches/5.4/scripts/60sdrkd1iuvns7c8vzs3hv858/init/inita22655f7e805aaeb10a177dc56aa75ac).\n   > BUG! exception in phase 'semantic analysis' in source unit '_BuildScript_' Unsupported class file major version 57\n",
+			doc:   "Failed to build Gradle dependency tree. The process has failed with following error: exception in phase 'semantic analysis' in source unit '_BuildScript_' Unsupported class file major version 57. Try run following command to get stacktrace: `nil --init-script nil debrickedFindSubProjectPaths --stacktrace` Replace --stacktrace with --info or --debug option to get more log output. Or with --scan to get full insights.",
+		},
+		{
+			error: "  |Error: Could not find or load main class org.gradle.wrapper.GradleWrapperMain\n        |Caused by: java.lang.ClassNotFoundException: org.gradle.wrapper.GradleWrapperMain\n",
+			doc:   "Failed to build Gradle dependency tree. The process has failed with following error: Could not find or load main class org.gradle.wrapper.GradleWrapperMain. You probably trying to run the command not from the root directory.",
+		},
+		{
+			error: "  |* What went wrong:\n        |Project directory '/home/asus/Projects/playground/protobuf-gradle-plugin/testProjectLite' is not part of the build defined by settings file '/home/asus/Projects/playground/protobuf-gradle-plugin/settings.gradle'. If this is an unrelated build, it must have its own settings file.",
+			doc:   "Failed to build Gradle dependency tree. The process has failed with following error: Project directory '/home/asus/Projects/playground/protobuf-gradle-plugin/testProjectLite' is not part of the build defined by settings file '/home/asus/Projects/playground/protobuf-gradle-plugin/settings.gradle'. This error might be caused by inclusion of test folders into resolve process. Try running resolve command with -e flag. For example, `debricked resolve -e \"**/test*/**\"` will exclude all folders that start from 'test' from resolution process. Or if this is an unrelated build, it must have its own settings file.",
+		},
+		{
+			error: "  |A problem occurred evaluating settings 'protobuf-gradle-plugin'.\n        |> Could not get unknown property 'glkjhe' for settings 'protobuf-gradle-plugin' of type org.gradle.initialization.DefaultSettings.",
+			doc:   "Failed to build Gradle dependency tree. The process has failed with following error: Could not get unknown property 'glkjhe' for settings 'protobuf-gradle-plugin' of type org.gradle.initialization.DefaultSettings.. Please check your settings.gradle file for errors.",
+		},
+	}
 
-	go jobTestdata.WaitStatus(j)
+	for _, c := range cases {
+		expectedError := util.NewPMJobError(c.error)
+		expectedError.SetDocumentation(c.doc)
 
-	j.Run()
+		cmdErr := errors.New(c.error)
+		j := NewJob("file", "dir", "nil", "nil", testdata.CmdFactoryMock{Err: cmdErr}, writer.FileWriter{})
 
-	assert.Len(t, j.Errors().GetAll(), 1)
-	assert.Contains(t, j.Errors().GetAll(), util.NewPMJobError(cmdErr.Error()))
+		go jobTestdata.WaitStatus(j)
+
+		j.Run()
+
+		assert.Len(t, j.Errors().GetAll(), 1)
+		assert.Contains(t, j.Errors().GetAll(), expectedError)
+	}
 }
 
 func TestRunCmdOutputErr(t *testing.T) {
