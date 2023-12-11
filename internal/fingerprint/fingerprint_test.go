@@ -155,7 +155,7 @@ func TestFingerprintFiles(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, fingerprints)
 	assert.NotEmpty(t, fingerprints)
-	assert.Equal(t, 1, fingerprints.Len())
+	assert.Equal(t, 2, fingerprints.Len())
 	assert.Equal(t, "file=72214db4e1e543018d1bafe86ea3b444,21,testdata/fingerprinter/testfile.py", fingerprints.Entries[0].ToString())
 
 	// Test no file

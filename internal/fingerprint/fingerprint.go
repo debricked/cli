@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bufio"
 	"crypto/md5" // #nosec
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -162,29 +163,32 @@ func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string) (
 }
 
 func computeMD5ForFileAndZip(fileInfo os.FileInfo, path string, exclusions []string) ([]FileFingerprint, error) {
-	fingerprints := []FileFingerprint{}
-
 	if !shouldProcessFile(fileInfo, exclusions, path) {
-		return fingerprints, nil
+		return nil, nil
 	}
 
-	// Scan the contents of compressed files
-	// such as .jar and .nupkg
+	var fingerprints []FileFingerprint
+
+	// If the file should be unzipped, try to unzip and fingerprint it
 	if shouldUnzip(path) {
 		fingerprintsZip, err := inMemFingerprintingCompressedContent(path, exclusions)
 		if err != nil {
-			return nil, err
+			if errors.Is(err, zip.ErrFormat) {
+				fmt.Printf("WARNING: Could not unpack and fingerprint contents of compressed file [%s]. Error: %v\n", path, err)
+			} else {
+				return nil, err
+			}
 		}
 		fingerprints = append(fingerprints, fingerprintsZip...)
 	}
+
+	// Compute the MD5 for the file
 	fingerprint, err := computeMD5ForFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	fingerprints = append(fingerprints, fingerprint)
-
-	return fingerprints, nil
+	return append(fingerprints, fingerprint), nil
 }
 
 func isSymlink(filename string) (bool, error) {
