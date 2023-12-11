@@ -153,7 +153,8 @@ func (j *Job) addDependenciesResolveErrorDocumentation(regex *regexp.Regexp, cmd
 		strings.Join(
 			[]string{
 				message,
-				"\nTry to run `mvn dependency:tree -e` to get more details",
+				"\nTry to run `mvn dependency:tree -e` to get more details.",
+				"If this is a private dependency, make sure you have access to install it.",
 			}, " "),
 	)
 

@@ -39,7 +39,7 @@ func TestRunCmdErr(t *testing.T) {
 		},
 		{
 			error: "    |[ERROR] Failed to execute goal on project jackpot: Could not resolve dependencies for project com.jeteo:jackpot:war:1.0-SNAPSHOT: The following artifacts could not be resolved: javax.servlet:com.springsource.javax.servlet:jar:2.5.0, javax.servlet:com.springsource.javax.servlet.jsp.jstl:jar:1.2.0 (http://repository.springsource.com/maven/bundles/release) -> [Help 1]\n",
-			doc:   "Could not resolve dependencies for project com.jeteo:jackpot:war:1.0-SNAPSHOT: The following artifacts could not be resolved: javax.servlet:com.springsource.javax.servlet:jar:2.5.0, javax.servlet:com.springsource.javax.servlet.jsp.jstl:jar:1.2.0  \nTry to run `mvn dependency:tree -e` to get more details",
+			doc:   "Could not resolve dependencies for project com.jeteo:jackpot:war:1.0-SNAPSHOT: The following artifacts could not be resolved: javax.servlet:com.springsource.javax.servlet:jar:2.5.0, javax.servlet:com.springsource.javax.servlet.jsp.jstl:jar:1.2.0  \nTry to run `mvn dependency:tree -e` to get more details. If this is a private dependency, make sure you have access to install it.",
 		},
 	}
 
