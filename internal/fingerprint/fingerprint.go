@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bufio"
 	"crypto/md5" // #nosec
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -172,7 +173,7 @@ func computeMD5ForFileAndZip(fileInfo os.FileInfo, path string, exclusions []str
 	if shouldUnzip(path) {
 		fingerprintsZip, err := inMemFingerprintingCompressedContent(path, exclusions)
 		if err != nil {
-			if strings.Contains(err.Error(), "not a valid zip file") {
+			if errors.Is(err, zip.ErrFormat) {
 				fmt.Printf("WARNING: Could not unpack and fingerprint contents of compressed file [%s]. Error: %v\n", path, err)
 			} else {
 				return nil, err
