@@ -1,4 +1,4 @@
-FROM golang:1.20-alpine AS dev
+FROM golang:1.21-alpine AS dev
 WORKDIR /cli
 RUN apk update \
   && apk --no-cache --update add git build-base
@@ -44,7 +44,7 @@ RUN apk --no-cache --update add \
   python3 \
   py3-scipy \
   py3-pip \
-  go~=1.20 \
+  go~=1.21 \
   nodejs \
   yarn \
   dotnet7-sdk \
@@ -59,8 +59,7 @@ RUN apk add --no-cache \
     php82-curl \
     php82-mbstring \
     php82-openssl \
-    php82-phar \
-    && ln -s /usr/bin/php82 /usr/bin/php
+    php82-phar
 
 RUN apk add --no-cache --virtual build-dependencies curl && \
     curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
