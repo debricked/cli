@@ -14,7 +14,7 @@ const (
 	nonParseablePomErrRegex     = "Non-parseable POM (.*)"
 	networkUnreachableErrRegex  = "Failed to retrieve plugin descriptor"
 	invalidVersionErrRegex      = "('[\\w\\.]+' for [\\w\\.:-]+ must not contain any of these characters .* but found .)"
-	dependenciesResolveErrRegex = "(Could not resolve dependencies for project .*)\\("
+	dependenciesResolveErrRegex = `Could not resolve dependencies for project`
 )
 
 type Job struct {
@@ -154,7 +154,7 @@ func (j *Job) addDependenciesResolveErrorDocumentation(regex *regexp.Regexp, cmd
 			[]string{
 				message,
 				"\nTry to run `mvn dependency:tree -e` to get more details.",
-				"If this is a private dependency, make sure you have access to install it.",
+				util.InstallPrivateDependencyMessage,
 			}, " "),
 	)
 

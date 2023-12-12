@@ -23,7 +23,7 @@ func TestRunCmdErr(t *testing.T) {
 	}{
 		{
 			error: "cmd-error",
-			doc:   "No specific documentation for this problem yet, please report it to us! :)",
+			doc:   util.UnknownError,
 		},
 		{
 			error: " |[FATAL] Non-parseable POM /home/asus/Projects/playground/maven-project/pom.xml: end tag name </target> must be the same as start tag <source> from line 37 (position: TEXT seen ...<source>1.6</target>... @37:31)  @ /home/asus/Projects/playground/maven-project/pom.xml, line 37, column 31\n",
