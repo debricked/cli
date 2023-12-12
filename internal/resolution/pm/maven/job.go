@@ -14,7 +14,7 @@ const (
 	nonParseablePomErrRegex     = "Non-parseable POM (.*)"
 	networkUnreachableErrRegex  = "Failed to retrieve plugin descriptor"
 	invalidVersionErrRegex      = "('[\\w\\.]+' for [\\w\\.:-]+ must not contain any of these characters .* but found .)"
-	dependenciesResolveErrRegex = `Could not resolve dependencies for project`
+	dependenciesResolveErrRegex = `Could not resolve dependencies for project\s+([\w\.-]+:[\w\.-]+:[\w\.-]+:[\w\.-]+)`
 )
 
 type Job struct {
@@ -144,18 +144,23 @@ func (j *Job) addInvalidVersionErrorDocumentation(regex *regexp.Regexp, cmdErr j
 
 func (j *Job) addDependenciesResolveErrorDocumentation(regex *regexp.Regexp, cmdErr job.IError) job.IError {
 	matches := regex.FindAllStringSubmatch(cmdErr.Error(), 1)
-	message := "An error occurred during dependencies resolve"
+	message := "An error occurred during dependencies resolve "
 	if len(matches) > 0 && len(matches[0]) > 1 {
-		message = matches[0][1]
+		message += strings.Join(
+			[]string{
+				"for: ",
+				matches[0][1],
+				"",
+			}, "")
 	}
 
 	cmdErr.SetDocumentation(
 		strings.Join(
 			[]string{
 				message,
-				"\nTry to run `mvn dependency:tree -e` to get more details.",
+				"\nTry to run `mvn dependency:tree -e` to get more details.\n",
 				util.InstallPrivateDependencyMessage,
-			}, " "),
+			}, ""),
 	)
 
 	return cmdErr
