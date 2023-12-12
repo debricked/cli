@@ -83,10 +83,15 @@ func TestRunCmdOutputErr(t *testing.T) {
 
 func TestRunCreateErr(t *testing.T) {
 	createErr := errors.New("create-error")
-	expectedError := util.NewPMJobError(createErr.Error())
-	expectedError.SetCommand("/usr/bin/echo MakeDependenciesCmd")
+
 	fileWriterMock := &writerTestdata.FileWriterMock{CreateErr: createErr}
-	j := NewJob("file", "dir", "gradlew", "path", testdata.CmdFactoryMock{Name: "echo", Err: createErr}, fileWriterMock)
+	cmdFactoryMock := testdata.CmdFactoryMock{Name: "echo", Err: createErr}
+	cmd, _ := cmdFactoryMock.MakeDependenciesCmd("")
+
+	expectedError := util.NewPMJobError(createErr.Error())
+	expectedError.SetCommand(cmd.String())
+
+	j := NewJob("file", "dir", "gradlew", "path", cmdFactoryMock, fileWriterMock)
 
 	go jobTestdata.WaitStatus(j)
 
@@ -98,10 +103,15 @@ func TestRunCreateErr(t *testing.T) {
 
 func TestRunWriteErr(t *testing.T) {
 	writeErr := errors.New("write-error")
+
+	fileWriterMock := &writerTestdata.FileWriterMock{CreateErr: writeErr}
+	cmdFactoryMock := testdata.CmdFactoryMock{Name: "echo", Err: writeErr}
+	cmd, _ := cmdFactoryMock.MakeDependenciesCmd("")
+
 	expectedError := util.NewPMJobError(writeErr.Error())
-	expectedError.SetCommand("/usr/bin/echo MakeDependenciesCmd")
-	fileWriterMock := &writerTestdata.FileWriterMock{WriteErr: writeErr}
-	j := NewJob("file", "dir", "", "", testdata.CmdFactoryMock{Name: "echo", Err: writeErr}, fileWriterMock)
+	expectedError.SetCommand(cmd.String())
+
+	j := NewJob("file", "dir", "", "", cmdFactoryMock, fileWriterMock)
 
 	go jobTestdata.WaitStatus(j)
 
@@ -113,10 +123,15 @@ func TestRunWriteErr(t *testing.T) {
 
 func TestRunCloseErr(t *testing.T) {
 	closeErr := errors.New("close-error")
+
+	fileWriterMock := &writerTestdata.FileWriterMock{CreateErr: closeErr}
+	cmdFactoryMock := testdata.CmdFactoryMock{Name: "echo", Err: closeErr}
+	cmd, _ := cmdFactoryMock.MakeDependenciesCmd("")
+
 	expectedError := util.NewPMJobError(closeErr.Error())
-	expectedError.SetCommand("/usr/bin/echo MakeDependenciesCmd")
-	fileWriterMock := &writerTestdata.FileWriterMock{CloseErr: closeErr}
-	j := NewJob("file", "dir", "gradlew", "path", testdata.CmdFactoryMock{Name: "echo", Err: closeErr}, fileWriterMock)
+	expectedError.SetCommand(cmd.String())
+
+	j := NewJob("file", "dir", "gradlew", "path", cmdFactoryMock, fileWriterMock)
 
 	go jobTestdata.WaitStatus(j)
 
