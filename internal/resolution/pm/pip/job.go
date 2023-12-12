@@ -142,29 +142,24 @@ func (j *Job) handleInstallError(cmdErr job.IError) {
 				[]string{
 					"Failed to install python dependency ",
 					dependencyName,
-					" due to authorization.\n" + util.InstalLPrivateDependencyMessage,
+					" due to authorization.\n" + util.InstallPrivateDependencyMessage,
 				}, ""),
 		)
 
 	case couldNotFindVersionError.MatchString(cmdErr.Error()):
-		// Define a regex to match the dependency name
 		dependencyNamePattern := regexp.MustCompile(`Could not find a version that satisfies the requirement ([\w=]+)`)
 		dependencyNameMatch := dependencyNamePattern.FindStringSubmatch(cmdErr.Error())
-
 		dependencyName := ""
 		if len(dependencyNameMatch) > 1 {
-			// Split the dependency name and version
 			dependency := strings.Split(dependencyNameMatch[1], "==")
 			dependencyName = "\"" + dependency[0] + "\""
 		}
-
-		// Set the documentation string
 		cmdErr.SetDocumentation(
 			strings.Join(
 				[]string{
 					"Failed to find a version that satisfies the requirement for python dependency ",
 					dependencyName,
-					". This could mean that the package or version does not exist.\n" + util.InstalLPrivateDependencyMessage,
+					". This could mean that the package or version does not exist.\n" + util.InstallPrivateDependencyMessage,
 				}, ""),
 		)
 	}
