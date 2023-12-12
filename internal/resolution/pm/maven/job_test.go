@@ -6,6 +6,7 @@ import (
 
 	jobTestdata "github.com/debricked/cli/internal/resolution/job/testdata"
 	"github.com/debricked/cli/internal/resolution/pm/maven/testdata"
+	"github.com/debricked/cli/internal/resolution/pm/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,7 +25,7 @@ func TestRunCmdErr(t *testing.T) {
 	j.Run()
 
 	assert.Len(t, j.Errors().GetAll(), 1)
-	assert.Contains(t, j.Errors().GetAll(), cmdErr)
+	assert.Contains(t, j.Errors().GetAll(), util.NewPMJobError(cmdErr.Error()))
 }
 
 func TestRunCmdOutputErr(t *testing.T) {
@@ -50,7 +51,7 @@ func TestRunCmdOutputErrNoOutput(t *testing.T) {
 
 	// assert empty because, when Output is executed it will allocate memory for the byte slice to contain the standard output.
 	// However since no bytes are sent to standard output err will be empty here.
-	assert.Empty(t, err)
+	assert.Empty(t, err.Error())
 }
 
 func TestRun(t *testing.T) {

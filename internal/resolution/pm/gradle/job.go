@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/debricked/cli/internal/resolution/job"
+	"github.com/debricked/cli/internal/resolution/pm/util"
 	"github.com/debricked/cli/internal/resolution/pm/writer"
 )
 
@@ -52,9 +53,9 @@ func (j *Job) Run() {
 
 	if err != nil {
 		if permissionErr != nil {
-			j.Errors().Critical(permissionErr)
+			j.Errors().Critical(util.NewPMJobError(permissionErr.Error()))
 		}
-		j.Errors().Critical(err)
+		j.Errors().Critical(util.NewPMJobError(err.Error()))
 
 		return
 	}
@@ -63,11 +64,11 @@ func (j *Job) Run() {
 	_, err = dependenciesCmd.Output()
 
 	if permissionErr != nil {
-		j.Errors().Warning(permissionErr)
+		j.Errors().Warning(util.NewPMJobError(permissionErr.Error()))
 	}
 
 	if err != nil {
-		j.Errors().Critical(j.GetExitError(err))
+		j.Errors().Critical(util.NewPMJobError(j.GetExitError(err).Error()))
 
 		return
 	}

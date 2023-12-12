@@ -50,13 +50,33 @@ func (jobsErrList JobsErrorList) addJob(list *bytes.Buffer, job job.IJob) {
 
 	for _, warning := range job.Errors().GetWarningErrors() {
 		err := jobsErrList.createErrorString(warning, true)
-		jobString = fmt.Sprintf("* %s:\n\t%s\n", color.YellowString("Warning"), err)
+		cmd := warning.Command()
+		doc := warning.Documentation()
+		status := warning.Status()
+		jobString = fmt.Sprintf(
+			"* %s: %s failed\n%s\ncommand: %s\n\t%s\n",
+			color.YellowString("Warning"),
+			status,
+			color.BlueString(doc),
+			color.GreenString(cmd),
+			err,
+		)
 		list.Write([]byte(jobString))
 	}
 
 	for _, critical := range job.Errors().GetCriticalErrors() {
 		err := jobsErrList.createErrorString(critical, false)
-		jobString = fmt.Sprintf("* %s:\n\t%s\n", color.RedString("Critical"), err)
+		cmd := critical.Command()
+		doc := critical.Documentation()
+		status := critical.Status()
+		jobString = fmt.Sprintf(
+			"* %s: %s failed\n%s%s\t%s\n",
+			color.RedString("Critical"),
+			status,
+			color.BlueString(doc),
+			color.GreenString(cmd),
+			err,
+		)
 
 		list.Write([]byte(jobString))
 	}

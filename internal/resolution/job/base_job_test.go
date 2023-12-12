@@ -39,10 +39,11 @@ func TestErrors(t *testing.T) {
 	j := BaseJob{}
 	j.file = testFile
 	j.errs = NewErrors(j.file)
-	j.errs.Critical(jobErr)
+	jobError := NewBaseJobError(jobErr.Error())
+	j.errs.Critical(jobError)
 
 	assert.Len(t, j.Errors().GetAll(), 1)
-	assert.Contains(t, j.Errors().GetAll(), jobErr)
+	assert.Contains(t, j.Errors().GetAll(), jobError)
 }
 
 func TestSendStatus(t *testing.T) {

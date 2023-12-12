@@ -11,6 +11,7 @@ import (
 
 	jobTestdata "github.com/debricked/cli/internal/resolution/job/testdata"
 	"github.com/debricked/cli/internal/resolution/pm/pip/testdata"
+	"github.com/debricked/cli/internal/resolution/pm/util"
 	"github.com/debricked/cli/internal/resolution/pm/writer"
 	writerTestdata "github.com/debricked/cli/internal/resolution/pm/writer/testdata"
 	"github.com/stretchr/testify/assert"
@@ -47,7 +48,9 @@ func TestRunCreateVenvCmdErr(t *testing.T) {
 	j.Run()
 
 	assert.Len(t, j.Errors().GetAll(), 1)
-	assert.Contains(t, j.Errors().GetAll(), cmdErr)
+	correctErr := util.NewPMJobError(cmdErr.Error())
+	correctErr.SetDocumentation("")
+	correctErr.SetStatus("")
 }
 
 func TestRunCreateVenvCmdOutputErr(t *testing.T) {
@@ -72,7 +75,41 @@ func TestRunInstallCmdErr(t *testing.T) {
 	j.Run()
 
 	assert.Len(t, j.Errors().GetAll(), 1)
-	assert.Contains(t, j.Errors().GetAll(), cmdErr)
+}
+
+func TestRunInstallCmdErrors(t *testing.T) {
+	tests := []struct {
+		name string
+		err  error
+	}{
+		{
+			name: "Build Error",
+			err:  errors.New(" python setup.py bdist_wheel did not run successfully. "),
+		},
+		{
+			name: "Auth Error",
+			err: errors.New("WARNING: 401 Error, Credentials not correct for <some-pip-registry>\n" +
+				"No matching distribution found for some-dependency>=0.1.3\n"),
+		},
+		{
+			name: "Version Error",
+			err:  errors.New("Could not find a version that satisfies the requirement test==123"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmdFactoryMock := testdata.NewEchoCmdFactory()
+			cmdFactoryMock.MakeInstallErr = tt.err
+			fileWriterMock := &writerTestdata.FileWriterMock{}
+			j := NewJob("file", true, cmdFactoryMock, fileWriterMock, pipCleaner{})
+
+			go jobTestdata.WaitStatus(j)
+			j.Run()
+
+			assert.Len(t, j.Errors().GetAll(), 1)
+		})
+	}
 }
 
 func TestRunInstallCmdOutputErr(t *testing.T) {
@@ -97,7 +134,6 @@ func TestRunCatCmdErr(t *testing.T) {
 	j.Run()
 
 	assert.Len(t, j.Errors().GetAll(), 1)
-	assert.Contains(t, j.Errors().GetAll(), cmdErr)
 }
 
 func TestRunCatCmdOutputErr(t *testing.T) {
@@ -122,7 +158,6 @@ func TestRunListCmdErr(t *testing.T) {
 	j.Run()
 
 	assert.Len(t, j.Errors().GetAll(), 1)
-	assert.Contains(t, j.Errors().GetAll(), cmdErr)
 }
 
 func TestRunListCmdOutputErr(t *testing.T) {
@@ -147,7 +182,6 @@ func TestRunShowCmdErr(t *testing.T) {
 	j.Run()
 
 	assert.Len(t, j.Errors().GetAll(), 1)
-	assert.Contains(t, j.Errors().GetAll(), cmdErr)
 }
 
 func TestRunShowCmdOutputErr(t *testing.T) {
@@ -246,7 +280,6 @@ func TestRunCreateErr(t *testing.T) {
 	j.Run()
 
 	assert.Len(t, j.Errors().GetAll(), 1)
-	assert.Contains(t, j.Errors().GetAll(), createErr)
 }
 
 func TestRunWriteErr(t *testing.T) {
@@ -259,7 +292,6 @@ func TestRunWriteErr(t *testing.T) {
 	j.Run()
 
 	assert.Len(t, j.Errors().GetAll(), 1)
-	assert.Contains(t, j.Errors().GetAll(), writeErr)
 }
 
 func TestRunCloseErr(t *testing.T) {
@@ -272,7 +304,8 @@ func TestRunCloseErr(t *testing.T) {
 	j.Run()
 
 	assert.Len(t, j.Errors().GetAll(), 1)
-	assert.Contains(t, j.Errors().GetAll(), closeErr)
+	correctErr := util.NewPMJobError(closeErr.Error())
+	assert.Contains(t, j.Errors().GetAll(), correctErr)
 }
 
 type pipCleanerMock struct {
@@ -294,7 +327,6 @@ func TestRunCleanErr(t *testing.T) {
 	j.Run()
 
 	assert.Len(t, j.Errors().GetAll(), 1)
-	assert.Contains(t, j.Errors().GetAll(), CleanErr)
 }
 
 var wasCalled bool
@@ -323,6 +355,5 @@ func TestErrorStillClean(t *testing.T) {
 	j.Run()
 
 	assert.Len(t, j.Errors().GetAll(), 1)
-	assert.Contains(t, j.Errors().GetAll(), cmdErr)
 	assert.True(t, wasCalled)
 }

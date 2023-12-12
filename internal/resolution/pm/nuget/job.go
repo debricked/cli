@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/debricked/cli/internal/resolution/job"
+	"github.com/debricked/cli/internal/resolution/pm/util"
 )
 
 const (
@@ -41,7 +42,8 @@ func (j *Job) Run() {
 		output, err := j.runInstallCmd()
 		defer j.cleanupTempCsproj()
 		if err != nil {
-			j.Errors().Critical(fmt.Errorf("%s\n%s", output, err))
+			formatted_error := fmt.Errorf("%s\n%s", output, err)
+			j.Errors().Critical(util.NewPMJobError(formatted_error.Error()))
 
 			return
 		}
@@ -73,8 +75,9 @@ func (j *Job) cleanupTempCsproj() {
 	if tempFile != "" {
 		// remove the packages.config.csproj file
 		err := osRemoveAll(tempFile)
+		formatted_error := fmt.Errorf("failed to remove temporary .csproj file: %s", err)
 		if err != nil {
-			j.Errors().Critical(fmt.Errorf("failed to remove temporary .csproj file: %s", err))
+			j.Errors().Critical(util.NewPMJobError(formatted_error.Error()))
 		}
 	}
 }

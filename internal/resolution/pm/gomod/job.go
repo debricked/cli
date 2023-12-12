@@ -37,7 +37,7 @@ func (j *Job) Run() {
 
 	graphCmdOutput, err := j.runGraphCmd(workingDirectory)
 	if err != nil {
-		j.Errors().Critical(err)
+		j.Errors().Critical(util.NewPMJobError(err.Error()))
 
 		return
 	}
@@ -45,7 +45,7 @@ func (j *Job) Run() {
 	j.SendStatus("creating dependency version list")
 	listCmdOutput, err := j.runListCmd(workingDirectory)
 	if err != nil {
-		j.Errors().Critical(err)
+		j.Errors().Critical(util.NewPMJobError(err.Error()))
 
 		return
 	}
@@ -53,7 +53,7 @@ func (j *Job) Run() {
 	j.SendStatus("creating lock file")
 	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.GetFile(), fileName))
 	if err != nil {
-		j.Errors().Critical(err)
+		j.Errors().Critical(util.NewPMJobError(err.Error()))
 
 		return
 	}
@@ -66,7 +66,7 @@ func (j *Job) Run() {
 
 	err = j.fileWriter.Write(lockFile, fileContents)
 	if err != nil {
-		j.Errors().Critical(err)
+		j.Errors().Critical(util.NewPMJobError(err.Error()))
 	}
 }
 
