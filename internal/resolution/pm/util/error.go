@@ -1,10 +1,11 @@
 package util
 
 type PMJobError struct {
-	err    string
-	cmd    string
-	doc    string
-	status string
+	err        string
+	cmd        string
+	doc        string
+	status     string
+	isCritical bool
 }
 
 var InstallPrivateDependencyMessage = "If this is a private dependency, please make sure that the debricked CLI has access to install it or pre-install it before running the debricked CLI."
@@ -30,6 +31,10 @@ func (e PMJobError) Status() string {
 	return e.status
 }
 
+func (e PMJobError) IsCritical() bool {
+	return e.isCritical
+}
+
 func (e *PMJobError) SetStatus(status string) {
 	e.status = status
 }
@@ -42,11 +47,16 @@ func (e *PMJobError) SetCommand(cmd string) {
 	e.cmd = cmd
 }
 
+func (e *PMJobError) SetIsCritical(isCritical bool) {
+	e.isCritical = isCritical
+}
+
 func NewPMJobError(err string) *PMJobError {
 	return &PMJobError{
-		err:    err,
-		cmd:    "",
-		doc:    UnknownError,
-		status: "",
+		err:        err,
+		cmd:        "",
+		doc:        UnknownError,
+		status:     "",
+		isCritical: true,
 	}
 }

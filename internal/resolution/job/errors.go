@@ -3,6 +3,7 @@ package job
 type IErrors interface {
 	Warning(err IError)
 	Critical(err IError)
+	Append(err IError)
 	GetWarningErrors() []IError
 	GetCriticalErrors() []IError
 	GetAll() []IError
@@ -29,6 +30,14 @@ func (errors *Errors) Warning(err IError) {
 
 func (errors *Errors) Critical(err IError) {
 	errors.criticalErrs = append(errors.criticalErrs, err)
+}
+
+func (errors *Errors) Append(err IError) {
+	if err.IsCritical() {
+		errors.Critical(err)
+	} else {
+		errors.Warning(err)
+	}
 }
 
 func (errors *Errors) GetWarningErrors() []IError {
