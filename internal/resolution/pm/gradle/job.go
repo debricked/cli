@@ -63,7 +63,9 @@ func (j *Job) Run() {
 		if permissionErr != nil {
 			j.handleError(util.NewPMJobError(permissionErr.Error()))
 		}
-		j.handleError(util.NewPMJobError(err.Error()))
+		cmdErr := util.NewPMJobError(err.Error())
+		cmdErr.SetCommand(strings.Trim(dependenciesCmd.String(), " "))
+		j.handleError(cmdErr)
 
 		return
 	}
@@ -79,7 +81,9 @@ func (j *Job) Run() {
 	}
 
 	if err != nil {
-		j.handleError(util.NewPMJobError(j.GetExitError(err).Error()))
+		cmdErr := util.NewPMJobError(j.GetExitError(err).Error())
+		cmdErr.SetCommand(dependenciesCmd.String())
+		j.handleError(cmdErr)
 
 		return
 	}
@@ -138,8 +142,7 @@ func (j *Job) addBugErrorDocumentation(regex *regexp.Regexp, cmdErr job.IError) 
 			[]string{
 				"Failed to build Gradle dependency tree.",
 				"The process has failed with following error: " + message + ".", //nolint:all
-				"Try run following command to get stacktrace:",
-				"`" + j.gradlew + " --init-script " + j.groovyInitScript + " debrickedFindSubProjectPaths --stacktrace`",
+				"Try running the command below with --stacktrace flag to get a stacktrace.",
 				"Replace --stacktrace with --info or --debug option to get more log output.",
 				"Or with --scan to get full insights.",
 			}, " "),
@@ -160,7 +163,7 @@ func (j *Job) addNotRootDirErrorDocumentation(regex *regexp.Regexp, cmdErr job.I
 			[]string{
 				"Failed to build Gradle dependency tree.",
 				"The process has failed with following error: " + message + ".", //nolint:all
-				"You probably trying to run the command not from the root directory.",
+				"You are probably not running the command from the root directory.",
 			}, " "),
 	)
 
