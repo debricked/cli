@@ -13,7 +13,7 @@ func TestNewError(t *testing.T) {
 	assert.Equal(t, string(""), jobError.cmd)
 	assert.Equal(
 		t,
-		string("No specific documentation for this problem yet, please report it to us! :)"),
+		UnknownError,
 		jobError.doc,
 	)
 	assert.Equal(t, string(""), jobError.status)

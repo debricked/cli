@@ -8,6 +8,7 @@ type PMJobError struct {
 }
 
 var InstalLPrivateDependencyMessage = "If this is a private dependency, please make sure that the debricked CLI has access to install it or pre-install it before running the debricked CLI."
+var UnknownError = "No specific documentation for this problem yet. If you would like this message to more informative for this error, please create an issue here: https://github.com/debricked/cli/issues"
 
 func (e PMJobError) Error() string {
 	return e.err
@@ -45,7 +46,7 @@ func NewPMJobError(err string) *PMJobError {
 	return &PMJobError{
 		err:    err,
 		cmd:    "",
-		doc:    "No specific documentation for this problem yet. If you would like this message to more informative for this error, please create an issue here: https://github.com/debricked/cli/issues",
+		doc:    UnknownError,
 		status: "",
 	}
 }
