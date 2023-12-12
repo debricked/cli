@@ -164,7 +164,7 @@ func (j *Job) handleInstallError(cmdErr job.IError) {
 				[]string{
 					"Failed to find a version that satisfies the requirement for python dependency ",
 					dependencyName,
-					". This could mean that the specified version or version does not exist.\n" + util.InstalLPrivateDependencyMessage,
+					". This could mean that the package or version does not exist.\n" + util.InstalLPrivateDependencyMessage,
 				}, ""),
 		)
 	}

@@ -61,7 +61,7 @@ func TestPMJobErrorSetDocumentation(t *testing.T) {
 	jobError := NewPMJobError("")
 	assert.Equal(
 		t,
-		string("No specific documentation for this problem yet, please create an issue here: https://github.com/debricked/cli/issues\n"),
+		string("No specific documentation for this problem yet. If you would like this message to more informative for this error, please create an issue here: https://github.com/debricked/cli/issues\n"),
 		jobError.Documentation(),
 	)
 	jobError.SetDocumentation("documentation")

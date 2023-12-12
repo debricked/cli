@@ -45,7 +45,7 @@ func NewPMJobError(err string) *PMJobError {
 	return &PMJobError{
 		err:    err,
 		cmd:    "",
-		doc:    "No specific documentation for this problem yet, please create an issue here: https://github.com/debricked/cli/issues",
+		doc:    "No specific documentation for this problem yet. If you would like this message to more informative for this error, please create an issue here: https://github.com/debricked/cli/issues",
 		status: "",
 	}
 }
