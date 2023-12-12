@@ -140,12 +140,14 @@ func (j *Job) addBugErrorDocumentation(regex *regexp.Regexp, cmdErr job.IError) 
 	cmdErr.SetDocumentation(
 		strings.Join(
 			[]string{
-				"Failed to build Gradle dependency tree.",
-				"The process has failed with following error: " + message + ".", //nolint:all
-				"Try running the command below with --stacktrace flag to get a stacktrace.",
-				"Replace --stacktrace with --info or --debug option to get more log output.",
+				"Failed to build Gradle dependency tree. ",
+				"The process has failed with following error: ",
+				message,
+				". ",
+				"Try running the command below with --stacktrace flag to get a stacktrace. ",
+				"Replace --stacktrace with --info or --debug option to get more log output. ",
 				"Or with --scan to get full insights.",
-			}, " "),
+			}, ""),
 	)
 
 	return cmdErr
@@ -180,13 +182,15 @@ func (j *Job) addUnrelatedBuildErrorDocumentation(regex *regexp.Regexp, cmdErr j
 	cmdErr.SetDocumentation(
 		strings.Join(
 			[]string{
-				"Failed to build Gradle dependency tree.",
-				"The process has failed with following error: " + message + ".", //nolint:all
-				"This error might be caused by inclusion of test folders into resolve process.",
-				"Try running resolve command with -e flag.",
-				"For example, `debricked resolve -e \"**/test*/**\"` will exclude all folders that start from 'test' from resolution process.",
+				"Failed to build Gradle dependency tree. ",
+				"The process has failed with following error: ",
+				message,
+				". ",
+				"This error might be caused by inclusion of test folders into resolve process. ",
+				"Try running resolve command with -e flag. ",
+				"For example, `debricked resolve -e \"**/test*/**\"` will exclude all folders that start from 'test' from resolution process. ",
 				"Or if this is an unrelated build, it must have its own settings file.",
-			}, " "),
+			}, ""),
 	)
 
 	return cmdErr
@@ -202,10 +206,12 @@ func (j *Job) addUnknownPropertyErrorDocumentation(regex *regexp.Regexp, cmdErr 
 	cmdErr.SetDocumentation(
 		strings.Join(
 			[]string{
-				"Failed to build Gradle dependency tree.",
-				"The process has failed with following error: " + message + ".", //nolint:all
+				"Failed to build Gradle dependency tree. ",
+				"The process has failed with following error: ",
+				message,
+				". ",
 				"Please check your settings.gradle file for errors.",
-			}, " "),
+			}, ""),
 	)
 
 	return cmdErr

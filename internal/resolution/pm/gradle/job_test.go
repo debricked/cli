@@ -28,7 +28,7 @@ func TestRunCmdErr(t *testing.T) {
 		{
 			cmd:   "MakeDependenciesCmd",
 			error: "cmd-error",
-			doc:   "No specific documentation for this problem yet, please report it to us! :)",
+			doc:   util.UnknownError,
 		},
 		{
 			cmd:   "MakeDependenciesCmd",
