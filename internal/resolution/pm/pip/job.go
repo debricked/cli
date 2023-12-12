@@ -109,6 +109,7 @@ func (j *Job) Run() {
 func (j *Job) handleInstallError(cmdErr job.IError) {
 	var buildError = regexp.MustCompile("setup.py[ install for]*(?P<dependency>[^ ]*) did not run successfully.")
 	var credentialError = regexp.MustCompile("WARNING: 401 Error, Credentials not correct for")
+	var couldNotFindVersionError = regexp.MustCompile("Could not find a version that satisfies the requirement")
 
 	switch {
 	case buildError.MatchString(cmdErr.Error()):
@@ -141,9 +142,29 @@ func (j *Job) handleInstallError(cmdErr job.IError) {
 				[]string{
 					"Failed to install python dependency ",
 					dependencyName,
-					" due to authorization. This could mean it is",
-					" a private dependency that the debricked CLI",
-					" does not have access to.",
+					" due to authorization.\n" + util.InstalLPrivateDependencyMessage,
+				}, ""),
+		)
+
+	case couldNotFindVersionError.MatchString(cmdErr.Error()):
+		// Define a regex to match the dependency name
+		dependencyNamePattern := regexp.MustCompile(`Could not find a version that satisfies the requirement ([\w=]+)`)
+		dependencyNameMatch := dependencyNamePattern.FindStringSubmatch(cmdErr.Error())
+
+		dependencyName := ""
+		if len(dependencyNameMatch) > 1 {
+			// Split the dependency name and version
+			dependency := strings.Split(dependencyNameMatch[1], "==")
+			dependencyName = "\"" + dependency[0] + "\""
+		}
+
+		// Set the documentation string
+		cmdErr.SetDocumentation(
+			strings.Join(
+				[]string{
+					"Failed to find a version that satisfies the requirement for python dependency ",
+					dependencyName,
+					". This could mean that the specified version or version does not exist.\n" + util.InstalLPrivateDependencyMessage,
 				}, ""),
 		)
 	}

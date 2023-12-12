@@ -77,33 +77,39 @@ func TestRunInstallCmdErr(t *testing.T) {
 	assert.Len(t, j.Errors().GetAll(), 1)
 }
 
-func TestRunInstallCmdBuildErr(t *testing.T) {
-	cmdErr := errors.New(" python setup.py bdist_wheel did not run successfully. ")
-	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	cmdFactoryMock.MakeInstallErr = cmdErr
-	fileWriterMock := &writerTestdata.FileWriterMock{}
-	j := NewJob("file", true, cmdFactoryMock, fileWriterMock, pipCleaner{})
+func TestRunInstallCmdErrors(t *testing.T) {
+	tests := []struct {
+		name string
+		err  error
+	}{
+		{
+			name: "Build Error",
+			err:  errors.New(" python setup.py bdist_wheel did not run successfully. "),
+		},
+		{
+			name: "Auth Error",
+			err: errors.New("WARNING: 401 Error, Credentials not correct for <some-pip-registry>\n" +
+				"No matching distribution found for some-dependency>=0.1.3\n"),
+		},
+		{
+			name: "Version Error",
+			err:  errors.New("Could not find a version that satisfies the requirement test==123"),
+		},
+	}
 
-	go jobTestdata.WaitStatus(j)
-	j.Run()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmdFactoryMock := testdata.NewEchoCmdFactory()
+			cmdFactoryMock.MakeInstallErr = tt.err
+			fileWriterMock := &writerTestdata.FileWriterMock{}
+			j := NewJob("file", true, cmdFactoryMock, fileWriterMock, pipCleaner{})
 
-	assert.Len(t, j.Errors().GetAll(), 1)
-}
+			go jobTestdata.WaitStatus(j)
+			j.Run()
 
-func TestRunInstallCmdAuthErr(t *testing.T) {
-	cmdErr := errors.New(
-		"WARNING: 401 Error, Credentials not correct for <some-pip-registry>\n" +
-			"No matching distribution found for some-dependency>=0.1.3\n",
-	)
-	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	cmdFactoryMock.MakeInstallErr = cmdErr
-	fileWriterMock := &writerTestdata.FileWriterMock{}
-	j := NewJob("file", true, cmdFactoryMock, fileWriterMock, pipCleaner{})
-
-	go jobTestdata.WaitStatus(j)
-	j.Run()
-
-	assert.Len(t, j.Errors().GetAll(), 1)
+			assert.Len(t, j.Errors().GetAll(), 1)
+		})
+	}
 }
 
 func TestRunInstallCmdOutputErr(t *testing.T) {
