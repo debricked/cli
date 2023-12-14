@@ -103,19 +103,19 @@ func (j *Job) addDocumentation(expr string, matches [][]string, cmdErr job.IErro
 
 	switch {
 	case expr == invalidJsonErrRegex:
-		documentation = getInvalidJsonErrorDocumentation(matches, cmdErr)
+		documentation = getInvalidJsonErrorDocumentation(matches)
 	case expr == invalidSchemaErrRegex:
-		documentation = getInvalidSchemaErrorDocumentation(matches, cmdErr)
+		documentation = getInvalidSchemaErrorDocumentation(matches)
 	case expr == invalidArgumentErrRegex:
-		documentation = getInvalidArgumentErrorDocumentation(matches, cmdErr)
+		documentation = getInvalidArgumentErrorDocumentation(matches)
 	case expr == versionNotFoundErrRegex:
-		documentation = getVersionNotFoundErrorDocumentation(matches, cmdErr)
+		documentation = getVersionNotFoundErrorDocumentation(matches)
 	case expr == dependencyNotFoundErrRegex:
-		documentation = getDependencyNotFoundErrorDocumentation(matches, cmdErr)
+		documentation = getDependencyNotFoundErrorDocumentation(matches)
 	case expr == registryUnavailableErrRegex:
-		documentation = getRegistryUnavailableErrorDocumentation(matches, cmdErr)
+		documentation = getRegistryUnavailableErrorDocumentation(matches)
 	case expr == permissionDeniedErrRegex:
-		documentation = getPermissionDeniedErrorDocumentation(matches, cmdErr)
+		documentation = getPermissionDeniedErrorDocumentation(matches)
 	}
 
 	cmdErr.SetDocumentation(documentation)
@@ -123,7 +123,7 @@ func (j *Job) addDocumentation(expr string, matches [][]string, cmdErr job.IErro
 	return cmdErr
 }
 
-func getInvalidJsonErrorDocumentation(matches [][]string, err job.IError) string {
+func getInvalidJsonErrorDocumentation(matches [][]string) string {
 	message := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		message = matches[0][1]
@@ -136,7 +136,7 @@ func getInvalidJsonErrorDocumentation(matches [][]string, err job.IError) string
 		}, " ")
 }
 
-func getInvalidSchemaErrorDocumentation(matches [][]string, err job.IError) string {
+func getInvalidSchemaErrorDocumentation(matches [][]string) string {
 	message := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		message = matches[0][1]
@@ -150,7 +150,7 @@ func getInvalidSchemaErrorDocumentation(matches [][]string, err job.IError) stri
 		}, " ")
 }
 
-func getInvalidArgumentErrorDocumentation(matches [][]string, err job.IError) string {
+func getInvalidArgumentErrorDocumentation(matches [][]string) string {
 	message := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		message = matches[0][1]
@@ -163,7 +163,7 @@ func getInvalidArgumentErrorDocumentation(matches [][]string, err job.IError) st
 		}, " ")
 }
 
-func getDependencyNotFoundErrorDocumentation(matches [][]string, err job.IError) string {
+func getDependencyNotFoundErrorDocumentation(matches [][]string) string {
 	dependency := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		dependency = matches[0][1]
@@ -178,7 +178,7 @@ func getDependencyNotFoundErrorDocumentation(matches [][]string, err job.IError)
 		}, " ")
 }
 
-func getVersionNotFoundErrorDocumentation(matches [][]string, err job.IError) string {
+func getVersionNotFoundErrorDocumentation(matches [][]string) string {
 	message := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		message = matches[0][1]
@@ -191,7 +191,7 @@ func getVersionNotFoundErrorDocumentation(matches [][]string, err job.IError) st
 		}, " ")
 }
 
-func getRegistryUnavailableErrorDocumentation(matches [][]string, err job.IError) string {
+func getRegistryUnavailableErrorDocumentation(matches [][]string) string {
 	registry := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		registry = matches[0][1]
@@ -206,7 +206,7 @@ func getRegistryUnavailableErrorDocumentation(matches [][]string, err job.IError
 		}, " ")
 }
 
-func getPermissionDeniedErrorDocumentation(matches [][]string, err job.IError) string {
+func getPermissionDeniedErrorDocumentation(matches [][]string) string {
 	dependency := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		dependency = matches[0][1]
