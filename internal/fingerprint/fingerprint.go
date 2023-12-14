@@ -53,7 +53,7 @@ func newHasher() *blake3.Hasher {
 }
 
 const (
-	OutputFileNameFingerprints = "debricked.fingerprints.wfp"
+	OutputFileNameFingerprints = "debricked.fingerprints.txt"
 )
 
 func isExcludedFile(filename string) bool {

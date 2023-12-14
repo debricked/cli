@@ -21,7 +21,7 @@ test/resolve/testdata/nuget/csproj/packages.lock.json
 test/resolve/testdata/nuget/packagesconfig/packages.config.nuget.debricked.lock
 test/resolve/testdata/nuget/obj
 test/resolve/testdata/nuget/**/obj
-debricked.fingerprints.wfp
+debricked.fingerprints.txt
 test/resolve/testdata/gomod/gomod.debricked.lock
 test/resolve/testdata/maven/maven.debricked.lock
 test/callgraph/**/maven.debricked.lock
