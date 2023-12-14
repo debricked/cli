@@ -3,7 +3,6 @@ package fingerprint
 import (
 	"archive/zip"
 	"bufio"
-	"crypto/md5" // #nosec
 	"errors"
 	"fmt"
 	"io"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/debricked/cli/internal/file"
 	"github.com/debricked/cli/internal/tui"
+	"lukechampine.com/blake3"
 )
 
 var EXCLUDED_EXT = []string{
@@ -41,6 +41,15 @@ var EXCLUDED_FILE_ENDINGS = []string{"-doc", "changelog", "config", "copying", "
 var EXCLUDED_FILES = []string{
 	"gradlew", "gradlew.bat", "mvnw", "mvnw.cmd", "gradle-wrapper.jar", "maven-wrapper.jar",
 	"thumbs.db", "babel.config.js", "license.txt", "license.md", "copying.lib", "makefile",
+}
+
+const HASH_SIZE = 16
+
+func newHasher() *blake3.Hasher {
+	return blake3.New(
+		HASH_SIZE,
+		nil,
+	)
 }
 
 const (
@@ -132,7 +141,7 @@ func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string) (
 			return err
 		}
 
-		fingerprintsZip, err := computeMD5ForFileAndZip(fileInfo, path, exclusions)
+		fingerprintsZip, err := computeHashForFileAndZip(fileInfo, path, exclusions)
 		if err != nil {
 			return err
 		}
@@ -162,7 +171,7 @@ func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string) (
 	return fingerprints, err
 }
 
-func computeMD5ForFileAndZip(fileInfo os.FileInfo, path string, exclusions []string) ([]FileFingerprint, error) {
+func computeHashForFileAndZip(fileInfo os.FileInfo, path string, exclusions []string) ([]FileFingerprint, error) {
 	if !shouldProcessFile(fileInfo, exclusions, path) {
 		return nil, nil
 	}
@@ -182,8 +191,7 @@ func computeMD5ForFileAndZip(fileInfo os.FileInfo, path string, exclusions []str
 		fingerprints = append(fingerprints, fingerprintsZip...)
 	}
 
-	// Compute the MD5 for the file
-	fingerprint, err := computeMD5ForFile(path)
+	fingerprint, err := computeHashForFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -229,15 +237,15 @@ func shouldProcessFile(fileInfo os.FileInfo, exclusions []string, path string) b
 	return !isSymlink
 }
 
-func computeMD5ForFile(filename string) (FileFingerprint, error) {
+func computeHashForFile(filename string) (FileFingerprint, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return FileFingerprint{}, err
 	}
 
-	hash := md5.New() // #nosec
+	hasher := newHasher()
 
-	if _, err := hash.Write(data); err != nil {
+	if _, err := hasher.Write(data); err != nil {
 		return FileFingerprint{}, err
 	}
 
@@ -250,7 +258,7 @@ func computeMD5ForFile(filename string) (FileFingerprint, error) {
 	return FileFingerprint{
 		path:          filename,
 		contentLength: contentLength,
-		fingerprint:   hash.Sum(nil),
+		fingerprint:   hasher.Sum(nil),
 	}, nil
 }
 
@@ -319,7 +327,9 @@ func inMemFingerprintingCompressedContent(filename string, exclusions []string) 
 		if err != nil {
 			return nil, err
 		}
-		hasher := md5.New()          // #nosec
+
+		hasher := newHasher()
+
 		_, err = io.Copy(hasher, rc) // #nosec
 		if err != nil {
 			rc.Close()
