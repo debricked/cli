@@ -43,7 +43,7 @@ var EXCLUDED_FILES = []string{
 	"thumbs.db", "babel.config.js", "license.txt", "license.md", "copying.lib", "makefile",
 }
 
-var HASH_SIZE = 16
+const HASH_SIZE = 16
 
 func newHasher() *blake3.Hasher {
 	return blake3.New(
