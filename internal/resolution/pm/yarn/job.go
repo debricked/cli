@@ -51,28 +51,29 @@ func (j *Job) Run() {
 		installCmd, err := j.cmdFactory.MakeInstallCmd(j.yarnCommand, j.GetFile())
 
 		if err != nil {
-			cmdError := util.NewPMJobError(err.Error())
-			cmdError.SetCommand(installCmd.String())
-			cmdError.SetStatus(status)
-			j.handleError(cmdError)
+			j.handleError(j.createError(err.Error(), installCmd.String(), status))
 
 			return
 		}
 
-		_, err = installCmd.Output()
-
-		if err != nil {
-			cmdError := util.NewPMJobError(err.Error())
-			cmdError.SetCommand(installCmd.String())
-			cmdError.SetStatus(status)
-			j.handleError(cmdError)
+		if output, err := installCmd.Output(); err != nil {
+			error := strings.Join([]string{string(output), j.GetExitError(err).Error()}, "")
+			j.handleError(j.createError(error, installCmd.String(), status))
 
 			return
 		}
 	}
 }
 
-func (j *Job) handleError(cmdErr job.IError) {
+func (j *Job) createError(error string, cmd string, status string) job.IError {
+	cmdError := util.NewPMJobError(error)
+	cmdError.SetCommand(cmd)
+	cmdError.SetStatus(status)
+
+	return cmdError
+}
+
+func (j *Job) handleError(cmdError job.IError) {
 	expressions := []string{
 		invalidJsonErrRegex,
 		invalidSchemaErrRegex,
@@ -85,21 +86,21 @@ func (j *Job) handleError(cmdErr job.IError) {
 
 	for _, expression := range expressions {
 		regex := regexp.MustCompile(expression)
-		matches := regex.FindAllStringSubmatch(cmdErr.Error(), -1)
+		matches := regex.FindAllStringSubmatch(cmdError.Error(), -1)
 
 		if len(matches) > 0 {
-			cmdErr = j.addDocumentation(expression, matches, cmdErr)
-			j.Errors().Append(cmdErr)
+			cmdError = j.addDocumentation(expression, matches, cmdError)
+			j.Errors().Append(cmdError)
 
 			return
 		}
 	}
 
-	j.Errors().Append(cmdErr)
+	j.Errors().Append(cmdError)
 }
 
-func (j *Job) addDocumentation(expr string, matches [][]string, cmdErr job.IError) job.IError {
-	documentation := cmdErr.Documentation()
+func (j *Job) addDocumentation(expr string, matches [][]string, cmdError job.IError) job.IError {
+	documentation := cmdError.Documentation()
 
 	switch {
 	case expr == invalidJsonErrRegex:
@@ -118,9 +119,9 @@ func (j *Job) addDocumentation(expr string, matches [][]string, cmdErr job.IErro
 		documentation = getPermissionDeniedErrorDocumentation(matches)
 	}
 
-	cmdErr.SetDocumentation(documentation)
+	cmdError.SetDocumentation(documentation)
 
-	return cmdErr
+	return cmdError
 }
 
 func getInvalidJsonErrorDocumentation(matches [][]string) string {
