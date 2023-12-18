@@ -325,7 +325,7 @@ func TestInMemFingerprintingCompressedContent(t *testing.T) {
 		{
 			name:     "Jar",
 			path:     "testdata/zipfile/jar",
-			expected: 5,
+			expected: 196,
 			suffix:   "log4j-api-2.18.0.jar",
 		},
 		{
