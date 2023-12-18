@@ -54,7 +54,11 @@ func TestRunInstallCmdErr(t *testing.T) {
 		},
 		{
 			error: "error Error: https://registry.yarnpkg.com/chalke: Not found\n    at Request.params.callback [as _callback] (/usr/local/lib/node_modules/yarn/lib/cli.js:66148:18)",
-			doc:   "Failed to find package \"https://registry.yarnpkg.com/chalke\" that satisfies the requirement from yarn dependencies. Please check that dependencies are correct in your package.json file.",
+			doc:   "Failed to find package \"https://registry.yarnpkg.com/chalke\" that satisfies the requirement from yarn dependencies. Please check that dependencies are correct in your package.json file. \nIf this is a private dependency, please make sure that the debricked CLI has access to install it or pre-install it before running the debricked CLI.",
+		},
+		{
+			error: `error An unexpected error occurred: "https://registry.yarnpkg.com/chalke: Not found".`,
+			doc:   "Failed to find package \"https://registry.yarnpkg.com/chalke\" that satisfies the requirement from yarn dependencies. Please check that dependencies are correct in your package.json file. \nIf this is a private dependency, please make sure that the debricked CLI has access to install it or pre-install it before running the debricked CLI.",
 		},
 		{
 			error: "error Couldn't find any versions for \"chalk\" that matches \"^300.0.0\"\ninfo Visit https://yarnpkg.com/en/docs/cli/install for documentation about this command.",

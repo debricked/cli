@@ -14,7 +14,7 @@ const (
 	invalidSchemaErrRegex       = "error package.json: (.*)"
 	invalidArgumentErrRegex     = "error TypeError \\[\\w+\\]: (.*)"
 	versionNotFoundErrRegex     = "error (Couldn\\'t find any versions for .*)"
-	dependencyNotFoundErrRegex  = "error Error: (.*): Not found"
+	dependencyNotFoundErrRegex  = `error.*? "?(https?://[^"\s:]+)?: Not found`
 	registryUnavailableErrRegex = "error Error: getaddrinfo ENOTFOUND ([\\w\\.]+)"
 	permissionDeniedErrRegex    = "Error: (.*): Request failed \"404 Not Found\""
 )
@@ -176,6 +176,7 @@ func getDependencyNotFoundErrorDocumentation(matches [][]string) string {
 			"\"" + dependency + "\"",
 			"that satisfies the requirement from yarn dependencies.",
 			"Please check that dependencies are correct in your package.json file.",
+			"\n" + util.InstallPrivateDependencyMessage,
 		}, " ")
 }
 
