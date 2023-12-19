@@ -237,7 +237,7 @@ func (j *Job) runCreateVenvCmd() ([]byte, job.IError) {
 
 	createVenvCmdOutput, err := createVenvCmd.Output()
 	if err != nil {
-		cmdErr := util.NewPMJobError(j.GetExitError(err).Error())
+		cmdErr := util.NewPMJobError(j.GetExitError(err, "").Error())
 		cmdErr.SetCommand(createVenvCmd.String())
 
 		return nil, cmdErr
@@ -268,7 +268,7 @@ func (j *Job) runInstallCmd() ([]byte, job.IError) {
 
 	installCmdOutput, err := installCmd.Output()
 	if err != nil {
-		cmdErr := util.NewPMJobError(j.GetExitError(err).Error())
+		cmdErr := util.NewPMJobError(j.GetExitError(err, "").Error())
 		cmdErr.SetCommand(installCmd.String())
 
 		return nil, cmdErr
@@ -288,7 +288,7 @@ func (j *Job) runCatCmd() ([]byte, job.IError) {
 
 	listCmdOutput, err := listCmd.Output()
 	if err != nil {
-		cmdErr := util.NewPMJobError(j.GetExitError(err).Error())
+		cmdErr := util.NewPMJobError(j.GetExitError(err, "").Error())
 		cmdErr.SetCommand(listCmd.String())
 
 		return nil, cmdErr
@@ -308,7 +308,7 @@ func (j *Job) runListCmd() ([]byte, job.IError) {
 
 	listCmdOutput, err := listCmd.Output()
 	if err != nil {
-		cmdErr := util.NewPMJobError(j.GetExitError(err).Error())
+		cmdErr := util.NewPMJobError(j.GetExitError(err, "").Error())
 		cmdErr.SetCommand(listCmd.String())
 
 		return nil, cmdErr
@@ -328,7 +328,7 @@ func (j *Job) runShowCmd(packages []string) ([]byte, job.IError) {
 
 	listCmdOutput, err := listCmd.Output()
 	if err != nil {
-		cmdErr := util.NewPMJobError(j.GetExitError(err).Error())
+		cmdErr := util.NewPMJobError(j.GetExitError(err, "").Error())
 		cmdErr.SetCommand(listCmd.String())
 
 		return nil, cmdErr

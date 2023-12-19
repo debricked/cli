@@ -76,13 +76,13 @@ func TestGetExitErrorWithExitError(t *testing.T) {
 		Stderr:       []byte("stderr"),
 	}
 	j := BaseJob{}
-	exitErr := j.GetExitError(err)
+	exitErr := j.GetExitError(err, "")
 	assert.ErrorContains(t, exitErr, string(err.Stderr))
 }
 
 func TestGetExitErrorWithNoneExitError(t *testing.T) {
 	err := &exec.Error{Err: errors.New("none-exit-err")}
 	j := BaseJob{}
-	exitErr := j.GetExitError(err)
+	exitErr := j.GetExitError(err, "")
 	assert.ErrorContains(t, exitErr, err.Error())
 }

@@ -63,7 +63,7 @@ func (j *Job) runInstallCmd() ([]byte, error) {
 
 	installCmdOutput, err := installCmd.Output()
 	if err != nil {
-		return installCmdOutput, j.GetExitError(err)
+		return installCmdOutput, j.GetExitError(err, "")
 	}
 
 	return installCmdOutput, nil

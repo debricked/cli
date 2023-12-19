@@ -57,7 +57,7 @@ func (j *Job) Run() {
 		}
 
 		if output, err := installCmd.Output(); err != nil {
-			error := strings.Join([]string{string(output), j.GetExitError(err).Error()}, "")
+			error := strings.Join([]string{string(output), j.GetExitError(err, "").Error()}, "")
 			j.handleError(j.createError(error, installCmd.String(), status))
 
 			return

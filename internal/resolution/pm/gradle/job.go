@@ -81,7 +81,7 @@ func (j *Job) Run() {
 	}
 
 	if err != nil {
-		cmdErr := util.NewPMJobError(j.GetExitError(err).Error())
+		cmdErr := util.NewPMJobError(j.GetExitError(err, "").Error())
 		cmdErr.SetCommand(dependenciesCmd.String())
 		j.handleError(cmdErr)
 

@@ -7,3 +7,4 @@ fi
 version=$(git symbolic-ref -q --short HEAD || git describe --tags --exact-match)
 ldFlags="-X main.version=${version}"
 go install -ldflags "${ldFlags}" ./cmd/debricked
+go generate -v -x ./cmd/debricked
