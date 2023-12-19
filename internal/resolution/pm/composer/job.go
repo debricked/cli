@@ -94,16 +94,16 @@ func (j *Job) handleError(cmdErr job.IError) {
 }
 
 func (j *Job) addDocumentation(expr string, regex *regexp.Regexp, cmdErr job.IError) job.IError {
-	switch {
-	case expr == composerMissingExtension:
+	switch expr {
+	case composerMissingExtension:
 		cmdErr = j.addComposerMissingRequirementsErrorDocumentation(regex, cmdErr)
-	case expr == invalidRequirement:
+	case invalidRequirement:
 		cmdErr = j.addInvalidRequirementErrorDocumentation(regex, cmdErr)
-	case expr == noNetworkRegex:
+	case noNetworkRegex:
 		cmdErr = j.addNetworkUnreachableErrorDocumentation(cmdErr)
-	case expr == invalidVersionErrRegex:
+	case invalidVersionErrRegex:
 		cmdErr = j.addInvalidVersionErrorDocumentation(regex, cmdErr)
-	case expr == dependenciesResolveErrRegex:
+	case dependenciesResolveErrRegex:
 		cmdErr = j.addDependenciesResolveErrorDocumentation(regex, cmdErr)
 	}
 
