@@ -18,7 +18,7 @@ import (
 
 var EXCLUDED_EXT = []string{
 	".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".9", ".ac", ".adoc", ".am",
-	".asciidoc", ".bmp", ".build", ".cfg", ".chm", ".class", ".cmake", ".cnf",
+	".asciidoc", ".bmp", ".build", ".cfg", ".chm", ".cmake", ".cnf",
 	".conf", ".config", ".contributors", ".copying", ".crt", ".csproj", ".css",
 	".csv", ".dat", ".data", ".doc", ".docx", ".dtd", ".dts", ".iws", ".c9", ".c9revisions",
 	".dtsi", ".dump", ".eot", ".eps", ".geojson", ".gdoc", ".gif",
