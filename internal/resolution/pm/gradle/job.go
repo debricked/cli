@@ -81,7 +81,7 @@ func (j *Job) Run() {
 	}
 
 	if err != nil {
-		cmdErr := util.NewPMJobError(j.GetExitError(err).Error())
+		cmdErr := util.NewPMJobError(j.GetExitError(err, "").Error())
 		cmdErr.SetCommand(dependenciesCmd.String())
 		j.handleError(cmdErr)
 
@@ -116,14 +116,14 @@ func (j *Job) handleError(cmdErr job.IError) {
 }
 
 func (j *Job) addDocumentation(expr string, regex *regexp.Regexp, cmdErr job.IError) job.IError {
-	switch {
-	case expr == bugErrRegex:
+	switch expr {
+	case bugErrRegex:
 		cmdErr = j.addBugErrorDocumentation(regex, cmdErr)
-	case expr == notRootDirErrRegex:
+	case notRootDirErrRegex:
 		cmdErr = j.addNotRootDirErrorDocumentation(regex, cmdErr)
-	case expr == unrelatedBuildErrRegex:
+	case unrelatedBuildErrRegex:
 		cmdErr = j.addUnrelatedBuildErrorDocumentation(regex, cmdErr)
-	case expr == unknownPropertyErrRegex:
+	case unknownPropertyErrRegex:
 		cmdErr = j.addUnknownPropertyErrorDocumentation(regex, cmdErr)
 	}
 

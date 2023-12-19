@@ -57,7 +57,7 @@ func (j *Job) Run() {
 		}
 
 		if output, err := installCmd.Output(); err != nil {
-			error := strings.Join([]string{string(output), j.GetExitError(err).Error()}, "")
+			error := strings.Join([]string{string(output), j.GetExitError(err, "").Error()}, "")
 			j.handleError(j.createError(error, installCmd.String(), status))
 
 			return
@@ -102,20 +102,20 @@ func (j *Job) handleError(cmdError job.IError) {
 func (j *Job) addDocumentation(expr string, matches [][]string, cmdError job.IError) job.IError {
 	documentation := cmdError.Documentation()
 
-	switch {
-	case expr == invalidJsonErrRegex:
+	switch expr {
+	case invalidJsonErrRegex:
 		documentation = getInvalidJsonErrorDocumentation(matches)
-	case expr == invalidSchemaErrRegex:
+	case invalidSchemaErrRegex:
 		documentation = getInvalidSchemaErrorDocumentation(matches)
-	case expr == invalidArgumentErrRegex:
+	case invalidArgumentErrRegex:
 		documentation = getInvalidArgumentErrorDocumentation(matches)
-	case expr == versionNotFoundErrRegex:
+	case versionNotFoundErrRegex:
 		documentation = getVersionNotFoundErrorDocumentation(matches)
-	case expr == dependencyNotFoundErrRegex:
+	case dependencyNotFoundErrRegex:
 		documentation = getDependencyNotFoundErrorDocumentation(matches)
-	case expr == registryUnavailableErrRegex:
+	case registryUnavailableErrRegex:
 		documentation = getRegistryUnavailableErrorDocumentation(matches)
-	case expr == permissionDeniedErrRegex:
+	case permissionDeniedErrRegex:
 		documentation = getPermissionDeniedErrorDocumentation(matches)
 	}
 

@@ -35,11 +35,17 @@ func (j *BaseJob) SendStatus(status string) {
 	j.status <- status
 }
 
-func (j *BaseJob) GetExitError(err error) error {
+func (j *BaseJob) GetExitError(err error, commandOutput string) error {
 	exitErr, ok := err.(*exec.ExitError)
 	if !ok {
 		return err
 	}
 
-	return errors.New(string(exitErr.Stderr))
+	// If Stderr is empty, use commandOutput as error string instead
+	errorMessage := string(exitErr.Stderr)
+	if errorMessage == "" {
+		errorMessage = commandOutput
+	}
+
+	return errors.New(errorMessage)
 }

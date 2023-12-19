@@ -78,7 +78,7 @@ func (j *Job) runGraphCmd(workingDirectory string) ([]byte, error) {
 
 	graphCmdOutput, err := graphCmd.Output()
 	if err != nil {
-		return nil, j.GetExitError(err)
+		return nil, j.GetExitError(err, "")
 	}
 
 	return graphCmdOutput, nil
@@ -92,7 +92,7 @@ func (j *Job) runListCmd(workingDirectory string) ([]byte, error) {
 
 	listCmdOutput, err := listCmd.Output()
 	if err != nil {
-		return nil, j.GetExitError(err)
+		return nil, j.GetExitError(err, "")
 	}
 
 	return listCmdOutput, nil

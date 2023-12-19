@@ -78,14 +78,14 @@ func (j *Job) handleError(cmdErr job.IError) {
 }
 
 func (j *Job) addDocumentation(expr string, regex *regexp.Regexp, cmdErr job.IError) job.IError {
-	switch {
-	case expr == nonParseablePomErrRegex:
+	switch expr {
+	case nonParseablePomErrRegex:
 		cmdErr = j.addNonParseablePomErrorDocumentation(regex, cmdErr)
-	case expr == networkUnreachableErrRegex:
+	case networkUnreachableErrRegex:
 		cmdErr = j.addNetworkUnreachableErrorDocumentation(cmdErr)
-	case expr == invalidVersionErrRegex:
+	case invalidVersionErrRegex:
 		cmdErr = j.addInvalidVersionErrorDocumentation(regex, cmdErr)
-	case expr == dependenciesResolveErrRegex:
+	case dependenciesResolveErrRegex:
 		cmdErr = j.addDependenciesResolveErrorDocumentation(regex, cmdErr)
 	}
 
