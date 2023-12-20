@@ -12,7 +12,7 @@ import (
 )
 
 type IResolver interface {
-	Resolve(paths []string, exclusions []string) (IResolution, error)
+	Resolve(paths []string, exclusions []string, verbose bool) (IResolution, error)
 }
 
 type Resolver struct {
@@ -36,7 +36,7 @@ func NewResolver(
 	}
 }
 
-func (r Resolver) Resolve(paths []string, exclusions []string) (IResolution, error) {
+func (r Resolver) Resolve(paths []string, exclusions []string, verbose bool) (IResolution, error) {
 	files, err := r.refinePaths(paths, exclusions)
 	if err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func (r Resolver) Resolve(paths []string, exclusions []string) (IResolution, err
 
 	if resolution.HasErr() {
 		jobErrList := tui.NewJobsErrorList(os.Stdout, resolution.Jobs())
-		err = jobErrList.Render()
+		err = jobErrList.Render(verbose)
 	}
 
 	return resolution, err

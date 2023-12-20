@@ -23,7 +23,7 @@ func NewJobsErrorList(mirror io.Writer, jobs []job.IJob) JobsErrorList {
 	return JobsErrorList{mirror: mirror, jobs: jobs}
 }
 
-func (jobsErrList JobsErrorList) Render() error {
+func (jobsErrList JobsErrorList) Render(verbose bool) error {
 	var listBuffer bytes.Buffer
 
 	formattedTitle := fmt.Sprintf("%s\n", color.BlueString(title))
@@ -32,7 +32,7 @@ func (jobsErrList JobsErrorList) Render() error {
 	listBuffer.Write([]byte(underlining))
 
 	for _, j := range jobsErrList.jobs {
-		jobsErrList.addJob(&listBuffer, j)
+		jobsErrList.addJob(&listBuffer, j, verbose)
 	}
 
 	_, err := jobsErrList.mirror.Write(listBuffer.Bytes())
@@ -40,7 +40,7 @@ func (jobsErrList JobsErrorList) Render() error {
 	return err
 }
 
-func (jobsErrList JobsErrorList) addJob(list *bytes.Buffer, job job.IJob) {
+func (jobsErrList JobsErrorList) addJob(list *bytes.Buffer, job job.IJob, verbose bool) {
 	var jobString string
 	if !job.Errors().HasError() {
 		return
@@ -49,7 +49,10 @@ func (jobsErrList JobsErrorList) addJob(list *bytes.Buffer, job job.IJob) {
 	list.Write([]byte(fmt.Sprintf("%s\n", color.YellowString(job.GetFile()))))
 
 	for _, warning := range job.Errors().GetWarningErrors() {
-		err := jobsErrList.createErrorString(warning, true)
+		err := ""
+		if verbose {
+			err = jobsErrList.createErrorString(warning, true)
+		}
 		cmd := warning.Command()
 		doc := warning.Documentation()
 		status := warning.Status()
@@ -65,7 +68,10 @@ func (jobsErrList JobsErrorList) addJob(list *bytes.Buffer, job job.IJob) {
 	}
 
 	for _, critical := range job.Errors().GetCriticalErrors() {
-		err := jobsErrList.createErrorString(critical, false)
+		err := ""
+		if verbose {
+			err = jobsErrList.createErrorString(critical, false)
+		}
 		cmd := critical.Command()
 		doc := critical.Documentation()
 		status := critical.Status()

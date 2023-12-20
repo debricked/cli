@@ -11,9 +11,11 @@ import (
 )
 
 var exclusions = file.Exclusions()
+var verbose bool
 
 const (
 	ExclusionFlag = "exclusion"
+	VerboseFlag   = "verbose"
 )
 
 func NewResolveCmd(resolver resolution.IResolver) *cobra.Command {
@@ -45,6 +47,7 @@ Exclude flags could alternatively be set using DEBRICKED_EXCLUSIONS="path1,path2
 
 Example: 
 $ debricked resolve . `+exampleFlags)
+	cmd.Flags().BoolVar(&verbose, VerboseFlag, true, "set to false to disable extensive resolution error messages")
 
 	viper.MustBindEnv(ExclusionFlag)
 
@@ -56,7 +59,7 @@ func RunE(resolver resolution.IResolver) func(_ *cobra.Command, args []string) e
 		if len(args) == 0 {
 			args = append(args, ".")
 		}
-		_, err := resolver.Resolve(args, viper.GetStringSlice(ExclusionFlag))
+		_, err := resolver.Resolve(args, viper.GetStringSlice(ExclusionFlag), viper.GetBool(VerboseFlag))
 
 		return err
 	}
