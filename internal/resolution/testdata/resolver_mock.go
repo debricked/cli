@@ -12,7 +12,7 @@ type ResolverMock struct {
 	files []string
 }
 
-func (r *ResolverMock) Resolve(_ []string, _ []string) (resolution.IResolution, error) {
+func (r *ResolverMock) Resolve(_ []string, _ []string, _ bool) (resolution.IResolution, error) {
 	for _, f := range r.files {
 		createdFile, err := os.Create(f)
 		if err != nil {

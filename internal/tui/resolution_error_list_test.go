@@ -20,7 +20,7 @@ func TestRenderNoJobs(t *testing.T) {
 	var listBuffer bytes.Buffer
 	errList := NewJobsErrorList(&listBuffer, []job.IJob{})
 
-	err := errList.Render()
+	err := errList.Render(true)
 
 	assert.NoError(t, err)
 	output := listBuffer.String()
@@ -35,7 +35,7 @@ func TestRenderWarningJob(t *testing.T) {
 	jobMock.Errors().Warning(warningErr)
 	errList := NewJobsErrorList(&listBuffer, []job.IJob{jobMock})
 
-	err := errList.Render()
+	err := errList.Render(true)
 
 	assert.NoError(t, err)
 	output := listBuffer.String()
@@ -57,7 +57,7 @@ func TestRenderCriticalJob(t *testing.T) {
 	jobMock.Errors().Critical(warningErr)
 	errList := NewJobsErrorList(&listBuffer, []job.IJob{jobMock})
 
-	err := errList.Render()
+	err := errList.Render(true)
 
 	assert.NoError(t, err)
 	output := listBuffer.String()
@@ -69,6 +69,27 @@ func TestRenderCriticalJob(t *testing.T) {
 		"critical-message\n",
 	}
 	assertOutput(t, output, contains)
+}
+
+func TestRenderCriticalJobNoVerbose(t *testing.T) {
+	var listBuffer bytes.Buffer
+
+	warningErr := job.NewBaseJobError("critical-message")
+	jobMock := testdata.NewJobMock("file")
+	jobMock.Errors().Critical(warningErr)
+	errList := NewJobsErrorList(&listBuffer, []job.IJob{jobMock})
+
+	err := errList.Render(false)
+
+	assert.NoError(t, err)
+	output := listBuffer.String()
+	contains := []string{
+		"file",
+		"\n* ",
+		"Critical",
+	}
+	assertOutput(t, output, contains)
+	assert.NotContains(t, output, "critical-message\n")
 }
 
 func TestRenderCriticalAndWarningJob(t *testing.T) {
@@ -84,7 +105,7 @@ func TestRenderCriticalAndWarningJob(t *testing.T) {
 
 	errList := NewJobsErrorList(&listBuffer, []job.IJob{jobMock})
 
-	err := errList.Render()
+	err := errList.Render(true)
 
 	assert.NoError(t, err)
 	output := listBuffer.String()
@@ -112,7 +133,7 @@ func TestRenderCriticalAndWorkingJob(t *testing.T) {
 
 	errList := NewJobsErrorList(&listBuffer, []job.IJob{jobWithErrMock, jobWorkingMock})
 
-	err := errList.Render()
+	err := errList.Render(true)
 
 	assert.NoError(t, err)
 	output := listBuffer.String()
