@@ -57,12 +57,10 @@ $ debricked resolve . `+exampleFlags)
 	npmPreferredDoc := strings.Join(
 		[]string{
 			"This flag allows you to select which package manager will be used as a resolver: Yarn (default) or NPM.",
-			"Examples:",
-			"$ debricked resolve --prefer-npm",
-			"$ debricked resolve -n",
+			"Example: debricked resolve --prefer-npm",
 		}, "\n")
 
-	cmd.Flags().BoolP(NpmPreferredFlag, "n", npmPreferred, npmPreferredDoc)
+	cmd.Flags().BoolP(NpmPreferredFlag, "", npmPreferred, npmPreferredDoc)
 
 	viper.MustBindEnv(ExclusionFlag)
 	viper.MustBindEnv(NpmPreferredFlag)
