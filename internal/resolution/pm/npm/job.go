@@ -1,4 +1,4 @@
-package yarn
+package npm
 
 import (
 	"regexp"
@@ -9,18 +9,18 @@ import (
 )
 
 const (
-	yarn                        = "yarn"
-	versionNotFoundErrRegex     = "error (Couldn\\'t find any versions for .*)"
-	dependencyNotFoundErrRegex  = `error.*? "?(https?://[^"\s:]+)?: Not found`
-	registryUnavailableErrRegex = "error Error: getaddrinfo ENOTFOUND ([\\w\\.]+)"
-	permissionDeniedErrRegex    = "Error: (.*): Request failed \"404 Not Found\""
+	npm                         = "npm"
+	versionNotFoundErrRegex     = `notarget [\w\s]+ ([^"\s:]+).`
+	dependencyNotFoundErrRegex  = `404\s+'([^"\s:]+)'`
+	registryUnavailableErrRegex = `EAI_AGAIN ([\w\.]+)`
+	permissionDeniedErrRegex    = `Error: EACCES, open '([^"\s:]+)'`
 )
 
 type Job struct {
 	job.BaseJob
-	install     bool
-	yarnCommand string
-	cmdFactory  ICmdFactory
+	install    bool
+	npmCommand string
+	cmdFactory ICmdFactory
 }
 
 func NewJob(
@@ -43,9 +43,9 @@ func (j *Job) Run() {
 	if j.install {
 		status := "installing dependencies"
 		j.SendStatus(status)
-		j.yarnCommand = yarn
+		j.npmCommand = npm
 
-		installCmd, err := j.cmdFactory.MakeInstallCmd(j.yarnCommand, j.GetFile())
+		installCmd, err := j.cmdFactory.MakeInstallCmd(j.npmCommand, j.GetFile())
 
 		if err != nil {
 			j.handleError(j.createError(err.Error(), installCmd.String(), status))
@@ -122,22 +122,25 @@ func getDependencyNotFoundErrorDocumentation(matches [][]string) string {
 		[]string{
 			"Failed to find package",
 			"\"" + dependency + "\"",
-			"that satisfies the requirement from yarn dependencies.",
+			"that satisfies the requirement from dependencies.",
 			"Please check that dependencies are correct in your package.json file.",
 			"\n" + util.InstallPrivateDependencyMessage,
 		}, " ")
 }
 
 func getVersionNotFoundErrorDocumentation(matches [][]string) string {
-	message := ""
+	dependency := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
-		message = matches[0][1]
+		dependency = matches[0][1]
 	}
 
 	return strings.Join(
 		[]string{
-			message + ".",
-			"Please check that dependencies are correct in your package.json file.",
+			"Failed to find package",
+			"\"" + dependency + "\"",
+			"that satisfies the requirement from package.json file.",
+			"In most cases you or one of your dependencies are requesting a package version that doesn't exist.",
+			"Please check that package versions are correct in your package.json file.",
 		}, " ")
 }
 
@@ -157,16 +160,15 @@ func getRegistryUnavailableErrorDocumentation(matches [][]string) string {
 }
 
 func getPermissionDeniedErrorDocumentation(matches [][]string) string {
-	dependency := ""
+	path := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
-		dependency = matches[0][1]
+		path = matches[0][1]
 	}
 
 	return strings.Join(
 		[]string{
-			"Failed to find a package that satisfies requirements for yarn dependencies:",
-			dependency + ".",
-			"This could mean that the package or version does not exist or is private.\n",
-			util.InstallPrivateDependencyMessage,
+			"Couldn't get access to",
+			"\"" + path + "\".",
+			"Please check permissions or try running this command again as root/Administrator.",
 		}, " ")
 }

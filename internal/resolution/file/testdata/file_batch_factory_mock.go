@@ -15,6 +15,9 @@ func NewBatchFactoryMock() BatchFactoryMock {
 	}
 }
 
+func (bf BatchFactoryMock) SetNpmPreferred(_ bool) {
+}
+
 func (bf BatchFactoryMock) Make(_ []string) []file.IBatch {
 
 	return []file.IBatch{}

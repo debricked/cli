@@ -13,6 +13,7 @@ import (
 
 type IResolver interface {
 	Resolve(paths []string, exclusions []string, verbose bool) (IResolution, error)
+	SetNpmPreferred(npmPreferred bool)
 }
 
 type Resolver struct {
@@ -20,6 +21,7 @@ type Resolver struct {
 	batchFactory    resolutionFile.IBatchFactory
 	strategyFactory strategy.IFactory
 	scheduler       IScheduler
+	npmPreferred    bool
 }
 
 func NewResolver(
@@ -33,7 +35,12 @@ func NewResolver(
 		batchFactory,
 		strategyFactory,
 		scheduler,
+		false,
 	}
+}
+
+func (r Resolver) SetNpmPreferred(npmPreferred bool) {
+	r.batchFactory.SetNpmPreferred(npmPreferred)
 }
 
 func (r Resolver) Resolve(paths []string, exclusions []string, verbose bool) (IResolution, error) {

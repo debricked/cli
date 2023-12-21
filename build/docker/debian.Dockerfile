@@ -51,6 +51,8 @@ RUN apt -y update && apt -y upgrade && apt -y install nodejs && \
     apt -y clean && rm -rf /var/lib/apt/lists/*
 RUN npm install --global npm@latest && npm install --global yarn
 
+RUN npm -v && yarn -v
+
 # https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install
 # https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian
 # Package manager installs are only supported on the x64 architecture. Other architectures, such as Arm, must install .NET by some other means such as with Snap, an installer script, or through a manual binary installation.

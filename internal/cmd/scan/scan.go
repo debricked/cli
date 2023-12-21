@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/debricked/cli/internal/file"
 	"github.com/debricked/cli/internal/scan"
@@ -24,6 +25,7 @@ var noResolve bool
 var noFingerprint bool
 var passOnDowntime bool
 var callgraph bool
+var npmPreferred bool
 var callgraphUploadTimeout int
 var callgraphGenerateTimeout int
 
@@ -42,6 +44,7 @@ const (
 	CallGraphFlag                = "callgraph"
 	CallGraphUploadTimeoutFlag   = "callgraph-upload-timeout"
 	CallGraphGenerateTimeoutFlag = "callgraph-generate-timeout"
+	NpmPreferredFlag             = "prefer-npm"
 )
 
 var scanCmdError error
@@ -101,6 +104,16 @@ For example, if there is a "go.mod" in the target path, its dependencies are goi
 	cmd.Flags().IntVar(&callgraphUploadTimeout, CallGraphUploadTimeoutFlag, 10*60, "Set a timeout (in seconds) on call graph upload.")
 	cmd.Flags().IntVar(&callgraphGenerateTimeout, CallGraphGenerateTimeoutFlag, 60*60, "Set a timeout (in seconds) on call graph generation.")
 
+	npmPreferredDoc := strings.Join(
+		[]string{
+			"This flag allows you to select which package manager will be used as a resolver: Yarn (default) or NPM.",
+			"Examples:",
+			"$ debricked resolve --prefer-npm",
+			"$ debricked resolve -n",
+		}, "\n")
+
+	cmd.Flags().BoolP(NpmPreferredFlag, "n", npmPreferred, npmPreferredDoc)
+
 	viper.MustBindEnv(RepositoryFlag)
 	viper.MustBindEnv(CommitFlag)
 	viper.MustBindEnv(BranchFlag)
@@ -108,6 +121,7 @@ For example, if there is a "go.mod" in the target path, its dependencies are goi
 	viper.MustBindEnv(RepositoryUrlFlag)
 	viper.MustBindEnv(IntegrationFlag)
 	viper.MustBindEnv(PassOnTimeOut)
+	viper.MustBindEnv(NpmPreferredFlag)
 
 	return cmd
 }
@@ -130,6 +144,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			CommitAuthor:             viper.GetString(CommitAuthorFlag),
 			RepositoryUrl:            viper.GetString(RepositoryUrlFlag),
 			IntegrationName:          viper.GetString(IntegrationFlag),
+			NpmPreferred:             viper.GetBool(NpmPreferredFlag),
 			PassOnTimeOut:            viper.GetBool(PassOnTimeOut),
 			CallGraph:                viper.GetBool(CallGraphFlag),
 			CallGraphUploadTimeout:   viper.GetInt(CallGraphUploadTimeoutFlag),

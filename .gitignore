@@ -15,7 +15,9 @@ internal/cmd/scan/testdata/npm/yarn.lock
 internal/file/embedded/supported_formats.json
 internal/resolution/pm/gradle/.gradle-init-script.debricked.groovy
 internal/callgraph/language/java11/testdata/mvnproj/target
+test/resolve/testdata/composer/composer.lock
 test/resolve/testdata/npm/yarn.lock
+test/resolve/testdata/npm/package-lock.json
 test/resolve/testdata/nuget/packages.lock.json
 test/resolve/testdata/nuget/csproj/packages.lock.json
 test/resolve/testdata/nuget/packagesconfig/packages.config.nuget.debricked.lock
@@ -25,9 +27,13 @@ debricked.fingerprints.txt
 test/resolve/testdata/gomod/gomod.debricked.lock
 test/resolve/testdata/maven/maven.debricked.lock
 test/callgraph/**/maven.debricked.lock
+internal/file/testdata/**/go.sum
 internal/file/testdata/**/gomod.debricked.lock
 internal/file/testdata/**/yarn-error.log
+internal/scan/composer/**/yarn.lock
 internal/scan/testdata/**/yarn.lock
+internal/scan/testdata/**/package-lock.json
+internal/scan/testdata/**/debricked.fingerprints.wfp
 test/resolve/testdata/gradle/*/**
 **.gradle-init-script.debricked.groovy
 test/resolve/testdata/gradle/gradle.debricked.lock

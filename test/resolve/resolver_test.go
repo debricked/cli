@@ -24,9 +24,15 @@ func TestResolves(t *testing.T) {
 			packageManager: "composer",
 		},
 		{
-			name:           "basic package.json",
+			name:           "basic package.json (Yarn)",
 			manifestFile:   "testdata/npm/package.json",
 			lockFileName:   "yarn.lock",
+			packageManager: "yarn",
+		},
+		{
+			name:           "basic package.json (NPM)",
+			manifestFile:   "testdata/npm/package.json",
+			lockFileName:   "package-lock.json",
 			packageManager: "npm",
 		},
 		{
