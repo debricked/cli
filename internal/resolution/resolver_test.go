@@ -40,7 +40,7 @@ func TestResolve(t *testing.T) {
 		NewScheduler(workers),
 	)
 
-	res, err := r.Resolve([]string{"../../go.mod"}, nil, true)
+	res, err := r.Resolve([]string{"../../go.mod"}, nil, true, 0)
 	assert.NotEmpty(t, res.Jobs())
 	assert.NoError(t, err)
 }
@@ -53,7 +53,7 @@ func TestResolveInvokeError(t *testing.T) {
 		NewScheduler(workers),
 	)
 
-	_, err := r.Resolve([]string{"../../go.mod"}, nil, true)
+	_, err := r.Resolve([]string{"../../go.mod"}, nil, true, 0)
 	assert.NotNil(t, err)
 }
 
@@ -65,7 +65,7 @@ func TestResolveStrategyError(t *testing.T) {
 		NewScheduler(workers),
 	)
 
-	res, err := r.Resolve([]string{"../../go.mod"}, nil, true)
+	res, err := r.Resolve([]string{"../../go.mod"}, nil, true, 0)
 	assert.Empty(t, res.Jobs())
 	assert.NoError(t, err)
 }
@@ -79,7 +79,7 @@ func TestResolveScheduleError(t *testing.T) {
 		SchedulerMock{Err: errAssertion},
 	)
 
-	res, err := r.Resolve([]string{"../../go.mod"}, nil, true)
+	res, err := r.Resolve([]string{"../../go.mod"}, nil, true, 0)
 	assert.NotEmpty(t, res.Jobs())
 	assert.ErrorIs(t, err, errAssertion)
 }
@@ -92,7 +92,7 @@ func TestResolveDirWithoutManifestFiles(t *testing.T) {
 		SchedulerMock{},
 	)
 
-	res, err := r.Resolve([]string{"."}, nil, true)
+	res, err := r.Resolve([]string{"."}, nil, true, 0)
 	assert.Empty(t, res.Jobs())
 	assert.NoError(t, err)
 }
@@ -105,7 +105,7 @@ func TestResolveInvalidDir(t *testing.T) {
 		SchedulerMock{},
 	)
 
-	_, err := r.Resolve([]string{"invalid-dir"}, nil, true)
+	_, err := r.Resolve([]string{"invalid-dir"}, nil, true, 0)
 	assert.Error(t, err)
 }
 
@@ -121,7 +121,7 @@ func TestResolveGetGroupsErr(t *testing.T) {
 		SchedulerMock{},
 	)
 
-	_, err := r.Resolve([]string{"."}, nil, true)
+	_, err := r.Resolve([]string{"."}, nil, true, 0)
 	assert.ErrorIs(t, testErr, err)
 }
 
@@ -147,9 +147,9 @@ func TestResolveDirWithManifestFiles(t *testing.T) {
 		SchedulerMock{},
 	)
 
-	for _, dir := range cases {
+	for i, dir := range cases {
 		t.Run(fmt.Sprintf("Case: %s", dir), func(t *testing.T) {
-			res, err := r.Resolve([]string{dir}, nil, true)
+			res, err := r.Resolve([]string{dir}, nil, true, i%3) // i%3 to test the different regenerate values
 			assert.Len(t, res.Jobs(), 1)
 			j := res.Jobs()[0]
 			assert.False(t, j.Errors().HasError())
@@ -172,7 +172,7 @@ func TestResolveDirWithExclusions(t *testing.T) {
 		SchedulerMock{},
 	)
 
-	res, err := r.Resolve([]string{"."}, []string{"dir"}, true)
+	res, err := r.Resolve([]string{"."}, []string{"dir"}, true, 0)
 
 	assert.Len(t, res.Jobs(), 1)
 	j := res.Jobs()[0]
@@ -199,7 +199,7 @@ func TestResolveHasResolutionErrs(t *testing.T) {
 		schedulerMock,
 	)
 
-	res, err := r.Resolve([]string{""}, []string{""}, true)
+	res, err := r.Resolve([]string{""}, []string{""}, true, 0)
 
 	assert.NoError(t, err)
 	assert.Len(t, res.Jobs(), 1)

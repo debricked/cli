@@ -3,6 +3,7 @@ package resolution
 import (
 	"os"
 	"path"
+	"regexp"
 
 	"github.com/debricked/cli/internal/file"
 	resolutionFile "github.com/debricked/cli/internal/resolution/file"
@@ -12,7 +13,7 @@ import (
 )
 
 type IResolver interface {
-	Resolve(paths []string, exclusions []string, verbose bool) (IResolution, error)
+	Resolve(paths []string, exclusions []string, verbose bool, regenerate int) (IResolution, error)
 	SetNpmPreferred(npmPreferred bool)
 }
 
@@ -43,12 +44,11 @@ func (r Resolver) SetNpmPreferred(npmPreferred bool) {
 	r.batchFactory.SetNpmPreferred(npmPreferred)
 }
 
-func (r Resolver) Resolve(paths []string, exclusions []string, verbose bool) (IResolution, error) {
-	files, err := r.refinePaths(paths, exclusions)
+func (r Resolver) Resolve(paths []string, exclusions []string, verbose bool, regenerate int) (IResolution, error) {
+	files, err := r.refinePaths(paths, exclusions, regenerate)
 	if err != nil {
 		return nil, err
 	}
-
 	pmBatches := r.batchFactory.Make(files)
 
 	var jobs []job.IJob
@@ -73,7 +73,7 @@ func (r Resolver) Resolve(paths []string, exclusions []string, verbose bool) (IR
 	return resolution, err
 }
 
-func (r Resolver) refinePaths(paths []string, exclusions []string) ([]string, error) {
+func (r Resolver) refinePaths(paths []string, exclusions []string, regenerate int) ([]string, error) {
 	var fileSet = map[string]bool{}
 	var dirs []string
 	for _, arg := range paths {
@@ -96,7 +96,7 @@ func (r Resolver) refinePaths(paths []string, exclusions []string) ([]string, er
 		}
 	}
 
-	err := r.searchDirs(fileSet, dirs, exclusions)
+	err := r.searchDirs(fileSet, dirs, exclusions, regenerate)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (r Resolver) refinePaths(paths []string, exclusions []string) ([]string, er
 	return files, nil
 }
 
-func (r Resolver) searchDirs(fileSet map[string]bool, dirs []string, exclusions []string) error {
+func (r Resolver) searchDirs(fileSet map[string]bool, dirs []string, exclusions []string, regenerate int) error {
 	for _, dir := range dirs {
 		fileGroups, err := r.finder.GetGroups(
 			dir,
@@ -121,11 +121,40 @@ func (r Resolver) searchDirs(fileSet map[string]bool, dirs []string, exclusions 
 			return err
 		}
 		for _, fileGroup := range fileGroups.ToSlice() {
-			if fileGroup.HasFile() && !fileGroup.HasLockFiles() {
+			shouldGenerate := shouldGenerateLock(fileGroup, regenerate)
+			if shouldGenerate {
 				fileSet[fileGroup.ManifestFile] = true
 			}
 		}
 	}
 
 	return nil
+}
+
+func shouldGenerateLock(fileGroup file.Group, regenerate int) bool {
+	if !fileGroup.HasFile() {
+		return false
+	}
+	switch regenerate {
+	case 0:
+		return !fileGroup.HasLockFiles()
+	case 1:
+		return onlyNonNativeLockFiles(fileGroup.LockFiles)
+	case 2:
+		return true
+	}
+
+	return false
+}
+
+func onlyNonNativeLockFiles(lockFiles []string) bool {
+	debrickedLockFilePattern := regexp.MustCompile(`.*\.debricked\.lock`)
+	for _, lockFile := range lockFiles {
+		if !debrickedLockFilePattern.MatchString(lockFile) {
+			return false
+		}
+	}
+
+	return true
+
 }
