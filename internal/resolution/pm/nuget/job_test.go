@@ -60,10 +60,13 @@ func TestRunInstallPackagesConfigRemoveAllErr(t *testing.T) {
 	cmdFactoryMock.GetTempoCsprojReturn = "tempo.csproj"
 	j := NewJob("packages.config", true, cmdFactoryMock)
 
+	expectedError := util.NewPMJobError(cmdErrGt.Error())
+	expectedError.SetStatus("cleanup")
+
 	go jobTestdata.WaitStatus(j)
 	j.Run()
 	errors := j.Errors().GetAll()
-	assert.Equal(t, errors[0], util.NewPMJobError(cmdErrGt.Error()))
+	assert.Equal(t, errors[0], expectedError)
 
 }
 
