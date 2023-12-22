@@ -54,6 +54,7 @@ type DebrickedOptions struct {
 	CommitAuthor             string
 	RepositoryUrl            string
 	IntegrationName          string
+	NpmPreferred             bool
 	PassOnTimeOut            bool
 	CallGraphUploadTimeout   int
 	CallGraphGenerateTimeout int
@@ -133,6 +134,7 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 
 func (dScanner *DebrickedScanner) scanResolve(options DebrickedOptions) error {
 	if options.Resolve {
+		dScanner.resolver.SetNpmPreferred(options.NpmPreferred)
 		_, resErr := dScanner.resolver.Resolve([]string{options.Path}, options.Exclusions, options.Verbose)
 		if resErr != nil {
 			return resErr

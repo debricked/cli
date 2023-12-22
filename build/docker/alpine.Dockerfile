@@ -46,12 +46,13 @@ RUN apk --no-cache --update add \
   py3-pip \
   go~=1.21 \
   nodejs \
+  npm \
   yarn \
   dotnet7-sdk \
   g++ \
   curl
 
-RUN dotnet --version
+RUN dotnet --version && npm -v && yarn -v
 
 RUN apk add --no-cache \
     git \

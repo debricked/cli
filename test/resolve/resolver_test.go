@@ -6,7 +6,9 @@ import (
 	"testing"
 
 	"github.com/debricked/cli/internal/cmd/resolve"
+	"github.com/debricked/cli/internal/resolution/pm/npm"
 	"github.com/debricked/cli/internal/wire"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,9 +26,15 @@ func TestResolves(t *testing.T) {
 			packageManager: "composer",
 		},
 		{
-			name:           "basic package.json",
+			name:           "basic package.json (Yarn)",
 			manifestFile:   "testdata/npm/package.json",
 			lockFileName:   "yarn.lock",
+			packageManager: "yarn",
+		},
+		{
+			name:           "basic package.json (NPM)",
+			manifestFile:   "testdata/npm/package.json",
+			lockFileName:   "package-lock.json",
 			packageManager: "npm",
 		},
 		{
@@ -70,6 +78,10 @@ func TestResolves(t *testing.T) {
 	for _, cT := range cases {
 		c := cT
 		t.Run(c.name, func(t *testing.T) {
+			if c.packageManager == npm.Name {
+				viper.Set(resolve.NpmPreferredFlag, true)
+			}
+
 			resolveCmd := resolve.NewResolveCmd(wire.GetCliContainer().Resolver())
 			lockFileDir := filepath.Dir(c.manifestFile)
 			lockFile := filepath.Join(lockFileDir, c.lockFileName)

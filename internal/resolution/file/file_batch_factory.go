@@ -5,26 +5,38 @@ import (
 	"regexp"
 
 	"github.com/debricked/cli/internal/resolution/pm"
+	"github.com/debricked/cli/internal/resolution/pm/npm"
+	"github.com/debricked/cli/internal/resolution/pm/yarn"
 )
 
 type IBatchFactory interface {
 	Make(files []string) []IBatch
+	SetNpmPreferred(npmPreferred bool)
 }
 
 type BatchFactory struct {
-	pms []pm.IPm
+	pms          []pm.IPm
+	npmPreferred bool
 }
 
-func NewBatchFactory() BatchFactory {
-	return BatchFactory{
+func NewBatchFactory() *BatchFactory {
+	return &BatchFactory{
 		pms: pm.Pms(),
 	}
 }
 
-func (bf BatchFactory) Make(files []string) []IBatch {
+func (bf *BatchFactory) SetNpmPreferred(npmPreferred bool) {
+	bf.npmPreferred = npmPreferred
+}
+
+func (bf *BatchFactory) Make(files []string) []IBatch {
 	batchMap := make(map[string]IBatch)
 	for _, file := range files {
 		for _, p := range bf.pms {
+			if bf.skipPackageManager(p) {
+				continue
+			}
+
 			for _, manifest := range p.Manifests() {
 				compiledRegex, _ := regexp.Compile(manifest)
 				if compiledRegex.MatchString(path.Base(file)) {
@@ -46,4 +58,17 @@ func (bf BatchFactory) Make(files []string) []IBatch {
 	}
 
 	return batches
+}
+
+func (bf *BatchFactory) skipPackageManager(p pm.IPm) bool {
+	name := p.Name()
+
+	switch true {
+	case name == npm.Name && !bf.npmPreferred:
+		return true
+	case name == yarn.Name && bf.npmPreferred:
+		return true
+	}
+
+	return false
 }
