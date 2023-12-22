@@ -1,6 +1,7 @@
 package resolution
 
 import (
+	"errors"
 	"os"
 	"path"
 	"regexp"
@@ -12,9 +13,12 @@ import (
 	"github.com/debricked/cli/internal/tui"
 )
 
+var (
+	BadOptsErr = errors.New("failed to type case IOptions")
+)
+
 type IResolver interface {
-	Resolve(paths []string, exclusions []string, verbose bool, regenerate int) (IResolution, error)
-	SetNpmPreferred(npmPreferred bool)
+	Resolve(paths []string, options IOptions) (IResolution, error)
 }
 
 type Resolver struct {
@@ -23,6 +27,16 @@ type Resolver struct {
 	strategyFactory strategy.IFactory
 	scheduler       IScheduler
 	npmPreferred    bool
+}
+
+type IOptions interface{}
+
+type DebrickedOptions struct {
+	Path         string
+	Exclusions   []string
+	Verbose      bool
+	Regenerate   int
+	NpmPreferred bool
 }
 
 func NewResolver(
@@ -40,15 +54,20 @@ func NewResolver(
 	}
 }
 
-func (r Resolver) SetNpmPreferred(npmPreferred bool) {
+func (r Resolver) setNpmPreferred(npmPreferred bool) {
 	r.batchFactory.SetNpmPreferred(npmPreferred)
 }
 
-func (r Resolver) Resolve(paths []string, exclusions []string, verbose bool, regenerate int) (IResolution, error) {
-	files, err := r.refinePaths(paths, exclusions, regenerate)
+func (r Resolver) Resolve(paths []string, options IOptions) (IResolution, error) {
+	dOptions, ok := options.(DebrickedOptions)
+	if !ok {
+		return nil, BadOptsErr
+	}
+	files, err := r.refinePaths(paths, dOptions.Exclusions, dOptions.Regenerate)
 	if err != nil {
 		return nil, err
 	}
+	r.setNpmPreferred(dOptions.NpmPreferred)
 	pmBatches := r.batchFactory.Make(files)
 
 	var jobs []job.IJob
@@ -67,7 +86,7 @@ func (r Resolver) Resolve(paths []string, exclusions []string, verbose bool, reg
 
 	if resolution.HasErr() {
 		jobErrList := tui.NewJobsErrorList(os.Stdout, resolution.Jobs())
-		err = jobErrList.Render(verbose)
+		err = jobErrList.Render(dOptions.Verbose)
 	}
 
 	return resolution, err

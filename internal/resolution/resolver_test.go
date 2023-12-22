@@ -39,8 +39,12 @@ func TestResolve(t *testing.T) {
 		strategyTestdata.NewStrategyFactoryMock(),
 		NewScheduler(workers),
 	)
-
-	res, err := r.Resolve([]string{"../../go.mod"}, nil, true, 0)
+	options := DebrickedOptions{
+		Exclusions: nil,
+		Verbose:    true,
+		Regenerate: 0,
+	}
+	res, err := r.Resolve([]string{"../../go.mod"}, options)
 	assert.NotEmpty(t, res.Jobs())
 	assert.NoError(t, err)
 }
@@ -52,8 +56,12 @@ func TestResolveInvokeError(t *testing.T) {
 		strategyTestdata.NewStrategyFactoryErrorMock(),
 		NewScheduler(workers),
 	)
-
-	_, err := r.Resolve([]string{"../../go.mod"}, nil, true, 0)
+	options := DebrickedOptions{
+		Exclusions: nil,
+		Verbose:    true,
+		Regenerate: 0,
+	}
+	_, err := r.Resolve([]string{"../../go.mod"}, options)
 	assert.NotNil(t, err)
 }
 
@@ -65,7 +73,12 @@ func TestResolveStrategyError(t *testing.T) {
 		NewScheduler(workers),
 	)
 
-	res, err := r.Resolve([]string{"../../go.mod"}, nil, true, 0)
+	options := DebrickedOptions{
+		Exclusions: nil,
+		Verbose:    true,
+		Regenerate: 0,
+	}
+	res, err := r.Resolve([]string{"../../go.mod"}, options)
 	assert.Empty(t, res.Jobs())
 	assert.NoError(t, err)
 }
@@ -79,7 +92,12 @@ func TestResolveScheduleError(t *testing.T) {
 		SchedulerMock{Err: errAssertion},
 	)
 
-	res, err := r.Resolve([]string{"../../go.mod"}, nil, true, 0)
+	options := DebrickedOptions{
+		Exclusions: nil,
+		Verbose:    true,
+		Regenerate: 0,
+	}
+	res, err := r.Resolve([]string{"../../go.mod"}, options)
 	assert.NotEmpty(t, res.Jobs())
 	assert.ErrorIs(t, err, errAssertion)
 }
@@ -92,7 +110,12 @@ func TestResolveDirWithoutManifestFiles(t *testing.T) {
 		SchedulerMock{},
 	)
 
-	res, err := r.Resolve([]string{"."}, nil, true, 0)
+	options := DebrickedOptions{
+		Exclusions: nil,
+		Verbose:    true,
+		Regenerate: 0,
+	}
+	res, err := r.Resolve([]string{"."}, options)
 	assert.Empty(t, res.Jobs())
 	assert.NoError(t, err)
 }
@@ -105,7 +128,12 @@ func TestResolveInvalidDir(t *testing.T) {
 		SchedulerMock{},
 	)
 
-	_, err := r.Resolve([]string{"invalid-dir"}, nil, true, 0)
+	options := DebrickedOptions{
+		Exclusions: nil,
+		Verbose:    true,
+		Regenerate: 0,
+	}
+	_, err := r.Resolve([]string{"invalid-dir"}, options)
 	assert.Error(t, err)
 }
 
@@ -121,7 +149,12 @@ func TestResolveGetGroupsErr(t *testing.T) {
 		SchedulerMock{},
 	)
 
-	_, err := r.Resolve([]string{"."}, nil, true, 0)
+	options := DebrickedOptions{
+		Exclusions: nil,
+		Verbose:    true,
+		Regenerate: 0,
+	}
+	_, err := r.Resolve([]string{"."}, options)
 	assert.ErrorIs(t, testErr, err)
 }
 
@@ -148,8 +181,13 @@ func TestResolveDirWithManifestFiles(t *testing.T) {
 	)
 
 	for i, dir := range cases {
+		options := DebrickedOptions{
+			Exclusions: nil,
+			Verbose:    true,
+			Regenerate: i % 3, // To test the different regenerate values
+		}
 		t.Run(fmt.Sprintf("Case: %s", dir), func(t *testing.T) {
-			res, err := r.Resolve([]string{dir}, nil, true, i%3) // i%3 to test the different regenerate values
+			res, err := r.Resolve([]string{dir}, options)
 			assert.Len(t, res.Jobs(), 1)
 			j := res.Jobs()[0]
 			assert.False(t, j.Errors().HasError())
@@ -172,7 +210,12 @@ func TestResolveDirWithExclusions(t *testing.T) {
 		SchedulerMock{},
 	)
 
-	res, err := r.Resolve([]string{"."}, []string{"dir"}, true, 0)
+	options := DebrickedOptions{
+		Exclusions: []string{"dir"},
+		Verbose:    true,
+		Regenerate: 0,
+	}
+	res, err := r.Resolve([]string{"."}, options)
 
 	assert.Len(t, res.Jobs(), 1)
 	j := res.Jobs()[0]
@@ -199,7 +242,12 @@ func TestResolveHasResolutionErrs(t *testing.T) {
 		schedulerMock,
 	)
 
-	res, err := r.Resolve([]string{""}, []string{""}, true, 0)
+	options := DebrickedOptions{
+		Exclusions: []string{""},
+		Verbose:    true,
+		Regenerate: 0,
+	}
+	res, err := r.Resolve([]string{""}, options)
 
 	assert.NoError(t, err)
 	assert.Len(t, res.Jobs(), 1)

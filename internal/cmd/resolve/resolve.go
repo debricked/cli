@@ -55,13 +55,17 @@ Exclude flags could alternatively be set using DEBRICKED_EXCLUSIONS="path1,path2
 Example: 
 $ debricked resolve . `+exampleFlags)
 	cmd.Flags().BoolVar(&verbose, VerboseFlag, true, "set to false to disable extensive resolution error messages")
-	cmd.Flags().IntVar(&regenerate, RegenerateFlag, 0, `Toggles regeneration of lock files between 3 modes:
-0: Default = Only generate new lock files for manifest files without matching lock files.
-1: Regenerate Non-Native: Only generate new lock files for manifest files without matching lock files or matching debricked lock file.
-2: Regenerate: Regenerate all existing lock files and generate new lock files for all manifest files.
-
-Example:
-$ debricked resolve . --regenerate=1`)
+	regenerateDoc := strings.Join(
+		[]string{
+			"Toggles regeneration of already existing lock files between 3 modes:\n",
+			"Force Regeneration Level | Meaning",
+			"------------------------ | -------",
+			"0 (default)              | No regeneration",
+			"1                        | Regenerates existing non package manager native Debricked lock files",
+			"2                        | Regenerates all existing lock files",
+			"\nExample:\n$ debricked resolve . --regenerate=1",
+		}, "\n")
+	cmd.Flags().IntVar(&regenerate, RegenerateFlag, 0, regenerateDoc)
 
 	npmPreferredDoc := strings.Join(
 		[]string{
@@ -82,8 +86,13 @@ func RunE(resolver resolution.IResolver) func(_ *cobra.Command, args []string) e
 		if len(args) == 0 {
 			args = append(args, ".")
 		}
-		resolver.SetNpmPreferred(viper.GetBool(NpmPreferredFlag))
-		_, err := resolver.Resolve(args, viper.GetStringSlice(ExclusionFlag), viper.GetBool(VerboseFlag), viper.GetInt(RegenerateFlag))
+		options := resolution.DebrickedOptions{
+			Exclusions:   viper.GetStringSlice(ExclusionFlag),
+			Verbose:      viper.GetBool(VerboseFlag),
+			Regenerate:   viper.GetInt(RegenerateFlag),
+			NpmPreferred: viper.GetBool(NpmPreferredFlag),
+		}
+		_, err := resolver.Resolve(args, options)
 
 		return err
 	}

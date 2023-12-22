@@ -134,9 +134,15 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 }
 
 func (dScanner *DebrickedScanner) scanResolve(options DebrickedOptions) error {
+	resolveOptions := resolution.DebrickedOptions{
+		Path:         options.Path,
+		Verbose:      options.Verbose,
+		Regenerate:   options.Regenerate,
+		Exclusions:   options.Exclusions,
+		NpmPreferred: options.NpmPreferred,
+	}
 	if options.Resolve {
-		dScanner.resolver.SetNpmPreferred(options.NpmPreferred)
-		_, resErr := dScanner.resolver.Resolve([]string{options.Path}, options.Exclusions, options.Verbose, options.Regenerate)
+		_, resErr := dScanner.resolver.Resolve([]string{options.Path}, resolveOptions)
 		if resErr != nil {
 			return resErr
 		}

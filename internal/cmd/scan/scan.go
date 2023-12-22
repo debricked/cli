@@ -97,13 +97,17 @@ Exclude flags could alternatively be set using DEBRICKED_EXCLUSIONS="path1,path2
 Examples: 
 $ debricked scan . `+exampleFlags)
 	cmd.Flags().BoolVar(&verbose, VerboseFlag, true, "set to false to disable extensive resolution error messages")
-	cmd.Flags().IntVar(&regenerate, RegenerateFlag, 0, `Toggles regeneration of lock files between 3 modes:
-0: Default = Only generate new lock files for manifest files without matching lock files.
-1: Regenerate Non-Native: Only generate new lock files for manifest files without matching lock files or matching debricked lock file.
-2: Regenerate: Regenerate all existing lock files and generate new lock files for all manifest files.
-
-Example:
-$ debricked resolve . --regenerate=1`)
+	regenerateDoc := strings.Join(
+		[]string{
+			"Toggles regeneration of already existing lock files between 3 modes:\n",
+			"Force Regeneration Level | Meaning",
+			"------------------------ | -------",
+			"0 (default)              | No regeneration",
+			"1                        | Regenerates existing non package manager native Debricked lock files",
+			"2                        | Regenerates all existing lock files",
+			"\nExample:\n$ debricked resolve . --regenerate=1",
+		}, "\n")
+	cmd.Flags().IntVar(&regenerate, RegenerateFlag, 0, regenerateDoc)
 	cmd.Flags().BoolVarP(&passOnDowntime, PassOnTimeOut, "p", false, "pass scan if there is a service access timeout")
 	cmd.Flags().BoolVar(&noResolve, NoResolveFlag, false, `disables resolution of manifest files that lack lock files. Resolving manifest files enables more accurate dependency scanning since the whole dependency tree will be analysed.
 For example, if there is a "go.mod" in the target path, its dependencies are going to get resolved onto a lock file, and latter scanned.`)
