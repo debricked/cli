@@ -96,7 +96,6 @@ Exclude flags could alternatively be set using DEBRICKED_EXCLUSIONS="path1,path2
 
 Examples: 
 $ debricked scan . `+exampleFlags)
-	cmd.Flags().BoolVar(&verbose, VerboseFlag, true, "set to false to disable extensive resolution error messages")
 	regenerateDoc := strings.Join(
 		[]string{
 			"Toggles regeneration of already existing lock files between 3 modes:\n",
@@ -108,6 +107,12 @@ $ debricked scan . `+exampleFlags)
 			"\nExample:\n$ debricked resolve . --regenerate=1",
 		}, "\n")
 	cmd.Flags().IntVar(&regenerate, RegenerateFlag, 0, regenerateDoc)
+	verboseDoc := strings.Join(
+		[]string{
+			"This flag allows you to reduce error output for resolution.",
+			"\nExample:\n$ debricked resolve --verbose=false",
+		}, "\n")
+	cmd.Flags().BoolVar(&verbose, VerboseFlag, true, verboseDoc)
 	cmd.Flags().BoolVarP(&passOnDowntime, PassOnTimeOut, "p", false, "pass scan if there is a service access timeout")
 	cmd.Flags().BoolVar(&noResolve, NoResolveFlag, false, `disables resolution of manifest files that lack lock files. Resolving manifest files enables more accurate dependency scanning since the whole dependency tree will be analysed.
 For example, if there is a "go.mod" in the target path, its dependencies are going to get resolved onto a lock file, and latter scanned.`)
@@ -116,7 +121,6 @@ For example, if there is a "go.mod" in the target path, its dependencies are goi
 	cmd.Flags().BoolVar(&callgraph, CallGraphFlag, false, `Enables call graph generation during scan.`)
 	cmd.Flags().IntVar(&callgraphUploadTimeout, CallGraphUploadTimeoutFlag, 10*60, "Set a timeout (in seconds) on call graph upload.")
 	cmd.Flags().IntVar(&callgraphGenerateTimeout, CallGraphGenerateTimeoutFlag, 60*60, "Set a timeout (in seconds) on call graph generation.")
-
 	npmPreferredDoc := strings.Join(
 		[]string{
 			"This flag allows you to select which package manager will be used as a resolver: Yarn (default) or NPM.",

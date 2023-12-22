@@ -131,7 +131,7 @@ func (j *Job) handleInstallError(cmdErr job.IError) {
 				}, ""),
 		)
 	case credentialError.MatchString(cmdErr.Error()):
-		authErrDependencyNamePattern := regexp.MustCompile("No matching distribution found for ([^ ]*)\n")
+		authErrDependencyNamePattern := regexp.MustCompile(`No matching distribution found for ([^\s]+)`)
 		dependencyNameMatch := authErrDependencyNamePattern.FindStringSubmatch(cmdErr.Error())
 		dependencyName := ""
 		if len(dependencyNameMatch) > 1 {

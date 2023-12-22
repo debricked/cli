@@ -54,7 +54,6 @@ Exclude flags could alternatively be set using DEBRICKED_EXCLUSIONS="path1,path2
 
 Example: 
 $ debricked resolve . `+exampleFlags)
-	cmd.Flags().BoolVar(&verbose, VerboseFlag, true, "set to false to disable extensive resolution error messages")
 	regenerateDoc := strings.Join(
 		[]string{
 			"Toggles regeneration of already existing lock files between 3 modes:\n",
@@ -66,7 +65,12 @@ $ debricked resolve . `+exampleFlags)
 			"\nExample:\n$ debricked resolve . --regenerate=1",
 		}, "\n")
 	cmd.Flags().IntVar(&regenerate, RegenerateFlag, 0, regenerateDoc)
-
+	verboseDoc := strings.Join(
+		[]string{
+			"This flag allows you to reduce error output for resolution.",
+			"\nExample:\n$ debricked resolve --verbose=false",
+		}, "\n")
+	cmd.Flags().BoolVar(&verbose, VerboseFlag, true, verboseDoc)
 	npmPreferredDoc := strings.Join(
 		[]string{
 			"This flag allows you to select which package manager will be used as a resolver: Yarn (default) or NPM.",
