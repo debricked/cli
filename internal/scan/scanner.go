@@ -48,6 +48,7 @@ type DebrickedOptions struct {
 	CallGraph                bool
 	Exclusions               []string
 	Verbose                  bool
+	Regenerate               int
 	RepositoryName           string
 	CommitName               string
 	BranchName               string
@@ -133,9 +134,15 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 }
 
 func (dScanner *DebrickedScanner) scanResolve(options DebrickedOptions) error {
+	resolveOptions := resolution.DebrickedOptions{
+		Path:         options.Path,
+		Verbose:      options.Verbose,
+		Regenerate:   options.Regenerate,
+		Exclusions:   options.Exclusions,
+		NpmPreferred: options.NpmPreferred,
+	}
 	if options.Resolve {
-		dScanner.resolver.SetNpmPreferred(options.NpmPreferred)
-		_, resErr := dScanner.resolver.Resolve([]string{options.Path}, options.Exclusions, options.Verbose)
+		_, resErr := dScanner.resolver.Resolve([]string{options.Path}, resolveOptions)
 		if resErr != nil {
 			return resErr
 		}

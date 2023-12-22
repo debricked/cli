@@ -1,10 +1,11 @@
 package testdata
 
 import (
-	"github.com/debricked/cli/internal/resolution"
-	"github.com/debricked/cli/internal/resolution/job"
 	"os"
 	"path/filepath"
+
+	"github.com/debricked/cli/internal/resolution"
+	"github.com/debricked/cli/internal/resolution/job"
 )
 
 type ResolverMock struct {
@@ -15,7 +16,7 @@ type ResolverMock struct {
 func (r *ResolverMock) SetNpmPreferred(_ bool) {
 }
 
-func (r *ResolverMock) Resolve(_ []string, _ []string, _ bool) (resolution.IResolution, error) {
+func (r *ResolverMock) Resolve(_ []string, _ resolution.IOptions) (resolution.IResolution, error) {
 	for _, f := range r.files {
 		createdFile, err := os.Create(f)
 		if err != nil {

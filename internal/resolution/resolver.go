@@ -1,8 +1,10 @@
 package resolution
 
 import (
+	"errors"
 	"os"
 	"path"
+	"regexp"
 
 	"github.com/debricked/cli/internal/file"
 	resolutionFile "github.com/debricked/cli/internal/resolution/file"
@@ -11,9 +13,12 @@ import (
 	"github.com/debricked/cli/internal/tui"
 )
 
+var (
+	BadOptsErr = errors.New("failed to type case IOptions")
+)
+
 type IResolver interface {
-	Resolve(paths []string, exclusions []string, verbose bool) (IResolution, error)
-	SetNpmPreferred(npmPreferred bool)
+	Resolve(paths []string, options IOptions) (IResolution, error)
 }
 
 type Resolver struct {
@@ -22,6 +27,16 @@ type Resolver struct {
 	strategyFactory strategy.IFactory
 	scheduler       IScheduler
 	npmPreferred    bool
+}
+
+type IOptions interface{}
+
+type DebrickedOptions struct {
+	Path         string
+	Exclusions   []string
+	Verbose      bool
+	Regenerate   int
+	NpmPreferred bool
 }
 
 func NewResolver(
@@ -39,16 +54,20 @@ func NewResolver(
 	}
 }
 
-func (r Resolver) SetNpmPreferred(npmPreferred bool) {
+func (r Resolver) setNpmPreferred(npmPreferred bool) {
 	r.batchFactory.SetNpmPreferred(npmPreferred)
 }
 
-func (r Resolver) Resolve(paths []string, exclusions []string, verbose bool) (IResolution, error) {
-	files, err := r.refinePaths(paths, exclusions)
+func (r Resolver) Resolve(paths []string, options IOptions) (IResolution, error) {
+	dOptions, ok := options.(DebrickedOptions)
+	if !ok {
+		return nil, BadOptsErr
+	}
+	files, err := r.refinePaths(paths, dOptions.Exclusions, dOptions.Regenerate)
 	if err != nil {
 		return nil, err
 	}
-
+	r.setNpmPreferred(dOptions.NpmPreferred)
 	pmBatches := r.batchFactory.Make(files)
 
 	var jobs []job.IJob
@@ -67,13 +86,13 @@ func (r Resolver) Resolve(paths []string, exclusions []string, verbose bool) (IR
 
 	if resolution.HasErr() {
 		jobErrList := tui.NewJobsErrorList(os.Stdout, resolution.Jobs())
-		err = jobErrList.Render(verbose)
+		err = jobErrList.Render(dOptions.Verbose)
 	}
 
 	return resolution, err
 }
 
-func (r Resolver) refinePaths(paths []string, exclusions []string) ([]string, error) {
+func (r Resolver) refinePaths(paths []string, exclusions []string, regenerate int) ([]string, error) {
 	var fileSet = map[string]bool{}
 	var dirs []string
 	for _, arg := range paths {
@@ -96,7 +115,7 @@ func (r Resolver) refinePaths(paths []string, exclusions []string) ([]string, er
 		}
 	}
 
-	err := r.searchDirs(fileSet, dirs, exclusions)
+	err := r.searchDirs(fileSet, dirs, exclusions, regenerate)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +128,7 @@ func (r Resolver) refinePaths(paths []string, exclusions []string) ([]string, er
 	return files, nil
 }
 
-func (r Resolver) searchDirs(fileSet map[string]bool, dirs []string, exclusions []string) error {
+func (r Resolver) searchDirs(fileSet map[string]bool, dirs []string, exclusions []string, regenerate int) error {
 	for _, dir := range dirs {
 		fileGroups, err := r.finder.GetGroups(
 			dir,
@@ -121,11 +140,40 @@ func (r Resolver) searchDirs(fileSet map[string]bool, dirs []string, exclusions 
 			return err
 		}
 		for _, fileGroup := range fileGroups.ToSlice() {
-			if fileGroup.HasFile() && !fileGroup.HasLockFiles() {
+			shouldGenerate := shouldGenerateLock(fileGroup, regenerate)
+			if shouldGenerate {
 				fileSet[fileGroup.ManifestFile] = true
 			}
 		}
 	}
 
 	return nil
+}
+
+func shouldGenerateLock(fileGroup file.Group, regenerate int) bool {
+	if !fileGroup.HasFile() {
+		return false
+	}
+	switch regenerate {
+	case 0:
+		return !fileGroup.HasLockFiles()
+	case 1:
+		return onlyNonNativeLockFiles(fileGroup.LockFiles)
+	case 2:
+		return true
+	}
+
+	return false
+}
+
+func onlyNonNativeLockFiles(lockFiles []string) bool {
+	debrickedLockFilePattern := regexp.MustCompile(`.*\.debricked\.lock`)
+	for _, lockFile := range lockFiles {
+		if !debrickedLockFilePattern.MatchString(lockFile) {
+			return false
+		}
+	}
+
+	return true
+
 }
