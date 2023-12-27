@@ -2,6 +2,8 @@ package gomod
 
 import (
 	"path/filepath"
+	"regexp"
+	"strings"
 
 	"github.com/debricked/cli/internal/resolution/job"
 	"github.com/debricked/cli/internal/resolution/pm/util"
@@ -9,7 +11,12 @@ import (
 )
 
 const (
-	fileName = "gomod.debricked.lock"
+	fileName                   = "gomod.debricked.lock"
+	versionNotFoundErrRegex    = `require ([^"'\s:]+): version "[^"'\s:]+" invalid: ([^"'\n:]+)`
+	dependencyNotFoundErrRegex = `go: ([^"'\s:]+): .*\n.*fatal: could not read Username`
+	noPackageErrRegex          = `([^"'\s:]+): .*, but does not contain package`
+	unableToResolveErrRegex    = `go: module ([^"'\s:]+): .*\n.*Permission denied`
+	noInternetErrRegex         = `dial tcp: lookup ([^"'\s:]+) .+: server misbehaving`
 )
 
 type Job struct {
@@ -31,29 +38,32 @@ func NewJob(
 }
 
 func (j *Job) Run() {
-	j.SendStatus("creating dependency graph")
+	status := "creating dependency graph"
+	j.SendStatus(status)
 
 	workingDirectory := filepath.Dir(filepath.Clean(j.GetFile()))
 
-	graphCmdOutput, err := j.runGraphCmd(workingDirectory)
+	graphCmdOutput, cmd, err := j.runGraphCmd(workingDirectory)
 	if err != nil {
-		j.Errors().Critical(util.NewPMJobError(err.Error()))
+		j.handleError(j.createError(err.Error(), cmd, status))
 
 		return
 	}
 
-	j.SendStatus("creating dependency version list")
-	listCmdOutput, err := j.runListCmd(workingDirectory)
+	status = "creating dependency version list"
+	j.SendStatus(status)
+	listCmdOutput, cmd, err := j.runListCmd(workingDirectory)
 	if err != nil {
-		j.Errors().Critical(util.NewPMJobError(err.Error()))
+		j.handleError(j.createError(err.Error(), cmd, status))
 
 		return
 	}
 
-	j.SendStatus("creating lock file")
+	status = "creating lock file"
+	j.SendStatus(status)
 	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.GetFile(), fileName))
 	if err != nil {
-		j.Errors().Critical(util.NewPMJobError(err.Error()))
+		j.handleError(j.createError(err.Error(), cmd, status))
 
 		return
 	}
@@ -66,34 +76,149 @@ func (j *Job) Run() {
 
 	err = j.fileWriter.Write(lockFile, fileContents)
 	if err != nil {
-		j.Errors().Critical(util.NewPMJobError(err.Error()))
+		j.handleError(j.createError(err.Error(), cmd, status))
 	}
 }
 
-func (j *Job) runGraphCmd(workingDirectory string) ([]byte, error) {
+func (j *Job) runGraphCmd(workingDirectory string) ([]byte, string, error) {
 	graphCmd, err := j.cmdFactory.MakeGraphCmd(workingDirectory)
 	if err != nil {
-		return nil, err
+		return nil, graphCmd.String(), err
 	}
 
 	graphCmdOutput, err := graphCmd.Output()
 	if err != nil {
-		return nil, j.GetExitError(err, "")
+		return nil, graphCmd.String(), j.GetExitError(err, "")
 	}
 
-	return graphCmdOutput, nil
+	return graphCmdOutput, graphCmd.String(), nil
 }
 
-func (j *Job) runListCmd(workingDirectory string) ([]byte, error) {
+func (j *Job) runListCmd(workingDirectory string) ([]byte, string, error) {
 	listCmd, err := j.cmdFactory.MakeListCmd(workingDirectory)
 	if err != nil {
-		return nil, err
+		return nil, listCmd.String(), err
 	}
 
 	listCmdOutput, err := listCmd.Output()
 	if err != nil {
-		return nil, j.GetExitError(err, "")
+		return nil, listCmd.String(), j.GetExitError(err, "")
 	}
 
-	return listCmdOutput, nil
+	return listCmdOutput, listCmd.String(), nil
+}
+
+func (j *Job) createError(error string, cmd string, status string) job.IError {
+	cmdError := util.NewPMJobError(error)
+	cmdError.SetCommand(cmd)
+	cmdError.SetStatus(status)
+
+	return cmdError
+}
+
+func (j *Job) handleError(cmdError job.IError) {
+	expressions := []string{
+		versionNotFoundErrRegex,
+		dependencyNotFoundErrRegex,
+		noPackageErrRegex,
+		unableToResolveErrRegex,
+		noInternetErrRegex,
+	}
+
+	for _, expression := range expressions {
+		regex := regexp.MustCompile(expression)
+		matches := regex.FindAllStringSubmatch(cmdError.Error(), -1)
+
+		if len(matches) > 0 {
+			cmdError = j.addDocumentation(expression, matches, cmdError)
+			j.Errors().Append(cmdError)
+
+			return
+		}
+	}
+
+	j.Errors().Append(cmdError)
+}
+
+func (j *Job) addDocumentation(expr string, matches [][]string, cmdError job.IError) job.IError {
+	documentation := cmdError.Documentation()
+
+	switch expr {
+	case versionNotFoundErrRegex:
+		documentation = getVersionNotFoundErrorDocumentation(matches)
+	case dependencyNotFoundErrRegex:
+		documentation = getDependencyNotFoundErrorDocumentation(matches)
+	case noPackageErrRegex:
+		documentation = getNoPackageErrorDocumentation(matches)
+	case unableToResolveErrRegex:
+		documentation = getDependencyNotFoundErrorDocumentation(matches)
+	case noInternetErrRegex:
+		documentation = getNoInternetErrorDocumentation(matches)
+	}
+
+	cmdError.SetDocumentation(documentation)
+
+	return cmdError
+}
+
+func getVersionNotFoundErrorDocumentation(matches [][]string) string {
+	dependency := ""
+	recommendation := ""
+	if len(matches) > 0 && len(matches[0]) > 1 {
+		dependency = matches[0][1]
+		recommendation = matches[0][2]
+	}
+
+	return strings.Join(
+		[]string{
+			"Failed to find package",
+			dependency + ".",
+			"Please check that package versions are correct in the manifest file.",
+			"It " + recommendation + ".",
+		}, " ")
+}
+
+func getDependencyNotFoundErrorDocumentation(matches [][]string) string {
+	dependency := ""
+	if len(matches) > 0 && len(matches[0]) > 1 {
+		dependency = matches[0][1]
+	}
+
+	return strings.Join(
+		[]string{
+			"Failed to find package",
+			"\"" + dependency + "\"",
+			"that satisfies the requirements.",
+			"Please check that dependencies are correct in the manifest file.",
+			"\n" + util.InstallPrivateDependencyMessage,
+		}, " ")
+}
+
+func getNoPackageErrorDocumentation(matches [][]string) string {
+	repository := ""
+	if len(matches) > 0 && len(matches[0]) > 1 {
+		repository = matches[0][1]
+	}
+
+	return strings.Join(
+		[]string{
+			"We weren't able to find a package in provided repository",
+			"\"" + repository + "\".",
+			"Please check that repository address is spelled correct and it actually contains a Go package.",
+		}, " ")
+}
+
+func getNoInternetErrorDocumentation(matches [][]string) string {
+	registry := ""
+	if len(matches) > 0 && len(matches[0]) > 1 {
+		registry = matches[0][1]
+	}
+
+	return strings.Join(
+		[]string{
+			"Registry",
+			"\"" + registry + "\"",
+			"is not available at the moment.",
+			"There might be a trouble with your network connection.",
+		}, " ")
 }
