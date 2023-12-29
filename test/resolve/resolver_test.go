@@ -38,6 +38,12 @@ func TestResolves(t *testing.T) {
 			packageManager: "npm",
 		},
 		{
+			name:           "basic bower.json",
+			manifestFile:   "testdata/bower/bower.json",
+			lockFileName:   "bower.debricked.lock",
+			packageManager: "bower",
+		},
+		{
 			name:           "basic requirements.txt",
 			manifestFile:   "testdata/pip/requirements.txt",
 			lockFileName:   "requirements.txt.pip.debricked.lock",

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/debricked/cli/internal/resolution/file"
+	"github.com/debricked/cli/internal/resolution/pm/bower"
 	"github.com/debricked/cli/internal/resolution/pm/composer"
 	"github.com/debricked/cli/internal/resolution/pm/gomod"
 	"github.com/debricked/cli/internal/resolution/pm/gradle"
@@ -24,6 +25,7 @@ func NewStrategyFactory() Factory {
 	return Factory{}
 }
 
+//nolint:all
 func (sf Factory) Make(pmFileBatch file.IBatch, paths []string) (IStrategy, error) {
 	name := pmFileBatch.Pm().Name()
 	switch name {
@@ -39,6 +41,8 @@ func (sf Factory) Make(pmFileBatch file.IBatch, paths []string) (IStrategy, erro
 		return yarn.NewStrategy(pmFileBatch.Files()), nil
 	case npm.Name:
 		return npm.NewStrategy(pmFileBatch.Files()), nil
+	case bower.Name:
+		return bower.NewStrategy(pmFileBatch.Files()), nil
 	case nuget.Name:
 		return nuget.NewStrategy(pmFileBatch.Files()), nil
 	case composer.Name:

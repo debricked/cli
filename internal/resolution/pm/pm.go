@@ -1,6 +1,7 @@
 package pm
 
 import (
+	"github.com/debricked/cli/internal/resolution/pm/bower"
 	"github.com/debricked/cli/internal/resolution/pm/composer"
 	"github.com/debricked/cli/internal/resolution/pm/gomod"
 	"github.com/debricked/cli/internal/resolution/pm/gradle"
@@ -24,6 +25,7 @@ func Pms() []IPm {
 		pip.NewPm(),
 		yarn.NewPm(),
 		npm.NewPm(),
+		bower.NewPm(),
 		nuget.NewPm(),
 		composer.NewPm(),
 	}

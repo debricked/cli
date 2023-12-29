@@ -58,6 +58,7 @@ func TestExclusionsWithEmptyTokenEnvVariable(t *testing.T) {
 		filepath.Join("**", "vendor", "**"),
 		filepath.Join("**", ".git", "**"),
 		filepath.Join("**", "obj", "**"),
+		filepath.Join("**", "bower_components", "**"),
 	}
 	defaultExclusions := Exclusions()
 	assert.Equal(t, gt, defaultExclusions)
