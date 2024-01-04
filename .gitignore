@@ -18,6 +18,8 @@ internal/callgraph/language/java11/testdata/mvnproj/target
 test/resolve/testdata/composer/composer.lock
 test/resolve/testdata/npm/yarn.lock
 test/resolve/testdata/npm/package-lock.json
+test/resolve/testdata/bower/bower.debricked.lock
+test/resolve/testdata/bower/bower_components/
 test/resolve/testdata/nuget/packages.lock.json
 test/resolve/testdata/nuget/csproj/packages.lock.json
 test/resolve/testdata/nuget/packagesconfig/packages.config.nuget.debricked.lock

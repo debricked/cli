@@ -1,0 +1,14 @@
+{
+  "name": "cli-test",
+  "main": "main.js",
+  "dependencies": {
+    "ev-emitter": "^1.0.0",
+    "get-size": "^2.0.2",
+    "fizzy-ui-utils": "^2.0.0"
+  },
+  "devDependencies": {
+    "jquery-bridget": "2.x",
+    "jquery": ">=1.4.3 <4",
+    "qunit": "^2.0.0"
+  }
+}

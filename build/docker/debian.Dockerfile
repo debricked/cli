@@ -49,9 +49,11 @@ RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg -
 RUN echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
 RUN apt -y update && apt -y upgrade && apt -y install nodejs && \
     apt -y clean && rm -rf /var/lib/apt/lists/*
-RUN npm install --global npm@latest && npm install --global yarn
+RUN npm install --global npm@latest && \
+    npm install --global yarn && \
+    npm install --global bower
 
-RUN npm -v && yarn -v
+RUN npm -v && yarn -v && bower -v
 
 # https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install
 # https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian

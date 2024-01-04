@@ -54,6 +54,8 @@ RUN apk --no-cache --update add \
 
 RUN dotnet --version && npm -v && yarn -v
 
+RUN npm install --global bower && bower -v
+
 RUN apk add --no-cache \
     git \
     php82 \
