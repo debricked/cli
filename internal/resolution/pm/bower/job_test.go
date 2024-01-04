@@ -30,6 +30,11 @@ func TestRunGraphCmdErr(t *testing.T) {
 			doc:   util.UnknownError,
 		},
 		{
+			name:  "Bower not found",
+			error: "        |exec: \"bower\": executable file not found in $PATH",
+			doc:   "Bower wasn't found. Please check if it is installed and accessible by the CLI.",
+		},
+		{
 			name:  "Invalid package version",
 			error: "bower get-size#11.0.*       not-cached https://github.com/desandro/get-size.git#11.0.*\nbower get-size#11.0.*          resolve https://github.com/desandro/get-size.git#11.0.*\nbower get-size#11.0.*     ENORESTARGET No tag found that was able to satisfy 11.0.*\n\nAdditional error details:\nAvailable versions in https://github.com/desandro/get-size.git: 3.0.0, 2.0.3, 2.0.2",
 			doc:   "Failed to find package \"get-size#11.0.*\" that satisfies the requirement from bower.json file. In most cases you or one of your dependencies are requesting a package version that doesn't exist. Please check that package versions are correct.",

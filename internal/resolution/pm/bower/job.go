@@ -12,6 +12,7 @@ import (
 const (
 	bower                       = "bower"
 	fileName                    = "bower.debricked.lock"
+	bowerNotFoundErrRegex       = `executable file not found`
 	versionNotFoundErrRegex     = `([^"\s:]+)\s+ENORESTARGET No tag found`
 	dependencyNotFoundErrRegex  = `ENOTFOUND Package ([^"\s:]+) not found`
 	registryUnavailableErrRegex = `getaddrinfo EAI_AGAIN ([\w\/\-\.]+)`
@@ -110,6 +111,7 @@ func (j *Job) createError(error string, cmd string, status string) job.IError {
 
 func (j *Job) handleError(cmdError job.IError) {
 	expressions := []string{
+		bowerNotFoundErrRegex,
 		versionNotFoundErrRegex,
 		dependencyNotFoundErrRegex,
 		registryUnavailableErrRegex,
@@ -135,6 +137,8 @@ func (j *Job) addDocumentation(expr string, matches [][]string, cmdError job.IEr
 	documentation := cmdError.Documentation()
 
 	switch expr {
+	case bowerNotFoundErrRegex:
+		documentation = getBowerNotFoundErrorDocumentation()
 	case versionNotFoundErrRegex:
 		documentation = getVersionNotFoundErrorDocumentation(matches)
 	case dependencyNotFoundErrRegex:
@@ -148,6 +152,14 @@ func (j *Job) addDocumentation(expr string, matches [][]string, cmdError job.IEr
 	cmdError.SetDocumentation(documentation)
 
 	return cmdError
+}
+
+func getBowerNotFoundErrorDocumentation() string {
+	return strings.Join(
+		[]string{
+			"Bower wasn't found.",
+			"Please check if it is installed and accessible by the CLI.",
+		}, " ")
 }
 
 func getDependencyNotFoundErrorDocumentation(matches [][]string) string {
