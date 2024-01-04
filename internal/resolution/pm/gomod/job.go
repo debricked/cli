@@ -172,7 +172,7 @@ func getVersionNotFoundErrorDocumentation(matches [][]string) string {
 	return strings.Join(
 		[]string{
 			"Failed to find package",
-			dependency + ".",
+			"\"" + dependency + "\".",
 			"Please check that package versions are correct in the manifest file.",
 			"It " + recommendation + ".",
 		}, " ")
