@@ -151,7 +151,7 @@ func TestFingerprinterInterface(t *testing.T) {
 
 func TestFingerprintFiles(t *testing.T) {
 	fingerprinter := NewFingerprinter()
-	fingerprints, err := fingerprinter.FingerprintFiles("testdata/fingerprinter", []string{})
+	fingerprints, err := fingerprinter.FingerprintFiles("testdata/fingerprinter", []string{}, true)
 	assert.NoError(t, err)
 	assert.NotNil(t, fingerprints)
 	assert.NotEmpty(t, fingerprints)
@@ -159,7 +159,7 @@ func TestFingerprintFiles(t *testing.T) {
 	assert.Equal(t, "file=634c5485de8e22b27094affadd8a6e3b,21,testdata/fingerprinter/testfile.py", fingerprints.Entries[0].ToString())
 
 	// Test no file
-	fingerprints, err = fingerprinter.FingerprintFiles("", []string{})
+	fingerprints, err = fingerprinter.FingerprintFiles("", []string{}, true)
 	assert.NoError(t, err)
 	assert.NotNil(t, fingerprints)
 	assert.NotEmpty(t, fingerprints)
@@ -308,7 +308,7 @@ func TestShouldUnzip(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := shouldUnzip(tt.filename); got != tt.want {
+			if got := isCompressedFile(tt.filename); got != tt.want {
 				t.Errorf("shouldUnzip() = %v, want %v", got, tt.want)
 			}
 		})
@@ -317,29 +317,39 @@ func TestShouldUnzip(t *testing.T) {
 
 func TestInMemFingerprintingCompressedContent(t *testing.T) {
 	tests := []struct {
-		name     string
-		path     string
-		expected int
-		suffix   string
+		name        string
+		path        string
+		expected    int
+		suffix      string
+		shouldUnzip bool
 	}{
 		{
-			name:     "Jar",
-			path:     "testdata/zipfile/jar",
-			expected: 196,
-			suffix:   "log4j-api-2.18.0.jar",
+			name:        "Jar",
+			path:        "testdata/zipfile/jar",
+			expected:    196,
+			suffix:      "log4j-api-2.18.0.jar",
+			shouldUnzip: true,
 		},
 		{
-			name:     "Nupkg",
-			path:     "testdata/zipfile/nupkg",
-			expected: 22,
-			suffix:   "newtonsoft.json.13.0.3.nupkg",
+			name:        "Nupkg",
+			path:        "testdata/zipfile/nupkg",
+			expected:    22,
+			suffix:      "newtonsoft.json.13.0.3.nupkg",
+			shouldUnzip: true,
+		},
+		{
+			name:        "Nupkg not unpack",
+			path:        "testdata/zipfile/nupkg",
+			expected:    1,
+			suffix:      "newtonsoft.json.13.0.3.nupkg",
+			shouldUnzip: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fingerprinter := NewFingerprinter()
-			fingerprints, err := fingerprinter.FingerprintFiles(tt.path, []string{})
+			fingerprints, err := fingerprinter.FingerprintFiles(tt.path, []string{}, tt.shouldUnzip)
 			assert.NoError(t, err)
 			assert.NotNil(t, fingerprints)
 			assert.NotEmpty(t, fingerprints)

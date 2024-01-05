@@ -43,6 +43,8 @@ var EXCLUDED_FILES = []string{
 	"thumbs.db", "babel.config.js", "license.txt", "license.md", "copying.lib", "makefile",
 }
 
+var FILES_TO_UNPACK = []string{".jar", ".nupkg", ".war"}
+
 const HASH_SIZE = 16
 
 func newHasher() *blake3.Hasher {
@@ -97,7 +99,7 @@ func isExcludedByEnding(filename string) bool {
 }
 
 type IFingerprint interface {
-	FingerprintFiles(rootPath string, exclusions []string) (Fingerprints, error)
+	FingerprintFiles(rootPath string, exclusions []string, fingerprintCompressedContent bool) (Fingerprints, error)
 }
 
 type Fingerprinter struct {
@@ -122,7 +124,7 @@ func (f FileFingerprint) ToString() string {
 	return fmt.Sprintf("file=%x,%d,%s", f.fingerprint, f.contentLength, path)
 }
 
-func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string) (Fingerprints, error) {
+func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string, fingerprintCompressedContent bool) (Fingerprints, error) {
 	log.Println("Warning: Fingerprinting is beta and may not work as expected.")
 	if len(rootPath) == 0 {
 		rootPath = filepath.Base("")
@@ -141,7 +143,7 @@ func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string) (
 			return err
 		}
 
-		fingerprintsZip, err := computeHashForFileAndZip(fileInfo, path, exclusions)
+		fingerprintsZip, err := computeHashForFileAndZip(fileInfo, path, exclusions, fingerprintCompressedContent)
 		if err != nil {
 			return err
 		}
@@ -171,7 +173,7 @@ func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string) (
 	return fingerprints, err
 }
 
-func computeHashForFileAndZip(fileInfo os.FileInfo, path string, exclusions []string) ([]FileFingerprint, error) {
+func computeHashForFileAndZip(fileInfo os.FileInfo, path string, exclusions []string, fingerprintCompressedContent bool) ([]FileFingerprint, error) {
 	if !shouldProcessFile(fileInfo, exclusions, path) {
 		return nil, nil
 	}
@@ -179,7 +181,7 @@ func computeHashForFileAndZip(fileInfo os.FileInfo, path string, exclusions []st
 	var fingerprints []FileFingerprint
 
 	// If the file should be unzipped, try to unzip and fingerprint it
-	if shouldUnzip(path) {
+	if isCompressedFile(path) && fingerprintCompressedContent {
 		fingerprintsZip, err := inMemFingerprintingCompressedContent(path, exclusions)
 		if err != nil {
 			if errors.Is(err, zip.ErrFormat) {
@@ -292,10 +294,8 @@ func (f *Fingerprints) ToFile(ouputFile string) error {
 
 }
 
-var filesToUnzip = []string{".jar", ".nupkg"}
-
-func shouldUnzip(filename string) bool {
-	for _, file := range filesToUnzip {
+func isCompressedFile(filename string) bool {
+	for _, file := range FILES_TO_UNPACK {
 		if filepath.Ext(filename) == file {
 			return true
 		}
