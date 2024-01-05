@@ -16,6 +16,7 @@ var (
 	verbose      bool
 	npmPreferred bool
 	regenerate   int
+	strictness   int
 )
 
 const (
@@ -23,6 +24,7 @@ const (
 	VerboseFlag      = "verbose"
 	NpmPreferredFlag = "prefer-npm"
 	RegenerateFlag   = "regenerate"
+	StrictFlag       = "strict"
 )
 
 func NewResolveCmd(resolver resolution.IResolver) *cobra.Command {
@@ -78,6 +80,14 @@ $ debricked resolve . `+exampleFlags)
 		}, "\n")
 
 	cmd.Flags().BoolP(NpmPreferredFlag, "", npmPreferred, npmPreferredDoc)
+
+	cmd.Flags().IntVarP(&strictness, StrictFlag, "s", file.StrictAll, `Allows you to configure exit code 1 or 0 depending on if the resolution was successful or not.
+Strictness Level | Meaning
+---------------- | -------
+0 (default)      | Always exit with code 0, even if any or all files failed to resolve
+1                | Exit with code 1 if all files failed to resolve, otherwise exit with code 0
+2                | Exit with code 1 if any file failed to resolve, otherwise exit with code 0
+`)
 
 	viper.MustBindEnv(ExclusionFlag)
 	viper.MustBindEnv(NpmPreferredFlag)
