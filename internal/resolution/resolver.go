@@ -2,10 +2,12 @@ package resolution
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path"
 	"regexp"
 
+	"github.com/debricked/cli/internal/cmd/cmderror"
 	"github.com/debricked/cli/internal/file"
 	resolutionFile "github.com/debricked/cli/internal/resolution/file"
 	"github.com/debricked/cli/internal/resolution/job"
@@ -32,11 +34,12 @@ type Resolver struct {
 type IOptions interface{}
 
 type DebrickedOptions struct {
-	Path         string
-	Exclusions   []string
-	Verbose      bool
-	Regenerate   int
-	NpmPreferred bool
+	Path                 string
+	Exclusions           []string
+	Verbose              bool
+	Regenerate           int
+	NpmPreferred         bool
+	Resolutionstrictness int
 }
 
 func NewResolver(
@@ -56,6 +59,35 @@ func NewResolver(
 
 func (r Resolver) setNpmPreferred(npmPreferred bool) {
 	r.batchFactory.SetNpmPreferred(npmPreferred)
+}
+
+func (r Resolver) GetExitCode(resolution IResolution, options DebrickedOptions) int {
+	errorCount := resolution.GetJobErrorCount()
+	jobCount := len(resolution.Jobs())
+
+	switch options.Resolutionstrictness {
+	case 0:
+		return 0
+	case 1:
+		if errorCount == jobCount {
+			return 1
+		}
+		return 0
+	case 2:
+		if errorCount > 0 {
+			return 1
+		}
+		return 0
+	case 3:
+		if errorCount == 0 {
+			return 0
+		} else if errorCount == jobCount {
+			return 1
+		}
+		return 3
+	default:
+		panic(fmt.Sprintf("Invalid strictness level: %d", options.Resolutionstrictness))
+	}
 }
 
 func (r Resolver) Resolve(paths []string, options IOptions) (IResolution, error) {
@@ -86,7 +118,17 @@ func (r Resolver) Resolve(paths []string, options IOptions) (IResolution, error)
 
 	if resolution.HasErr() {
 		jobErrList := tui.NewJobsErrorList(os.Stdout, resolution.Jobs())
-		err = jobErrList.Render(dOptions.Verbose)
+		renderErr := jobErrList.Render(dOptions.Verbose)
+		if renderErr != nil {
+			return resolution, renderErr
+		}
+		code := r.GetExitCode(resolution, dOptions)
+		if code != 0 {
+			err = cmderror.CommandError{
+				Code: code,
+				Err:  fmt.Errorf("resolution failed"),
+			}
+		}
 	}
 
 	return resolution, err

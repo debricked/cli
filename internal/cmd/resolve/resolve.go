@@ -12,11 +12,11 @@ import (
 )
 
 var (
-	exclusions   = file.Exclusions()
-	verbose      bool
-	npmPreferred bool
-	regenerate   int
-	strictness   int
+	exclusions           = file.Exclusions()
+	verbose              bool
+	npmPreferred         bool
+	regenerate           int
+	resolutionStrictness int
 )
 
 const (
@@ -81,7 +81,7 @@ $ debricked resolve . `+exampleFlags)
 
 	cmd.Flags().BoolP(NpmPreferredFlag, "", npmPreferred, npmPreferredDoc)
 
-	cmd.Flags().IntVarP(&strictness, ResolutionStrictFlag, "s", file.StrictAll, `Allows you to configure exit code 1 or 0 depending on if the resolution was successful or not.
+	cmd.Flags().IntVarP(&resolutionStrictness, ResolutionStrictFlag, "s", file.StrictAll, `Allows you to configure exit code 1 or 0 depending on if the resolution was successful or not.
 Strictness Level | Meaning
 ---------------- | -------
 0 (default)      | Always exit with code 0, even if any or all files failed to resolve
@@ -102,13 +102,13 @@ func RunE(resolver resolution.IResolver) func(_ *cobra.Command, args []string) e
 			args = append(args, ".")
 		}
 		options := resolution.DebrickedOptions{
-			Exclusions:   viper.GetStringSlice(ExclusionFlag),
-			Verbose:      viper.GetBool(VerboseFlag),
-			Regenerate:   viper.GetInt(RegenerateFlag),
-			NpmPreferred: viper.GetBool(NpmPreferredFlag),
+			Exclusions:           viper.GetStringSlice(ExclusionFlag),
+			Verbose:              viper.GetBool(VerboseFlag),
+			Regenerate:           viper.GetInt(RegenerateFlag),
+			NpmPreferred:         viper.GetBool(NpmPreferredFlag),
+			Resolutionstrictness: viper.GetInt(ResolutionStrictFlag),
 		}
 		_, err := resolver.Resolve(args, options)
-
 		return err
 	}
 }
