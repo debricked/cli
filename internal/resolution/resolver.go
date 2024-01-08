@@ -96,38 +96,44 @@ func (r Resolver) GetExitCode(resolution IResolution, options IOptions) (int, er
 	return r.getExitCodeBasedOnStrictness(dOptions.Resolutionstrictness, errorCount, jobCount)
 }
 
+type exitCodeLogic func(errorCount, jobCount int) (int, error)
+
 func (r Resolver) getExitCodeBasedOnStrictness(strictness StrictnessLevel, errorCount, jobCount int) (int, error) {
-	switch strictness {
-	case NoFail:
-		return 0, nil
-	case FailIfAllFail:
-		if errorCount == jobCount {
-
-			return 1, nil
-		}
-
-		return 0, nil
-	case FailIfAnyFail:
-		if errorCount > 0 {
-
-			return 1, nil
-		}
-
-		return 0, nil
-	case FailOrWarn:
-		if errorCount == 0 {
+	exitCodeLogics := map[StrictnessLevel]exitCodeLogic{
+		NoFail: func(errorCount, jobCount int) (int, error) {
+			return 0, nil
+		},
+		FailIfAllFail: func(errorCount, jobCount int) (int, error) {
+			if errorCount == jobCount {
+				return 1, nil
+			}
 
 			return 0, nil
-		} else if errorCount == jobCount {
+		},
+		FailIfAnyFail: func(errorCount, jobCount int) (int, error) {
+			if errorCount > 0 {
+				return 1, nil
+			}
 
-			return 1, nil
-		}
+			return 0, nil
+		},
+		FailOrWarn: func(errorCount, jobCount int) (int, error) {
+			if errorCount == 0 {
+				return 0, nil
+			} else if errorCount == jobCount {
+				return 1, nil
+			}
 
-		return 3, nil
-	default:
+			return 3, nil
+		},
+	}
 
+	logic, ok := exitCodeLogics[strictness]
+	if !ok {
 		return 0, fmt.Errorf("invalid strictness level: %d", strictness)
 	}
+
+	return logic(errorCount, jobCount)
 }
 
 func (r Resolver) Resolve(paths []string, options IOptions) (IResolution, error) {
@@ -218,24 +224,36 @@ func (r Resolver) refinePaths(paths []string, exclusions []string, regenerate in
 
 func (r Resolver) searchDirs(fileSet map[string]bool, dirs []string, exclusions []string, regenerate int) error {
 	for _, dir := range dirs {
-		fileGroups, err := r.finder.GetGroups(
-			dir,
-			exclusions,
-			false,
-			file.StrictAll,
-		)
+		err := r.processDir(fileSet, dir, exclusions, regenerate)
 		if err != nil {
 			return err
-		}
-		for _, fileGroup := range fileGroups.ToSlice() {
-			shouldGenerate := shouldGenerateLock(fileGroup, regenerate)
-			if shouldGenerate {
-				fileSet[fileGroup.ManifestFile] = true
-			}
 		}
 	}
 
 	return nil
+}
+
+func (r Resolver) processDir(fileSet map[string]bool, dir string, exclusions []string, regenerate int) error {
+	fileGroups, err := r.finder.GetGroups(
+		dir,
+		exclusions,
+		false,
+		file.StrictAll,
+	)
+	if err != nil {
+		return err
+	}
+	r.processFileGroups(fileSet, fileGroups, regenerate)
+
+	return nil
+}
+
+func (r Resolver) processFileGroups(fileSet map[string]bool, fileGroups file.Groups, regenerate int) {
+	for _, fileGroup := range fileGroups.ToSlice() {
+		if shouldGenerateLock(fileGroup, regenerate) {
+			fileSet[fileGroup.ManifestFile] = true
+		}
+	}
 }
 
 func shouldGenerateLock(fileGroup file.Group, regenerate int) bool {
