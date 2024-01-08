@@ -313,10 +313,68 @@ func TestGetExitCode(t *testing.T) {
 				Resolutionstrictness: c.strictness,
 			}
 			resolution, err := r.Resolve([]string{""}, options)
-			assert.NoError(t, err)
+			if c.expected > 0 {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
 			exitCode, err := r.GetExitCode(resolution, options)
 			assert.NoError(t, err)
 			assert.Equal(t, c.expected, exitCode)
+		})
+	}
+}
+
+func TestGetStrictnessLevel(t *testing.T) {
+	tests := []struct {
+		name    string
+		level   int
+		want    StrictnessLevel
+		wantErr bool
+	}{
+		{
+			name:    "Test NoFail",
+			level:   0,
+			want:    NoFail,
+			wantErr: false,
+		},
+		{
+			name:    "Test FailIfAllFail",
+			level:   1,
+			want:    FailIfAllFail,
+			wantErr: false,
+		},
+		{
+			name:    "Test FailIfAnyFail",
+			level:   2,
+			want:    FailIfAnyFail,
+			wantErr: false,
+		},
+		{
+			name:    "Test FailOrWarn",
+			level:   3,
+			want:    FailOrWarn,
+			wantErr: false,
+		},
+		{
+			name:    "Test Invalid",
+			level:   151,
+			want:    NoFail,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := GetStrictnessLevel(tt.level)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetStrictnessLevel() error = %v, wantErr %v", err, tt.wantErr)
+
+				return
+			}
+			if got != tt.want {
+				t.Errorf("GetStrictnessLevel() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }

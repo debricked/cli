@@ -101,14 +101,19 @@ func RunE(resolver resolution.IResolver) func(_ *cobra.Command, args []string) e
 		if len(args) == 0 {
 			args = append(args, ".")
 		}
+		strictness, err := resolution.GetStrictnessLevel(resolutionStrictness)
+		if err != nil {
+			return err
+		}
 		options := resolution.DebrickedOptions{
 			Exclusions:           viper.GetStringSlice(ExclusionFlag),
 			Verbose:              viper.GetBool(VerboseFlag),
 			Regenerate:           viper.GetInt(RegenerateFlag),
 			NpmPreferred:         viper.GetBool(NpmPreferredFlag),
-			Resolutionstrictness: resolution.StrictnessLevel(viper.GetInt(ResolutionStrictFlag)),
+			Resolutionstrictness: strictness,
 		}
-		_, err := resolver.Resolve(args, options)
+		_, err = resolver.Resolve(args, options)
+
 		return err
 	}
 }

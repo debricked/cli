@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	BadOptsErr = errors.New("failed to type case IOptions")
+	ErrBadOpts = errors.New("failed to type case IOptions")
 )
 
 type StrictnessLevel int
@@ -27,6 +27,21 @@ const (
 	FailIfAnyFail
 	FailOrWarn
 )
+
+func GetStrictnessLevel(level int) (StrictnessLevel, error) {
+	switch level {
+	case 0:
+		return NoFail, nil
+	case 1:
+		return FailIfAllFail, nil
+	case 2:
+		return FailIfAnyFail, nil
+	case 3:
+		return FailOrWarn, nil
+	default:
+		return NoFail, fmt.Errorf("invalid strictness level: %d", level)
+	}
+}
 
 type IResolver interface {
 	Resolve(paths []string, options IOptions) (IResolution, error)
@@ -73,40 +88,52 @@ func (r Resolver) setNpmPreferred(npmPreferred bool) {
 func (r Resolver) GetExitCode(resolution IResolution, options IOptions) (int, error) {
 	dOptions, ok := options.(DebrickedOptions)
 	if !ok {
-		return 1, BadOptsErr
+		return 1, ErrBadOpts
 	}
 	errorCount := resolution.GetJobErrorCount()
 	jobCount := len(resolution.Jobs())
 
-	switch dOptions.Resolutionstrictness {
+	return r.getExitCodeBasedOnStrictness(dOptions.Resolutionstrictness, errorCount, jobCount)
+}
+
+func (r Resolver) getExitCodeBasedOnStrictness(strictness StrictnessLevel, errorCount, jobCount int) (int, error) {
+	switch strictness {
 	case NoFail:
 		return 0, nil
 	case FailIfAllFail:
 		if errorCount == jobCount {
+
 			return 1, nil
 		}
+
 		return 0, nil
 	case FailIfAnyFail:
 		if errorCount > 0 {
+
 			return 1, nil
 		}
+
 		return 0, nil
 	case FailOrWarn:
 		if errorCount == 0 {
+
 			return 0, nil
 		} else if errorCount == jobCount {
+
 			return 1, nil
 		}
+
 		return 3, nil
 	default:
-		return 1, fmt.Errorf("Invalid strictness level: %d", dOptions.Resolutionstrictness)
+
+		return 0, fmt.Errorf("invalid strictness level: %d", strictness)
 	}
 }
 
 func (r Resolver) Resolve(paths []string, options IOptions) (IResolution, error) {
 	dOptions, ok := options.(DebrickedOptions)
 	if !ok {
-		return nil, BadOptsErr
+		return nil, ErrBadOpts
 	}
 	files, err := r.refinePaths(paths, dOptions.Exclusions, dOptions.Regenerate)
 	if err != nil {
@@ -145,6 +172,8 @@ func (r Resolver) Resolve(paths []string, options IOptions) (IResolution, error)
 				Code: code,
 				Err:  fmt.Errorf("resolution failed"),
 			}
+
+			return resolution, err
 		}
 	}
 

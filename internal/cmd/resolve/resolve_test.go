@@ -93,3 +93,12 @@ func TestRunEError(t *testing.T) {
 
 	assert.EqualError(t, err, "finder-error", "error doesn't match expected")
 }
+
+func TestRunEErrorInvalidStrictness(t *testing.T) {
+	r := &resolveTestdata.ResolverMock{}
+	resolutionStrictness = 123
+	runE := RunE(r)
+	err := runE(nil, []string{"."})
+
+	assert.EqualError(t, err, "invalid strictness level: 123", "error doesn't match expected")
+}
