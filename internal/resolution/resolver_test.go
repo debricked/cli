@@ -258,3 +258,65 @@ func TestResolveHasResolutionErrs(t *testing.T) {
 	assert.Len(t, errs, 1)
 	assert.ErrorIs(t, jobErr, errs[0])
 }
+
+func TestGetExitCode(t *testing.T) {
+	f := testdata.NewFinderMock()
+	groups := file.Groups{}
+	groups.Add(file.Group{ManifestFile: goModFile})
+	f.SetGetGroupsReturnMock(groups, nil)
+
+	jobErr := job.NewBaseJobError("job-error")
+	jobWithErr := jobTestdata.NewJobMock(goModFile)
+	jobWithErr.Errors().Warning(jobErr)
+
+	jobNoErr := jobTestdata.NewJobMock(goModFile)
+
+	cases := []struct {
+		strictness       StrictnessLevel
+		expected         int
+		nbFailingJobs    int
+		nbSuccessfulJobs int
+	}{
+		{NoFail, 0, 1, 1},
+		{NoFail, 0, 1, 0},
+		{FailIfAllFail, 0, 1, 1},
+		{FailIfAllFail, 1, 2, 0},
+		{FailIfAllFail, 0, 0, 2},
+		{FailIfAnyFail, 1, 1, 1},
+		{FailIfAnyFail, 1, 2, 0},
+		{FailIfAnyFail, 0, 0, 2},
+		{FailOrWarn, 3, 1, 1},
+		{FailOrWarn, 1, 2, 0},
+		{FailOrWarn, 0, 0, 2},
+	}
+
+	for _, c := range cases {
+		t.Run(fmt.Sprintf("Strictness: %d", c.strictness), func(t *testing.T) {
+			var jobs []job.IJob
+			for i := 0; i < c.nbFailingJobs; i++ {
+				jobs = append(jobs, jobWithErr)
+			}
+			for i := 0; i < c.nbSuccessfulJobs; i++ {
+				jobs = append(jobs, jobNoErr)
+			}
+			schedulerMock := SchedulerMock{JobsMock: jobs}
+			r := NewResolver(
+				f,
+				resolutionFile.NewBatchFactory(),
+				strategyTestdata.NewStrategyFactoryMock(),
+				schedulerMock,
+			)
+			options := DebrickedOptions{
+				Exclusions:           []string{""},
+				Verbose:              true,
+				Regenerate:           0,
+				Resolutionstrictness: c.strictness,
+			}
+			resolution, err := r.Resolve([]string{""}, options)
+			assert.NoError(t, err)
+			exitCode, err := r.GetExitCode(resolution, options)
+			assert.NoError(t, err)
+			assert.Equal(t, c.expected, exitCode)
+		})
+	}
+}

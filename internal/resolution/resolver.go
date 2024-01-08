@@ -19,6 +19,15 @@ var (
 	BadOptsErr = errors.New("failed to type case IOptions")
 )
 
+type StrictnessLevel int
+
+const (
+	NoFail StrictnessLevel = iota
+	FailIfAllFail
+	FailIfAnyFail
+	FailOrWarn
+)
+
 type IResolver interface {
 	Resolve(paths []string, options IOptions) (IResolution, error)
 }
@@ -39,7 +48,7 @@ type DebrickedOptions struct {
 	Verbose              bool
 	Regenerate           int
 	NpmPreferred         bool
-	Resolutionstrictness int
+	Resolutionstrictness StrictnessLevel
 }
 
 func NewResolver(
@@ -61,32 +70,36 @@ func (r Resolver) setNpmPreferred(npmPreferred bool) {
 	r.batchFactory.SetNpmPreferred(npmPreferred)
 }
 
-func (r Resolver) GetExitCode(resolution IResolution, options DebrickedOptions) int {
+func (r Resolver) GetExitCode(resolution IResolution, options IOptions) (int, error) {
+	dOptions, ok := options.(DebrickedOptions)
+	if !ok {
+		return 1, BadOptsErr
+	}
 	errorCount := resolution.GetJobErrorCount()
 	jobCount := len(resolution.Jobs())
 
-	switch options.Resolutionstrictness {
-	case 0:
-		return 0
-	case 1:
+	switch dOptions.Resolutionstrictness {
+	case NoFail:
+		return 0, nil
+	case FailIfAllFail:
 		if errorCount == jobCount {
-			return 1
+			return 1, nil
 		}
-		return 0
-	case 2:
+		return 0, nil
+	case FailIfAnyFail:
 		if errorCount > 0 {
-			return 1
+			return 1, nil
 		}
-		return 0
-	case 3:
+		return 0, nil
+	case FailOrWarn:
 		if errorCount == 0 {
-			return 0
+			return 0, nil
 		} else if errorCount == jobCount {
-			return 1
+			return 1, nil
 		}
-		return 3
+		return 3, nil
 	default:
-		panic(fmt.Sprintf("Invalid strictness level: %d", options.Resolutionstrictness))
+		return 1, fmt.Errorf("Invalid strictness level: %d", dOptions.Resolutionstrictness)
 	}
 }
 
@@ -122,7 +135,11 @@ func (r Resolver) Resolve(paths []string, options IOptions) (IResolution, error)
 		if renderErr != nil {
 			return resolution, renderErr
 		}
-		code := r.GetExitCode(resolution, dOptions)
+		code, err := r.GetExitCode(resolution, dOptions)
+		if err != nil {
+			return resolution, err
+		}
+
 		if code != 0 {
 			err = cmderror.CommandError{
 				Code: code,

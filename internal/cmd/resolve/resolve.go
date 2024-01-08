@@ -106,7 +106,7 @@ func RunE(resolver resolution.IResolver) func(_ *cobra.Command, args []string) e
 			Verbose:              viper.GetBool(VerboseFlag),
 			Regenerate:           viper.GetInt(RegenerateFlag),
 			NpmPreferred:         viper.GetBool(NpmPreferredFlag),
-			Resolutionstrictness: viper.GetInt(ResolutionStrictFlag),
+			Resolutionstrictness: resolution.StrictnessLevel(viper.GetInt(ResolutionStrictFlag)),
 		}
 		_, err := resolver.Resolve(args, options)
 		return err
