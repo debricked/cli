@@ -35,6 +35,11 @@ func TestRunGraphCmdErr(t *testing.T) {
 			doc:   "Failed to find package \"github.com/google/uuid\". Please check that package versions are correct in the manifest file. It should be v0 or v1, not v111.",
 		},
 		{
+			name:  "Invalid package revision",
+			error: "        |go: github.com/go-git/go-git/v5@v5.61.1: reading github.com/go-git/go-git/go.mod at revision v5.61.1: unknown revision v5.61.1",
+			doc:   "Failed to find package \"github.com/go-git/go-git/v5@v5.61.1\" with revision v5.61.1. Please check that package version is correct in the manifest file.",
+		},
+		{
 			name:  "Invalid package name",
 			error: "        |go: github.com/google/yuid@v1.5.0: reading github.com/google/yuid/go.mod at revision v1.5.0: git ls-remote -q origin in /home/asus/go/pkg/mod/cache/vcs/0292faa5faa65b4148fe687f4ad2478601180035651bd75864518f9b0a6ddd2c: exit status 128:\n        |       fatal: could not read Username for 'https://github.com': terminal prompts disabled\n        |Confirm the import path was entered correctly.",
 			doc:   "Failed to find package \"github.com/google/yuid@v1.5.0\" that satisfies the requirements. Please check that dependencies are correct in the manifest file. \nIf this is a private dependency, please make sure that the debricked CLI has access to install it or pre-install it before running the debricked CLI.",
@@ -48,6 +53,11 @@ func TestRunGraphCmdErr(t *testing.T) {
 			name:  "Unable to resolve package",
 			error: "go: module github.com/Private-Org/go-commons: git ls-remote -q origin in /Users/arieroos/Workspace/go/pkg/mod/cache/vcs/4371bddb1b5a61a8f85ece4f86eaa40bbac4cc02925be418880bcce25aafa433: exit status 128:\n        git@github.com: Permission denied (publickey).\n        fatal: Could not read from remote repository.",
 			doc:   "Failed to find package \"github.com/Private-Org/go-commons\" that satisfies the requirements. Please check that dependencies are correct in the manifest file. \nIf this is a private dependency, please make sure that the debricked CLI has access to install it or pre-install it before running the debricked CLI.",
+		},
+		{
+			name:  "Unable to find repository",
+			error: "|go: github.com/golang/protobufs@v1.4.2: reading github.com/golang/protobufs/go.mod at revision v1.4.2: git ls-remote -q origin in /Users/carl/go/pkg/mod/cache/vcs/e7f33729525288c1fbe8860eabe251f76946433d6da49b960702db5159894078: exit status 128:\n\t|\tremote: Repository not found.\n\t|\tfatal: repository 'https://github.com/golang/protobufs/' not found",
+			doc:   "Failed to find package \"github.com/golang/protobufs@v1.4.2\" that satisfies the requirements. Please check that dependencies are correct in the manifest file. \nIf this is a private dependency, please make sure that the debricked CLI has access to install it or pre-install it before running the debricked CLI.",
 		},
 		{
 			name:  "No internet connection",
