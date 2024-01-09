@@ -81,7 +81,7 @@ $ debricked resolve . `+exampleFlags)
 
 	cmd.Flags().BoolP(NpmPreferredFlag, "", npmPreferred, npmPreferredDoc)
 
-	cmd.Flags().IntVarP(&resolutionStrictness, ResolutionStrictFlag, "s", file.StrictAll, `Allows you to configure exit code 1 or 0 depending on if the resolution was successful or not.
+	cmd.Flags().IntVar(&resolutionStrictness, ResolutionStrictFlag, file.StrictAll, `Allows you to configure exit code 1 or 0 depending on if the resolution was successful or not.
 Strictness Level | Meaning
 ---------------- | -------
 0 (default)      | Always exit with code 0, even if any or all files failed to resolve
@@ -110,7 +110,7 @@ func RunE(resolver resolution.IResolver) func(_ *cobra.Command, args []string) e
 			Verbose:              viper.GetBool(VerboseFlag),
 			Regenerate:           viper.GetInt(RegenerateFlag),
 			NpmPreferred:         viper.GetBool(NpmPreferredFlag),
-			Resolutionstrictness: strictness,
+			ResolutionStrictness: strictness,
 		}
 		_, err = resolver.Resolve(args, options)
 

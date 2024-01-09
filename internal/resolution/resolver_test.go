@@ -310,7 +310,7 @@ func TestGetExitCode(t *testing.T) {
 				Exclusions:           []string{""},
 				Verbose:              true,
 				Regenerate:           0,
-				Resolutionstrictness: c.strictness,
+				ResolutionStrictness: c.strictness,
 			}
 			resolution, err := r.Resolve([]string{""}, options)
 			if c.expected > 0 {

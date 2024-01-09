@@ -63,7 +63,7 @@ type DebrickedOptions struct {
 	Verbose              bool
 	Regenerate           int
 	NpmPreferred         bool
-	Resolutionstrictness StrictnessLevel
+	ResolutionStrictness StrictnessLevel
 }
 
 func NewResolver(
@@ -93,47 +93,49 @@ func (r Resolver) GetExitCode(resolution IResolution, options IOptions) (int, er
 	errorCount := resolution.GetJobErrorCount()
 	jobCount := len(resolution.Jobs())
 
-	return r.getExitCodeBasedOnStrictness(dOptions.Resolutionstrictness, errorCount, jobCount)
+	return r.getExitCodeBasedOnStrictness(dOptions.ResolutionStrictness, errorCount, jobCount)
 }
 
-type exitCodeLogic func(errorCount, jobCount int) (int, error)
-
 func (r Resolver) getExitCodeBasedOnStrictness(strictness StrictnessLevel, errorCount, jobCount int) (int, error) {
-	exitCodeLogics := map[StrictnessLevel]exitCodeLogic{
-		NoFail: func(errorCount, jobCount int) (int, error) {
-			return 0, nil
-		},
-		FailIfAllFail: func(errorCount, jobCount int) (int, error) {
-			if errorCount == jobCount {
-				return 1, nil
-			}
-
-			return 0, nil
-		},
-		FailIfAnyFail: func(errorCount, jobCount int) (int, error) {
-			if errorCount > 0 {
-				return 1, nil
-			}
-
-			return 0, nil
-		},
-		FailOrWarn: func(errorCount, jobCount int) (int, error) {
-			if errorCount == 0 {
-				return 0, nil
-			} else if errorCount == jobCount {
-				return 1, nil
-			}
-
-			return 3, nil
-		},
-	}
-
-	logic, ok := exitCodeLogics[strictness]
-	if !ok {
+	switch strictness {
+	case NoFail:
+		return r.noFailLogic(errorCount, jobCount)
+	case FailIfAllFail:
+		return r.failIfAllFailLogic(errorCount, jobCount)
+	case FailIfAnyFail:
+		return r.failIfAnyFailLogic(errorCount, jobCount)
+	case FailOrWarn:
+		return r.failOrWarnLogic(errorCount, jobCount)
+	default:
 		return 0, fmt.Errorf("invalid strictness level: %d", strictness)
 	}
+}
 
-	return logic(errorCount, jobCount)
+func (r Resolver) noFailLogic(errorCount, jobCount int) (int, error) {
+	return 0, nil
+}
+
+func (r Resolver) failIfAllFailLogic(errorCount, jobCount int) (int, error) {
+	if errorCount == jobCount {
+		return 1, nil
+	}
+	return 0, nil
+}
+
+func (r Resolver) failIfAnyFailLogic(errorCount, jobCount int) (int, error) {
+	if errorCount > 0 {
+		return 1, nil
+	}
+	return 0, nil
+}
+
+func (r Resolver) failOrWarnLogic(errorCount, jobCount int) (int, error) {
+	if errorCount == 0 {
+		return 0, nil
+	} else if errorCount == jobCount {
+		return 1, nil
+	}
+	return 3, nil
 }
 
 func (r Resolver) Resolve(paths []string, options IOptions) (IResolution, error) {
