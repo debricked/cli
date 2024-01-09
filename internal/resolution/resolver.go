@@ -119,6 +119,7 @@ func (r Resolver) failIfAllFailLogic(errorCount, jobCount int) (int, error) {
 	if errorCount == jobCount {
 		return 1, nil
 	}
+
 	return 0, nil
 }
 
@@ -126,6 +127,7 @@ func (r Resolver) failIfAnyFailLogic(errorCount, jobCount int) (int, error) {
 	if errorCount > 0 {
 		return 1, nil
 	}
+
 	return 0, nil
 }
 
@@ -135,6 +137,7 @@ func (r Resolver) failOrWarnLogic(errorCount, jobCount int) (int, error) {
 	} else if errorCount == jobCount {
 		return 1, nil
 	}
+
 	return 3, nil
 }
 
