@@ -60,11 +60,16 @@ func (j *Job) Run() {
 var osRemoveAll = os.RemoveAll
 
 func (j *Job) runInstallCmd() ([]byte, string, error) {
-
 	j.nugetCommand = nuget
 	installCmd, err := j.cmdFactory.MakeInstallCmd(j.nugetCommand, j.GetFile())
+
 	if err != nil {
-		return nil, installCmd.String(), err
+		command := ""
+		if installCmd != nil {
+			command = installCmd.String()
+		}
+
+		return nil, command, err
 	}
 
 	installCmdOutput, err := installCmd.Output()
