@@ -146,3 +146,22 @@ func TestRunInstallCmdOutputErr(t *testing.T) {
 
 	jobTestdata.AssertPathErr(t, j.Errors())
 }
+
+func TestNoCmdOutputError(t *testing.T) {
+	cmdErr := errors.New("")
+	cmdFactoryMock := testdata.NewEmptyCmdFactory()
+	cmdFactoryMock.MakeErr = cmdErr
+
+	expectedError := util.NewPMJobError("\n")
+	expectedError.SetStatus("installing dependencies")
+
+	j := NewJob("file", true, cmdFactoryMock)
+
+	go jobTestdata.WaitStatus(j)
+	j.Run()
+
+	allErrors := j.Errors().GetAll()
+
+	assert.Len(t, j.Errors().GetAll(), 1)
+	assert.Contains(t, allErrors, expectedError)
+}
