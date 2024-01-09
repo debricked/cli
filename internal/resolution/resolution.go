@@ -5,6 +5,7 @@ import "github.com/debricked/cli/internal/resolution/job"
 type IResolution interface {
 	Jobs() []job.IJob
 	HasErr() bool
+	GetJobErrorCount() int
 }
 
 type Resolution struct {
@@ -27,4 +28,15 @@ func (r Resolution) HasErr() bool {
 	}
 
 	return false
+}
+
+func (r Resolution) GetJobErrorCount() int {
+	count := 0
+	for _, j := range r.Jobs() {
+		if j.Errors().HasError() {
+			count++
+		}
+	}
+
+	return count
 }

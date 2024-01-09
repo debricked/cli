@@ -12,17 +12,19 @@ import (
 )
 
 var (
-	exclusions   = file.Exclusions()
-	verbose      bool
-	npmPreferred bool
-	regenerate   int
+	exclusions           = file.Exclusions()
+	verbose              bool
+	npmPreferred         bool
+	regenerate           int
+	resolutionStrictness int
 )
 
 const (
-	ExclusionFlag    = "exclusion"
-	VerboseFlag      = "verbose"
-	NpmPreferredFlag = "prefer-npm"
-	RegenerateFlag   = "regenerate"
+	ExclusionFlag        = "exclusion"
+	VerboseFlag          = "verbose"
+	NpmPreferredFlag     = "prefer-npm"
+	RegenerateFlag       = "regenerate"
+	ResolutionStrictFlag = "resolution-strictness"
 )
 
 func NewResolveCmd(resolver resolution.IResolver) *cobra.Command {
@@ -79,6 +81,15 @@ $ debricked resolve . `+exampleFlags)
 
 	cmd.Flags().BoolP(NpmPreferredFlag, "", npmPreferred, npmPreferredDoc)
 
+	cmd.Flags().IntVar(&resolutionStrictness, ResolutionStrictFlag, file.StrictAll, `Allows you to configure exit code 1 or 0 depending on if the resolution was successful or not.
+Strictness Level | Meaning
+---------------- | -------
+0 (default)      | Always exit with code 0, even if any or all files failed to resolve
+1                | Exit with code 1 if all files failed to resolve, otherwise exit with code 0
+2                | Exit with code 1 if any file failed to resolve, otherwise exit with code 0
+3                | Exit with code 1 if all files failed to resolve, if any but not all files failed to resolve exit with code 3, otherwise exit with code 0
+`)
+
 	viper.MustBindEnv(ExclusionFlag)
 	viper.MustBindEnv(NpmPreferredFlag)
 
@@ -90,13 +101,18 @@ func RunE(resolver resolution.IResolver) func(_ *cobra.Command, args []string) e
 		if len(args) == 0 {
 			args = append(args, ".")
 		}
-		options := resolution.DebrickedOptions{
-			Exclusions:   viper.GetStringSlice(ExclusionFlag),
-			Verbose:      viper.GetBool(VerboseFlag),
-			Regenerate:   viper.GetInt(RegenerateFlag),
-			NpmPreferred: viper.GetBool(NpmPreferredFlag),
+		strictness, err := resolution.GetStrictnessLevel(resolutionStrictness)
+		if err != nil {
+			return err
 		}
-		_, err := resolver.Resolve(args, options)
+		options := resolution.DebrickedOptions{
+			Exclusions:           viper.GetStringSlice(ExclusionFlag),
+			Verbose:              viper.GetBool(VerboseFlag),
+			Regenerate:           viper.GetInt(RegenerateFlag),
+			NpmPreferred:         viper.GetBool(NpmPreferredFlag),
+			ResolutionStrictness: strictness,
+		}
+		_, err = resolver.Resolve(args, options)
 
 		return err
 	}
