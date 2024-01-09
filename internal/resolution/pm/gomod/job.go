@@ -13,7 +13,9 @@ import (
 const (
 	fileName                   = "gomod.debricked.lock"
 	versionNotFoundErrRegex    = `require ([^"'\s:]+): version "[^"'\s:]+" invalid: ([^"'\n:]+)`
+	revisionNotFoundErrRegex   = `([^"'\s\n:]+): reading [^"'\n:]+ at revision [^"'\n:]+: unknown revision ([^"'\n:]+)`
 	dependencyNotFoundErrRegex = `go: ([^"'\s:]+): .*\n.*fatal: could not read Username`
+	repositoryNotFoundErrRegex = `go: ([^"'\s:]+): .*\n.*remote: Repository not found`
 	noPackageErrRegex          = `([^"'\s:]+): .*, but does not contain package`
 	unableToResolveErrRegex    = `go: module ([^"'\s:]+): .*\n.*Permission denied`
 	noInternetErrRegex         = `dial tcp: lookup ([^"'\s:]+) .+: server misbehaving`
@@ -119,7 +121,9 @@ func (j *Job) createError(error string, cmd string, status string) job.IError {
 func (j *Job) handleError(cmdError job.IError) {
 	expressions := []string{
 		versionNotFoundErrRegex,
+		revisionNotFoundErrRegex,
 		dependencyNotFoundErrRegex,
+		repositoryNotFoundErrRegex,
 		noPackageErrRegex,
 		unableToResolveErrRegex,
 		noInternetErrRegex,
@@ -146,7 +150,11 @@ func (j *Job) addDocumentation(expr string, matches [][]string, cmdError job.IEr
 	switch expr {
 	case versionNotFoundErrRegex:
 		documentation = getVersionNotFoundErrorDocumentation(matches)
+	case revisionNotFoundErrRegex:
+		documentation = getRevisionNotFoundErrorDocumentation(matches)
 	case dependencyNotFoundErrRegex:
+		documentation = getDependencyNotFoundErrorDocumentation(matches)
+	case repositoryNotFoundErrRegex:
 		documentation = getDependencyNotFoundErrorDocumentation(matches)
 	case noPackageErrRegex:
 		documentation = getNoPackageErrorDocumentation(matches)
@@ -175,6 +183,22 @@ func getVersionNotFoundErrorDocumentation(matches [][]string) string {
 			"\"" + dependency + "\".",
 			"Please check that package versions are correct in the manifest file.",
 			"It " + recommendation + ".",
+		}, " ")
+}
+
+func getRevisionNotFoundErrorDocumentation(matches [][]string) string {
+	dependency := ""
+	revision := ""
+	if len(matches) > 0 && len(matches[0]) > 1 {
+		dependency = matches[0][1]
+		revision = matches[0][2]
+	}
+
+	return strings.Join(
+		[]string{
+			"Failed to find package",
+			"\"" + dependency + "\" with revision " + revision + ".",
+			"Please check that package version is correct in the manifest file.",
 		}, " ")
 }
 
