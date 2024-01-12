@@ -2,6 +2,7 @@ package maven
 
 import (
 	"errors"
+	"path/filepath"
 	"testing"
 
 	jobTestdata "github.com/debricked/cli/internal/resolution/job/testdata"
@@ -11,7 +12,7 @@ import (
 )
 
 func TestNewJob(t *testing.T) {
-	j := NewJob("file", CmdFactory{})
+	j := NewJob("file", CmdFactory{}, PomService{})
 	assert.Equal(t, "file", j.GetFile())
 	assert.False(t, j.Errors().HasError())
 }
@@ -48,21 +49,21 @@ func TestRunCmdErr(t *testing.T) {
 		expectedError.SetDocumentation(c.doc)
 
 		cmdErr := errors.New(c.error)
-		j := NewJob("file", testdata.CmdFactoryMock{Err: cmdErr})
+		j := NewJob("file", testdata.CmdFactoryMock{Err: cmdErr}, testdata.PomServiceMock{})
 
 		go jobTestdata.WaitStatus(j)
 
 		j.Run()
 
-		errors := j.Errors().GetAll()
+		allErrors := j.Errors().GetAll()
 
-		assert.Len(t, errors, 1)
-		assert.Contains(t, errors, expectedError)
+		assert.Len(t, allErrors, 1)
+		assert.Contains(t, allErrors, expectedError)
 	}
 }
 
 func TestRunCmdOutputErr(t *testing.T) {
-	j := NewJob("file", testdata.CmdFactoryMock{Name: "bad-name"})
+	j := NewJob("file", testdata.CmdFactoryMock{Name: "bad-name"}, testdata.PomServiceMock{})
 
 	go jobTestdata.WaitStatus(j)
 
@@ -72,7 +73,7 @@ func TestRunCmdOutputErr(t *testing.T) {
 }
 
 func TestRunCmdOutputErrNoOutput(t *testing.T) {
-	j := NewJob("file", testdata.CmdFactoryMock{Name: "go", Arg: "bad-arg"})
+	j := NewJob("file", testdata.CmdFactoryMock{Name: "go", Arg: "bad-arg"}, testdata.PomServiceMock{})
 
 	go jobTestdata.WaitStatus(j)
 
@@ -88,11 +89,80 @@ func TestRunCmdOutputErrNoOutput(t *testing.T) {
 }
 
 func TestRun(t *testing.T) {
-	j := NewJob("file", testdata.CmdFactoryMock{Name: "echo"})
+	j := NewJob("file", testdata.CmdFactoryMock{Name: "echo"}, testdata.PomServiceMock{})
 
 	go jobTestdata.WaitStatus(j)
 
 	j.Run()
 
 	assert.False(t, j.Errors().HasError())
+}
+
+func TestSuccessfulRunWithActualFile(t *testing.T) {
+	cases := []struct {
+		name string
+		file string
+	}{
+		{
+			name: "valid file",
+			file: filepath.Join("testdata", "pom.xml"),
+		},
+		{
+			name: "valid child",
+			file: filepath.Join("testdata", "guava", "pom.xml"),
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			j := NewJob(c.file, testdata.CmdFactoryMock{Name: "echo"}, PomService{})
+
+			go jobTestdata.WaitStatus(j)
+
+			j.Run()
+
+			assert.False(t, j.Errors().HasError())
+		})
+	}
+}
+
+func TestRunWithActualFileErrOutput(t *testing.T) {
+	cases := []struct {
+		name  string
+		file  string
+		error string
+		doc   string
+	}{
+		{
+			name:  "not a pom",
+			file:  filepath.Join("testdata", "notAPom.xml"),
+			error: "EOF",
+			doc:   "This file doesn't contain valid XML",
+		},
+		{
+			name:  "invalid pom",
+			file:  filepath.Join("testdata", "invalidPom.xml"),
+			error: "XML syntax error on line 13: invalid characters between </artifactId and >",
+			doc:   "XML syntax error on line 13: invalid characters between </artifactId and >",
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			j := NewJob(c.file, testdata.CmdFactoryMock{Name: "echo"}, PomService{})
+
+			go jobTestdata.WaitStatus(j)
+
+			j.Run()
+
+			allErrors := j.Errors().GetAll()
+
+			expectedError := util.NewPMJobError(c.error)
+			expectedError.SetStatus("parsing XML")
+			expectedError.SetDocumentation(c.doc)
+
+			assert.Len(t, allErrors, 1)
+			assert.Contains(t, allErrors, expectedError)
+		})
+	}
 }

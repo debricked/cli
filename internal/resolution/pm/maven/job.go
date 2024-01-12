@@ -20,17 +20,41 @@ const (
 type Job struct {
 	job.BaseJob
 	cmdFactory ICmdFactory
+	pomService IPomService
 }
 
-func NewJob(file string, cmdFactory ICmdFactory) *Job {
+func NewJob(file string, cmdFactory ICmdFactory, pomService IPomService) *Job {
 	return &Job{
 		BaseJob:    job.NewBaseJob(file),
 		cmdFactory: cmdFactory,
+		pomService: pomService,
 	}
 }
 
 func (j *Job) Run() {
-	workingDirectory := filepath.Dir(filepath.Clean(j.GetFile()))
+	status := "parsing XML"
+	j.SendStatus(status)
+
+	file := j.GetFile()
+	_, err := j.pomService.ParsePomModules(file)
+
+	if err != nil {
+		doc := err.Error()
+
+		if doc == "EOF" {
+			doc = "This file doesn't contain valid XML"
+		}
+
+		parsingError := util.NewPMJobError(err.Error())
+		parsingError.SetStatus(status)
+		parsingError.SetDocumentation(doc)
+
+		j.Errors().Critical(parsingError)
+
+		return
+	}
+
+	workingDirectory := filepath.Dir(filepath.Clean(file))
 	cmd, err := j.cmdFactory.MakeDependencyTreeCmd(workingDirectory)
 	if err != nil {
 		j.handleError(util.NewPMJobError(err.Error()))
@@ -38,7 +62,7 @@ func (j *Job) Run() {
 		return
 	}
 
-	status := "creating dependency graph"
+	status = "creating dependency graph"
 	j.SendStatus(status)
 	var output []byte
 	output, err = cmd.Output()
