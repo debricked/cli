@@ -142,9 +142,9 @@ func (j *Job) addDocumentation(expr string, matches [][]string, cmdError job.IEr
 	case buildErrRegex:
 		documentation = j.getBuildErrorDocumentation(matches)
 	case invalidCredentialsErrRegex:
-		documentation = j.getCredentialErrorDocumentation(cmdError.Error())
+		documentation = j.getCredentialErrorDocumentation(cmdError)
 	case couldNotFindVersionErrRegex:
-		documentation = j.getCouldNotFindVersionErrorDocumentation(cmdError.Error())
+		documentation = j.getCouldNotFindVersionErrorDocumentation(cmdError)
 	}
 
 	cmdError.SetDocumentation(documentation)
@@ -170,9 +170,9 @@ func (j *Job) getBuildErrorDocumentation(matches [][]string) string {
 		}, "")
 }
 
-func (j *Job) getCredentialErrorDocumentation(errorText string) string {
+func (j *Job) getCredentialErrorDocumentation(cmdError job.IError) string {
 	authErrDependencyNamePattern := regexp.MustCompile(`No matching distribution found for ([^\s]+)`)
-	dependencyNameMatch := authErrDependencyNamePattern.FindStringSubmatch(errorText)
+	dependencyNameMatch := authErrDependencyNamePattern.FindStringSubmatch(cmdError.Error())
 	dependencyName := ""
 	if len(dependencyNameMatch) > 1 {
 		dependencyName = "\"" + dependencyNameMatch[len(dependencyNameMatch)-1] + "\""
@@ -186,9 +186,9 @@ func (j *Job) getCredentialErrorDocumentation(errorText string) string {
 		}, "")
 }
 
-func (j *Job) getCouldNotFindVersionErrorDocumentation(errorText string) string {
+func (j *Job) getCouldNotFindVersionErrorDocumentation(cmdError job.IError) string {
 	dependencyNamePattern := regexp.MustCompile(`Could not find a version that satisfies the requirement ([\w=]+)`)
-	dependencyNameMatch := dependencyNamePattern.FindStringSubmatch(errorText)
+	dependencyNameMatch := dependencyNamePattern.FindStringSubmatch(cmdError.Error())
 	dependencyName := ""
 
 	if len(dependencyNameMatch) > 1 {

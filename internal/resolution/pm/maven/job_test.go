@@ -30,9 +30,9 @@ func TestRunCmdErr(t *testing.T) {
 		},
 
 		{
-			name:  "Mvn not found",
-			error: "        |exec: \"mvn\": executable file not found in $PATH",
-			doc:   "Mvn wasn't found. Please check if it is installed and accessible by the CLI.",
+			name:  "Maven not found",
+			error: "        |exec: \"maven\": executable file not found in $PATH",
+			doc:   "Maven wasn't found. Please check if it is installed and accessible by the CLI.",
 		},
 		{
 			name:  "Invalid XML",

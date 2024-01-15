@@ -109,7 +109,7 @@ func (j *Job) addDocumentation(expr string, matches [][]string, cmdError job.IEr
 
 	switch expr {
 	case executableNotFoundErrRegex:
-		documentation = j.GetExecutableNotFoundErrorDocumentation("Mvn")
+		documentation = j.GetExecutableNotFoundErrorDocumentation("Maven")
 	case nonParseablePomErrRegex:
 		documentation = j.addNonParseablePomErrorDocumentation(matches)
 	case networkUnreachableErrRegex:
