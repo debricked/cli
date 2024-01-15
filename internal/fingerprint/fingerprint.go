@@ -41,6 +41,7 @@ var EXCLUDED_FILE_ENDINGS = []string{"-doc", "changelog", "config", "copying", "
 var EXCLUDED_FILES = []string{
 	"gradlew", "gradlew.bat", "mvnw", "mvnw.cmd", "gradle-wrapper.jar", "maven-wrapper.jar",
 	"thumbs.db", "babel.config.js", "license.txt", "license.md", "copying.lib", "makefile",
+	"[content_types].xml",
 }
 
 var FILES_TO_UNPACK = []string{".jar", ".nupkg", ".war"}
