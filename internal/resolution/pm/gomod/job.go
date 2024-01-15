@@ -12,6 +12,7 @@ import (
 
 const (
 	fileName                   = "gomod.debricked.lock"
+	executableNotFoundErrRegex = `executable file not found`
 	versionNotFoundErrRegex    = `require ([^"'\s:]+): version "[^"'\s:]+" invalid: ([^"'\n:]+)`
 	revisionNotFoundErrRegex   = `([^"'\s\n:]+): reading [^"'\n:]+ at revision [^"'\n:]+: unknown revision ([^"'\n:]+)`
 	dependencyNotFoundErrRegex = `go: ([^"'\s:]+): .*\n.*fatal: could not read Username`
@@ -120,6 +121,7 @@ func (j *Job) createError(error string, cmd string, status string) job.IError {
 
 func (j *Job) handleError(cmdError job.IError) {
 	expressions := []string{
+		executableNotFoundErrRegex,
 		versionNotFoundErrRegex,
 		revisionNotFoundErrRegex,
 		dependencyNotFoundErrRegex,
@@ -148,20 +150,22 @@ func (j *Job) addDocumentation(expr string, matches [][]string, cmdError job.IEr
 	documentation := cmdError.Documentation()
 
 	switch expr {
+	case executableNotFoundErrRegex:
+		documentation = j.GetExecutableNotFoundErrorDocumentation("Go")
 	case versionNotFoundErrRegex:
-		documentation = getVersionNotFoundErrorDocumentation(matches)
+		documentation = j.getVersionNotFoundErrorDocumentation(matches)
 	case revisionNotFoundErrRegex:
-		documentation = getRevisionNotFoundErrorDocumentation(matches)
+		documentation = j.getRevisionNotFoundErrorDocumentation(matches)
 	case dependencyNotFoundErrRegex:
-		documentation = getDependencyNotFoundErrorDocumentation(matches)
+		documentation = j.getDependencyNotFoundErrorDocumentation(matches)
 	case repositoryNotFoundErrRegex:
-		documentation = getDependencyNotFoundErrorDocumentation(matches)
+		documentation = j.getDependencyNotFoundErrorDocumentation(matches)
 	case noPackageErrRegex:
-		documentation = getNoPackageErrorDocumentation(matches)
+		documentation = j.getNoPackageErrorDocumentation(matches)
 	case unableToResolveErrRegex:
-		documentation = getDependencyNotFoundErrorDocumentation(matches)
+		documentation = j.getDependencyNotFoundErrorDocumentation(matches)
 	case noInternetErrRegex:
-		documentation = getNoInternetErrorDocumentation(matches)
+		documentation = j.getNoInternetErrorDocumentation(matches)
 	}
 
 	cmdError.SetDocumentation(documentation)
@@ -169,7 +173,7 @@ func (j *Job) addDocumentation(expr string, matches [][]string, cmdError job.IEr
 	return cmdError
 }
 
-func getVersionNotFoundErrorDocumentation(matches [][]string) string {
+func (j *Job) getVersionNotFoundErrorDocumentation(matches [][]string) string {
 	dependency := ""
 	recommendation := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
@@ -186,7 +190,7 @@ func getVersionNotFoundErrorDocumentation(matches [][]string) string {
 		}, " ")
 }
 
-func getRevisionNotFoundErrorDocumentation(matches [][]string) string {
+func (j *Job) getRevisionNotFoundErrorDocumentation(matches [][]string) string {
 	dependency := ""
 	revision := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
@@ -202,7 +206,7 @@ func getRevisionNotFoundErrorDocumentation(matches [][]string) string {
 		}, " ")
 }
 
-func getDependencyNotFoundErrorDocumentation(matches [][]string) string {
+func (j *Job) getDependencyNotFoundErrorDocumentation(matches [][]string) string {
 	dependency := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		dependency = matches[0][1]
@@ -218,7 +222,7 @@ func getDependencyNotFoundErrorDocumentation(matches [][]string) string {
 		}, " ")
 }
 
-func getNoPackageErrorDocumentation(matches [][]string) string {
+func (j *Job) getNoPackageErrorDocumentation(matches [][]string) string {
 	repository := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		repository = matches[0][1]
@@ -232,7 +236,7 @@ func getNoPackageErrorDocumentation(matches [][]string) string {
 		}, " ")
 }
 
-func getNoInternetErrorDocumentation(matches [][]string) string {
+func (j *Job) getNoInternetErrorDocumentation(matches [][]string) string {
 	registry := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		registry = matches[0][1]

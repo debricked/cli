@@ -10,6 +10,7 @@ import (
 
 const (
 	yarn                        = "yarn"
+	executableNotFoundErrRegex  = `executable file not found`
 	versionNotFoundErrRegex     = "error (Couldn\\'t find any versions for .*)"
 	dependencyNotFoundErrRegex  = `error.*? "?(https?://[^"\s:]+)?: Not found`
 	registryUnavailableErrRegex = "error Error: getaddrinfo ENOTFOUND ([\\w\\.]+)"
@@ -72,6 +73,7 @@ func (j *Job) createError(error string, cmd string, status string) job.IError {
 
 func (j *Job) handleError(cmdError job.IError) {
 	expressions := []string{
+		executableNotFoundErrRegex,
 		versionNotFoundErrRegex,
 		dependencyNotFoundErrRegex,
 		registryUnavailableErrRegex,
@@ -97,14 +99,16 @@ func (j *Job) addDocumentation(expr string, matches [][]string, cmdError job.IEr
 	documentation := cmdError.Documentation()
 
 	switch expr {
+	case executableNotFoundErrRegex:
+		documentation = j.GetExecutableNotFoundErrorDocumentation("Yarn")
 	case versionNotFoundErrRegex:
-		documentation = getVersionNotFoundErrorDocumentation(matches)
+		documentation = j.getVersionNotFoundErrorDocumentation(matches)
 	case dependencyNotFoundErrRegex:
-		documentation = getDependencyNotFoundErrorDocumentation(matches)
+		documentation = j.getDependencyNotFoundErrorDocumentation(matches)
 	case registryUnavailableErrRegex:
-		documentation = getRegistryUnavailableErrorDocumentation(matches)
+		documentation = j.getRegistryUnavailableErrorDocumentation(matches)
 	case permissionDeniedErrRegex:
-		documentation = getPermissionDeniedErrorDocumentation(matches)
+		documentation = j.getPermissionDeniedErrorDocumentation(matches)
 	}
 
 	cmdError.SetDocumentation(documentation)
@@ -112,7 +116,7 @@ func (j *Job) addDocumentation(expr string, matches [][]string, cmdError job.IEr
 	return cmdError
 }
 
-func getDependencyNotFoundErrorDocumentation(matches [][]string) string {
+func (j *Job) getDependencyNotFoundErrorDocumentation(matches [][]string) string {
 	dependency := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		dependency = matches[0][1]
@@ -128,7 +132,7 @@ func getDependencyNotFoundErrorDocumentation(matches [][]string) string {
 		}, " ")
 }
 
-func getVersionNotFoundErrorDocumentation(matches [][]string) string {
+func (j *Job) getVersionNotFoundErrorDocumentation(matches [][]string) string {
 	message := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		message = matches[0][1]
@@ -141,7 +145,7 @@ func getVersionNotFoundErrorDocumentation(matches [][]string) string {
 		}, " ")
 }
 
-func getRegistryUnavailableErrorDocumentation(matches [][]string) string {
+func (j *Job) getRegistryUnavailableErrorDocumentation(matches [][]string) string {
 	registry := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		registry = matches[0][1]
@@ -156,7 +160,7 @@ func getRegistryUnavailableErrorDocumentation(matches [][]string) string {
 		}, " ")
 }
 
-func getPermissionDeniedErrorDocumentation(matches [][]string) string {
+func (j *Job) getPermissionDeniedErrorDocumentation(matches [][]string) string {
 	dependency := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		dependency = matches[0][1]

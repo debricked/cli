@@ -42,6 +42,11 @@ func TestRunInstallCmdErr(t *testing.T) {
 			doc:   util.UnknownError,
 		},
 		{
+			name:  "Yarn not found",
+			error: "        |exec: \"yarn\": executable file not found in $PATH",
+			doc:   "Yarn wasn't found. Please check if it is installed and accessible by the CLI.",
+		},
+		{
 			name:  "Invalid package name",
 			error: "error Error: https://registry.yarnpkg.com/chalke: Not found\n    at Request.params.callback [as _callback] (/usr/local/lib/node_modules/yarn/lib/cli.js:66148:18)",
 			doc:   "Failed to find package \"https://registry.yarnpkg.com/chalke\" that satisfies the requirement from yarn dependencies. Please check that dependencies are correct in your package.json file. \nIf this is a private dependency, please make sure that the debricked CLI has access to install it or pre-install it before running the debricked CLI.",
