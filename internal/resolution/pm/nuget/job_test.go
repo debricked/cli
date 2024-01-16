@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"regexp"
 	"testing"
 
 	jobTestdata "github.com/debricked/cli/internal/resolution/job/testdata"
@@ -156,7 +157,7 @@ func TestInstallCmdErrCleansUpLockFile(t *testing.T) {
 	lockFileContents, fileErr := os.ReadFile(lockFile)
 
 	assert.Nil(t, lockFileContents)
-	assert.Contains(t, fileErr.Error(), "no such file or directory")
+	assert.Regexp(t, regexp.MustCompile(`(no such file or directory|cannot find the file)`), fileErr.Error())
 	assert.Len(t, j.Errors().GetAll(), 1)
 }
 
