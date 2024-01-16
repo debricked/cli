@@ -42,54 +42,69 @@ func TestInstall(t *testing.T) {
 
 func TestRunInstallCmdErr(t *testing.T) {
 	cases := []struct {
+		name  string
 		error string
 		doc   string
 	}{
 		{
+			name:  "General error",
 			error: "cmd-error",
 			doc:   util.UnknownError,
 		},
 		{
+			name:  "Composer not found",
+			error: "        |exec: \"composer\": executable file not found in $PATH",
+			doc:   "Composer wasn't found. Please check if it is installed and accessible by the CLI.",
+		},
+		{
+			name:  "Phar extension is missing",
 			error: "\n\n PHP's phar extension is missing. Composer requires it to run. Enable the extension or recompile php without --disable-phar then try again.",
 			doc:   "Failed to build Composer dependency tree. Your runtime environment is missing one or more Composer requirements. Check error message below for more details:\n\n \n\n PHP's phar extension is missing. Composer requires it to run. Enable the extension or recompile php without --disable-phar then try again.",
 		},
 		{
+			name:  "Invalid package name",
 			error: "require.debricked is invalid, it should have a vendor name, a forward slash, and a package name",
 			doc:   "Couldn't resolve dependency debricked , please make sure it is spelt correctly:\n",
 		},
 		{
+			name:  "No internet connection 1",
 			error: "The following exception probably indicates you have misconfigured DNS resolver(s)\n\n[Composer\\Downloader\\TransportException]\ncurl error 6 while downloading https://flex.symfony.com/versions.json: Could not resolve host: flex.symfony.com",
 			doc:   "We weren't able to retrieve one or more dependencies. Please check your Internet connection and try again.",
 		},
 		{
+			name:  "No internet connection 2",
 			error: "The following exception probably indicates you are offline or have misconfigured DNS resolver(s)\n\n[Composer\\Downloader\\TransportException]\ncurl error 6 while downloading https://flex.symfony.com/versions.json: Could not resolve host: flex.symfony.com",
 			doc:   "We weren't able to retrieve one or more dependencies. Please check your Internet connection and try again.",
 		},
 		{
+			name:  "Invalid package version",
 			error: "Root composer.json requires drupal/entity_pager 1.0@RC, found drupal/entity_pager[dev-1.x, dev-2.0.x, 1.0.0-alpha1, ..., 1.x-dev (alias of dev-1.x), 2.0.x-dev (alias of dev-2.0.x)] but it does not match the constraint.",
 			doc:   "Couldn't resolve version drupal/entity_pager 1.0@RC , please make sure it exists:\n",
 		},
 		{
+			name:  "Invalid package name",
 			error: "Loading composer repositories with package information\nUpdating dependencies\nYour requirements could not be resolved to an installable set of packages.\n\n  Problem 1\n    - Root composer.json requires blablabla/blabla, it could not be found in any version, there may be a typo in the package name.\n\nPotential causes:\n - A typo in the package name\n - The package is not available in a stable-enough version according to your minimum-stability setting\n   see <https://getcomposer.org/doc/04-schema.md#minimum-stability> for more details.\n - It's a private package and you forgot to add a custom repository to find it\n\nRead <https://getcomposer.org/doc/articles/troubleshooting.md> for further common problems.\n",
 			doc:   "An error occurred during dependencies resolve for: blablabla/blabla\n\nIf this is a private dependency, please make sure that the debricked CLI has access to install it or pre-install it before running the debricked CLI.\n\n",
 		},
 	}
 
 	for _, c := range cases {
-		expectedError := util.NewPMJobError(c.error)
-		expectedError.SetDocumentation(c.doc)
+		t.Run(c.name, func(t *testing.T) {
+			expectedError := util.NewPMJobError(c.error)
+			expectedError.SetDocumentation(c.doc)
 
-		cmdErr := errors.New(c.error)
-		j := NewJob("file", true, testdata.CmdFactoryMock{InstallCmdName: "echo", MakeInstallErr: cmdErr})
+			cmdErr := errors.New(c.error)
+			j := NewJob("file", true, testdata.CmdFactoryMock{InstallCmdName: "echo", MakeInstallErr: cmdErr})
 
-		go jobTestdata.WaitStatus(j)
+			go jobTestdata.WaitStatus(j)
 
-		j.Run()
+			j.Run()
 
-		errors := j.Errors().GetAll()
+			allErrors := j.Errors().GetAll()
 
-		assert.Len(t, errors, 1)
-		assert.Contains(t, errors, expectedError)
+			assert.Len(t, allErrors, 1)
+			assert.Contains(t, allErrors, expectedError)
+		})
 	}
 }
 

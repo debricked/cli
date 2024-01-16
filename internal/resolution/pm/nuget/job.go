@@ -12,6 +12,7 @@ import (
 
 const (
 	nuget                      = "dotnet"
+	executableNotFoundErrRegex = `executable file not found`
 	versionNotFoundErrRegex    = `Unable to find [\w\s]*package ('[^"'\s:]+' with version [^"'\n:]+)`
 	dependencyNotFoundErrRegex = `'([^"'\s:]+)'. No packages exist`
 	unableToResolveErrRegex    = `Unable to resolve '([^"'\n:]+)'`
@@ -103,6 +104,7 @@ func (j *Job) createError(error string, cmd string, status string) job.IError {
 
 func (j *Job) handleError(cmdError job.IError) {
 	expressions := []string{
+		executableNotFoundErrRegex,
 		versionNotFoundErrRegex,
 		dependencyNotFoundErrRegex,
 		unableToResolveErrRegex,
@@ -128,14 +130,16 @@ func (j *Job) addDocumentation(expr string, matches [][]string, cmdError job.IEr
 	documentation := cmdError.Documentation()
 
 	switch expr {
+	case executableNotFoundErrRegex:
+		documentation = j.GetExecutableNotFoundErrorDocumentation("Dotnet")
 	case versionNotFoundErrRegex:
-		documentation = getVersionNotFoundErrorDocumentation(matches)
+		documentation = j.getVersionNotFoundErrorDocumentation(matches)
 	case dependencyNotFoundErrRegex:
-		documentation = getDependencyNotFoundErrorDocumentation(matches)
+		documentation = j.getDependencyNotFoundErrorDocumentation(matches)
 	case unableToResolveErrRegex:
-		documentation = getUnableToResolveErrorDocumentation(matches)
+		documentation = j.getUnableToResolveErrorDocumentation(matches)
 	case noInternetErrRegex:
-		documentation = getNoInternetErrorDocumentation(matches)
+		documentation = j.getNoInternetErrorDocumentation(matches)
 	}
 
 	cmdError.SetDocumentation(documentation)
@@ -143,7 +147,7 @@ func (j *Job) addDocumentation(expr string, matches [][]string, cmdError job.IEr
 	return cmdError
 }
 
-func getVersionNotFoundErrorDocumentation(matches [][]string) string {
+func (j *Job) getVersionNotFoundErrorDocumentation(matches [][]string) string {
 	dependency := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		dependency = matches[0][1]
@@ -157,7 +161,7 @@ func getVersionNotFoundErrorDocumentation(matches [][]string) string {
 		}, " ")
 }
 
-func getDependencyNotFoundErrorDocumentation(matches [][]string) string {
+func (j *Job) getDependencyNotFoundErrorDocumentation(matches [][]string) string {
 	dependency := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		dependency = matches[0][1]
@@ -173,7 +177,7 @@ func getDependencyNotFoundErrorDocumentation(matches [][]string) string {
 		}, " ")
 }
 
-func getUnableToResolveErrorDocumentation(matches [][]string) string {
+func (j *Job) getUnableToResolveErrorDocumentation(matches [][]string) string {
 	dependency := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		dependency = matches[0][1]
@@ -187,7 +191,7 @@ func getUnableToResolveErrorDocumentation(matches [][]string) string {
 		}, " ")
 }
 
-func getNoInternetErrorDocumentation(matches [][]string) string {
+func (j *Job) getNoInternetErrorDocumentation(matches [][]string) string {
 	registry := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		registry = matches[0][1]

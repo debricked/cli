@@ -30,6 +30,11 @@ func TestRunGraphCmdErr(t *testing.T) {
 			doc:   util.UnknownError,
 		},
 		{
+			name:  "Go not found",
+			error: "        |exec: \"go\": executable file not found in $PATH",
+			doc:   "Go wasn't found. Please check if it is installed and accessible by the CLI.",
+		},
+		{
 			name:  "Invalid package version",
 			error: "        |go: errors parsing go.mod:\n        |/home/asus/Projects/playground/imessage/go.mod:8:2: require github.com/google/uuid: version \"v111.5.0\" invalid: should be v0 or v1, not v111",
 			doc:   "Failed to find package \"github.com/google/uuid\". Please check that package versions are correct in the manifest file. It should be v0 or v1, not v111.",

@@ -90,6 +90,11 @@ func TestRunInstallCmdErr(t *testing.T) {
 			doc:   util.UnknownError,
 		},
 		{
+			name:  "Dotnet not found",
+			error: "        |exec: \"dotnet\": executable file not found in $PATH",
+			doc:   "Dotnet wasn't found. Please check if it is installed and accessible by the CLI.",
+		},
+		{
 			name:  "Invalid package version",
 			error: "Unable to find a stable package 'PackageId' with version (>= 3.0.0)\n  - Found 10 version(s) in 'sourceA' [ Nearest version: '4.0.0-rc-2129' ]\n  - Found 9 version(s) in 'sourceB' [ Nearest version: '3.0.0-beta-00032' ]\n  - Found 0 version(s) in 'sourceC'\n  - Found 0 version(s) in 'sourceD'",
 			doc:   "Failed to find package 'PackageId' with version (>= 3.0.0). Please check that package versions are correct in the manifest file.",

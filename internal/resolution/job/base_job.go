@@ -3,6 +3,7 @@ package job
 import (
 	"errors"
 	"os/exec"
+	"strings"
 )
 
 type BaseJob struct {
@@ -48,4 +49,12 @@ func (j *BaseJob) GetExitError(err error, commandOutput string) error {
 	}
 
 	return errors.New(errorMessage)
+}
+
+func (j *BaseJob) GetExecutableNotFoundErrorDocumentation(pm string) string {
+	return strings.Join(
+		[]string{
+			pm + " wasn't found.",
+			"Please check if it is installed and accessible by the CLI.",
+		}, " ")
 }
