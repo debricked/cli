@@ -14,6 +14,9 @@ test/resolve/testdata/pip/requirements.txt.pip.debricked.lock
 internal/cmd/scan/testdata/npm/yarn.lock
 internal/file/embedded/supported_formats.json
 internal/resolution/pm/gradle/.gradle-init-script.debricked.groovy
+internal/resolution/pm/nuget/testdata/invalid_dependency/obj
+internal/resolution/pm/nuget/testdata/valid/obj
+internal/resolution/pm/nuget/testdata/valid/packages.config.nuget.debricked.lock
 internal/callgraph/language/java11/testdata/mvnproj/target
 test/resolve/testdata/composer/composer.lock
 test/resolve/testdata/npm/yarn.lock
