@@ -303,7 +303,7 @@ func TestCreateCsprojContent(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			cmd := CmdFactory{
 				execPath:               ExecPath{},
-				packageConfgRegex:      PackagesConfigRegex,
+				packageConfigRegex:     PackagesConfigRegex,
 				packagesConfigTemplate: test.tmpl,
 			}
 			_, err := cmd.createCsprojContentWithTemplate(test.targetFrameworksStr, test.packages)
@@ -317,8 +317,8 @@ func TestCreateCsprojContent(t *testing.T) {
 func TestMakeInstallCmdBadPackagesConfigRegex(t *testing.T) {
 
 	cmd, err := (&CmdFactory{
-		execPath:          ExecPath{},
-		packageConfgRegex: "[",
+		execPath:           ExecPath{},
+		packageConfigRegex: "[",
 	}).MakeInstallCmd(nuget, "file")
 
 	assert.Error(t, err)
@@ -364,8 +364,8 @@ func (ExecPathErr) LookPath(file string) (string, error) {
 func TestMakeInstallCmdExecPathError(t *testing.T) {
 
 	cmd, err := (&CmdFactory{
-		execPath:          ExecPathErr{},
-		packageConfgRegex: PackagesConfigRegex,
+		execPath:           ExecPathErr{},
+		packageConfigRegex: PackagesConfigRegex,
 	}).MakeInstallCmd(nuget, "file")
 
 	assert.Error(t, err)
@@ -421,7 +421,7 @@ func TestConvertPackagesConfigToCsproj(t *testing.T) {
 
 			cmd := CmdFactory{
 				execPath:               ExecPath{},
-				packageConfgRegex:      PackagesConfigRegex,
+				packageConfigRegex:     PackagesConfigRegex,
 				packagesConfigTemplate: tt.packagesConfigTemplate,
 			}
 			_, err := cmd.convertPackagesConfigToCsproj(tt.filePath, nugetCommand)

@@ -47,7 +47,7 @@ var packagesConfigTemplate = `
 
 type CmdFactory struct {
 	execPath               IExecPath
-	packageConfgRegex      string
+	packageConfigRegex     string
 	packagesConfigTemplate string
 	tempoCsproj            string
 }
@@ -55,7 +55,7 @@ type CmdFactory struct {
 func NewCmdFactory(execPath IExecPath) *CmdFactory {
 	return &CmdFactory{
 		execPath:               execPath,
-		packageConfgRegex:      PackagesConfigRegex,
+		packageConfigRegex:     PackagesConfigRegex,
 		packagesConfigTemplate: packagesConfigTemplate,
 		tempoCsproj:            "",
 	}
@@ -75,7 +75,7 @@ func (cmdf *CmdFactory) MakeInstallCmd(command string, file string) (*exec.Cmd, 
 
 	// If the file is a packages.config file, convert it to a .csproj file
 	// check regex with PackagesConfigRegex
-	packageConfig, err := regexp.Compile(cmdf.packageConfgRegex)
+	packageConfig, err := regexp.Compile(cmdf.packageConfigRegex)
 	if err != nil {
 		return nil, err
 	}
