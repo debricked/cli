@@ -3,6 +3,7 @@ package nuget
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -124,6 +125,10 @@ func (j *Job) handleError(cmdError job.IError) {
 	}
 
 	j.Errors().Append(cmdError)
+
+	// Remove lock file
+	dir := filepath.Dir(j.GetFile())
+	os.Remove(filepath.Join(dir, packagesConfigLockfile))
 }
 
 func (j *Job) addDocumentation(expr string, matches [][]string, cmdError job.IError) job.IError {

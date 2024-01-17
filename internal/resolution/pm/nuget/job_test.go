@@ -2,6 +2,9 @@ package nuget
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
+	"regexp"
 	"testing"
 
 	jobTestdata "github.com/debricked/cli/internal/resolution/job/testdata"
@@ -139,6 +142,40 @@ func TestRunInstallCmdErr(t *testing.T) {
 			assert.Contains(t, allErrors, expectedError)
 		})
 	}
+}
+
+func TestInstallCmdErrCleansUpLockFile(t *testing.T) {
+	dir := "testdata/invalid_dependency"
+	cmdFactory := NewCmdFactory(ExecPath{})
+
+	j := NewJob(filepath.Join(dir, "packages.config"), true, cmdFactory)
+
+	go jobTestdata.WaitStatus(j)
+	j.Run()
+
+	lockFile := filepath.Join(dir, "packages.config.nuget.debricked.lock")
+	lockFileContents, fileErr := os.ReadFile(lockFile)
+
+	assert.Nil(t, lockFileContents)
+	assert.Regexp(t, regexp.MustCompile(`(no such file or directory|cannot find the file)`), fileErr.Error())
+	assert.Len(t, j.Errors().GetAll(), 1)
+}
+
+func TestSuccessfulInstallCmdWontDeleteLockFile(t *testing.T) {
+	dir := "testdata/valid"
+	cmdFactory := NewCmdFactory(ExecPath{})
+
+	j := NewJob(filepath.Join(dir, "packages.config"), true, cmdFactory)
+
+	go jobTestdata.WaitStatus(j)
+	j.Run()
+
+	lockFile := filepath.Join(dir, "packages.config.nuget.debricked.lock")
+	lockFileContents, fileErr := os.ReadFile(lockFile)
+
+	assert.NotNil(t, lockFileContents)
+	assert.Nil(t, fileErr)
+	assert.Empty(t, j.Errors().GetAll())
 }
 
 func TestRunInstallCmdOutputErr(t *testing.T) {
