@@ -18,4 +18,4 @@ With this done we can move on to the next section
 ### .csproj
 
 1. Run `dotnet restore <file> --use-lock-file --lock-file-path <lock_file>` in order to restore the dependencies and tools of a project (lock file name can be different depend on which manifest file is being resolved)
-2. Cleanup temporary csproj file after lock file is created (for `packages.comfig` case)
+2. Cleanup temporary csproj file after lock file is created (for `packages.config` case)
