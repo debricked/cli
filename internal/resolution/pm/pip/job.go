@@ -15,9 +15,14 @@ import (
 )
 
 const (
-	lockFileExtension = ".pip.debricked.lock"
-	pip               = "pip"
-	lockFileDelimiter = "***"
+	lockFileExtension           = ".pip.debricked.lock"
+	pip                         = "pip"
+	lockFileDelimiter           = "***"
+	executableNotFoundErrRegex  = `executable file not found`
+	buildErrRegex               = `setup.py[ install for]*(?P<dependency>[^ ]*) did not run successfully.`
+	couldNotFindVersionErrRegex = `Could not find a version that satisfies the requirement`
+	//nolint:all
+	invalidCredentialsErrRegex = `WARNING: 401 Error, Credentials not correct for`
 )
 
 type Job struct {
@@ -91,7 +96,7 @@ func (j *Job) Run() {
 		_, cmdErr = j.runInstallCmd()
 		if cmdErr != nil {
 			cmdErr.SetStatus(status)
-			j.handleInstallError(cmdErr)
+			j.handleError(cmdErr)
 
 			return
 		}
@@ -103,67 +108,100 @@ func (j *Job) Run() {
 
 		return
 	}
-
 }
 
-func (j *Job) handleInstallError(cmdErr job.IError) {
-	var buildError = regexp.MustCompile("setup.py[ install for]*(?P<dependency>[^ ]*) did not run successfully.")
-	var credentialError = regexp.MustCompile("WARNING: 401 Error, Credentials not correct for")
-	var couldNotFindVersionError = regexp.MustCompile("Could not find a version that satisfies the requirement")
-
-	switch {
-	case buildError.MatchString(cmdErr.Error()):
-		matches := buildError.FindAllStringSubmatch(cmdErr.Error(), 10)
-		dependencyName := ""
-		if len(matches) > 0 {
-			if len(matches[len(matches)-1]) > 1 {
-				dependencyName = "\"" + matches[len(matches)-1][1] + "\""
-			}
-		}
-		cmdErr.SetDocumentation(
-			strings.Join(
-				[]string{
-					"Failed to build python dependency ",
-					dependencyName,
-					" with setup.py. This probably means the " +
-						"project was not set up correctly and " +
-						"could mean that an OS package is missing.",
-				}, ""),
-		)
-	case credentialError.MatchString(cmdErr.Error()):
-		authErrDependencyNamePattern := regexp.MustCompile(`No matching distribution found for ([^\s]+)`)
-		dependencyNameMatch := authErrDependencyNamePattern.FindStringSubmatch(cmdErr.Error())
-		dependencyName := ""
-		if len(dependencyNameMatch) > 1 {
-			dependencyName = "\"" + dependencyNameMatch[len(dependencyNameMatch)-1] + "\""
-		}
-		cmdErr.SetDocumentation(
-			strings.Join(
-				[]string{
-					"Failed to install python dependency ",
-					dependencyName,
-					" due to authorization.\n" + util.InstallPrivateDependencyMessage,
-				}, ""),
-		)
-
-	case couldNotFindVersionError.MatchString(cmdErr.Error()):
-		dependencyNamePattern := regexp.MustCompile(`Could not find a version that satisfies the requirement ([\w=]+)`)
-		dependencyNameMatch := dependencyNamePattern.FindStringSubmatch(cmdErr.Error())
-		dependencyName := ""
-		if len(dependencyNameMatch) > 1 {
-			dependency := strings.Split(dependencyNameMatch[1], "==")
-			dependencyName = "\"" + dependency[0] + "\""
-		}
-		cmdErr.SetDocumentation(
-			strings.Join(
-				[]string{
-					"Failed to find a version that satisfies the requirement for python dependency ",
-					dependencyName,
-					". This could mean that the package or version does not exist.\n" + util.InstallPrivateDependencyMessage,
-				}, ""),
-		)
+func (j *Job) handleError(cmdError job.IError) {
+	expressions := []string{
+		executableNotFoundErrRegex,
+		buildErrRegex,
+		invalidCredentialsErrRegex,
+		couldNotFindVersionErrRegex,
 	}
-	j.Errors().Critical(cmdErr)
+
+	for _, expression := range expressions {
+		regex := regexp.MustCompile(expression)
+		matches := regex.FindAllStringSubmatch(cmdError.Error(), -1)
+
+		if len(matches) > 0 {
+			cmdError = j.addDocumentation(expression, matches, cmdError)
+			j.Errors().Append(cmdError)
+
+			return
+		}
+	}
+
+	j.Errors().Append(cmdError)
+}
+
+func (j *Job) addDocumentation(expr string, matches [][]string, cmdError job.IError) job.IError {
+	documentation := cmdError.Documentation()
+
+	switch expr {
+	case executableNotFoundErrRegex:
+		documentation = j.GetExecutableNotFoundErrorDocumentation("Pip")
+	case buildErrRegex:
+		documentation = j.getBuildErrorDocumentation(matches)
+	case invalidCredentialsErrRegex:
+		documentation = j.getCredentialErrorDocumentation(cmdError)
+	case couldNotFindVersionErrRegex:
+		documentation = j.getCouldNotFindVersionErrorDocumentation(cmdError)
+	}
+
+	cmdError.SetDocumentation(documentation)
+
+	return cmdError
+}
+
+func (j *Job) getBuildErrorDocumentation(matches [][]string) string {
+	dependencyName := ""
+	if len(matches) > 0 {
+		if len(matches[len(matches)-1]) > 1 {
+			dependencyName = "\"" + matches[len(matches)-1][1] + "\""
+		}
+	}
+
+	return strings.Join(
+		[]string{
+			"Failed to build python dependency ",
+			dependencyName,
+			" with setup.py. This probably means the " +
+				"project was not set up correctly and " +
+				"could mean that an OS package is missing.",
+		}, "")
+}
+
+func (j *Job) getCredentialErrorDocumentation(cmdError job.IError) string {
+	authErrDependencyNamePattern := regexp.MustCompile(`No matching distribution found for ([^\s]+)`)
+	dependencyNameMatch := authErrDependencyNamePattern.FindStringSubmatch(cmdError.Error())
+	dependencyName := ""
+	if len(dependencyNameMatch) > 1 {
+		dependencyName = "\"" + dependencyNameMatch[len(dependencyNameMatch)-1] + "\""
+	}
+
+	return strings.Join(
+		[]string{
+			"Failed to install python dependency ",
+			dependencyName,
+			" due to authorization.\n" + util.InstallPrivateDependencyMessage,
+		}, "")
+}
+
+func (j *Job) getCouldNotFindVersionErrorDocumentation(cmdError job.IError) string {
+	dependencyNamePattern := regexp.MustCompile(`Could not find a version that satisfies the requirement ([\w=]+)`)
+	dependencyNameMatch := dependencyNamePattern.FindStringSubmatch(cmdError.Error())
+	dependencyName := ""
+
+	if len(dependencyNameMatch) > 1 {
+		dependency := strings.Split(dependencyNameMatch[1], "==")
+		dependencyName = "\"" + dependency[0] + "\""
+	}
+
+	return strings.Join(
+		[]string{
+			"Failed to find a version that satisfies the requirement for python dependency ",
+			dependencyName,
+			". This could mean that the package or version does not exist.\n" + util.InstallPrivateDependencyMessage,
+		}, "")
 }
 
 func (j *Job) writeLockContent() job.IError {

@@ -10,6 +10,7 @@ import (
 
 const (
 	composer                    = "composer"
+	executableNotFoundErrRegex  = `executable file not found`
 	composerMissingExtension    = "Composer requires it to run"
 	invalidRequirement          = `require\.([^ ]*) is invalid, it should have a vendor name`
 	noNetworkRegex              = `The following exception probably indicates you( are offline or)? have misconfigured DNS resolver\(s\)`
@@ -72,6 +73,7 @@ func (j *Job) runInstallCmd() ([]byte, error) {
 
 func (j *Job) handleError(cmdErr job.IError) {
 	expressions := []string{
+		executableNotFoundErrRegex,
 		composerMissingExtension,
 		invalidRequirement,
 		noNetworkRegex,
@@ -84,7 +86,7 @@ func (j *Job) handleError(cmdErr job.IError) {
 		matches := regex.FindAllStringSubmatch(cmdErr.Error(), -1)
 
 		if len(matches) > 0 {
-			cmdErr = j.addDocumentation(expression, regex, matches, cmdErr)
+			cmdErr = j.addDocumentation(expression, matches, cmdErr)
 			j.Errors().Critical(cmdErr)
 
 			return
@@ -94,10 +96,12 @@ func (j *Job) handleError(cmdErr job.IError) {
 	j.Errors().Critical(cmdErr)
 }
 
-func (j *Job) addDocumentation(expr string, regex *regexp.Regexp, matches [][]string, cmdErr job.IError) job.IError {
+func (j *Job) addDocumentation(expr string, matches [][]string, cmdErr job.IError) job.IError {
 	documentation := cmdErr.Documentation()
 
 	switch expr {
+	case executableNotFoundErrRegex:
+		documentation = j.GetExecutableNotFoundErrorDocumentation("Composer")
 	case composerMissingExtension:
 		documentation = j.addComposerMissingRequirementsErrorDocumentation(cmdErr)
 	case invalidRequirement:

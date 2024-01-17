@@ -42,6 +42,11 @@ func TestRunInstallCmdErr(t *testing.T) {
 			doc:   util.UnknownError,
 		},
 		{
+			name:  "NPM not found",
+			error: "        |exec: \"npm\": executable file not found in $PATH",
+			doc:   "NPM wasn't found. Please check if it is installed and accessible by the CLI.",
+		},
+		{
 			name:  "Invalid package version",
 			error: "npm ERR! code ETARGET\nnpm ERR! notarget No matching version found for chalk@^113.0.0.\nnpm ERR! notarget In most cases you or one of your dependencies are requesting\nnpm ERR! notarget a package version that doesn't exist.",
 			doc:   "Failed to find package \"chalk@^113.0.0\" that satisfies the requirement from package.json file. In most cases you or one of your dependencies are requesting a package version that doesn't exist. Please check that package versions are correct in your package.json file.",

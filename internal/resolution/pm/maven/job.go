@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	executableNotFoundErrRegex  = `executable file not found`
 	lockFileExtension           = "maven.debricked.lock"
 	nonParseablePomErrRegex     = "Non-parseable POM (.*)"
 	networkUnreachableErrRegex  = "Failed to retrieve plugin descriptor"
@@ -20,17 +21,41 @@ const (
 type Job struct {
 	job.BaseJob
 	cmdFactory ICmdFactory
+	pomService IPomService
 }
 
-func NewJob(file string, cmdFactory ICmdFactory) *Job {
+func NewJob(file string, cmdFactory ICmdFactory, pomService IPomService) *Job {
 	return &Job{
 		BaseJob:    job.NewBaseJob(file),
 		cmdFactory: cmdFactory,
+		pomService: pomService,
 	}
 }
 
 func (j *Job) Run() {
-	workingDirectory := filepath.Dir(filepath.Clean(j.GetFile()))
+	status := "parsing XML"
+	j.SendStatus(status)
+
+	file := j.GetFile()
+	_, err := j.pomService.ParsePomModules(file)
+
+	if err != nil {
+		doc := err.Error()
+
+		if doc == "EOF" {
+			doc = "This file doesn't contain valid XML"
+		}
+
+		parsingError := util.NewPMJobError(err.Error())
+		parsingError.SetStatus(status)
+		parsingError.SetDocumentation(doc)
+
+		j.Errors().Critical(parsingError)
+
+		return
+	}
+
+	workingDirectory := filepath.Dir(filepath.Clean(file))
 	cmd, err := j.cmdFactory.MakeDependencyTreeCmd(workingDirectory)
 	if err != nil {
 		j.handleError(util.NewPMJobError(err.Error()))
@@ -38,7 +63,7 @@ func (j *Job) Run() {
 		return
 	}
 
-	status := "creating dependency graph"
+	status = "creating dependency graph"
 	j.SendStatus(status)
 	var output []byte
 	output, err = cmd.Output()
@@ -55,8 +80,9 @@ func (j *Job) Run() {
 	}
 }
 
-func (j *Job) handleError(cmdErr job.IError) {
+func (j *Job) handleError(cmdError job.IError) {
 	expressions := []string{
+		executableNotFoundErrRegex,
 		nonParseablePomErrRegex,
 		networkUnreachableErrRegex,
 		invalidVersionErrRegex,
@@ -65,85 +91,77 @@ func (j *Job) handleError(cmdErr job.IError) {
 
 	for _, expression := range expressions {
 		regex := regexp.MustCompile(expression)
+		matches := regex.FindAllStringSubmatch(cmdError.Error(), -1)
 
-		if regex.MatchString(cmdErr.Error()) {
-			cmdErr = j.addDocumentation(expression, regex, cmdErr)
-			j.Errors().Critical(cmdErr)
+		if len(matches) > 0 {
+			cmdError = j.addDocumentation(expression, matches, cmdError)
+			j.Errors().Critical(cmdError)
 
 			return
 		}
 	}
 
-	j.Errors().Critical(cmdErr)
+	j.Errors().Critical(cmdError)
 }
 
-func (j *Job) addDocumentation(expr string, regex *regexp.Regexp, cmdErr job.IError) job.IError {
+func (j *Job) addDocumentation(expr string, matches [][]string, cmdError job.IError) job.IError {
+	documentation := cmdError.Documentation()
+
 	switch expr {
+	case executableNotFoundErrRegex:
+		documentation = j.GetExecutableNotFoundErrorDocumentation("Mvn")
 	case nonParseablePomErrRegex:
-		cmdErr = j.addNonParseablePomErrorDocumentation(regex, cmdErr)
+		documentation = j.addNonParseablePomErrorDocumentation(matches)
 	case networkUnreachableErrRegex:
-		cmdErr = j.addNetworkUnreachableErrorDocumentation(cmdErr)
+		documentation = j.addNetworkUnreachableErrorDocumentation()
 	case invalidVersionErrRegex:
-		cmdErr = j.addInvalidVersionErrorDocumentation(regex, cmdErr)
+		documentation = j.addInvalidVersionErrorDocumentation(matches)
 	case dependenciesResolveErrRegex:
-		cmdErr = j.addDependenciesResolveErrorDocumentation(regex, cmdErr)
+		documentation = j.addDependenciesResolveErrorDocumentation(matches)
 	}
 
-	return cmdErr
+	cmdError.SetDocumentation(documentation)
+
+	return cmdError
 }
 
-func (j *Job) addNonParseablePomErrorDocumentation(regex *regexp.Regexp, cmdErr job.IError) job.IError {
-	matches := regex.FindAllStringSubmatch(cmdErr.Error(), 1)
+func (j *Job) addNonParseablePomErrorDocumentation(matches [][]string) string {
 	message := "the POM file for errors"
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		message = matches[0][1]
 	}
 
-	cmdErr.SetDocumentation(
-		strings.Join(
-			[]string{
-				"Failed to build Maven dependency tree.",
-				"Your POM file is not valid.",
-				"Please check",
-				message,
-			}, " "),
-	)
-
-	return cmdErr
+	return strings.Join(
+		[]string{
+			"Failed to build Maven dependency tree.",
+			"Your POM file is not valid.",
+			"Please check",
+			message,
+		}, " ")
 }
 
-func (j *Job) addNetworkUnreachableErrorDocumentation(cmdErr job.IError) job.IError {
-	cmdErr.SetDocumentation(
-		strings.Join(
-			[]string{
-				"We weren't able to retrieve one or more plugin descriptor(s).",
-				"Please check your Internet connection and try again.",
-			}, " "),
-	)
-
-	return cmdErr
+func (j *Job) addNetworkUnreachableErrorDocumentation() string {
+	return strings.Join(
+		[]string{
+			"We weren't able to retrieve one or more plugin descriptor(s).",
+			"Please check your Internet connection and try again.",
+		}, " ")
 }
 
-func (j *Job) addInvalidVersionErrorDocumentation(regex *regexp.Regexp, cmdErr job.IError) job.IError {
-	matches := regex.FindAllStringSubmatch(cmdErr.Error(), 1)
+func (j *Job) addInvalidVersionErrorDocumentation(matches [][]string) string {
 	message := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		message = matches[0][1]
 	}
 
-	cmdErr.SetDocumentation(
-		strings.Join(
-			[]string{
-				"There is an error in dependencies:",
-				message,
-			}, " "),
-	)
-
-	return cmdErr
+	return strings.Join(
+		[]string{
+			"There is an error in dependencies:",
+			message,
+		}, " ")
 }
 
-func (j *Job) addDependenciesResolveErrorDocumentation(regex *regexp.Regexp, cmdErr job.IError) job.IError {
-	matches := regex.FindAllStringSubmatch(cmdErr.Error(), 1)
+func (j *Job) addDependenciesResolveErrorDocumentation(matches [][]string) string {
 	message := "An error occurred during dependencies resolve "
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		message += strings.Join(
@@ -154,14 +172,10 @@ func (j *Job) addDependenciesResolveErrorDocumentation(regex *regexp.Regexp, cmd
 			}, "")
 	}
 
-	cmdErr.SetDocumentation(
-		strings.Join(
-			[]string{
-				message,
-				"\nTry to run `mvn dependency:tree -e` to get more details.\n",
-				util.InstallPrivateDependencyMessage,
-			}, ""),
-	)
-
-	return cmdErr
+	return strings.Join(
+		[]string{
+			message,
+			"\nTry to run `mvn dependency:tree -e` to get more details.\n",
+			util.InstallPrivateDependencyMessage,
+		}, "")
 }

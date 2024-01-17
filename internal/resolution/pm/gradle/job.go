@@ -12,10 +12,11 @@ import (
 )
 
 const (
-	bugErrRegex             = "BUG! (.*)"
-	notRootDirErrRegex      = "Error: (Could not find or load main class .*)"
-	unrelatedBuildErrRegex  = "(Project directory '.*' is not part of the build defined by settings file '.*')"
-	unknownPropertyErrRegex = "(Could not get unknown property .*)"
+	bugErrRegex                = "BUG! (.*)"
+	executableNotFoundErrRegex = `executable file not found`
+	notRootDirErrRegex         = "Error: (Could not find or load main class .*)"
+	unrelatedBuildErrRegex     = "(Project directory '.*' is not part of the build defined by settings file '.*')"
+	unknownPropertyErrRegex    = "(Could not get unknown property .*)"
 )
 
 type Job struct {
@@ -93,9 +94,10 @@ func (j *Job) GetDir() string {
 	return j.dir
 }
 
-func (j *Job) handleError(cmdErr job.IError) {
+func (j *Job) handleError(cmdError job.IError) {
 	expressions := []string{
 		bugErrRegex,
+		executableNotFoundErrRegex,
 		notRootDirErrRegex,
 		unrelatedBuildErrRegex,
 		unknownPropertyErrRegex,
@@ -103,116 +105,103 @@ func (j *Job) handleError(cmdErr job.IError) {
 
 	for _, expression := range expressions {
 		regex := regexp.MustCompile(expression)
+		matches := regex.FindAllStringSubmatch(cmdError.Error(), -1)
 
-		if regex.MatchString(cmdErr.Error()) {
-			cmdErr = j.addDocumentation(expression, regex, cmdErr)
-			j.Errors().Append(cmdErr)
+		if len(matches) > 0 {
+			cmdError = j.addDocumentation(expression, matches, cmdError)
+			j.Errors().Append(cmdError)
 
 			return
 		}
 	}
 
-	j.Errors().Append(cmdErr)
+	j.Errors().Append(cmdError)
 }
 
-func (j *Job) addDocumentation(expr string, regex *regexp.Regexp, cmdErr job.IError) job.IError {
+func (j *Job) addDocumentation(expr string, matches [][]string, cmdError job.IError) job.IError {
+	documentation := cmdError.Documentation()
+
 	switch expr {
+	case executableNotFoundErrRegex:
+		documentation = j.GetExecutableNotFoundErrorDocumentation("Gradle")
 	case bugErrRegex:
-		cmdErr = j.addBugErrorDocumentation(regex, cmdErr)
+		documentation = j.addBugErrorDocumentation(matches)
 	case notRootDirErrRegex:
-		cmdErr = j.addNotRootDirErrorDocumentation(regex, cmdErr)
+		documentation = j.addNotRootDirErrorDocumentation(matches)
 	case unrelatedBuildErrRegex:
-		cmdErr = j.addUnrelatedBuildErrorDocumentation(regex, cmdErr)
+		documentation = j.addUnrelatedBuildErrorDocumentation(matches)
 	case unknownPropertyErrRegex:
-		cmdErr = j.addUnknownPropertyErrorDocumentation(regex, cmdErr)
+		documentation = j.addUnknownPropertyErrorDocumentation(matches)
 	}
 
-	return cmdErr
+	cmdError.SetDocumentation(documentation)
+
+	return cmdError
 }
 
-func (j *Job) addBugErrorDocumentation(regex *regexp.Regexp, cmdErr job.IError) job.IError {
-	matches := regex.FindAllStringSubmatch(cmdErr.Error(), 1)
+func (j *Job) addBugErrorDocumentation(matches [][]string) string {
 	message := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		message = matches[0][1]
 	}
 
-	cmdErr.SetDocumentation(
-		strings.Join(
-			[]string{
-				"Failed to build Gradle dependency tree. ",
-				"The process has failed with following error: ",
-				message,
-				". ",
-				"Try running the command below with --stacktrace flag to get a stacktrace. ",
-				"Replace --stacktrace with --info or --debug option to get more log output. ",
-				"Or with --scan to get full insights.",
-			}, ""),
-	)
-
-	return cmdErr
+	return strings.Join(
+		[]string{
+			"Failed to build Gradle dependency tree. ",
+			"The process has failed with following error: ",
+			message,
+			". ",
+			"Try running the command below with --stacktrace flag to get a stacktrace. ",
+			"Replace --stacktrace with --info or --debug option to get more log output. ",
+			"Or with --scan to get full insights.",
+		}, "")
 }
 
-func (j *Job) addNotRootDirErrorDocumentation(regex *regexp.Regexp, cmdErr job.IError) job.IError {
-	matches := regex.FindAllStringSubmatch(cmdErr.Error(), 1)
+func (j *Job) addNotRootDirErrorDocumentation(matches [][]string) string {
 	message := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		message = matches[0][1]
 	}
 
-	cmdErr.SetDocumentation(
-		strings.Join(
-			[]string{
-				"Failed to build Gradle dependency tree.",
-				"The process has failed with following error: " + message + ".", //nolint:all
-				"You are probably not running the command from the root directory.",
-			}, " "),
-	)
-
-	return cmdErr
+	return strings.Join(
+		[]string{
+			"Failed to build Gradle dependency tree.",
+			"The process has failed with following error: " + message + ".", //nolint:all
+			"You are probably not running the command from the root directory.",
+		}, " ")
 }
 
-func (j *Job) addUnrelatedBuildErrorDocumentation(regex *regexp.Regexp, cmdErr job.IError) job.IError {
-	matches := regex.FindAllStringSubmatch(cmdErr.Error(), 1)
+func (j *Job) addUnrelatedBuildErrorDocumentation(matches [][]string) string {
 	message := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		message = matches[0][1]
 	}
 
-	cmdErr.SetDocumentation(
-		strings.Join(
-			[]string{
-				"Failed to build Gradle dependency tree. ",
-				"The process has failed with following error: ",
-				message,
-				". ",
-				"This error might be caused by inclusion of test folders into resolve process. ",
-				"Try running resolve command with -e flag. ",
-				"For example, `debricked resolve -e \"**/test*/**\"` will exclude all folders that start from 'test' from resolution process. ",
-				"Or if this is an unrelated build, it must have its own settings file.",
-			}, ""),
-	)
-
-	return cmdErr
+	return strings.Join(
+		[]string{
+			"Failed to build Gradle dependency tree. ",
+			"The process has failed with following error: ",
+			message,
+			". ",
+			"This error might be caused by inclusion of test folders into resolve process. ",
+			"Try running resolve command with -e flag. ",
+			"For example, `debricked resolve -e \"**/test*/**\"` will exclude all folders that start from 'test' from resolution process. ",
+			"Or if this is an unrelated build, it must have its own settings file.",
+		}, "")
 }
 
-func (j *Job) addUnknownPropertyErrorDocumentation(regex *regexp.Regexp, cmdErr job.IError) job.IError {
-	matches := regex.FindAllStringSubmatch(cmdErr.Error(), 1)
+func (j *Job) addUnknownPropertyErrorDocumentation(matches [][]string) string {
 	message := ""
 	if len(matches) > 0 && len(matches[0]) > 1 {
 		message = matches[0][1]
 	}
 
-	cmdErr.SetDocumentation(
-		strings.Join(
-			[]string{
-				"Failed to build Gradle dependency tree. ",
-				"The process has failed with following error: ",
-				message,
-				". ",
-				"Please check your settings.gradle file for errors.",
-			}, ""),
-	)
-
-	return cmdErr
+	return strings.Join(
+		[]string{
+			"Failed to build Gradle dependency tree. ",
+			"The process has failed with following error: ",
+			message,
+			". ",
+			"Please check your settings.gradle file for errors.",
+		}, "")
 }

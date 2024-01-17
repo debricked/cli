@@ -44,7 +44,6 @@ func TestInvokeNoFiles(t *testing.T) {
 
 func TestInvokeOneFile(t *testing.T) {
 	s := NewStrategy([]string{"file"})
-	s.pomService = PomServiceMock{}
 
 	jobs, _ := s.Invoke()
 
@@ -53,7 +52,6 @@ func TestInvokeOneFile(t *testing.T) {
 
 func TestInvokeManyFiles(t *testing.T) {
 	s := NewStrategy([]string{"file-1", "file-2"})
-	s.pomService = PomServiceMock{}
 
 	jobs, _ := s.Invoke()
 

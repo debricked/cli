@@ -78,36 +78,55 @@ func TestRunInstallCmdErr(t *testing.T) {
 }
 
 func TestRunInstallCmdErrors(t *testing.T) {
-	tests := []struct {
-		name string
-		err  error
+	cases := []struct {
+		name  string
+		error string
+		doc   string
 	}{
 		{
-			name: "Build Error",
-			err:  errors.New(" python setup.py bdist_wheel did not run successfully. "),
+			name:  "Pip not found",
+			error: "        |exec: \"pip\": executable file not found in $PATH",
+			doc:   "Pip wasn't found. Please check if it is installed and accessible by the CLI.",
 		},
 		{
-			name: "Auth Error",
-			err: errors.New("WARNING: 401 Error, Credentials not correct for <some-pip-registry>\n" +
-				"No matching distribution found for some-dependency>=0.1.3\n"),
+			name:  "Build Error",
+			error: " python setup.py bdist_wheel did not run successfully. ",
+			doc:   "Failed to build python dependency \"bdist_wheel\" with setup.py. This probably means the project was not set up correctly and could mean that an OS package is missing.",
 		},
 		{
-			name: "Version Error",
-			err:  errors.New("Could not find a version that satisfies the requirement test==123"),
+			name:  "Auth Error",
+			error: "WARNING: 401 Error, Credentials not correct for <some-pip-registry>\nNo matching distribution found for some-dependency>=0.1.3\n",
+			doc:   "Failed to install python dependency \"some-dependency>=0.1.3\" due to authorization.\nIf this is a private dependency, please make sure that the debricked CLI has access to install it or pre-install it before running the debricked CLI.",
+		},
+		{
+			name:  "Version Error",
+			error: "Could not find a version that satisfies the requirement test==123",
+			doc:   "Failed to find a version that satisfies the requirement for python dependency \"test\". This could mean that the package or version does not exist.\nIf this is a private dependency, please make sure that the debricked CLI has access to install it or pre-install it before running the debricked CLI.",
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			cmdErr := errors.New(c.error)
 			cmdFactoryMock := testdata.NewEchoCmdFactory()
-			cmdFactoryMock.MakeInstallErr = tt.err
+			cmdFactoryMock.MakeInstallErr = cmdErr
+			cmd, _ := cmdFactoryMock.MakeInstallCmd("echo", "file")
 			fileWriterMock := &writerTestdata.FileWriterMock{}
+
+			expectedError := util.NewPMJobError(c.error)
+			expectedError.SetDocumentation(c.doc)
+			expectedError.SetStatus("installing dependencies")
+			expectedError.SetCommand(cmd.String())
+
 			j := NewJob("file", true, cmdFactoryMock, fileWriterMock, pipCleaner{})
 
 			go jobTestdata.WaitStatus(j)
 			j.Run()
 
+			allErrors := j.Errors().GetAll()
+
 			assert.Len(t, j.Errors().GetAll(), 1)
+			assert.Contains(t, allErrors, expectedError)
 		})
 	}
 }
