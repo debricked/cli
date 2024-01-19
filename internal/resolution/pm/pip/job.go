@@ -15,12 +15,14 @@ import (
 )
 
 const (
-	lockFileExtension           = ".pip.debricked.lock"
-	pip                         = "pip"
-	lockFileDelimiter           = "***"
-	executableNotFoundErrRegex  = `executable file not found`
-	buildErrRegex               = `setup.py[ install for]*(?P<dependency>[^ ]*) did not run successfully.`
-	couldNotFindVersionErrRegex = `Could not find a version that satisfies the requirement`
+	lockFileExtension                 = ".pip.debricked.lock"
+	pip                               = "pip"
+	lockFileDelimiter                 = "***"
+	pythonExecutableNotFoundErrRegex  = `"python": executable file not found`
+	python3ExecutableNotFoundErrRegex = `"python3": executable file not found`
+	pipExecutableNotFoundErrRegex     = `"pip": executable file not found`
+	buildErrRegex                     = `setup.py[ install for]*(?P<dependency>[^ ]*) did not run successfully.`
+	couldNotFindVersionErrRegex       = `Could not find a version that satisfies the requirement`
 	//nolint:all
 	invalidCredentialsErrRegex = `WARNING: 401 Error, Credentials not correct for`
 )
@@ -85,9 +87,8 @@ func (j *Job) Run() {
 		j.SendStatus(status)
 		_, cmdErr := j.runCreateVenvCmd()
 		if cmdErr != nil {
-			cmdErr.SetDocumentation("Error when trying to create python virtual environment")
 			cmdErr.SetStatus(status)
-			j.Errors().Critical(cmdErr)
+			j.handleError(cmdErr, "Error when trying to create python virtual environment")
 
 			return
 		}
@@ -96,7 +97,7 @@ func (j *Job) Run() {
 		_, cmdErr = j.runInstallCmd()
 		if cmdErr != nil {
 			cmdErr.SetStatus(status)
-			j.handleError(cmdErr)
+			j.handleError(cmdErr, cmdErr.Documentation())
 
 			return
 		}
@@ -110,9 +111,11 @@ func (j *Job) Run() {
 	}
 }
 
-func (j *Job) handleError(cmdError job.IError) {
+func (j *Job) handleError(cmdError job.IError, defaultError string) {
 	expressions := []string{
-		executableNotFoundErrRegex,
+		pythonExecutableNotFoundErrRegex,
+		python3ExecutableNotFoundErrRegex,
+		pipExecutableNotFoundErrRegex,
 		buildErrRegex,
 		invalidCredentialsErrRegex,
 		couldNotFindVersionErrRegex,
@@ -130,6 +133,7 @@ func (j *Job) handleError(cmdError job.IError) {
 		}
 	}
 
+	cmdError.SetDocumentation(defaultError)
 	j.Errors().Append(cmdError)
 }
 
@@ -137,7 +141,11 @@ func (j *Job) addDocumentation(expr string, matches [][]string, cmdError job.IEr
 	documentation := cmdError.Documentation()
 
 	switch expr {
-	case executableNotFoundErrRegex:
+	case pythonExecutableNotFoundErrRegex:
+		documentation = j.GetExecutableNotFoundErrorDocumentation("Python")
+	case python3ExecutableNotFoundErrRegex:
+		documentation = j.GetExecutableNotFoundErrorDocumentation("Python3")
+	case pipExecutableNotFoundErrRegex:
 		documentation = j.GetExecutableNotFoundErrorDocumentation("Pip")
 	case buildErrRegex:
 		documentation = j.getBuildErrorDocumentation(matches)
@@ -268,7 +276,10 @@ func (j *Job) runCreateVenvCmd() ([]byte, job.IError) {
 	createVenvCmd, err := j.cmdFactory.MakeCreateVenvCmd(j.venvPath)
 	if err != nil {
 		cmdErr := util.NewPMJobError(err.Error())
-		cmdErr.SetCommand(createVenvCmd.String())
+
+		if createVenvCmd != nil {
+			cmdErr.SetCommand(createVenvCmd.String())
+		}
 
 		return nil, cmdErr
 	}
