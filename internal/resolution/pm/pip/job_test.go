@@ -38,19 +38,46 @@ func TestInstall(t *testing.T) {
 }
 
 func TestRunCreateVenvCmdErr(t *testing.T) {
-	cmdErr := errors.New("cmd-error")
-	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	cmdFactoryMock.MakeCreateVenvErr = cmdErr
-	fileWriterMock := &writerTestdata.FileWriterMock{}
-	j := NewJob("file", true, cmdFactoryMock, fileWriterMock, pipCleaner{})
+	cases := []struct {
+		name  string
+		error string
+		doc   string
+	}{
+		{
+			name:  "General error",
+			error: "some random error",
+			doc:   "Error when trying to create python virtual environment",
+		},
+		{
+			name:  "Python not found",
+			error: "        |exec: \"python\": executable file not found in $PATH",
+			doc:   "Python wasn't found. Please check if it is installed and accessible by the CLI.",
+		},
+	}
 
-	go jobTestdata.WaitStatus(j)
-	j.Run()
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			cmdErr := errors.New(c.error)
+			cmdFactoryMock := testdata.NewEchoCmdFactory()
+			cmdFactoryMock.MakeCreateVenvErr = cmdErr
+			cmd, _ := cmdFactoryMock.MakeCreateVenvCmd("file.venv")
+			fileWriterMock := &writerTestdata.FileWriterMock{}
+			j := NewJob("file", true, cmdFactoryMock, fileWriterMock, pipCleaner{})
 
-	assert.Len(t, j.Errors().GetAll(), 1)
-	correctErr := util.NewPMJobError(cmdErr.Error())
-	correctErr.SetDocumentation("")
-	correctErr.SetStatus("")
+			expectedError := util.NewPMJobError(c.error)
+			expectedError.SetDocumentation(c.doc)
+			expectedError.SetStatus("creating venv")
+			expectedError.SetCommand(cmd.String())
+
+			go jobTestdata.WaitStatus(j)
+			j.Run()
+
+			allErrors := j.Errors().GetAll()
+
+			assert.Len(t, allErrors, 1)
+			assert.Contains(t, allErrors, expectedError)
+		})
+	}
 }
 
 func TestRunCreateVenvCmdOutputErr(t *testing.T) {
@@ -87,6 +114,16 @@ func TestRunInstallCmdErrors(t *testing.T) {
 			name:  "Pip not found",
 			error: "        |exec: \"pip\": executable file not found in $PATH",
 			doc:   "Pip wasn't found. Please check if it is installed and accessible by the CLI.",
+		},
+		{
+			name:  "Python not found",
+			error: "        |exec: \"python\": executable file not found in $PATH",
+			doc:   "Python wasn't found. Please check if it is installed and accessible by the CLI.",
+		},
+		{
+			name:  "Python3 not found",
+			error: "        |exec: \"python3\": executable file not found in $PATH",
+			doc:   "Python3 wasn't found. Please check if it is installed and accessible by the CLI.",
 		},
 		{
 			name:  "Build Error",
