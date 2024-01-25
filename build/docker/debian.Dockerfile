@@ -104,5 +104,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin -
 
 RUN php -v && composer --version
 
+CMD [ "debricked",  "scan" ]
+
 # Put copy at the end to speedup Docker build by caching previous RUNs and run those concurrently
 COPY --from=dev /cli/debricked /usr/bin/debricked
