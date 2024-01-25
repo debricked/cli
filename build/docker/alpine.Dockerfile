@@ -6,7 +6,7 @@ COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 COPY . .
 RUN mkdir -p internal/file/embedded && \
-    wget -O internal/file/embedded/supported_formats.json https://debricked.com/api/1.0/open/files/supported-formats
+  wget -O internal/file/embedded/supported_formats.json https://debricked.com/api/1.0/open/files/supported-formats
 RUN go build -o debricked ./cmd/debricked
 ENTRYPOINT ["debricked"]
 
@@ -57,18 +57,19 @@ RUN dotnet --version && npm -v && yarn -v
 RUN npm install --global bower && bower -v
 
 RUN apk add --no-cache \
-    git \
-    php82 \
-    php82-curl \
-    php82-mbstring \
-    php82-openssl \
-    php82-phar
+  git \
+  php82 \
+  php82-curl \
+  php82-mbstring \
+  php82-openssl \
+  php82-phar
 
 RUN apk add --no-cache --virtual build-dependencies curl && \
-    curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
-    && apk del build-dependencies
+  curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
+  && apk del build-dependencies
 
 RUN php -v && composer --version
 
 # Put copy at the end to speedup Docker build by caching previous RUNs and run those concurrently
 COPY --from=dev /cli/debricked /usr/bin/debricked
+ENTRYPOINT [ "debricked",  "scan" ]
