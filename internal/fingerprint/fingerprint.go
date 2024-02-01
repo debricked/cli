@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -126,7 +125,6 @@ func (f FileFingerprint) ToString() string {
 }
 
 func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string, fingerprintCompressedContent bool) (Fingerprints, error) {
-	log.Println("Warning: Fingerprinting is beta and may not work as expected.")
 	if len(rootPath) == 0 {
 		rootPath = filepath.Base("")
 	}
