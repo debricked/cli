@@ -153,7 +153,7 @@ func (dScanner *DebrickedScanner) scanResolve(options DebrickedOptions) error {
 
 func (dScanner *DebrickedScanner) scanFingerprint(options DebrickedOptions) error {
 	if options.Fingerprint {
-		fingerprints, err := dScanner.fingerprint.FingerprintFiles(options.Path, file.DefaultExclusionsFingerprint(), true)
+		fingerprints, err := dScanner.fingerprint.FingerprintFiles(options.Path, file.DefaultExclusionsFingerprint(), false)
 		if err != nil {
 			return err
 		}
