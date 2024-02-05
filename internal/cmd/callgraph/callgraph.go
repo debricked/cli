@@ -28,7 +28,7 @@ func NewCallgraphCmd(generator callgraph.IGenerator) *cobra.Command {
 		Short: "Generate a static call graph for the given directory and subdirectories",
 		Long: `Generate a static call graph for a project in the given directory. The command consists of two main parts: build and callgraph. 
 Build: Build the project and resolve dependencies. In this step, all necessary .class files are created.
-Callgraph: Generate the static call graph using debricked Vulnerable Functionality.
+Callgraph: Generate the static call graph using debricked Reachability Analysis.
 
 The full documentation is available here https://portal.debricked.com/debricked-cli-63/debricked-cli-documentation-298
 
