@@ -61,3 +61,19 @@ func Excluded(exclusions []string, path string) bool {
 
 	return false
 }
+
+func InclusionsExperience() []string {
+	return []string{
+		".go",
+		".java",
+	}
+}
+
+func Included(inclusions []string, path string) bool {
+	for _, ex := range inclusions {
+		if strings.HasSuffix(path, ex) {
+			return true
+		}
+	}
+	return false
+}

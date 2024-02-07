@@ -2,6 +2,7 @@ package root
 
 import (
 	"github.com/debricked/cli/internal/cmd/callgraph"
+	"github.com/debricked/cli/internal/cmd/experience"
 	"github.com/debricked/cli/internal/cmd/files"
 	"github.com/debricked/cli/internal/cmd/fingerprint"
 	"github.com/debricked/cli/internal/cmd/report"
@@ -47,6 +48,7 @@ Read more: https://portal.debricked.com/administration-47/how-do-i-generate-an-a
 	rootCmd.AddCommand(fingerprint.NewFingerprintCmd(container.Fingerprinter()))
 	rootCmd.AddCommand(resolve.NewResolveCmd(container.Resolver()))
 	rootCmd.AddCommand(callgraph.NewCallgraphCmd(container.CallgraphGenerator()))
+	rootCmd.AddCommand(experience.NewExperienceCmd(container.Expereince()))
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 
