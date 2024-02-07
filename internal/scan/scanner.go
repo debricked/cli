@@ -59,7 +59,6 @@ type DebrickedOptions struct {
 	JsonFilePath             string
 	NpmPreferred             bool
 	PassOnTimeOut            bool
-	WriteToJson              bool
 	CallGraphUploadTimeout   int
 	CallGraphGenerateTimeout int
 }
@@ -121,13 +120,9 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 		return nil
 	}
 
-	if dOptions.WriteToJson {
+	if dOptions.JsonFilePath != "" {
 		file, _ := json.MarshalIndent(result, "", " ")
-		filepath := dOptions.JsonFilePath
-		if filepath == "" {
-			filepath = "result.json"
-		}
-		_ = os.WriteFile(filepath, file, 0644)
+		_ = os.WriteFile(dOptions.JsonFilePath, file, 0644)
 	}
 
 	fmt.Printf("\n%d vulnerabilities found\n", result.VulnerabilitiesFound)
