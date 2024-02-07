@@ -117,7 +117,7 @@ $ debricked scan . `+exampleFlags)
 			"This flag allows you to reduce error output for resolution.",
 			"\nExample:\n$ debricked resolve --verbose=false",
 		}, "\n")
-	cmd.Flags().BoolVar(&writeToJson, WriteToJsonFlag, false, "write the upload result to result.json in working directory")
+	cmd.Flags().BoolVar(&writeToJson, WriteToJsonFlag, false, "write the upload result to result.json in working directory or the path provided in --json-path")
 	cmd.Flags().BoolVar(&verbose, VerboseFlag, true, verboseDoc)
 	cmd.Flags().BoolVarP(&passOnDowntime, PassOnTimeOut, "p", false, "pass scan if there is a service access timeout")
 	cmd.Flags().BoolVar(&noResolve, NoResolveFlag, false, `disables resolution of manifest files that lack lock files. Resolving manifest files enables more accurate dependency scanning since the whole dependency tree will be analysed.
