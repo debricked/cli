@@ -19,6 +19,7 @@ var branchName string
 var commitAuthor string
 var repositoryUrl string
 var integrationName string
+var jsonFilePath string
 var exclusions = file.Exclusions()
 var verbose bool
 var regenerate int
@@ -49,6 +50,7 @@ const (
 	CallGraphGenerateTimeoutFlag = "callgraph-generate-timeout"
 	NpmPreferredFlag             = "prefer-npm"
 	WriteToJsonFlag              = "write-json"
+	JsonFilePathFlag             = "json-path"
 )
 
 var scanCmdError error
@@ -76,6 +78,7 @@ If the given path contains a git repository all flags but "integration" will be 
 		"CLI",
 		`name of integration used to trigger scan. For example "GitHub Actions"`,
 	)
+	cmd.Flags().StringVarP(&jsonFilePath, JsonFilePathFlag, "j", "", "json file path")
 
 	fileExclusionExample := filepath.Join("*", "**.lock")
 	dirExclusionExample := filepath.Join("**", "node_modules", "**")
@@ -162,6 +165,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			CommitAuthor:             viper.GetString(CommitAuthorFlag),
 			RepositoryUrl:            viper.GetString(RepositoryUrlFlag),
 			IntegrationName:          viper.GetString(IntegrationFlag),
+			JsonFilePath:             viper.GetString(JsonFilePathFlag),
 			NpmPreferred:             viper.GetBool(NpmPreferredFlag),
 			PassOnTimeOut:            viper.GetBool(PassOnTimeOut),
 			CallGraph:                viper.GetBool(CallGraphFlag),

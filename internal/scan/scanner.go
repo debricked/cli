@@ -56,6 +56,7 @@ type DebrickedOptions struct {
 	CommitAuthor             string
 	RepositoryUrl            string
 	IntegrationName          string
+	JsonFilePath             string
 	NpmPreferred             bool
 	PassOnTimeOut            bool
 	WriteToJson              bool
@@ -119,10 +120,16 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 
 		return nil
 	}
+
 	if dOptions.WriteToJson {
 		file, _ := json.MarshalIndent(result, "", " ")
-		_ = os.WriteFile("result.json", file, 0644)
+		filepath := dOptions.JsonFilePath
+		if filepath == "" {
+			filepath = "result.json"
+		}
+		_ = os.WriteFile(filepath, file, 0644)
 	}
+
 	fmt.Printf("\n%d vulnerabilities found\n", result.VulnerabilitiesFound)
 	fmt.Println("")
 	failPipeline := false
