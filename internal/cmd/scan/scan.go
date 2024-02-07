@@ -27,6 +27,7 @@ var noFingerprint bool
 var passOnDowntime bool
 var callgraph bool
 var npmPreferred bool
+var writeToJson bool
 var callgraphUploadTimeout int
 var callgraphGenerateTimeout int
 
@@ -47,6 +48,7 @@ const (
 	CallGraphUploadTimeoutFlag   = "callgraph-upload-timeout"
 	CallGraphGenerateTimeoutFlag = "callgraph-generate-timeout"
 	NpmPreferredFlag             = "prefer-npm"
+	WriteToJsonFlag              = "write-json"
 )
 
 var scanCmdError error
@@ -112,6 +114,7 @@ $ debricked scan . `+exampleFlags)
 			"This flag allows you to reduce error output for resolution.",
 			"\nExample:\n$ debricked resolve --verbose=false",
 		}, "\n")
+	cmd.Flags().BoolVar(&writeToJson, WriteToJsonFlag, false, "write the upload result to result.json in working directory")
 	cmd.Flags().BoolVar(&verbose, VerboseFlag, true, verboseDoc)
 	cmd.Flags().BoolVarP(&passOnDowntime, PassOnTimeOut, "p", false, "pass scan if there is a service access timeout")
 	cmd.Flags().BoolVar(&noResolve, NoResolveFlag, false, `disables resolution of manifest files that lack lock files. Resolving manifest files enables more accurate dependency scanning since the whole dependency tree will be analysed.
@@ -162,6 +165,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			NpmPreferred:             viper.GetBool(NpmPreferredFlag),
 			PassOnTimeOut:            viper.GetBool(PassOnTimeOut),
 			CallGraph:                viper.GetBool(CallGraphFlag),
+			WriteToJson:              viper.GetBool(WriteToJsonFlag),
 			CallGraphUploadTimeout:   viper.GetInt(CallGraphUploadTimeoutFlag),
 			CallGraphGenerateTimeout: viper.GetInt(CallGraphGenerateTimeoutFlag),
 		}

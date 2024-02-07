@@ -1,0 +1,274 @@
+[
+  {
+    "regex": "advenica_format\\.txt",
+    "documentationUrl": "https://portal.debricked.com/language-support-49",
+    "lockFileRegexes": []
+  },
+  {
+    "regex": "apk\\.list",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/linux-package-managers-180",
+    "lockFileRegexes": []
+  },
+  {
+    "regex": "apt\\.list",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/linux-package-managers-180",
+    "lockFileRegexes": []
+  },
+  {
+    "regex": "axis_packages\\.txt",
+    "documentationUrl": "https://portal.debricked.com/language-support-49",
+    "lockFileRegexes": []
+  },
+  {
+    "regex": "((?!WORKSPACE|BUILD)).*(?:\\.bazel)",
+    "documentationUrl": "https://portal.debricked.com/language-support-49",
+    "lockFileRegexes": [
+      ".*_install\\.json"
+    ]
+  },
+  {
+    "regex": "((?!WORKSPACE|BUILD)).*(?:\\.bzl)",
+    "documentationUrl": "https://portal.debricked.com/language-support-49",
+    "lockFileRegexes": [
+      ".*_install\\.json"
+    ]
+  },
+  {
+    "regex": "WORKSPACE\\.bazel",
+    "documentationUrl": "https://portal.debricked.com/language-support-49",
+    "lockFileRegexes": [
+      ".*_install\\.json"
+    ]
+  },
+  {
+    "regex": "WORKSPACE\\.bzl",
+    "documentationUrl": "https://portal.debricked.com/language-support-49",
+    "lockFileRegexes": [
+      ".*_install\\.json"
+    ]
+  },
+  {
+    "regex": "WORKSPACE",
+    "documentationUrl": "https://portal.debricked.com/language-support-49",
+    "lockFileRegexes": [
+      ".*_install\\.json"
+    ]
+  },
+  {
+    "regex": "bitbake_installed_packages\\.txt",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/linux-package-managers-180",
+    "lockFileRegexes": []
+  },
+  {
+    "regex": "\\.manifest",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/linux-package-managers-180",
+    "lockFileRegexes": []
+  },
+  {
+    "regex": "debian_descriptions\\.txt",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/linux-package-managers-180",
+    "lockFileRegexes": []
+  },
+  {
+    "regex": "NaNaNa\\.batman",
+    "documentationUrl": "https://portal.debricked.com/language-support-49",
+    "lockFileRegexes": []
+  },
+  {
+    "regex": "flatpak\\.list",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/linux-package-managers-180",
+    "lockFileRegexes": []
+  },
+  {
+    "regex": "go\\.mod",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/go-go-modules-go-dep-bazel-212",
+    "lockFileRegexes": [
+      "\\.?debricked-go-dependencies\\.txt",
+      "\\.?gomod\\.debricked\\.lock"
+    ]
+  },
+  {
+    "regex": "build\\.gradle",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/java-kotlin-gradle-maven-and-bazel-150",
+    "lockFileRegexes": [
+      "\\.?debricked-gradle-dependencies\\.txt",
+      "\\.?gradle.debricked\\.lock"
+    ]
+  },
+  {
+    "regex": "build\\.gradle\\.kts",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/java-kotlin-gradle-maven-and-bazel-150",
+    "lockFileRegexes": [
+      "\\.?debricked-gradle-dependencies\\.txt",
+      "\\.?gradle.debricked\\.lock"
+    ]
+  },
+  {
+    "regex": "pom\\.xml",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/java-kotlin-gradle-maven-and-bazel-150",
+    "lockFileRegexes": [
+      "\\.?debricked-maven-dependencies\\.tgf",
+      "\\.?maven.debricked\\.lock"
+    ]
+  },
+  {
+    "regex": "bower\\.json",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/javascript-npm-yarn-and-bower-151",
+    "lockFileRegexes": [
+      "bower\\.debricked\\.lock"
+    ]
+  },
+  {
+    "regex": "package\\.json",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/javascript-npm-yarn-and-bower-151",
+    "lockFileRegexes": [
+      "package-lock\\.json",
+      "yarn\\.lock"
+    ]
+  },
+  {
+    "regex": "npm-shrinkwrap\\.json",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/javascript-npm-yarn-and-bower-151",
+    "lockFileRegexes": []
+  },
+  {
+    "regex": ".*(?:\\.csproj)(?:\\.\\w+)*",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/c-nuget-and-paket-149",
+    "lockFileRegexes": [
+      "packages\\.lock\\.json"
+    ]
+  },
+  {
+    "regex": "packages\\.config",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/c-nuget-and-paket-149",
+    "lockFileRegexes": [
+      "\\.?packages\\.config\\.nuget\\.debricked\\.lock"
+    ]
+  },
+  {
+    "regex": "pacman\\.list",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/linux-package-managers-180",
+    "lockFileRegexes": []
+  },
+  {
+    "regex": "composer\\.json",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/php-composer-153",
+    "lockFileRegexes": [
+      "composer\\.lock"
+    ]
+  },
+  {
+    "regex": "[\\w\\-\\.]*requirements.*\\.txt",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/python-pip-154",
+    "lockFileRegexes": [
+      ".*\\.?pip\\.debricked\\.lock"
+    ]
+  },
+  {
+    "regex": "Pipfile$",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/python-pip-154",
+    "lockFileRegexes": [
+      "Pipfile\\.lock"
+    ]
+  },
+  {
+    "regex": "manifest_rev_revisions\\.txt",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/linux-package-managers-180",
+    "lockFileRegexes": []
+  },
+  {
+    "regex": "manifest_revisions\\.txt",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/linux-package-managers-180",
+    "lockFileRegexes": []
+  },
+  {
+    "regex": "rootfs_manifest\\.txt",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/linux-package-managers-180",
+    "lockFileRegexes": []
+  },
+  {
+    "regex": "rpm\\.list",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/linux-package-managers-180",
+    "lockFileRegexes": []
+  },
+  {
+    "regex": "snap\\.list",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/linux-package-managers-180",
+    "lockFileRegexes": []
+  },
+  {
+    "regex": "\\.?debricked-call-graph",
+    "documentationUrl": "https://portal.debricked.com/language-support-49",
+    "lockFileRegexes": []
+  },
+  {
+    "regex": "",
+    "documentationUrl": "https://portal.debricked.com/language-support-49",
+    "lockFileRegexes": [
+      ".*bom.*\\.json"
+    ]
+  },
+  {
+    "regex": "",
+    "documentationUrl": "https://portal.debricked.com/language-support-49",
+    "lockFileRegexes": [
+      ".*bom.*\\.xml"
+    ]
+  },
+  {
+    "regex": "",
+    "documentationUrl": "https://portal.debricked.com/language-support-49",
+    "lockFileRegexes": [
+      "mix\\.lock"
+    ]
+  },
+  {
+    "regex": "",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/go-go-modules-go-dep-bazel-212",
+    "lockFileRegexes": [
+      "Gopkg\\.lock"
+    ]
+  },
+  {
+    "regex": "",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/c-nuget-and-paket-149",
+    "lockFileRegexes": [
+      "paket\\.lock"
+    ]
+  },
+  {
+    "regex": "",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/ruby-gem-155",
+    "lockFileRegexes": [
+      "Gemfile\\.lock"
+    ]
+  },
+  {
+    "regex": "",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/rust-cargo-156",
+    "lockFileRegexes": [
+      "Cargo\\.lock"
+    ]
+  },
+  {
+    "regex": "",
+    "documentationUrl": "https://portal.debricked.com/language-support-49/objective-c-swift-cocoapods-152",
+    "lockFileRegexes": [
+      "Podfile\\.lock"
+    ]
+  },
+  {
+    "regex": "",
+    "documentationUrl": "https://portal.debricked.com/language-support-49",
+    "lockFileRegexes": [
+      "\\.?debricked\\.fingerprints\\.(wfp|txt)"
+    ]
+  },
+  {
+    "regex": "",
+    "documentationUrl": "https://portal.debricked.com/language-support-49",
+    "lockFileRegexes": [
+      "\\.?debricked\\.(scanned_fingerprint\\.txt|scanned_wfp)"
+    ]
+  }
+]

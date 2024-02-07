@@ -1,6 +1,7 @@
 package scan
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -57,6 +58,7 @@ type DebrickedOptions struct {
 	IntegrationName          string
 	NpmPreferred             bool
 	PassOnTimeOut            bool
+	WriteToJson              bool
 	CallGraphUploadTimeout   int
 	CallGraphGenerateTimeout int
 }
@@ -117,7 +119,10 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 
 		return nil
 	}
-
+	if dOptions.WriteToJson {
+		file, _ := json.MarshalIndent(result, "", " ")
+		_ = os.WriteFile("result.json", file, 0644)
+	}
 	fmt.Printf("\n%d vulnerabilities found\n", result.VulnerabilitiesFound)
 	fmt.Println("")
 	failPipeline := false
