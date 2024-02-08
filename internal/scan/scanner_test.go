@@ -37,6 +37,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const windowsOS = "windows"
+
 var testdataNpm = filepath.Join("testdata", "npm")
 
 var ciService ci.IService = ci.NewService([]ci.ICi{
@@ -64,7 +66,7 @@ func TestNewDebrickedScanner(t *testing.T) {
 }
 
 func TestScan(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windowsOS {
 		t.Skipf("TestScan is skipped due to Windows env")
 	}
 	clientMock := testdata.NewDebClientMock()
@@ -109,7 +111,6 @@ func TestScan(t *testing.T) {
 
 	outputAssertions := []string{
 		"Working directory: /",
-		"cli/internal/scan",
 		"Successfully uploaded",
 		"package.json\n",
 		"Successfully initialized scan\n",
@@ -127,7 +128,7 @@ func TestScan(t *testing.T) {
 }
 
 func TestScanWithJsonPath(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windowsOS {
 		t.Skipf("TestScan is skipped due to Windows env")
 	}
 	clientMock := testdata.NewDebClientMock()
@@ -141,7 +142,6 @@ func TestScanWithJsonPath(t *testing.T) {
 	path := testdataNpm
 	repositoryName := path
 	cwd, _ := os.Getwd()
-	jsonPath := filepath.Join(cwd, "result.json")
 
 	// reset working directory that has been manipulated in scanner.Scan
 	defer resetWd(t, cwd)
@@ -175,7 +175,6 @@ func TestScanWithJsonPath(t *testing.T) {
 
 	outputAssertions := []string{
 		"Working directory: /",
-		"cli/internal/scan",
 		"Successfully uploaded",
 		"package.json\n",
 		"Successfully initialized scan\n",
@@ -190,7 +189,7 @@ func TestScanWithJsonPath(t *testing.T) {
 	for _, assertion := range outputAssertions {
 		assert.Contains(t, string(output), assertion)
 	}
-	assert.FileExists(t, jsonPath)
+	assert.FileExists(t, "internal/scan/testdata/npm/result.json")
 }
 
 func TestScanFailingMetaObject(t *testing.T) {
@@ -251,7 +250,7 @@ func TestScanBadOpts(t *testing.T) {
 }
 
 func TestScanEmptyResult(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windowsOS {
 		t.Skipf("TestScan is skipped due to Windows env")
 	}
 	clientMock := testdata.NewDebClientMock()
