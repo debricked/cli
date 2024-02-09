@@ -176,7 +176,7 @@ func TestScanWithJsonPath(t *testing.T) {
 	outputAssertions := []string{
 		"Working directory: /",
 		"Successfully uploaded",
-		"package.json\n",
+		"package.json",
 		"Successfully initialized scan\n",
 		"Scanning...",
 		"0% |",
