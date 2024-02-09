@@ -267,6 +267,6 @@ func MapEnvToOptions(o *DebrickedOptions, env env.Env) {
 func WriteApiReplyToJsonFile(options DebrickedOptions, result *upload.UploadResult) {
 	if options.JsonFilePath != "" {
 		file, _ := json.MarshalIndent(result, "", " ")
-		_ = os.WriteFile(options.JsonFilePath, file, 0644)
+		_ = os.WriteFile(options.JsonFilePath, file, 0600)
 	}
 }
