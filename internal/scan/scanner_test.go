@@ -189,7 +189,7 @@ func TestScanWithJsonPath(t *testing.T) {
 	for _, assertion := range outputAssertions {
 		assert.Contains(t, string(output), assertion)
 	}
-	assert.FileExists(t, "internal/scan/testdata/npm/result.json")
+	assert.FileExists(t, filepath.Join(cwd, path, "result.json"))
 }
 
 func TestScanFailingMetaObject(t *testing.T) {
