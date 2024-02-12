@@ -1,6 +1,7 @@
 package scan
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -55,6 +56,7 @@ type DebrickedOptions struct {
 	CommitAuthor             string
 	RepositoryUrl            string
 	IntegrationName          string
+	JsonFilePath             string
 	NpmPreferred             bool
 	PassOnTimeOut            bool
 	CallGraphUploadTimeout   int
@@ -117,6 +119,8 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 
 		return nil
 	}
+
+	WriteApiReplyToJsonFile(dOptions, result)
 
 	fmt.Printf("\n%d vulnerabilities found\n", result.VulnerabilitiesFound)
 	fmt.Println("")
@@ -257,5 +261,12 @@ func MapEnvToOptions(o *DebrickedOptions, env env.Env) {
 	}
 	if len(o.Path) == 0 && len(env.Filepath) > 0 {
 		o.Path = env.Filepath
+	}
+}
+
+func WriteApiReplyToJsonFile(options DebrickedOptions, result *upload.UploadResult) {
+	if options.JsonFilePath != "" {
+		file, _ := json.MarshalIndent(result, "", " ")
+		_ = os.WriteFile(options.JsonFilePath, file, 0600)
 	}
 }

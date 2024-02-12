@@ -37,6 +37,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const windowsOS = "windows"
+
 var testdataNpm = filepath.Join("testdata", "npm")
 
 var ciService ci.IService = ci.NewService([]ci.ICi{
@@ -64,7 +66,7 @@ func TestNewDebrickedScanner(t *testing.T) {
 }
 
 func TestScan(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windowsOS {
 		t.Skipf("TestScan is skipped due to Windows env")
 	}
 	clientMock := testdata.NewDebClientMock()
@@ -109,7 +111,6 @@ func TestScan(t *testing.T) {
 
 	outputAssertions := []string{
 		"Working directory: /",
-		"cli/internal/scan",
 		"Successfully uploaded",
 		"package.json\n",
 		"Successfully initialized scan\n",
@@ -124,6 +125,71 @@ func TestScan(t *testing.T) {
 	for _, assertion := range outputAssertions {
 		assert.Contains(t, string(output), assertion)
 	}
+}
+
+func TestScanWithJsonPath(t *testing.T) {
+	if runtime.GOOS == windowsOS {
+		t.Skipf("TestScan is skipped due to Windows env")
+	}
+	clientMock := testdata.NewDebClientMock()
+	addMockedFormatsResponse(clientMock, "package\\.json")
+	addMockedFileUploadResponse(clientMock)
+	addMockedFinishResponse(clientMock, http.StatusNoContent)
+	addMockedStatusResponse(clientMock, http.StatusOK, 50)
+	addMockedStatusResponse(clientMock, http.StatusOK, 100)
+	scanner := makeScanner(clientMock, nil, nil)
+
+	path := testdataNpm
+	repositoryName := path
+	cwd, _ := os.Getwd()
+
+	// reset working directory that has been manipulated in scanner.Scan
+	defer resetWd(t, cwd)
+	opts := DebrickedOptions{
+		Path:                     path,
+		Exclusions:               nil,
+		RepositoryName:           repositoryName,
+		CommitName:               "commit",
+		BranchName:               "",
+		CommitAuthor:             "",
+		RepositoryUrl:            "",
+		IntegrationName:          "",
+		CallGraphUploadTimeout:   10 * 60,
+		CallGraphGenerateTimeout: 10 * 60,
+		JsonFilePath:             "result.json",
+	}
+
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := scanner.Scan(opts)
+
+	_ = w.Close()
+	output, _ := io.ReadAll(r)
+	os.Stdout = rescueStdout
+
+	if err != nil {
+		t.Error("failed to assert that scan ran without errors. Error:", err)
+	}
+
+	outputAssertions := []string{
+		"Working directory: /",
+		"Successfully uploaded",
+		"package.json",
+		"Successfully initialized scan\n",
+		"Scanning...",
+		"0% |",
+		"50% |",
+		"100% |",
+		"32m✔",
+		"0 vulnerabilities found\n\n",
+		"For full details, visit:",
+	}
+	for _, assertion := range outputAssertions {
+		assert.Contains(t, string(output), assertion)
+	}
+	assert.FileExists(t, filepath.Join(cwd, path, "result.json"))
 }
 
 func TestScanFailingMetaObject(t *testing.T) {
@@ -184,7 +250,7 @@ func TestScanBadOpts(t *testing.T) {
 }
 
 func TestScanEmptyResult(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windowsOS {
 		t.Skipf("TestScan is skipped due to Windows env")
 	}
 	clientMock := testdata.NewDebClientMock()
