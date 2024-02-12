@@ -1,7 +1,6 @@
 <p align="center">
-  <a href="#"/>
   <p align="center">
-    <img width="150" height="150" src="/assets/CLI_logo_1024.png" alt="Logo">
+    <img width="150" height="150" src="./assets/CLI_logo_1024.png" alt="Logo">
     <h1 align="center"><b>Debricked CLI</b></h1>
     <p align="center">
     Safety through commandline.

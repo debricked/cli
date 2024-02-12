@@ -7,8 +7,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: debricked/actions/cache@v3
+      - uses: actions/checkout@v4
+      - uses: debricked/actions/cache@v4
       - uses: debricked/actions/scan-non-docker@v3
         env:
           DEBRICKED_TOKEN: ${{ secrets.DEBRICKED_TOKEN }}
