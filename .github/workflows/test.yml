@@ -19,10 +19,10 @@ jobs:
           git config --global core.autocrlf input
           git config --global core.eol lf
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: '1.20'
 
@@ -30,15 +30,6 @@ jobs:
         run: |
           npm install --global bower
           bower -v
-
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/Library/Caches/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ matrix.os }}-go
 
       - name: Pull Supported Formats
         run: |
@@ -54,7 +45,7 @@ jobs:
           TEST_COVERAGE_THRESHOLD: 90
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: ${{ matrix.os == 'ubuntu-latest' }}
         with:
           name: coverage.html
@@ -79,21 +70,12 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: '1.20'
-
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/Library/Caches/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ matrix.os }}-go
 
       - name: Pull Supported Formats
         run: |
@@ -104,7 +86,7 @@ jobs:
         run: go build -v ./...
 
       - name: Set up Java ${{matrix.java}}
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: ${{matrix.java}}
           distribution: 'temurin'
@@ -122,7 +104,7 @@ jobs:
       matrix:
         docker-os: ['alpine', 'debian']
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # Pull from debian and re-tag to match cache
       - name: Pull Image; Debian
@@ -151,8 +133,8 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: '1.20'
       - name: Pull Supported Formats
@@ -160,6 +142,6 @@ jobs:
           cd cmd/debricked
           go generate -v -x
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v4
         with:
           version: v1.52
