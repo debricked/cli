@@ -277,6 +277,7 @@ func ensureDirExists(dir string) error {
 	if _, err := os.Stat(dir); !os.IsNotExist(err) {
 		return nil
 	}
+
 	return os.MkdirAll(dir, 0755)
 }
 
@@ -302,6 +303,7 @@ func (f *Fingerprints) writeToFile(file *os.File) error {
 			return fmt.Errorf("failed to write to file: %w", err)
 		}
 	}
+
 	return writer.Flush()
 }
 func isCompressedFile(filename string) bool {
