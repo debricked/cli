@@ -91,7 +91,7 @@ jobs:
         id: cache-jars
         with:
           path: |
-            target/*.jar
+            java/common/target/*.jar
           key: ${{ runner.os }}-soot-wrapper-${{ matrix.java-version }}-${{ steps.calc-checksum.outputs.hash }}
 
       - name: Set up JDK ${{ matrix.java-version }}
