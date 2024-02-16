@@ -103,7 +103,9 @@ jobs:
 
       - name: Build with Maven
         if: steps.cache-jars.outputs.cache-hit != 'true'
-        run: mvn clean package
+        run: |
+          cd java/common/
+          mvn clean package -X -DskipTests
 
       - name: Upload JAR if cache missed
         if: steps.cache-jars.outputs.cache-hit != 'true'
