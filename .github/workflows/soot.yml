@@ -33,20 +33,17 @@ jobs:
           key: ${{ runner.os }}-soot-wrapper-${{ matrix.java-version }}-${{ steps.calc-checksum.outputs.hash }}
 
       - name: Set up JDK ${{ matrix.java-version }}
-        if: steps.cache-jars.outputs.cache-hit != 'true'
         uses: actions/setup-java@v2
         with:
           java-version: ${{ matrix.java-version }}
           distribution: 'adopt'
 
       - name: Build with Maven
-        if: steps.cache-jars.outputs.cache-hit != 'true'
         run: |
           cd java/common/
           mvn clean package -X -DskipTests
 
       - name: Upload JAR if cache missed
-        if: steps.cache-jars.outputs.cache-hit != 'true'
         uses: actions/upload-artifact@v2
         with:
           name: soot-wrapper-${{ matrix.java-version }}.jar
