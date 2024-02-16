@@ -50,4 +50,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: soot-wrapper-${{ matrix.java-version }}.jar
-          path: target/*.jar
+          path: java/common/target/*.jar
