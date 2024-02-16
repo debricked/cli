@@ -71,3 +71,43 @@ jobs:
           sudo -u aur git config user.name "Debricked build bot"
           git config --global --add safe.directory "$PWD"
           make push
+
+  soot-wrapper:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java-version: [ 11, 17, 21 ]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          repository: 'debricked/soot-wrapper'
+
+      - name: Calculate checksum
+        id: calc-checksum
+        run: echo "::set-output name=hash::$(git rev-parse HEAD)"
+
+      - name: Cache JARs
+        uses: actions/cache@v2
+        id: cache-jars
+        with:
+          path: |
+            target/*.jar
+          key: ${{ runner.os }}-soot-wrapper-${{ matrix.java-version }}-${{ steps.calc-checksum.outputs.hash }}
+
+      - name: Set up JDK ${{ matrix.java-version }}
+        if: steps.cache-jars.outputs.cache-hit != 'true'
+        uses: actions/setup-java@v2
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: 'adopt'
+
+      - name: Build with Maven
+        if: steps.cache-jars.outputs.cache-hit != 'true'
+        run: mvn clean package
+
+      - name: Upload JAR if cache missed
+        if: steps.cache-jars.outputs.cache-hit != 'true'
+        uses: actions/upload-artifact@v2
+        with:
+          name: soot-wrapper-${{ matrix.java-version }}.jar
+          path: target/*.jar
