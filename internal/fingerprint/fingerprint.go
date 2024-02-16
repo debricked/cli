@@ -273,26 +273,37 @@ func (f *Fingerprints) Len() int {
 
 var osCreate = os.Create
 
-func (f *Fingerprints) ToFile(ouputFile string) error {
-	file, err := osCreate(ouputFile)
+func ensureDirExists(dir string) error {
+	if _, err := os.Stat(dir); !os.IsNotExist(err) {
+		return nil
+	}
+	return os.MkdirAll(dir, 0755)
+}
+
+func (f *Fingerprints) ToFile(outputFile string) error {
+	dir := filepath.Dir(outputFile)
+	if err := ensureDirExists(dir); err != nil {
+		return fmt.Errorf("failed to ensure directory exists: %w", err)
+	}
+
+	file, err := osCreate(outputFile)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create file: %w", err)
 	}
 	defer file.Close()
 
-	writer := bufio.NewWriter(file)
-	for _, fingerprint := range f.Entries {
-		_, err := writer.WriteString(fingerprint.ToString() + "\n")
-		if err != nil {
-			return err
-		}
-	}
-	writer.Flush()
-
-	return nil
-
+	return f.writeToFile(file)
 }
 
+func (f *Fingerprints) writeToFile(file *os.File) error {
+	writer := bufio.NewWriter(file)
+	for _, fingerprint := range f.Entries {
+		if _, err := writer.WriteString(fingerprint.ToString() + "\n"); err != nil {
+			return fmt.Errorf("failed to write to file: %w", err)
+		}
+	}
+	return writer.Flush()
+}
 func isCompressedFile(filename string) bool {
 	for _, file := range FILES_TO_UNPACK {
 		if filepath.Ext(filename) == file {
