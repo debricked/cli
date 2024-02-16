@@ -241,6 +241,12 @@ func TestFingerprintsToFile(t *testing.T) {
 			outputFile:    "/invalid/path/fingerprints.wfp",
 			expectedError: true,
 		},
+		{
+			name:          "Create non-existent directory",
+			setupMock:     func() {},
+			outputFile:    "test/newfile/debricked.fingerprints.txt",
+			expectedError: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -267,6 +273,10 @@ func TestFingerprintsToFile(t *testing.T) {
 			if tt.expectedError {
 				assert.Error(t, err)
 			} else {
+				assert.NoError(t, err)
+
+				// Check if the file exists
+				_, err := os.Stat(filepath.Join(dir, tt.outputFile))
 				assert.NoError(t, err)
 			}
 		})
