@@ -94,9 +94,9 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           files: |
-            soot-wrapper-11.jar
-            soot-wrapper-17.jar
-            soot-wrapper-21.jar
+            /home/runner/work/cli/cli/soot-wrapper-11.jar
+            /home/runner/work/cli/cli/soot-wrapper-17.jar
+            /home/runner/work/cli/cli/soot-wrapper-21.jar
 
   aur:
     runs-on: ubuntu-latest
