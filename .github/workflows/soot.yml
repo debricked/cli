@@ -2,11 +2,9 @@ name: Soot test
 
 on:
   push:
-    tags:
-      - '*'
-
-permissions:
-  contents: write
+    branches:
+      - main
+  pull_request:
 
 jobs:
   soot-wrapper-test:
