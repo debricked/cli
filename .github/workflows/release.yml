@@ -21,7 +21,7 @@ jobs:
 
       - name: Calculate checksum
         id: calc-checksum
-        run: echo "::set-output name=hash::$(git rev-parse HEAD)"
+        run: echo "hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
       - name: Cache JARs
         uses: actions/cache@v4
@@ -92,6 +92,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
+          tag_name: ${{ github.ref_name }}
           files: |
             soot-wrapper-11.jar
             soot-wrapper-17.jar
