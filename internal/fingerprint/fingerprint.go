@@ -116,12 +116,28 @@ type FileFingerprint struct {
 	path          string
 	contentLength int64
 	fingerprint   []byte
+	snippets      []Snippet
 }
 
 func (f FileFingerprint) ToString() string {
 	path := filepath.ToSlash(f.path)
+	output := fmt.Sprintf("file=%x,%d,%s", f.fingerprint, f.contentLength, path)
 
-	return fmt.Sprintf("file=%x,%d,%s", f.fingerprint, f.contentLength, path)
+	if len(f.snippets) != 0 {
+		snippetOutput := ""
+		prevLine := -1
+		for _, snippet := range f.snippets {
+			if snippet.Line == prevLine {
+				snippetOutput += fmt.Sprintf(",%s", snippet.Hash)
+			} else {
+				snippetOutput += fmt.Sprintf("\n%d=%s", snippet.Line, snippet.Hash)
+			}
+			prevLine = snippet.Line
+		}
+
+		output += snippetOutput
+	}
+	return output
 }
 
 func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string, fingerprintCompressedContent bool) (Fingerprints, error) {
@@ -239,28 +255,42 @@ func shouldProcessFile(fileInfo os.FileInfo, exclusions []string, path string) b
 }
 
 func computeHashForFile(filename string) (FileFingerprint, error) {
-	data, err := os.ReadFile(filename)
+	rc, err := os.Open(filename)
 	if err != nil {
 		return FileFingerprint{}, err
 	}
+	defer rc.Close()
 
 	hasher := newHasher()
 
-	if _, err := hasher.Write(data); err != nil {
+	_, err = io.Copy(hasher, rc) // #nosec
+	if err != nil {
 		return FileFingerprint{}, err
 	}
 
-	contentLength := int64(len(data))
+	contentLength := int64(hasher.Size())
 
 	if err != nil {
 		return FileFingerprint{}, err
 	}
 
-	return FileFingerprint{
+	fingerprint := FileFingerprint{
 		path:          filename,
 		contentLength: contentLength,
 		fingerprint:   hasher.Sum(nil),
-	}, nil
+	}
+	winnowing := NewWinnowing(nil)
+
+	snippets, err := winnowing.GenerateWFP(filename)
+	if err != nil {
+		return FileFingerprint{}, err
+	}
+
+	if snippets != nil {
+		fingerprint.snippets = *snippets
+	}
+
+	return fingerprint, nil
 }
 
 type Fingerprints struct {
@@ -327,22 +357,33 @@ func inMemFingerprintingCompressedContent(filename string, exclusions []string) 
 			return nil, err
 		}
 
+		defer rc.Close()
+
 		hasher := newHasher()
 
 		_, err = io.Copy(hasher, rc) // #nosec
 		if err != nil {
-			rc.Close()
-
 			return nil, err
 		}
 
-		fingerprints = append(fingerprints, FileFingerprint{
+		fingerprint := FileFingerprint{
 			path:          longFileName,
 			contentLength: int64(f.UncompressedSize64),
 			fingerprint:   hasher.Sum(nil),
-		})
+		}
 
-		rc.Close()
+		winnowing := NewWinnowing(nil)
+
+		snippets, err := winnowing.GenerateWFP(longFileName)
+		if err != nil {
+			return nil, err
+		}
+
+		if snippets != nil {
+			fingerprint.snippets = *snippets
+		}
+
+		fingerprints = append(fingerprints, fingerprint)
 	}
 
 	return fingerprints, nil
