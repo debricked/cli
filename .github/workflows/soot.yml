@@ -22,8 +22,8 @@ jobs:
         run: |
           TAG=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name')
           curl -LJO https://github.com/${{ github.repository }}/releases/download/${TAG}/soot-wrapper-rev-hash.txt
-          
-          echo "release_tag=$(${TAG})" >> $GITHUB_OUTPUT
+
+          echo "release_tag=$TAG" >> $GITHUB_OUTPUT
           echo "hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
           if [ ! -f soot-wrapper-rev-hash.txt ]; then
             touch soot-wrapper-rev-hash.txt
