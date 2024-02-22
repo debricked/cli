@@ -23,6 +23,8 @@ jobs:
           TAG=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name')
           curl -LJO https://github.com/${{ github.repository }}/releases/download/${TAG}/soot-wrapper-rev-hash.txt
           
+          cat soot-wrapper-rev-hash.txt
+          
           echo "release_tag=$(${TAG})" >> $GITHUB_OUTPUT
           echo "hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
           if [ ! -f soot-wrapper-rev-hash.txt ]; then
@@ -31,7 +33,7 @@ jobs:
           echo "prev_hash=$(cat soot-wrapper-rev-hash.txt)" >> $GITHUB_OUTPUT
 
       - name: Pull JAR from previous release if already built
-        if: steps.calc-checksum.outputs.hash == steps.calc-checksum.outputs.prev_hash
+#        if: steps.calc-checksum.outputs.hash == steps.calc-checksum.outputs.prev_hash
         run: |
           curl -LJO https://github.com/${{ github.repository }}/releases/download/${{ steps.calc-checksum.outputs.release_tag }}/soot-wrapper-${{ matrix.java-version }}.jar
         env:
