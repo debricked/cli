@@ -65,6 +65,11 @@ jobs:
 
       - name: Store soot-wrapper revision hash
         if: steps.calc-checksum.outputs.hash != steps.calc-checksum.outputs.prev_hash
+        run: |
+          echo ${{ steps.calc-checksum.outputs.hash }} > soot-wrapper-rev-hash.txt
+
+      - name: Upload file containing soot-wrapper revision hash
+        if: steps.calc-checksum.outputs.hash != steps.calc-checksum.outputs.prev_hash
         uses: actions/upload-artifact@v4
         with:
           name: soot-wrapper-rev-hash.txt
