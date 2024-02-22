@@ -99,7 +99,7 @@ func isExcludedByEnding(filename string) bool {
 }
 
 type IFingerprint interface {
-	FingerprintFiles(rootPath string, exclusions []string, fingerprintCompressedContent bool) (Fingerprints, error)
+	FingerprintFiles(rootPath string, exclusions []string, fingerprintCompressedContent bool, includeSnippet bool) (Fingerprints, error)
 }
 
 type Fingerprinter struct {
@@ -137,10 +137,11 @@ func (f FileFingerprint) ToString() string {
 
 		output += snippetOutput
 	}
+
 	return output
 }
 
-func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string, fingerprintCompressedContent bool) (Fingerprints, error) {
+func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string, fingerprintCompressedContent bool, includeSnippet bool) (Fingerprints, error) {
 	if len(rootPath) == 0 {
 		rootPath = filepath.Base("")
 	}
@@ -158,7 +159,7 @@ func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string, f
 			return err
 		}
 
-		fingerprintsZip, err := computeHashForFileAndZip(fileInfo, path, exclusions, fingerprintCompressedContent)
+		fingerprintsZip, err := computeHashForFileAndZip(fileInfo, path, exclusions, fingerprintCompressedContent, includeSnippet)
 		if err != nil {
 			return err
 		}
@@ -188,7 +189,7 @@ func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string, f
 	return fingerprints, err
 }
 
-func computeHashForFileAndZip(fileInfo os.FileInfo, path string, exclusions []string, fingerprintCompressedContent bool) ([]FileFingerprint, error) {
+func computeHashForFileAndZip(fileInfo os.FileInfo, path string, exclusions []string, fingerprintCompressedContent bool, includeSnippet bool) ([]FileFingerprint, error) {
 	if !shouldProcessFile(fileInfo, exclusions, path) {
 		return nil, nil
 	}
@@ -197,7 +198,7 @@ func computeHashForFileAndZip(fileInfo os.FileInfo, path string, exclusions []st
 
 	// If the file should be unzipped, try to unzip and fingerprint it
 	if isCompressedFile(path) && fingerprintCompressedContent {
-		fingerprintsZip, err := inMemFingerprintingCompressedContent(path, exclusions)
+		fingerprintsZip, err := inMemFingerprintingCompressedContent(path, exclusions, includeSnippet)
 		if err != nil {
 			if errors.Is(err, zip.ErrFormat) {
 				fmt.Printf("WARNING: Could not unpack and fingerprint contents of compressed file [%s]. Error: %v\n", path, err)
@@ -208,7 +209,7 @@ func computeHashForFileAndZip(fileInfo os.FileInfo, path string, exclusions []st
 		fingerprints = append(fingerprints, fingerprintsZip...)
 	}
 
-	fingerprint, err := computeHashForFile(path)
+	fingerprint, err := computeHashForFile(path, includeSnippet)
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +255,7 @@ func shouldProcessFile(fileInfo os.FileInfo, exclusions []string, path string) b
 	return !isSymlink
 }
 
-func computeHashForFile(filename string) (FileFingerprint, error) {
+func computeHashForFile(filename string, includeSnippet bool) (FileFingerprint, error) {
 	rc, err := os.Open(filename)
 	if err != nil {
 		return FileFingerprint{}, err
@@ -263,12 +264,10 @@ func computeHashForFile(filename string) (FileFingerprint, error) {
 
 	hasher := newHasher()
 
-	_, err = io.Copy(hasher, rc) // #nosec
+	contentLen, err := io.Copy(hasher, rc) // #nosec
 	if err != nil {
 		return FileFingerprint{}, err
 	}
-
-	contentLength := int64(hasher.Size())
 
 	if err != nil {
 		return FileFingerprint{}, err
@@ -276,18 +275,21 @@ func computeHashForFile(filename string) (FileFingerprint, error) {
 
 	fingerprint := FileFingerprint{
 		path:          filename,
-		contentLength: contentLength,
+		contentLength: contentLen,
 		fingerprint:   hasher.Sum(nil),
 	}
-	winnowing := NewWinnowing(nil)
 
-	snippets, err := winnowing.GenerateWFP(filename)
-	if err != nil {
-		return FileFingerprint{}, err
-	}
+	if includeSnippet {
+		winnowing := NewWinnowing(nil)
 
-	if snippets != nil {
-		fingerprint.snippets = *snippets
+		snippets, err := winnowing.GenerateWFP(filename)
+		if err != nil {
+			return FileFingerprint{}, err
+		}
+
+		if snippets != nil {
+			fingerprint.snippets = *snippets
+		}
 	}
 
 	return fingerprint, nil
@@ -333,7 +335,7 @@ func isCompressedFile(filename string) bool {
 	return false
 }
 
-func inMemFingerprintingCompressedContent(filename string, exclusions []string) ([]FileFingerprint, error) {
+func inMemFingerprintingCompressedContent(filename string, exclusions []string, includeSnippet bool) ([]FileFingerprint, error) {
 
 	r, err := zip.OpenReader(filename)
 	if err != nil {
@@ -361,26 +363,27 @@ func inMemFingerprintingCompressedContent(filename string, exclusions []string) 
 
 		hasher := newHasher()
 
-		_, err = io.Copy(hasher, rc) // #nosec
+		contentLen, err := io.Copy(hasher, rc) // #nosec
 		if err != nil {
 			return nil, err
 		}
 
 		fingerprint := FileFingerprint{
 			path:          longFileName,
-			contentLength: int64(f.UncompressedSize64),
+			contentLength: contentLen,
 			fingerprint:   hasher.Sum(nil),
 		}
+		if includeSnippet {
+			winnowing := NewWinnowing(nil)
 
-		winnowing := NewWinnowing(nil)
+			snippets, err := winnowing.GenerateWFP(longFileName)
+			if err != nil {
+				return nil, err
+			}
 
-		snippets, err := winnowing.GenerateWFP(longFileName)
-		if err != nil {
-			return nil, err
-		}
-
-		if snippets != nil {
-			fingerprint.snippets = *snippets
+			if snippets != nil {
+				fingerprint.snippets = *snippets
+			}
 		}
 
 		fingerprints = append(fingerprints, fingerprint)

@@ -15,9 +15,11 @@ var exclusions = file.DefaultExclusionsFingerprint()
 const (
 	ExclusionFlag                = "exclusion"
 	FingerprintCompressedContent = "fingerprint-compressed-content"
+	IncludeSnippet               = "snippet"
 )
 
 var shouldFingerprintCompressedContent bool
+var includeSnippet bool
 
 func NewFingerprintCmd(fingerprinter fingerprint.IFingerprint) *cobra.Command {
 
@@ -48,7 +50,9 @@ Example:
 $ debricked files fingerprint . `+exampleFlags)
 
 	cmd.Flags().BoolVar(&shouldFingerprintCompressedContent, FingerprintCompressedContent, false, `Fingerprint the contents of compressed files by unpacking them in memory, Supported files: `+fmt.Sprintf("%v", fingerprint.FILES_TO_UNPACK))
-
+	cmd.Flags().BoolVar(&includeSnippet, IncludeSnippet, false, "Snippet fingerprint file content.")
+	// hide the flag from the help message
+	_ = cmd.Flags().MarkHidden(IncludeSnippet)
 	viper.MustBindEnv(ExclusionFlag)
 
 	return cmd
@@ -61,7 +65,7 @@ func RunE(f fingerprint.IFingerprint) func(_ *cobra.Command, args []string) erro
 			path = args[0]
 		}
 
-		output, err := f.FingerprintFiles(path, exclusions, shouldFingerprintCompressedContent)
+		output, err := f.FingerprintFiles(path, exclusions, shouldFingerprintCompressedContent, includeSnippet)
 
 		if err != nil {
 			return err

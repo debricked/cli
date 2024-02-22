@@ -107,6 +107,7 @@ func NewWinnowing(minFileSize *int) *Winnowing {
 	} else {
 		MinFileSize = MinFileSizeDefault
 	}
+
 	return &Winnowing{
 		crc8MaximTable: make([]uint8, 0),
 		MinFileSize:    MinFileSize,
@@ -117,14 +118,17 @@ func (w *Winnowing) NormalizeByte(b byte) byte {
 	if b < ASCII0 || b > ASCII9 {
 		return 0
 	}
+
 	return b
 }
 
 func (w *Winnowing) ShouldSkipFile(filePath string) bool {
 	ext := filepath.Ext(filePath)
 	if _, ok := IncludedExtensions[ext]; !ok {
+
 		return true
 	}
+
 	return false
 }
 
@@ -134,6 +138,7 @@ func (w *Winnowing) Write(p []byte) (n int, err error) {
 	content := p
 	content_len := len(content)
 	if content_len < w.MinFileSize {
+
 		return len(p), nil
 	}
 	line := 1
@@ -145,11 +150,13 @@ func (w *Winnowing) Write(p []byte) (n int, err error) {
 
 		if bt == ASCIILF {
 			line++
+
 			continue
 		}
 
 		btNorm, process := w.normalizeContent(bt)
 		if !process {
+
 			continue
 		}
 
@@ -189,6 +196,7 @@ func minHash(window []uint32) uint32 {
 			min = hash
 		}
 	}
+
 	return min
 }
 
@@ -200,11 +208,13 @@ func (w *Winnowing) GenerateWFP(filePath string) (*[]Snippet, error) {
 	defer rc.Close()
 
 	if w.ShouldSkipFile(filePath) {
+
 		return nil, nil
 	}
 
 	_, err = io.Copy(w, rc)
 	if err != nil {
+
 		return nil, err
 	}
 
@@ -229,12 +239,4 @@ func (w *Winnowing) normalizeContent(b byte) (byte, bool) {
 	} else {
 		return 0, false
 	}
-}
-
-func (w *Winnowing) generateKgrams(content []byte, k int) [][]byte {
-	var kgrams [][]byte
-	for i := 0; i <= len(content)-k; i++ {
-		kgrams = append(kgrams, content[i:i+k])
-	}
-	return kgrams
 }

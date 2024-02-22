@@ -151,7 +151,7 @@ func TestFingerprinterInterface(t *testing.T) {
 
 func TestFingerprintFiles(t *testing.T) {
 	fingerprinter := NewFingerprinter()
-	fingerprints, err := fingerprinter.FingerprintFiles("testdata/fingerprinter", []string{}, true)
+	fingerprints, err := fingerprinter.FingerprintFiles("testdata/fingerprinter", []string{}, true, false)
 	assert.NoError(t, err)
 	assert.NotNil(t, fingerprints)
 	assert.NotEmpty(t, fingerprints)
@@ -159,7 +159,7 @@ func TestFingerprintFiles(t *testing.T) {
 	assert.Equal(t, "file=634c5485de8e22b27094affadd8a6e3b,21,testdata/fingerprinter/testfile.py", fingerprints.Entries[0].ToString())
 
 	// Test no file
-	fingerprints, err = fingerprinter.FingerprintFiles("", []string{}, true)
+	fingerprints, err = fingerprinter.FingerprintFiles("", []string{}, true, false)
 	assert.NoError(t, err)
 	assert.NotNil(t, fingerprints)
 	assert.NotEmpty(t, fingerprints)
@@ -198,11 +198,11 @@ func TestFileFingerprintToString(t *testing.T) {
 
 func TestComputeMD5(t *testing.T) {
 	// Test file not found
-	_, err := computeHashForFile("testdata/fingerprinter/testfile-not-found.py")
+	_, err := computeHashForFile("testdata/fingerprinter/testfile-not-found.py", false)
 	assert.Error(t, err)
 
 	// Test file found
-	entry, err := computeHashForFile("testdata/fingerprinter/testfile.py")
+	entry, err := computeHashForFile("testdata/fingerprinter/testfile.py", false)
 	assert.NoError(t, err)
 	entryS := fmt.Sprintf("%x", entry.fingerprint)
 	assert.Equal(t, "634c5485de8e22b27094affadd8a6e3b", entryS)
@@ -349,7 +349,7 @@ func TestInMemFingerprintingCompressedContent(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fingerprinter := NewFingerprinter()
-			fingerprints, err := fingerprinter.FingerprintFiles(tt.path, []string{}, tt.shouldUnzip)
+			fingerprints, err := fingerprinter.FingerprintFiles(tt.path, []string{}, tt.shouldUnzip, false)
 			assert.NoError(t, err)
 			assert.NotNil(t, fingerprints)
 			assert.NotEmpty(t, fingerprints)
@@ -376,7 +376,7 @@ func TestComputeHashForFile(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := computeHashForFile(tt.file)
+			_, err := computeHashForFile(tt.file, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("computeHashForFile() error = %v, wantErr %v", err, tt.wantErr)
 			}
