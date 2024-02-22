@@ -27,10 +27,10 @@ jobs:
           echo "prev_hash=$(cat soot-wrapper-rev-hash.txt)" >> $GITHUB_OUTPUT
 
       - name: Pull JAR from previous release if already built
-        if: steps.calc-checksum.outputs.hash == steps.calc-checksum.outputs.prev_hash
+#        if: steps.calc-checksum.outputs.hash == steps.calc-checksum.outputs.prev_hash
         run: |
           TAG=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name')
-          gh api repos/${{ github.repository }}/releases/tags/$TAG | jq '.assets[] | .name'
+          gh api repos/${{ github.repository }}/releases/tags/${TAG} | jq '.assets[] | .name'
           gh api repos/${{ github.repository }}/releases/soot-wrapper-${{ matrix.java-version }}.jar \
             --raw \
             -H 'Accept: application/octet-stream' \
@@ -91,12 +91,5 @@ jobs:
 
       - name: Ensure files are in place
         run: |
-          if [ -f soot-wrapper-11.jar ]; then
-            echo "soot-wrapper-11.jar exists"
-          fi
-          if [ -f soot-wrapper-17.jar ]; then
-            echo "soot-wrapper-17.jar exists"
-          fi
-          if [ -f soot-wrapper-21.jar ]; then
-            echo "soot-wrapper-21.jar exists"
-          fi
+          ls -la
+          pwd
