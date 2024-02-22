@@ -35,6 +35,8 @@ jobs:
             --raw \
             -H 'Accept: application/octet-stream' \
             -o soot-wrapper-${{ matrix.java-version }}.jar
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload JAR from previous release
         if: steps.calc-checksum.outputs.hash == steps.calc-checksum.outputs.prev_hash
