@@ -1,15 +1,13 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - '*'
+  pull_request:
 
 permissions:
   contents: write
 
 jobs:
-  soot-wrapper:
+  soot-wrapper-test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -24,7 +22,7 @@ jobs:
         run: |
           TAG=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name')
           curl -LJO https://github.com/${{ github.repository }}/releases/download/${TAG}/soot-wrapper-rev-hash.txt
-
+          
           echo "release_tag=$(${TAG})" >> $GITHUB_OUTPUT
           echo "hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
           if [ ! -f soot-wrapper-rev-hash.txt ]; then
@@ -79,9 +77,9 @@ jobs:
           path: soot-wrapper-rev-hash.txt
           overwrite: 'true'
 
-  goreleaser:
+  goreleaser-test:
     runs-on: ubuntu-latest
-    needs: soot-wrapper
+    needs: soot-wrapper-test
     steps:
       - uses: actions/checkout@v4
         with:
@@ -89,77 +87,10 @@ jobs:
 
       - run: git fetch --force --tags
 
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '>=1.20'
-          cache: true
-
-      - name: Import GPG signing key
-        id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@v6
-        with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.GPG_PASSPHRASE }}
-
-      - name: Pull Supported Formats
-        run: |
-          cd cmd/debricked
-          go generate -v -x
-
-      - uses: goreleaser/goreleaser-action@v5
-        with:
-          distribution: goreleaser
-          version: latest
-          args: release --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
-
       - name: Download JARs
         uses: actions/download-artifact@v4
 
-      - name: Add JARs to release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          tag_name: ${{ github.ref_name }}
-          files: |
-            /home/runner/work/cli/cli/soot-wrapper-rev-hash.txt
-            /home/runner/work/cli/cli/soot-wrapper-11.jar
-            /home/runner/work/cli/cli/soot-wrapper-17.jar
-            /home/runner/work/cli/cli/soot-wrapper-21.jar
-
-  aur:
-    runs-on: ubuntu-latest
-    needs: goreleaser
-    container:
-      image: archlinux/archlinux:base-devel
-    steps:
-      - name: Prepare Arch Linux container
+      - name: Ensure files are in place
         run: |
-          pacman -Syu --noconfirm git go openssh pacman-contrib
-          useradd -m aur
-
-      # Setup SSH access to aur.archlinux.org
-      - uses: webfactory/ssh-agent@v0.8.0
-        with:
-          ssh-private-key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-
-      # Now actually clone AUR repo, and update to new version
-      - name: Build package and update AUR
-        run: |
-          export NEW_VERSION="${GITHUB_REF_NAME#v}"
-          sudo -u aur sh -c "mkdir -p /home/aur/.ssh && chmod 700 /home/aur/.ssh && touch /home/aur/.ssh/known_hosts && chmod 600 /home/aur/.ssh/known_hosts"
-          sudo -u aur sh -c "echo 'aur.archlinux.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEuBKrPzbawxA/k2g6NcyV5jmqwJ2s+zpgZGZ7tpLIcN' >> /home/aur/.ssh/known_hosts"
-          mkdir -p /root/.ssh && chmod 700 /root/.ssh && cp /home/aur/.ssh/known_hosts /root/.ssh/known_hosts && chown root: /root/.ssh/known_hosts
-          # clone repo
-          git clone aur@aur.archlinux.org:debricked.git debricked
-          chown -R aur debricked/
-          cd debricked/
-          sudo -u aur NEW_VERSION="${NEW_VERSION}" make update_version
-          sudo -u aur make package
-          sudo -u aur git diff
-          sudo -u aur git config user.email noreply@debricked.com
-          sudo -u aur git config user.name "Debricked build bot"
-          git config --global --add safe.directory "$PWD"
-          make push
+          ls -la
+          pwd
