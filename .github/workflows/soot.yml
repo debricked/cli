@@ -30,11 +30,7 @@ jobs:
 #        if: steps.calc-checksum.outputs.hash == steps.calc-checksum.outputs.prev_hash
         run: |
           TAG=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name')
-          gh api repos/${{ github.repository }}/releases/tags/${TAG} | jq '.assets[] | .name'
-          gh api repos/${{ github.repository }}/releases/soot-wrapper-${{ matrix.java-version }}.jar \
-            --raw \
-            -H 'Accept: application/octet-stream' \
-            -o soot-wrapper-${{ matrix.java-version }}.jar
+          curl -LJO https://github.com/${{ github.repository }}/releases/download/${TAG}/soot-wrapper-${{ matrix.java-version }}.jar
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
