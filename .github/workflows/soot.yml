@@ -1,0 +1,96 @@
+name: Release
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  soot-wrapper-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java-version: [ 11, 17, 21 ]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: 'debricked/soot-wrapper'
+
+      - name: Calculate checksum
+        id: calc-checksum
+        run: |
+          echo "hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          if [ ! -f soot-wrapper-rev-hash.txt ]; then
+            touch soot-wrapper-rev-hash.txt
+          fi
+          echo "prev_hash=$(cat soot-wrapper-rev-hash.txt)" >> $GITHUB_OUTPUT
+
+      - name: Pull JAR from previous release if already built
+        if: steps.calc-checksum.outputs.hash == steps.calc-checksum.outputs.prev_hash
+        run: |
+          TAG=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name')
+          gh api repos/${{ github.repository }}/releases/tags/$TAG | jq '.assets[] | .name'
+          gh api repos/${{ github.repository }}/releases/soot-wrapper-${{ matrix.java-version }}.jar \
+            --raw \
+            -H 'Accept: application/octet-stream' \
+            -o soot-wrapper-${{ matrix.java-version }}.jar
+
+      - name: Upload JAR from previous release
+        if: steps.calc-checksum.outputs.hash == steps.calc-checksum.outputs.prev_hash
+        uses: actions/upload-artifact@v4
+        with:
+          name: soot-wrapper-${{ matrix.java-version }}.jar
+          path: soot-wrapper-${{ matrix.java-version }}.jar
+
+      - name: Set up JDK ${{ matrix.java-version }}
+        if: steps.calc-checksum.outputs.hash != steps.calc-checksum.outputs.prev_hash
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: 'adopt'
+
+      - name: Build with Maven
+        if: steps.calc-checksum.outputs.hash != steps.calc-checksum.outputs.prev_hash
+        run: |
+          cd java/common/
+          mvn clean package -X -DskipTests
+
+      - name: Upload generated JAR
+        if: steps.calc-checksum.outputs.hash != steps.calc-checksum.outputs.prev_hash
+        uses: actions/upload-artifact@v4
+        with:
+          name: soot-wrapper-${{ matrix.java-version }}.jar
+          path: java/common/target/*.jar
+
+      - name: Store soot-wrapper revision hash
+        if: steps.calc-checksum.outputs.hash != steps.calc-checksum.outputs.prev_hash
+        uses: actions/upload-artifact@v4
+        with:
+          name: soot-wrapper-rev-hash.txt
+          path: java/common/target/*.jar
+
+  goreleaser-test:
+    runs-on: ubuntu-latest
+    needs: soot-wrapper-test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - run: git fetch --force --tags
+
+      - name: Download JARs
+        uses: actions/download-artifact@v4
+
+      - name: Ensure files are in place
+        run: |
+          if [ -f soot-wrapper-11.jar ]; then
+            echo "soot-wrapper-11.jar exists"
+          fi
+          if [ -f soot-wrapper-17.jar ]; then
+            echo "soot-wrapper-17.jar exists"
+          fi
+          if [ -f soot-wrapper-21.jar ]; then
+            echo "soot-wrapper-21.jar exists"
+          fi
