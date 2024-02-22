@@ -30,6 +30,7 @@ jobs:
 #        if: steps.calc-checksum.outputs.hash == steps.calc-checksum.outputs.prev_hash
         run: |
           TAG=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name')
+          echo ${TAG}
           curl -LJO https://github.com/${{ github.repository }}/releases/download/${TAG}/soot-wrapper-${{ matrix.java-version }}.jar
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
