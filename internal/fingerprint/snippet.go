@@ -208,8 +208,9 @@ func (w *Winnowing) GenerateWFP(filePath string) (*[]Snippet, error) {
 	defer rc.Close()
 
 	if w.ShouldSkipFile(filePath) {
+		emptySnippets := make([]Snippet, 0)
 
-		return nil, nil
+		return &emptySnippets, nil
 	}
 
 	_, err = io.Copy(w, rc)

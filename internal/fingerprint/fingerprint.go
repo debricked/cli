@@ -335,6 +335,58 @@ func isCompressedFile(filename string) bool {
 	return false
 }
 
+type NotProcessableError struct {
+	Message string
+}
+
+func (e *NotProcessableError) Error() string {
+	return e.Message
+}
+
+func processFile(f *zip.File, filename string, exclusions []string, includeSnippet bool) (*FileFingerprint, error) {
+	longFileName := filepath.Join(filename, f.Name) // #nosec
+
+	if !shouldProcessFile(f.FileInfo(), exclusions, longFileName) {
+
+		return nil, &NotProcessableError{
+			Message: "file is not processable",
+		}
+	}
+	rc, err := f.Open()
+	if err != nil {
+		return nil, err
+	}
+
+	defer rc.Close()
+
+	hasher := newHasher()
+
+	contentLen, err := io.Copy(hasher, rc) // #nosec
+	if err != nil {
+		return nil, err
+	}
+
+	fingerprint := FileFingerprint{
+		path:          longFileName,
+		contentLength: contentLen,
+		fingerprint:   hasher.Sum(nil),
+	}
+	if includeSnippet {
+		winnowing := NewWinnowing(nil)
+
+		snippets, err := winnowing.GenerateWFP(longFileName)
+		if err != nil {
+			return nil, err
+		}
+
+		if snippets != nil {
+			fingerprint.snippets = *snippets
+		}
+	}
+
+	return &fingerprint, nil
+}
+
 func inMemFingerprintingCompressedContent(filename string, exclusions []string, includeSnippet bool) ([]FileFingerprint, error) {
 
 	r, err := zip.OpenReader(filename)
@@ -349,44 +401,16 @@ func inMemFingerprintingCompressedContent(filename string, exclusions []string, 
 		if filepath.IsAbs(f.Name) || strings.HasPrefix(f.Name, "..") {
 			continue
 		}
-		longFileName := filepath.Join(filename, f.Name) // #nosec
 
-		if !shouldProcessFile(f.FileInfo(), exclusions, longFileName) {
-			continue
-		}
-		rc, err := f.Open()
+		fingerprint, err := processFile(f, filename, exclusions, includeSnippet)
 		if err != nil {
-			return nil, err
-		}
-
-		defer rc.Close()
-
-		hasher := newHasher()
-
-		contentLen, err := io.Copy(hasher, rc) // #nosec
-		if err != nil {
-			return nil, err
-		}
-
-		fingerprint := FileFingerprint{
-			path:          longFileName,
-			contentLength: contentLen,
-			fingerprint:   hasher.Sum(nil),
-		}
-		if includeSnippet {
-			winnowing := NewWinnowing(nil)
-
-			snippets, err := winnowing.GenerateWFP(longFileName)
-			if err != nil {
+			if _, ok := err.(*NotProcessableError); ok {
+				continue
+			} else {
 				return nil, err
 			}
-
-			if snippets != nil {
-				fingerprint.snippets = *snippets
-			}
 		}
-
-		fingerprints = append(fingerprints, fingerprint)
+		fingerprints = append(fingerprints, *fingerprint)
 	}
 
 	return fingerprints, nil
