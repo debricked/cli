@@ -57,11 +57,17 @@ jobs:
           cd java/common/
           mvn clean package -X -DskipTests
 
+      - name: Create archive with generated JARs
+        if: steps.calc-checksum.outputs.hash != steps.calc-checksum.outputs.prev_hash
+        run: |
+          zip -r soot-wrapper-${{ matrix.java-version }}.zip java/common/target/*.jar
+          ls -la
+
       - name: Upload generated JAR
         if: steps.calc-checksum.outputs.hash != steps.calc-checksum.outputs.prev_hash
         uses: actions/upload-artifact@v4
         with:
-          name: soot-wrapper-${{ matrix.java-version }}.jar
+          name: soot-wrapper-${{ matrix.java-version }}
           path: java/common/target/*.jar
 
       - name: Store soot-wrapper revision hash
@@ -92,7 +98,7 @@ jobs:
 
       - name: Ensure files are in place
         run: |
-          ls -la soot-wrapper-11.jar
-          ls -la soot-wrapper-17.jar
-          ls -la soot-wrapper-21.jar
-          ls -la soot-wrapper-rev-hash.txt
+          ls -la soot-wrapper-11
+          ls -la soot-wrapper-17
+          ls -la soot-wrapper-21
+          cat soot-wrapper-rev-hash.txt/soot-wrapper-rev-hash.txt
