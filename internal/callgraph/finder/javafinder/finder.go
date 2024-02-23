@@ -10,7 +10,7 @@ import (
 
 type JavaFinder struct{}
 
-func (f JavaFinder) FindMavenRoots(files []string) ([]string, error) {
+func (f JavaFinder) FindRoots(files []string) ([]string, error) {
 	pomFiles := finder.FilterFiles(files, "pom.xml")
 	ps := PomService{}
 	rootFiles := ps.GetRootPomFiles(pomFiles)
@@ -18,7 +18,7 @@ func (f JavaFinder) FindMavenRoots(files []string) ([]string, error) {
 	return rootFiles, nil
 }
 
-func (f JavaFinder) FindJavaClassDirs(files []string, findJars bool) ([]string, error) {
+func (f JavaFinder) FindDependencyDirs(files []string, findJars bool) ([]string, error) {
 	filteredFiles := finder.FilterFiles(files, ".*\\.class")
 	dirsWithClassFiles := make(map[string]bool)
 	for _, file := range filteredFiles {

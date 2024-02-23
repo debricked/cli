@@ -11,16 +11,16 @@ func TestFindMavenRoots(t *testing.T) {
 
 	files := []string{"test/asd/pom.xml", "test2/pom.xml", "test2/test/asd/pom.xml", "test3/tes"}
 	f := JavaFinder{}
-	roots, err := f.FindMavenRoots(files)
+	roots, err := f.FindRoots(files)
 
 	assert.Nil(t, err)
 	assert.Len(t, roots, 0)
 }
 
-func TestFindJavaClassDirs(t *testing.T) {
+func TestFindDependencyDirs(t *testing.T) {
 	files := []string{"test/asd/pom.xml", "test2/basd/qwe/asd.class", "test2/test/asd", "test3/tes.jar"}
 	f := JavaFinder{}
-	files, err := f.FindJavaClassDirs(files, false)
+	files, err := f.FindDependencyDirs(files, false)
 
 	assert.Nil(t, err)
 	assert.Len(t, files, 1)
@@ -28,7 +28,7 @@ func TestFindJavaClassDirs(t *testing.T) {
 	assert.Equal(t, files[0], gt)
 
 	files = []string{"test/asd/pom.xml", "test2/basd/qwe/asd.class", "test2/test/asd", "test3/tes.jar"}
-	files, err = f.FindJavaClassDirs(files, true)
+	files, err = f.FindDependencyDirs(files, true)
 
 	assert.Nil(t, err)
 	assert.Len(t, files, 2)

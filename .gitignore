@@ -43,3 +43,4 @@ test/resolve/testdata/gradle/*/**
 **.gradle-init-script.debricked.groovy
 test/resolve/testdata/gradle/gradle.debricked.lock
 /mvnproj/target
+debricked-call-graph-golang

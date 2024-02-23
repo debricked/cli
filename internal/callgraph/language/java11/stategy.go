@@ -52,7 +52,7 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	// 	roots, err = s.finder.FindMavenRoots(s.files)
 	// }
 
-	roots, err = s.finder.FindMavenRoots(files)
+	roots, err = s.finder.FindRoots(files)
 	if err != nil {
 		strategyWarning("Error while finding roots: " + err.Error())
 
@@ -70,7 +70,7 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 		files, _ = s.finder.FindFiles(s.paths, s.exclusions)
 	}
 
-	javaClassDirs, _ := s.finder.FindJavaClassDirs(files, false)
+	javaClassDirs, _ := s.finder.FindDependencyDirs(files, false)
 	absRoots, _ := finder.ConvertPathsToAbsPaths(roots)
 	absClassDirs, _ := finder.ConvertPathsToAbsPaths(javaClassDirs)
 	rootClassMapping := finder.MapFilesToDir(absRoots, absClassDirs)
