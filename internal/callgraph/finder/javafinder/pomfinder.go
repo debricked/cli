@@ -1,4 +1,4 @@
-package maven
+package javafinder
 
 import (
 	"path/filepath"

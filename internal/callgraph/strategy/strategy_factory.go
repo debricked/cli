@@ -5,12 +5,12 @@ import (
 
 	"github.com/debricked/cli/internal/callgraph/cgexec"
 	conf "github.com/debricked/cli/internal/callgraph/config"
-	"github.com/debricked/cli/internal/callgraph/finder"
+	"github.com/debricked/cli/internal/callgraph/finder/javafinder"
 	java "github.com/debricked/cli/internal/callgraph/language/java11"
 )
 
 type IFactory interface {
-	Make(config conf.IConfig, files []string, paths []string, exclusions []string, finder finder.IFinder, ctx cgexec.IContext) (IStrategy, error)
+	Make(config conf.IConfig, paths []string, exclusions []string, ctx cgexec.IContext) (IStrategy, error)
 }
 
 type Factory struct{}
@@ -19,11 +19,13 @@ func NewStrategyFactory() Factory {
 	return Factory{}
 }
 
-func (sf Factory) Make(config conf.IConfig, files []string, paths []string, exclusions []string, finder finder.IFinder, ctx cgexec.IContext) (IStrategy, error) {
+func (sf Factory) Make(config conf.IConfig, paths []string, exclusions []string, ctx cgexec.IContext) (IStrategy, error) {
 	name := config.Language()
 	switch name {
 	case java.Name:
-		return java.NewStrategy(config, files, paths, exclusions, finder, ctx), nil
+		return java.NewStrategy(config, paths, exclusions, javafinder.JavaFinder{}, ctx), nil
+	// case python.Name:
+	// 	return python.NewStrategy(config, paths, exclusions, finder, ctx), nil
 	default:
 		return nil, fmt.Errorf("failed to make strategy from %s", name)
 	}
