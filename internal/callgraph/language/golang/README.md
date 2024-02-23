@@ -1,0 +1,1 @@
+# TODO: add docs to this readme on how we generate go CGs

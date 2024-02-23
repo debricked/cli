@@ -26,6 +26,13 @@ var buildDisabled bool
 var generateTimeout int
 var languages string
 
+var supportedLanguages = []string{"java", "golang"}
+
+var languageMap = map[string]string{
+	"java":   "maven",
+	"golang": "go",
+}
+
 func NewCallgraphCmd(generator callgraph.IGenerator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "callgraph [path]",
@@ -65,17 +72,11 @@ $ debricked callgraph . `+exampleFlags)
 This option requires a pre-built project. For more detailed documentation on the callgraph generation, visit our portal:
 https://portal.debricked.com/debricked-cli-63/debricked-cli-documentation-298?tid=298&fid=63#callgraph`)
 	cmd.Flags().IntVar(&generateTimeout, GenerateTimeoutFlag, 60*60, "Timeout (in seconds) on call graph generation.")
-	cmd.Flags().StringVarP(&languages, LanguagesFlag, "l", "java,python", "Colon separated list of languages to create a call graph for.")
+	cmd.Flags().StringVarP(&languages, LanguagesFlag, "l", strings.Join(supportedLanguages, ","), "Colon separated list of languages to create a call graph for.")
 
 	viper.MustBindEnv(ExclusionFlag)
 
 	return cmd
-}
-
-var supportedLanguages = []string{"java"}
-
-var languageMap = map[string]string{
-	"java": "maven",
 }
 
 func parseAndValidateLanguages(languages string) ([]string, error) {
