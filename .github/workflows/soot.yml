@@ -53,7 +53,7 @@ jobs:
       - name: Create archive with generated JARs
         if: steps.calc-checksum.outputs.hash != steps.calc-checksum.outputs.prev_hash
         run: |
-          zip -r soot-wrapper-${{ matrix.java-version }}.zip java/common/target/*.jar
+          zip -r soot-wrapper-${{ matrix.java-version }}.zip java/common/target/
           ls -la
 
       - name: Store soot-wrapper revision hash
