@@ -54,7 +54,7 @@ jobs:
         if: steps.calc-checksum.outputs.hash != steps.calc-checksum.outputs.prev_hash
         run: |
           cd java/common/
-          zip -r soot-wrapper-${{ matrix.java-version }}.zip "target/*.jar"
+          zip -r soot-wrapper-${{ matrix.java-version }}.zip target/*.jar
 
       - name: Store soot-wrapper revision hash
         if: steps.calc-checksum.outputs.hash != steps.calc-checksum.outputs.prev_hash
