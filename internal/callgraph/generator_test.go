@@ -6,7 +6,6 @@ import (
 
 	ctxTestdata "github.com/debricked/cli/internal/callgraph/cgexec/testdata"
 	"github.com/debricked/cli/internal/callgraph/config"
-	"github.com/debricked/cli/internal/callgraph/finder/testdata"
 	strategyTestdata "github.com/debricked/cli/internal/callgraph/strategy/testdata"
 	"github.com/stretchr/testify/assert"
 )
@@ -18,7 +17,6 @@ const (
 
 func TestNewGenerator(t *testing.T) {
 	g := NewGenerator(
-		&testdata.FinderMock{},
 		strategyTestdata.NewStrategyFactoryMock(),
 		NewScheduler(workers),
 	)
@@ -27,7 +25,6 @@ func TestNewGenerator(t *testing.T) {
 
 func TestGenerate(t *testing.T) {
 	g := NewGenerator(
-		&testdata.FinderMock{},
 		strategyTestdata.NewStrategyFactoryMock(),
 		NewScheduler(workers),
 	)
@@ -43,7 +40,6 @@ func TestGenerate(t *testing.T) {
 
 func TestGenerateWithTimer(t *testing.T) {
 	g := NewGenerator(
-		&testdata.FinderMock{},
 		strategyTestdata.NewStrategyFactoryMock(),
 		NewScheduler(workers),
 	)
@@ -58,7 +54,6 @@ func TestGenerateWithTimer(t *testing.T) {
 
 func TestGenerateInvokeError(t *testing.T) {
 	g := NewGenerator(
-		&testdata.FinderMock{},
 		strategyTestdata.NewStrategyFactoryErrorMock(),
 		NewScheduler(workers),
 	)
@@ -74,7 +69,6 @@ func TestGenerateInvokeError(t *testing.T) {
 func TestGenerateScheduleError(t *testing.T) {
 	errAssertion := errors.New("error")
 	g := NewGenerator(
-		&testdata.FinderMock{},
 		strategyTestdata.NewStrategyFactoryMock(),
 		SchedulerMock{Err: errAssertion},
 	)
@@ -90,7 +84,6 @@ func TestGenerateScheduleError(t *testing.T) {
 
 func TestGenerateDirWithoutConfig(t *testing.T) {
 	g := NewGenerator(
-		&testdata.FinderMock{},
 		strategyTestdata.NewStrategyFactoryMock(),
 		SchedulerMock{},
 	)

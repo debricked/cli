@@ -1,8 +1,10 @@
 package callgraph
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/debricked/cli/internal/callgraph"
 	conf "github.com/debricked/cli/internal/callgraph/config"
@@ -17,10 +19,12 @@ const (
 	ExclusionFlag       = "exclusion"
 	NoBuildFlag         = "no-build"
 	GenerateTimeoutFlag = "generate-timeout"
+	LanguagesFlag       = "languages"
 )
 
 var buildDisabled bool
 var generateTimeout int
+var languages string
 
 func NewCallgraphCmd(generator callgraph.IGenerator) *cobra.Command {
 	cmd := &cobra.Command{
@@ -61,10 +65,39 @@ $ debricked callgraph . `+exampleFlags)
 This option requires a pre-built project. For more detailed documentation on the callgraph generation, visit our portal:
 https://portal.debricked.com/debricked-cli-63/debricked-cli-documentation-298?tid=298&fid=63#callgraph`)
 	cmd.Flags().IntVar(&generateTimeout, GenerateTimeoutFlag, 60*60, "Timeout (in seconds) on call graph generation.")
+	cmd.Flags().StringVarP(&languages, LanguagesFlag, "l", "java,python", "Colon separated list of languages to create a call graph for.")
 
 	viper.MustBindEnv(ExclusionFlag)
 
 	return cmd
+}
+
+var supportedLanguages = []string{"java"}
+
+var languageMap = map[string]string{
+	"java": "maven",
+}
+
+func parseAndValidateLanguages(languages string) ([]string, error) {
+	parsedLanguages := strings.Split(languages, ",")
+
+	for _, language := range parsedLanguages {
+		if !isSupportedLanguage(language) {
+			return nil, errors.New(language + " is not a supported language")
+		}
+	}
+
+	return parsedLanguages, nil
+}
+
+func isSupportedLanguage(language string) bool {
+	for _, supportedLanguage := range supportedLanguages {
+		if language == supportedLanguage {
+			return true
+		}
+	}
+
+	return false
 }
 
 func RunE(callgraph callgraph.IGenerator) func(_ *cobra.Command, args []string) error {
@@ -72,11 +105,19 @@ func RunE(callgraph callgraph.IGenerator) func(_ *cobra.Command, args []string) 
 		if len(args) == 0 {
 			args = append(args, ".")
 		}
-		configs := []conf.IConfig{
-			conf.NewConfig("java", []string{}, map[string]string{}, !viper.GetBool(NoBuildFlag), "maven"),
+
+		languages, err := parseAndValidateLanguages(languages)
+		if err != nil {
+			return err
 		}
 
-		err := callgraph.GenerateWithTimer(args, viper.GetStringSlice(ExclusionFlag), configs, viper.GetInt(GenerateTimeoutFlag))
+		configs := []conf.IConfig{}
+
+		for _, language := range languages {
+			configs = append(configs, conf.NewConfig(language, args, map[string]string{}, !buildDisabled, languageMap[language]))
+		}
+
+		err = callgraph.GenerateWithTimer(args, viper.GetStringSlice(ExclusionFlag), configs, viper.GetInt(GenerateTimeoutFlag))
 
 		return err
 	}
