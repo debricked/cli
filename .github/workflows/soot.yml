@@ -75,6 +75,7 @@ jobs:
         with:
           name: soot-wrapper-${{ matrix.java-version }}.zip
           path: soot-wrapper-${{ matrix.java-version }}.zip
+          overwrite: 'true'
 
   goreleaser-test:
     runs-on: ubuntu-latest
