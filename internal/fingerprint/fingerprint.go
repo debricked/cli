@@ -177,10 +177,10 @@ func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string, f
 
 func computeHashForArchive(path string, exclusions []string) ([]FileFingerprint, error) {
 	if isZipFile(path) {
-		return inMemFingerprintingZipContent(path, exclusions)
+		return inMemFingerprintZipContent(path, exclusions)
 	}
 	if isTarGZipFile(path) {
-		return inMemFingerprintingTarGZipContent(path, exclusions)
+		return inMemFingerprintTarGZipContent(path, exclusions)
 	}
 
 	return nil, nil
@@ -353,7 +353,7 @@ func shouldProcessTarHeader(header tar.Header, exclusions []string, longPath str
 	return true
 }
 
-func inMemFingerprintingTarGZipContent(filename string, exclusions []string) ([]FileFingerprint, error) {
+func inMemFingerprintTarGZipContent(filename string, exclusions []string) ([]FileFingerprint, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -393,7 +393,7 @@ func inMemFingerprintingTarGZipContent(filename string, exclusions []string) ([]
 	return fingerprints, nil
 }
 
-func inMemFingerprintingZipContent(filename string, exclusions []string) ([]FileFingerprint, error) {
+func inMemFingerprintZipContent(filename string, exclusions []string) ([]FileFingerprint, error) {
 	r, err := zip.OpenReader(filename)
 
 	if err != nil {
