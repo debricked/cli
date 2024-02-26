@@ -46,7 +46,7 @@ var EXCLUDED_FILES = []string{
 }
 
 var ZIP_FILE_ENDINGS = []string{".jar", ".nupkg", ".war"}
-var TAR_GZIP_FILE_ENDINGS = []string{".tgz", ".tar"}
+var TAR_GZIP_FILE_ENDINGS = []string{".tgz", ".tar.gz"}
 
 const HASH_SIZE = 16
 
