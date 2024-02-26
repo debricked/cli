@@ -1,8 +1,10 @@
 package fingerprint
 
 import (
+	"archive/tar"
 	"archive/zip"
 	"bufio"
+	"compress/gzip"
 	"errors"
 	"fmt"
 	"io"
@@ -43,7 +45,8 @@ var EXCLUDED_FILES = []string{
 	"[content_types].xml",
 }
 
-var FILES_TO_UNPACK = []string{".jar", ".nupkg", ".war"}
+var ZIP_FILE_ENDINGS = []string{".jar", ".nupkg", ".war"}
+var TAR_GZIP_FILE_ENDINGS = []string{".tgz", ".tar"}
 
 const HASH_SIZE = 16
 
@@ -180,8 +183,8 @@ func computeHashForFileAndZip(fileInfo os.FileInfo, path string, exclusions []st
 	var fingerprints []FileFingerprint
 
 	// If the file should be unzipped, try to unzip and fingerprint it
-	if isCompressedFile(path) && fingerprintCompressedContent {
-		fingerprintsZip, err := inMemFingerprintingCompressedContent(path, exclusions)
+	if isZipFile(path) && fingerprintCompressedContent {
+		fingerprintsZip, err := inMemFingerprintingZipContent(path, exclusions)
 		if err != nil {
 			if errors.Is(err, zip.ErrFormat) {
 				fmt.Printf("WARNING: Could not unpack and fingerprint contents of compressed file [%s]. Error: %v\n", path, err)
@@ -190,6 +193,12 @@ func computeHashForFileAndZip(fileInfo os.FileInfo, path string, exclusions []st
 			}
 		}
 		fingerprints = append(fingerprints, fingerprintsZip...)
+	} else if isTarGZipFile(path) && fingerprintCompressedContent {
+		fingerprintsTarGZip, err := inMemFingerprintingTarGZipContent(path, exclusions)
+		if err != nil {
+			return nil, err
+		}
+		fingerprints = append(fingerprints, fingerprintsTarGZip...)
 	}
 
 	fingerprint, err := computeHashForFile(path)
@@ -306,8 +315,8 @@ func (f *Fingerprints) writeToFile(file *os.File) error {
 
 	return writer.Flush()
 }
-func isCompressedFile(filename string) bool {
-	for _, file := range FILES_TO_UNPACK {
+func isZipFile(filename string) bool {
+	for _, file := range ZIP_FILE_ENDINGS {
 		if filepath.Ext(filename) == file {
 			return true
 		}
@@ -316,9 +325,63 @@ func isCompressedFile(filename string) bool {
 	return false
 }
 
-func inMemFingerprintingCompressedContent(filename string, exclusions []string) ([]FileFingerprint, error) {
+func isTarGZipFile(filename string) bool {
+	for _, file := range TAR_GZIP_FILE_ENDINGS {
+		if filepath.Ext(filename) == file {
+			return true
+		}
+	}
+	return false
+}
 
+func inMemFingerprintingTarGZipContent(filename string, exclusions []string) ([]FileFingerprint, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	gzReader, err := gzip.NewReader(file)
+	if err != nil {
+		return nil, err
+	}
+	tarReader := tar.NewReader(gzReader)
+	fingerprints := []FileFingerprint{}
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return nil, err
+		}
+		if header.Typeflag != tar.TypeReg {
+			continue
+		}
+		if filepath.IsAbs(header.Name) || strings.HasPrefix(header.Name, "..") {
+			continue
+		}
+		longPath := filepath.Join(filename, header.Name) // #nosec
+		if !shouldProcessFile(header.FileInfo(), exclusions, longPath) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		hasher := newHasher()
+
+		_, err = io.Copy(hasher, tarReader) // #nosec
+
+		fingerprints = append(fingerprints, FileFingerprint{
+			path:          longPath,
+			contentLength: header.Size,
+			fingerprint:   hasher.Sum(nil),
+		})
+	}
+	return fingerprints, nil
+}
+
+func inMemFingerprintingZipContent(filename string, exclusions []string) ([]FileFingerprint, error) {
 	r, err := zip.OpenReader(filename)
+
 	if err != nil {
 		return nil, err
 	}
