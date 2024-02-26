@@ -318,8 +318,54 @@ func TestShouldUnzip(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := isCompressedFile(tt.filename); got != tt.want {
-				t.Errorf("shouldUnzip() = %v, want %v", got, tt.want)
+			if got := isZipFile(tt.filename); got != tt.want {
+				t.Errorf("isZipFile() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+func TestIsTarGZip(t *testing.T) {
+	tests := []struct {
+		name     string
+		filename string
+		want     bool
+	}{
+		{
+			name:     ".jar is not tar gzip",
+			filename: "test.jar",
+			want:     false,
+		},
+		{
+			name:     ".nupkg is not tar gzip",
+			filename: "test.nupkg",
+			want:     false,
+		},
+		{
+			name:     ".txt is not tar gzip",
+			filename: "test.txt",
+			want:     false,
+		},
+		{
+			name:     ".go is not tar gzip",
+			filename: "test.go",
+			want:     false,
+		},
+		{
+			name:     ".tgz is tar gzip",
+			filename: "test.tgz",
+			want:     true,
+		},
+		{
+			name:     "Should pick up .tgz archive in nested folder",
+			filename: "deep/folder/test.tgz",
+			want:     true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isTarGZipFile(tt.filename); got != tt.want {
+				t.Errorf("isTarGZipFile() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -335,21 +381,28 @@ func TestInMemFingerprintingCompressedContent(t *testing.T) {
 	}{
 		{
 			name:        "Jar",
-			path:        "testdata/zipfile/jar",
+			path:        "testdata/archive/jar",
 			expected:    196,
 			suffix:      "log4j-api-2.18.0.jar",
 			shouldUnzip: true,
 		},
 		{
 			name:        "Nupkg",
-			path:        "testdata/zipfile/nupkg",
+			path:        "testdata/archive/nupkg",
 			expected:    22,
 			suffix:      "newtonsoft.json.13.0.3.nupkg",
 			shouldUnzip: true,
 		},
 		{
+			name:        "TGz",
+			path:        "testdata/archive/tgz",
+			expected:    1050,
+			suffix:      "lodash.tgz",
+			shouldUnzip: true,
+		},
+		{
 			name:        "Nupkg not unpack",
-			path:        "testdata/zipfile/nupkg",
+			path:        "testdata/archive/nupkg",
 			expected:    1,
 			suffix:      "newtonsoft.json.13.0.3.nupkg",
 			shouldUnzip: false,

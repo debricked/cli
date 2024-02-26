@@ -1,8 +1,10 @@
 package fingerprint
 
 import (
+	"archive/tar"
 	"archive/zip"
 	"bufio"
+	"compress/gzip"
 	"errors"
 	"fmt"
 	"io"
@@ -43,7 +45,8 @@ var EXCLUDED_FILES = []string{
 	"[content_types].xml",
 }
 
-var FILES_TO_UNPACK = []string{".jar", ".nupkg", ".war"}
+var ZIP_FILE_ENDINGS = []string{".jar", ".nupkg", ".war"}
+var TAR_GZIP_FILE_ENDINGS = []string{".tgz", ".tar.gz"}
 
 const HASH_SIZE = 16
 
@@ -172,6 +175,17 @@ func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string, f
 	return fingerprints, err
 }
 
+func computeHashForArchive(path string, exclusions []string) ([]FileFingerprint, error) {
+	if isZipFile(path) {
+		return inMemFingerprintZipContent(path, exclusions)
+	}
+	if isTarGZipFile(path) {
+		return inMemFingerprintTarGZipContent(path, exclusions)
+	}
+
+	return nil, nil
+}
+
 func computeHashForFileAndZip(fileInfo os.FileInfo, path string, exclusions []string, fingerprintCompressedContent bool) ([]FileFingerprint, error) {
 	if !shouldProcessFile(fileInfo, exclusions, path) {
 		return nil, nil
@@ -179,9 +193,8 @@ func computeHashForFileAndZip(fileInfo os.FileInfo, path string, exclusions []st
 
 	var fingerprints []FileFingerprint
 
-	// If the file should be unzipped, try to unzip and fingerprint it
-	if isCompressedFile(path) && fingerprintCompressedContent {
-		fingerprintsZip, err := inMemFingerprintingCompressedContent(path, exclusions)
+	if fingerprintCompressedContent {
+		fingerprintsArchive, err := computeHashForArchive(path, exclusions)
 		if err != nil {
 			if errors.Is(err, zip.ErrFormat) {
 				fmt.Printf("WARNING: Could not unpack and fingerprint contents of compressed file [%s]. Error: %v\n", path, err)
@@ -189,7 +202,7 @@ func computeHashForFileAndZip(fileInfo os.FileInfo, path string, exclusions []st
 				return nil, err
 			}
 		}
-		fingerprints = append(fingerprints, fingerprintsZip...)
+		fingerprints = append(fingerprints, fingerprintsArchive...)
 	}
 
 	fingerprint, err := computeHashForFile(path)
@@ -306,8 +319,8 @@ func (f *Fingerprints) writeToFile(file *os.File) error {
 
 	return writer.Flush()
 }
-func isCompressedFile(filename string) bool {
-	for _, file := range FILES_TO_UNPACK {
+func isZipFile(filename string) bool {
+	for _, file := range ZIP_FILE_ENDINGS {
 		if filepath.Ext(filename) == file {
 			return true
 		}
@@ -316,9 +329,73 @@ func isCompressedFile(filename string) bool {
 	return false
 }
 
-func inMemFingerprintingCompressedContent(filename string, exclusions []string) ([]FileFingerprint, error) {
+func isTarGZipFile(filename string) bool {
+	for _, file := range TAR_GZIP_FILE_ENDINGS {
+		if filepath.Ext(filename) == file {
+			return true
+		}
+	}
 
+	return false
+}
+
+func shouldProcessTarHeader(header tar.Header, exclusions []string, longPath string) bool {
+	if header.Typeflag != tar.TypeReg {
+		return false
+	}
+	if filepath.IsAbs(header.Name) || strings.HasPrefix(header.Name, "..") {
+		return false
+	}
+	if !shouldProcessFile(header.FileInfo(), exclusions, longPath) {
+		return false
+	}
+
+	return true
+}
+
+func inMemFingerprintTarGZipContent(filename string, exclusions []string) ([]FileFingerprint, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	gzReader, err := gzip.NewReader(file)
+	if err != nil {
+		return nil, err
+	}
+	tarReader := tar.NewReader(gzReader)
+	fingerprints := []FileFingerprint{}
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return nil, err
+		}
+		longPath := filepath.Join(filename, header.Name) // #nosec
+		if !shouldProcessTarHeader(*header, exclusions, longPath) {
+			continue
+		}
+		hasher := newHasher()
+
+		_, err = io.Copy(hasher, tarReader) // #nosec
+		if err != nil {
+			return nil, err
+		}
+
+		fingerprints = append(fingerprints, FileFingerprint{
+			path:          longPath,
+			contentLength: header.Size,
+			fingerprint:   hasher.Sum(nil),
+		})
+	}
+
+	return fingerprints, nil
+}
+
+func inMemFingerprintZipContent(filename string, exclusions []string) ([]FileFingerprint, error) {
 	r, err := zip.OpenReader(filename)
+
 	if err != nil {
 		return nil, err
 	}
