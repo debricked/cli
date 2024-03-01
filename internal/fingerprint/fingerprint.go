@@ -80,7 +80,8 @@ func isExcludedByExtension(filename string) bool {
 }
 
 func isExcludedByFilename(filename string) bool {
-	filenameLower := strings.ToLower(filename)
+	baseFilename := filepath.Base(filename)
+	filenameLower := strings.ToLower(baseFilename)
 	for _, file := range EXCLUDED_FILES {
 		if filenameLower == file {
 			return true
