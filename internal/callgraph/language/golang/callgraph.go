@@ -44,30 +44,34 @@ func NewCallgraph(
 }
 
 type IntermediateEdge struct {
-	edges map[string][]string
+	Symbol   string
+	CallLine int
 }
 
-func (ie *IntermediateEdge) AddEdge(parent, child string) {
+type IntermediateEdges struct {
+	edges map[string][]IntermediateEdge
+}
+
+func (ie *IntermediateEdges) AddEdge(parent, child string, line int) {
 
 	if _, ok := ie.edges[child]; !ok {
-		ie.edges[child] = []string{}
+		ie.edges[child] = make([]IntermediateEdge, 0)
 	}
 
-	ie.edges[child] = append(ie.edges[child], parent)
+	ie.edges[child] = append(ie.edges[child], IntermediateEdge{Symbol: parent, CallLine: line})
 
 }
 
-func (ie *IntermediateEdge) GetParents(child string) []string {
+func (ie *IntermediateEdges) GetParents(child string) []IntermediateEdge {
 	return ie.edges[child]
 }
 
 func (cg *Callgraph) constructCallGraph(cgInput *[]byte) {
 
 	uniqueNodeStrings := make(map[string]bool)
-	intermediateEdge := &IntermediateEdge{
-		edges: make(map[string][]string),
+	intermediateEdge := &IntermediateEdges{
+		edges: make(map[string][]IntermediateEdge),
 	}
-
 	for _, line := range bytes.Split(*cgInput, []byte("\n")) {
 		if len(line) == 0 {
 			continue
@@ -83,11 +87,12 @@ func (cg *Callgraph) constructCallGraph(cgInput *[]byte) {
 		symbol := string(nodeParts[0])
 		symbolSplit := bytes.Split(nodeParts[0], []byte("."))
 		name := string(symbolSplit[len(symbolSplit)-1])
-		lineStart, _ := strconv.Atoi(string(nodeParts[2]))
-		lineEnd, _ := strconv.Atoi(string(nodeParts[3]))
+		callLine, _ := strconv.Atoi(string(nodeParts[2]))
+		lineStart := -1 //, _ := strconv.Atoi(string(nodeParts[2]))
+		lineEnd := -1
 		node := cg.cgModel.AddNode(filename, name, symbol, false, lineStart, lineEnd)
 		uniqueNodeStrings[node.Symbol] = true
-		intermediateEdge.AddEdge(symbol, string(parts[1]))
+		intermediateEdge.AddEdge(symbol, string(parts[1]), callLine)
 	}
 
 	for symbol := range uniqueNodeStrings {
@@ -95,8 +100,8 @@ func (cg *Callgraph) constructCallGraph(cgInput *[]byte) {
 		node := cg.cgModel.Nodes[symbol]
 
 		for _, parent := range parents {
-			parentNode := cg.cgModel.Nodes[parent]
-			cg.cgModel.AddEdge(parentNode, node, 0)
+			parentNode := cg.cgModel.Nodes[parent.Symbol]
+			cg.cgModel.AddEdge(parentNode, node, parent.CallLine)
 		}
 	}
 
