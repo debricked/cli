@@ -3,6 +3,7 @@ package golang
 import (
 	"fmt"
 	"log"
+	"path/filepath"
 
 	"github.com/debricked/cli/internal/callgraph/cgexec"
 	conf "github.com/debricked/cli/internal/callgraph/config"
@@ -52,16 +53,13 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 			return jobs, nil
 		}
 
-		if path != "." {
-			for i, _ := range roots {
-				roots[i] = roots[i][len(path)+1:]
-			}
-		}
+		for _, rootFilePath := range roots {
 
-		for _, rootFile := range roots {
+			rootFileDir := filepath.Dir(rootFilePath)
+			rootFile := filepath.Base(rootFilePath)
 
 			jobs = append(jobs, NewJob(
-				path,
+				rootFileDir,
 				rootFile,
 				s.cmdFactory,
 				io.FileWriter{},
