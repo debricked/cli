@@ -21,9 +21,11 @@ func TestIsExcludedFile(t *testing.T) {
 	}
 
 	// Test excluded files
-	excludedFiles := []string{"LICENSE", "README.md", "Makefile"}
-	for _, file := range excludedFiles {
-		assert.True(t, isExcludedFile(file), "Expected %q to be excluded", file)
+	excludedFiles := []string{"LICENSE", "README.md", "Makefile", "mvnw", "[content_types].xml"}
+	for _, filename := range excludedFiles {
+		assert.True(t, isExcludedFile(filename), "Expected %q to be excluded", filename)
+		filepath := "foo/bar/" + filename
+		assert.True(t, isExcludedFile(filepath), "Expected %q to be excluded", filepath)
 	}
 
 	// Test excluded file endings
@@ -389,7 +391,7 @@ func TestInMemFingerprintingCompressedContent(t *testing.T) {
 		{
 			name:        "Nupkg",
 			path:        "testdata/archive/nupkg",
-			expected:    22,
+			expected:    21,
 			suffix:      "newtonsoft.json.13.0.3.nupkg",
 			shouldUnzip: true,
 		},

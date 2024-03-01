@@ -61,17 +61,17 @@ const (
 	OutputFileNameFingerprints = "debricked.fingerprints.txt"
 )
 
-func isExcludedFile(filename string) bool {
+func isExcludedFile(path string) bool {
 
-	return isExcludedByExtension(filename) ||
-		isExcludedByFilename(filename) ||
-		isExcludedByEnding(filename)
+	return isExcludedByExtension(path) ||
+		isExcludedByFilename(path) ||
+		isExcludedByEnding(path)
 }
 
-func isExcludedByExtension(filename string) bool {
-	filenameLower := strings.ToLower(filename)
+func isExcludedByExtension(path string) bool {
+	pathLower := strings.ToLower(path)
 	for _, format := range EXCLUDED_EXT {
-		if filepath.Ext(filenameLower) == format {
+		if filepath.Ext(pathLower) == format {
 			return true
 		}
 	}
@@ -79,7 +79,8 @@ func isExcludedByExtension(filename string) bool {
 	return false
 }
 
-func isExcludedByFilename(filename string) bool {
+func isExcludedByFilename(path string) bool {
+	filename := filepath.Base(path)
 	filenameLower := strings.ToLower(filename)
 	for _, file := range EXCLUDED_FILES {
 		if filenameLower == file {
@@ -90,10 +91,10 @@ func isExcludedByFilename(filename string) bool {
 	return false
 }
 
-func isExcludedByEnding(filename string) bool {
-	filenameLower := strings.ToLower(filename)
+func isExcludedByEnding(path string) bool {
+	pathLower := strings.ToLower(path)
 	for _, ending := range EXCLUDED_FILE_ENDINGS {
-		if strings.HasSuffix(filenameLower, ending) {
+		if strings.HasSuffix(pathLower, ending) {
 			return true
 		}
 	}
