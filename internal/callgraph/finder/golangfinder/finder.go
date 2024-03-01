@@ -1,17 +1,48 @@
 package golanfinder
 
 import (
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"os"
 	"path/filepath"
+	"strings"
 
-	"github.com/debricked/cli/internal/callgraph/finder"
 	"github.com/debricked/cli/internal/file"
 )
 
 type GolangFinder struct{}
 
 func (f GolangFinder) FindRoots(files []string) ([]string, error) {
-	mainFiles := finder.FilterFiles(files, "main.go")
+	var mainFiles []string
+
+	for _, file := range files {
+		if strings.HasSuffix(file, ".go") {
+			fset := token.NewFileSet()
+			node, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
+			if err != nil {
+				return nil, err
+			}
+
+			if node.Name.Name == "main" {
+				hasMainFunction := false
+				for _, decl := range node.Decls {
+					if funcDecl, ok := decl.(*ast.FuncDecl); ok {
+						if funcDecl.Name.Name == "main" && funcDecl.Recv == nil &&
+							funcDecl.Type.Params.List == nil {
+							hasMainFunction = true
+							break
+						}
+					}
+				}
+
+				if hasMainFunction {
+					mainFiles = append(mainFiles, file)
+				}
+			}
+		}
+	}
+
 	return mainFiles, nil
 }
 

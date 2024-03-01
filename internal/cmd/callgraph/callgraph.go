@@ -80,6 +80,11 @@ https://portal.debricked.com/debricked-cli-63/debricked-cli-documentation-298?ti
 }
 
 func parseAndValidateLanguages(languages string) ([]string, error) {
+	if languages == "" {
+		// default to all supported languages
+		return supportedLanguages, nil
+	}
+
 	parsedLanguages := strings.Split(languages, ",")
 
 	for _, language := range parsedLanguages {
