@@ -362,6 +362,11 @@ func TestIsTarGZip(t *testing.T) {
 			filename: "deep/folder/test.tgz",
 			want:     true,
 		},
+		{
+			name:     "tar.gz",
+			filename: "deep/folder/python-dotenv-1.0.0.tar.gz",
+			want:     true,
+		},
 	}
 
 	for _, tt := range tests {

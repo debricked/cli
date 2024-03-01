@@ -332,7 +332,7 @@ func isZipFile(filename string) bool {
 
 func isTarGZipFile(filename string) bool {
 	for _, file := range TAR_GZIP_FILE_ENDINGS {
-		if filepath.Ext(filename) == file {
+		if strings.HasSuffix(filename, file) {
 			return true
 		}
 	}
