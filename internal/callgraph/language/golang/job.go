@@ -1,6 +1,9 @@
 package golang
 
 import (
+	"os"
+	"syscall"
+
 	"github.com/debricked/cli/internal/callgraph/cgexec"
 	conf "github.com/debricked/cli/internal/callgraph/config"
 	"github.com/debricked/cli/internal/callgraph/job"
@@ -54,10 +57,41 @@ func (j *Job) Run() {
 }
 
 func (j *Job) runCallGraph(callgraph ICallgraph) {
-	err := callgraph.RunCallGraph()
+	outputFullPath, err := callgraph.RunCallGraph()
 
 	if err != nil {
 		j.Errors().Critical(err)
 
 	}
+	outputFullPathZip := outputFullPath + ".zip"
+
+	j.SendStatus("zipping callgraph")
+	err = j.archive.ZipFile(outputFullPath, outputFullPathZip, outputName)
+	if err != nil {
+		j.Errors().Critical(err)
+
+		return
+	}
+
+	j.SendStatus("base64 encoding zipped callgraph")
+	err = j.archive.B64(outputFullPathZip, outputFullPath)
+	if err != nil {
+		j.Errors().Critical(err)
+
+		return
+	}
+
+	j.SendStatus("cleanup")
+	err = j.archive.Cleanup(outputFullPathZip)
+	if err != nil {
+		e, ok := err.(*os.PathError)
+		if ok && e.Err == syscall.ENOENT {
+			return
+		} else {
+			j.Errors().Critical(err)
+
+			return
+		}
+	}
+
 }
