@@ -76,6 +76,7 @@ func TestDefaultExclusionsFingerprint(t *testing.T) {
 		filepath.Join("**", "wheels", "**"),
 		filepath.Join("**", "htmlcov", "**"),
 		filepath.Join("**", "__pypackages__", "**"),
+		filepath.Join("**", ".git", "**"),
 		"**/*.egg-info/**",
 		"**/*venv/**",
 	}
