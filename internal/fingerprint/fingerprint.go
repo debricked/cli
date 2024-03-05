@@ -45,7 +45,7 @@ var EXCLUDED_FILES = []string{
 	"[content_types].xml",
 }
 
-var ZIP_FILE_ENDINGS = []string{".jar", ".nupkg", ".war"}
+var ZIP_FILE_ENDINGS = []string{".jar", ".nupkg", ".war", ".zip", ".ear"}
 var TAR_GZIP_FILE_ENDINGS = []string{".tgz", ".tar.gz"}
 
 const HASH_SIZE = 16
