@@ -76,7 +76,7 @@ func (f GolangFinder) FindFiles(roots []string, exclusions []string) ([]string, 
 		})
 
 		if err != nil {
-			break
+			return nil, err
 		}
 	}
 
