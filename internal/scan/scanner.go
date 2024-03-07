@@ -50,6 +50,7 @@ type DebrickedOptions struct {
 	Exclusions               []string
 	Verbose                  bool
 	Regenerate               int
+	VersionConsolidation     int
 	RepositoryName           string
 	CommitName               string
 	BranchName               string

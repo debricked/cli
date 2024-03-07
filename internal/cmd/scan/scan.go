@@ -23,6 +23,7 @@ var jsonFilePath string
 var exclusions = file.Exclusions()
 var verbose bool
 var regenerate int
+var versionConsolidation int
 var noResolve bool
 var noFingerprint bool
 var passOnDowntime bool
@@ -40,6 +41,7 @@ const (
 	IntegrationFlag              = "integration"
 	ExclusionFlag                = "exclusion"
 	VerboseFlag                  = "verbose"
+	VersionConsolidationFlag     = "version-consolidation"
 	RegenerateFlag               = "regenerate"
 	NoResolveFlag                = "no-resolve"
 	FingerprintFlag              = "fingerprint"
@@ -110,6 +112,17 @@ $ debricked scan . `+exampleFlags)
 			"\nExample:\n$ debricked resolve . --regenerate=1",
 		}, "\n")
 	cmd.Flags().IntVar(&regenerate, RegenerateFlag, 0, regenerateDoc)
+	versionConsolidationDoc := strings.Join(
+		[]string{
+			"Toggles version consolidation of manifest and manifestless resolition with 3 modes:\n",
+			"Consolidation Level | Meaning",
+			"------------------- | -------",
+			"0                   | No consolidation",
+			"1 (default)         | Use manifest version hints",
+			"2 (not implemented) | Combine version and package hints",
+			"\nExample:\n$ debricked scan . --version-consolidation=1",
+		}, "\n")
+	cmd.Flags().IntVar(&versionConsolidation, VersionConsolidationFlag, 1, versionConsolidationDoc)
 	verboseDoc := strings.Join(
 		[]string{
 			"This flag allows you to reduce error output for resolution.",
@@ -156,6 +169,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			Exclusions:               viper.GetStringSlice(ExclusionFlag),
 			Verbose:                  viper.GetBool(VerboseFlag),
 			Regenerate:               viper.GetInt(RegenerateFlag),
+			VersionConsolidation:     viper.GetInt(VersionConsolidationFlag),
 			RepositoryName:           viper.GetString(RepositoryFlag),
 			CommitName:               viper.GetString(CommitFlag),
 			BranchName:               viper.GetString(BranchFlag),
