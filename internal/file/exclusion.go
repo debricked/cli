@@ -34,7 +34,7 @@ func Exclusions() []string {
 var EXCLUDED_DIRS_FINGERPRINT = []string{
 	"nbproject", "nbbuild", "nbdist", "node_modules",
 	"__pycache__", "_yardoc", "eggs",
-	"wheels", "htmlcov", "__pypackages__"}
+	"wheels", "htmlcov", "__pypackages__", ".git"}
 
 var EXCLUDED_DIRS_FINGERPRINT_RAW = []string{"**/*.egg-info/**", "**/*venv/**"}
 
