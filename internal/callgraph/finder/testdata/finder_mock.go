@@ -3,8 +3,8 @@ package testdata
 type FinderMock struct {
 	FindDependencyDirsNames []string
 	FindDependencyDirsErr   error
-	FindMavenRootsNames     []string
-	FindMavenRootsErr       error
+	FindRootsNames          []string
+	FindRootsErr            error
 	FindFilesNames          []string
 	FindFilesErr            error
 }
@@ -12,7 +12,7 @@ type FinderMock struct {
 func NewEmptyFinderMock() FinderMock {
 	return FinderMock{
 		FindDependencyDirsNames: []string{},
-		FindMavenRootsNames:     []string{},
+		FindRootsNames:          []string{},
 		FindFilesNames:          []string{},
 	}
 }
@@ -22,7 +22,7 @@ func (f FinderMock) FindDependencyDirs(_ []string, _ bool) ([]string, error) {
 }
 
 func (f FinderMock) FindRoots(_ []string) ([]string, error) {
-	return f.FindMavenRootsNames, f.FindMavenRootsErr
+	return f.FindRootsNames, f.FindRootsErr
 }
 
 func (f FinderMock) FindFiles(_ []string, _ []string) ([]string, error) {

@@ -28,7 +28,7 @@ func TestNewStrategy(t *testing.T) {
 	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "maven")
 	finder := testdata.NewEmptyFinderMock()
 	testFiles := []string{"file-1"}
-	finder.FindMavenRootsNames = testFiles
+	finder.FindRootsNames = testFiles
 	ctx, _ := ctxTestdata.NewContextMock()
 	s = NewStrategy(conf, testFiles, []string{}, finder, ctx)
 	assert.NotNil(t, s)
@@ -45,7 +45,7 @@ func TestInvokeOneFile(t *testing.T) {
 	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "maven")
 	finder := testdata.NewEmptyFinderMock()
 	testFiles := []string{"file-1"}
-	finder.FindMavenRootsNames = testFiles
+	finder.FindRootsNames = testFiles
 	ctx, _ := ctxTestdata.NewContextMock()
 	s := NewStrategy(conf, testFiles, []string{}, finder, ctx)
 	jobs, _ := s.Invoke()
@@ -56,7 +56,7 @@ func TestInvokeManyFiles(t *testing.T) {
 	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "maven")
 	finder := testdata.NewEmptyFinderMock()
 	testFiles := []string{"file-1", "file-2"}
-	finder.FindMavenRootsNames = testFiles
+	finder.FindRootsNames = testFiles
 	ctx, _ := ctxTestdata.NewContextMock()
 	s := NewStrategy(conf, testFiles, []string{}, finder, ctx)
 	jobs, _ := s.Invoke()
@@ -67,7 +67,7 @@ func TestInvokeManyFilesWCorrectFilters(t *testing.T) {
 	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, false, "maven")
 	finder := testdata.NewEmptyFinderMock()
 	testFiles := []string{"file-1", "file-2", "file-3"}
-	finder.FindMavenRootsNames = []string{"file-3/pom.xml"}
+	finder.FindRootsNames = []string{"file-3/pom.xml"}
 	finder.FindDependencyDirsNames = []string{"file-3/test.class"}
 	ctx, _ := ctxTestdata.NewContextMock()
 	s := NewStrategy(conf, testFiles, []string{"test"}, finder, ctx)
@@ -86,7 +86,7 @@ func TestBuildProjectsError(t *testing.T) {
 	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, false, "maven")
 	finder := testdata.NewEmptyFinderMock()
 	testFiles := []string{"file-1", "file-2", "file-3"}
-	finder.FindMavenRootsNames = []string{"file-3/pom.xml"}
+	finder.FindRootsNames = []string{"file-3/pom.xml"}
 	finder.FindDependencyDirsNames = []string{"file-3/test.class"}
 	ctx, _ := ctxTestdata.NewContextMock()
 	s := NewStrategy(conf, testFiles, []string{"test"}, finder, ctx)

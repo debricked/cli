@@ -1,7 +1,6 @@
 package golang
 
 import (
-	"path/filepath"
 	"testing"
 
 	ctxTestdata "github.com/debricked/cli/internal/callgraph/cgexec/testdata"
@@ -23,12 +22,12 @@ func TestNewStrategy(t *testing.T) {
 	s = NewStrategy(nil, []string{"file-1", "file-2"}, []string{}, nil, nil)
 	assert.NotNil(t, s)
 
-	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "maven")
+	conf := config.NewConfig("golang", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "go")
 	finder := testdata.NewEmptyFinderMock()
 	testFiles := []string{"file-1"}
-	finder.FindMavenRootsNames = testFiles
+	finder.FindRootsNames = testFiles
 	ctx, _ := ctxTestdata.NewContextMock()
-	s = NewStrategy(conf, testFiles, []string{}, finder, ctx)
+	s = NewStrategy(conf, []string{"."}, []string{}, finder, ctx)
 	assert.NotNil(t, s)
 	assert.Equal(t, s.config, conf)
 }
@@ -40,42 +39,56 @@ func TestInvokeNoFiles(t *testing.T) {
 }
 
 func TestInvokeOneFile(t *testing.T) {
-	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "maven")
+	conf := config.NewConfig("golang", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "go")
 	finder := testdata.NewEmptyFinderMock()
 	testFiles := []string{"file-1"}
-	finder.FindMavenRootsNames = testFiles
+	finder.FindRootsNames = testFiles
 	ctx, _ := ctxTestdata.NewContextMock()
-	s := NewStrategy(conf, testFiles, []string{}, finder, ctx)
-	jobs, _ := s.Invoke()
-	assert.Len(t, jobs, 0)
+	s := NewStrategy(conf, []string{"."}, []string{}, finder, ctx)
+	jobs, err := s.Invoke()
+	assert.NoError(t, err)
+	assert.Len(t, jobs, 1)
 }
 
 func TestInvokeManyFiles(t *testing.T) {
-	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "maven")
+	conf := config.NewConfig("golang", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "go")
 	finder := testdata.NewEmptyFinderMock()
 	testFiles := []string{"file-1", "file-2"}
-	finder.FindMavenRootsNames = testFiles
+	finder.FindRootsNames = testFiles
 	ctx, _ := ctxTestdata.NewContextMock()
-	s := NewStrategy(conf, testFiles, []string{}, finder, ctx)
+	s := NewStrategy(conf, []string{"."}, []string{}, finder, ctx)
 	jobs, _ := s.Invoke()
-	assert.Len(t, jobs, 0)
+	assert.Len(t, jobs, 2)
 }
 
-func TestInvokeManyFilesWCorrectFilters(t *testing.T) {
-	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, false, "maven")
+func TestInvokeWithErrors(t *testing.T) {
+	conf := config.NewConfig("golang", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "go")
 	finder := testdata.NewEmptyFinderMock()
-	testFiles := []string{"file-1", "file-2", "file-3"}
-	finder.FindMavenRootsNames = []string{"file-3/pom.xml"}
-	finder.FindDependencyDirsNames = []string{"file-3/test.class"}
+	testFiles := []string{"file-1", "file-2"}
+	finder.FindRootsNames = testFiles
+	finder.FindRootsErr = assert.AnError
 	ctx, _ := ctxTestdata.NewContextMock()
-	s := NewStrategy(conf, testFiles, []string{"test"}, finder, ctx)
-	jobs, _ := s.Invoke()
-	assert.Len(t, jobs, 1)
-	for _, job := range jobs {
-		file, _ := filepath.Abs("file-3/test.class")
-		dir, _ := filepath.Abs("file-3/")
-		assert.Equal(t, job.GetFiles(), []string{file})
-		assert.Equal(t, job.GetDir(), dir)
+	s := NewStrategy(conf, []string{"."}, []string{}, finder, ctx)
+	jobs, err := s.Invoke()
+	assert.Error(t, err)
+	assert.Empty(t, jobs)
 
-	}
+	finder.FindRootsErr = nil
+	finder.FindFilesErr = assert.AnError
+	s = NewStrategy(conf, []string{"."}, []string{}, finder, ctx)
+	jobs, err = s.Invoke()
+	assert.Error(t, err)
+	assert.Empty(t, jobs)
+}
+
+func TestInvokeNoRoots(t *testing.T) {
+	conf := config.NewConfig("golang", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "go")
+	finder := testdata.NewEmptyFinderMock()
+	testFiles := []string{}
+	finder.FindRootsNames = testFiles
+	ctx, _ := ctxTestdata.NewContextMock()
+	s := NewStrategy(conf, []string{"."}, []string{}, finder, ctx)
+	jobs, err := s.Invoke()
+	assert.NoError(t, err)
+	assert.Empty(t, jobs)
 }
