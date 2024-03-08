@@ -15,7 +15,6 @@ import (
 
 type Strategy struct {
 	config     conf.IConfig
-	cmdFactory ICmdFactory
 	paths      []string
 	exclusions []string
 	finder     finder.IFinder
@@ -61,7 +60,6 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 			jobs = append(jobs, NewJob(
 				rootFileDir,
 				rootFile,
-				s.cmdFactory,
 				io.FileWriter{},
 				io.NewArchive("."),
 				s.config,
@@ -76,7 +74,7 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 }
 
 func NewStrategy(config conf.IConfig, paths []string, exclusions []string, finder finder.IFinder, ctx cgexec.IContext) Strategy {
-	return Strategy{config, CmdFactory{}, paths, exclusions, finder, ctx}
+	return Strategy{config, paths, exclusions, finder, ctx}
 }
 
 func strategyWarning(errMsg string) {

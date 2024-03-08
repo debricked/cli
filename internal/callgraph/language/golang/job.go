@@ -17,30 +17,27 @@ const (
 
 type Job struct {
 	job.BaseJob
-	mainFile   string
-	cmdFactory ICmdFactory
-	config     conf.IConfig
-	archive    io.IArchive
-	ctx        cgexec.IContext
-	fs         ioFs.IFileSystem
+	mainFile string
+	config   conf.IConfig
+	archive  io.IArchive
+	ctx      cgexec.IContext
+	fs       ioFs.IFileSystem
 }
 
-func NewJob(dir string, mainFile string, cmdFactory ICmdFactory, writer ioFs.IFileWriter, archive io.IArchive, config conf.IConfig, ctx cgexec.IContext, fs ioFs.IFileSystem) *Job {
+func NewJob(dir string, mainFile string, writer ioFs.IFileWriter, archive io.IArchive, config conf.IConfig, ctx cgexec.IContext, fs ioFs.IFileSystem) *Job {
 	return &Job{
-		BaseJob:    job.NewBaseJob(dir, []string{mainFile}),
-		mainFile:   mainFile,
-		cmdFactory: cmdFactory,
-		config:     config,
-		archive:    archive,
-		ctx:        ctx,
-		fs:         fs,
+		BaseJob:  job.NewBaseJob(dir, []string{mainFile}),
+		mainFile: mainFile,
+		config:   config,
+		archive:  archive,
+		ctx:      ctx,
+		fs:       fs,
 	}
 }
 
 func (j *Job) Run() {
 	workingDirectory := j.GetDir()
 	callgraph := NewCallgraph(
-		j.cmdFactory,
 		workingDirectory,
 		j.mainFile,
 		outputName,
