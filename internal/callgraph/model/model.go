@@ -7,9 +7,9 @@ import (
 
 const CURRENT_VERSION = "5"
 
-type Calee struct {
-	Parent    *Node
-	LineStart int
+type Edge struct {
+	Parent   *Node
+	CallLine int
 }
 
 type Node struct {
@@ -19,7 +19,7 @@ type Node struct {
 	IsLibraryNode bool
 	LineStart     int
 	LineEnd       int
-	Parents       []Calee
+	Parents       []Edge
 }
 
 func (n *Node) ToBytes() []byte {
@@ -36,7 +36,7 @@ func (n *Node) ToBytes() []byte {
 	buffer.WriteString(fmt.Sprintf("'%s', '%s', %d, %d, [", n.Name, n.Filename, n.LineStart, n.LineEnd))
 
 	for _, parent := range n.Parents {
-		buffer.WriteString(fmt.Sprintf("['%s', %d, '%s'], ", parent.Parent.Symbol, parent.LineStart, parent.Parent.Filename))
+		buffer.WriteString(fmt.Sprintf("['%s', %d, '%s'], ", parent.Parent.Symbol, parent.CallLine, parent.Parent.Filename))
 	}
 
 	buffer.WriteString("]]")
@@ -73,7 +73,7 @@ func (cg *CallGraph) AddNode(filename, name, symbol string, isLibraryNode bool, 
 		IsLibraryNode: isLibraryNode,
 		LineStart:     lineStart,
 		LineEnd:       lineEnd,
-		Parents:       []Calee{},
+		Parents:       []Edge{},
 	}
 
 	cg.Nodes[symbol] = node
@@ -81,10 +81,10 @@ func (cg *CallGraph) AddNode(filename, name, symbol string, isLibraryNode bool, 
 	return node
 }
 
-func (cg *CallGraph) AddEdge(parent, child *Node, lineStart int) {
-	callee := Calee{
-		Parent:    parent,
-		LineStart: lineStart,
+func (cg *CallGraph) AddEdge(parent, child *Node, callLine int) {
+	callee := Edge{
+		Parent:   parent,
+		CallLine: callLine,
 	}
 	child.Parents = append(child.Parents, callee)
 }

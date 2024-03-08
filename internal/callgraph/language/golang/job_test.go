@@ -23,7 +23,6 @@ const (
 var files = []string{"file"}
 
 func TestNewJob(t *testing.T) {
-	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	writer := io.FileWriter{}
 	config := conf.Config{}
 	ctx, _ := ctxTestdata.NewContextMock()
@@ -34,7 +33,7 @@ func TestNewJob(t *testing.T) {
 
 	fs := io.FileSystem{}
 
-	j := NewJob(dir, "main.go", cmdFactoryMock, writer, archiveMock, config, ctx, fs)
+	j := NewJob(dir, "main.go", writer, archiveMock, config, ctx, fs)
 	assert.Equal(t, []string{"main.go"}, j.GetFiles())
 	assert.Equal(t, "dir", j.GetDir())
 	assert.False(t, j.Errors().HasError())
@@ -42,8 +41,6 @@ func TestNewJob(t *testing.T) {
 
 func TestRun(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
-	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	cmdFactoryMock.CommandOutput = "github.com/go-git/go-git/v5/plumbing/transport/http.init file: 0 0--->reflect.init"
 	config := conf.NewConfig("golang", nil, nil, true, "go")
 	ctx, _ := ctxTestdata.NewContextMock()
 
@@ -51,7 +48,7 @@ func TestRun(t *testing.T) {
 	zip := ioTestData.ZipMock{}
 	archiveMock := io.NewArchiveWithStructs("dir", fsMock, zip)
 
-	j := NewJob(dir, "main.go", cmdFactoryMock, fileWriterMock, archiveMock, config, ctx, fsMock)
+	j := NewJob(dir, "main.go", fileWriterMock, archiveMock, config, ctx, fsMock)
 
 	go jobTestdata.WaitStatus(j)
 	j.Run()
@@ -62,8 +59,6 @@ func TestRun(t *testing.T) {
 
 func TestRunCallgraphMockError(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
-	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	cmdFactoryMock.CommandOutput = "github.com/go-git/go-git/v5/plumbing/transport/http.init file: 0 0--->reflect.init"
 	config := conf.NewConfig("golang", nil, nil, true, "go")
 	ctx, _ := ctxTestdata.NewContextMock()
 	callgraphMock := testdata.CallgraphMock{RunCallGraphError: fmt.Errorf("error")}
@@ -74,7 +69,7 @@ func TestRunCallgraphMockError(t *testing.T) {
 
 	fs := io.FileSystem{}
 
-	j := NewJob(dir, "main.go", cmdFactoryMock, fileWriterMock, archiveMock, config, ctx, fs)
+	j := NewJob(dir, "main.go", fileWriterMock, archiveMock, config, ctx, fs)
 	j.runCallGraph(callgraphMock)
 
 	assert.True(t, j.Errors().HasError())
@@ -82,14 +77,12 @@ func TestRunCallgraphMockError(t *testing.T) {
 
 func TestRunPostProcessZipFileError(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
-	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	cmdFactoryMock.CommandOutput = "github.com/go-git/go-git/v5/plumbing/transport/http.init file: 0 0--->reflect.init"
 	config := conf.NewConfig("golang", nil, nil, true, "go")
 	ctx, _ := ctxTestdata.NewContextMock()
 	archiveMock := ioTestData.ArchiveMock{ZipFileError: fmt.Errorf("error")}
 	fs := io.FileSystem{}
 
-	j := NewJob(dir, "main.go", cmdFactoryMock, fileWriterMock, archiveMock, config, ctx, fs)
+	j := NewJob(dir, "main.go", fileWriterMock, archiveMock, config, ctx, fs)
 	go jobTestdata.WaitStatus(j)
 	callgraphMock := testdata.CallgraphMock{}
 	j.runCallGraph(callgraphMock)
@@ -99,15 +92,13 @@ func TestRunPostProcessZipFileError(t *testing.T) {
 
 func TestRunPostProcessB64Error(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
-	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	cmdFactoryMock.CommandOutput = "github.com/go-git/go-git/v5/plumbing/transport/http.init file: 0 0--->reflect.init"
 	config := conf.NewConfig("golang", nil, nil, true, "go")
 	ctx, _ := ctxTestdata.NewContextMock()
 	fs := io.FileSystem{}
 
 	archiveMock := ioTestData.ArchiveMock{B64Error: fmt.Errorf("error")}
 
-	j := NewJob(dir, "main.go", cmdFactoryMock, fileWriterMock, archiveMock, config, ctx, fs)
+	j := NewJob(dir, "main.go", fileWriterMock, archiveMock, config, ctx, fs)
 	go jobTestdata.WaitStatus(j)
 	callgraphMock := testdata.CallgraphMock{}
 	j.runCallGraph(callgraphMock)
@@ -117,15 +108,13 @@ func TestRunPostProcessB64Error(t *testing.T) {
 
 func TestRunPostProcessCleanupError(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
-	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	cmdFactoryMock.CommandOutput = "github.com/go-git/go-git/v5/plumbing/transport/http.init file: 0 0--->reflect.init"
 	config := conf.NewConfig("golang", nil, nil, true, "go")
 	ctx, _ := ctxTestdata.NewContextMock()
 	fs := io.FileSystem{}
 
 	archiveMock := ioTestData.ArchiveMock{CleanupError: fmt.Errorf("error")}
 
-	j := NewJob(dir, "main.go", cmdFactoryMock, fileWriterMock, archiveMock, config, ctx, fs)
+	j := NewJob(dir, "main.go", fileWriterMock, archiveMock, config, ctx, fs)
 	go jobTestdata.WaitStatus(j)
 	callgraphMock := testdata.CallgraphMock{}
 	j.runCallGraph(callgraphMock)
@@ -135,8 +124,6 @@ func TestRunPostProcessCleanupError(t *testing.T) {
 
 func TestRunPostProcessCleanupNoFileExistError(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
-	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	cmdFactoryMock.CommandOutput = "github.com/go-git/go-git/v5/plumbing/transport/http.init file: 0 0--->reflect.init"
 	config := conf.NewConfig("golang", nil, nil, true, "go")
 	ctx, _ := ctxTestdata.NewContextMock()
 	fs := io.FileSystem{}
@@ -145,7 +132,7 @@ func TestRunPostProcessCleanupNoFileExistError(t *testing.T) {
 	err.Err = syscall.ENOENT
 	archiveMock := ioTestData.ArchiveMock{CleanupError: err}
 
-	j := NewJob(dir, "main.go", cmdFactoryMock, fileWriterMock, archiveMock, config, ctx, fs)
+	j := NewJob(dir, "main.go", fileWriterMock, archiveMock, config, ctx, fs)
 	go jobTestdata.WaitStatus(j)
 	callgraphMock := testdata.CallgraphMock{}
 	j.runCallGraph(callgraphMock)
@@ -155,8 +142,6 @@ func TestRunPostProcessCleanupNoFileExistError(t *testing.T) {
 
 func TestRunWithErrorsIsNotExistFalse(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
-	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	cmdFactoryMock.CommandOutput = "github.com/go-git/go-git/v5/plumbing/transport/http.init file: 0 0--->reflect.init"
 	config := conf.NewConfig("golang", nil, nil, true, "go")
 	ctx, _ := ctxTestdata.NewContextMock()
 
@@ -166,7 +151,7 @@ func TestRunWithErrorsIsNotExistFalse(t *testing.T) {
 
 	fs.IsNotExistBool = false
 
-	j := NewJob(dir, "main.go", cmdFactoryMock, fileWriterMock, archiveMock, config, ctx, fs)
+	j := NewJob(dir, "main.go", fileWriterMock, archiveMock, config, ctx, fs)
 	j.Errors().Critical(fmt.Errorf("error"))
 
 	go jobTestdata.WaitStatus(j)
@@ -179,8 +164,6 @@ func TestRunWithErrorsIsNotExistFalse(t *testing.T) {
 
 func TestRunWithErrorsIsNotExistTrue(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
-	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	cmdFactoryMock.CommandOutput = "github.com/go-git/go-git/v5/plumbing/transport/http.init file: 0 0--->reflect.init"
 	config := conf.NewConfig("golang", nil, nil, true, "go")
 	ctx, _ := ctxTestdata.NewContextMock()
 
@@ -190,7 +173,7 @@ func TestRunWithErrorsIsNotExistTrue(t *testing.T) {
 
 	fs.IsNotExistBool = true
 
-	j := NewJob(dir, "main.go", cmdFactoryMock, fileWriterMock, archiveMock, config, ctx, fs)
+	j := NewJob(dir, "main.go", fileWriterMock, archiveMock, config, ctx, fs)
 	j.Errors().Critical(fmt.Errorf("error"))
 
 	go jobTestdata.WaitStatus(j)
