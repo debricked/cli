@@ -62,6 +62,7 @@ func (j *Job) runCallGraph(callgraph ICallgraph) {
 	if err != nil {
 		j.Errors().Critical(err)
 
+		return
 	}
 	outputFullPathZip := outputFullPath + ".zip"
 
