@@ -71,6 +71,7 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 			)
 		}
 	}
+
 	return jobs, nil
 }
 
