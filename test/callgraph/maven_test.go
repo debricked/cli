@@ -15,7 +15,7 @@ func TestGenerateCallgraph(t *testing.T) {
 	mavenProjectPath := filepath.Join("testdata", "mvnproj-build")
 	tmpFolder := filepath.Join(mavenProjectPath, ".debrickedTmpFolder")
 	targetFolder := filepath.Join(mavenProjectPath, "target")
-	callgraphFile := filepath.Join(mavenProjectPath, "debricked-call-graph")
+	callgraphFile := filepath.Join(mavenProjectPath, "debricked-call-graph-java")
 
 	assert.NoDirExists(t, tmpFolder)
 	assert.NoDirExists(t, targetFolder)
@@ -43,7 +43,7 @@ func TestGenerateCallgraphNoBuild(t *testing.T) {
 	mavenProjectPath := filepath.Join("testdata", "mvnproj-no-build")
 	tmpFolder := filepath.Join(mavenProjectPath, ".debrickedTmpFolder")
 	targetFolder := filepath.Join(mavenProjectPath, "target")
-	callgraphFile := filepath.Join(mavenProjectPath, "debricked-call-graph")
+	callgraphFile := filepath.Join(mavenProjectPath, "debricked-call-graph-java")
 
 	assert.NoFileExists(t, callgraphFile)
 	tmpFolderInfoBefore, tmpErr := os.Stat(tmpFolder)
