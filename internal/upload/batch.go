@@ -32,17 +32,17 @@ var (
 const callgraphName = "debricked-call-graph"
 
 type uploadBatch struct {
-	client               *client.IDebClient
-	fileGroups           file.Groups
-	gitMetaObject        *git.MetaObject
-	integrationName      string
-	ciUploadId           int
-	callGraphTimeout     int
-	versionConsolidation int
+	client           *client.IDebClient
+	fileGroups       file.Groups
+	gitMetaObject    *git.MetaObject
+	integrationName  string
+	ciUploadId       int
+	callGraphTimeout int
+	versionHint      bool
 }
 
-func newUploadBatch(client *client.IDebClient, fileGroups file.Groups, gitMetaObject *git.MetaObject, integrationName string, callGraphTimeout int, versionConsolidation int) *uploadBatch {
-	return &uploadBatch{client: client, fileGroups: fileGroups, gitMetaObject: gitMetaObject, integrationName: integrationName, ciUploadId: 0, callGraphTimeout: callGraphTimeout, versionConsolidation: versionConsolidation}
+func newUploadBatch(client *client.IDebClient, fileGroups file.Groups, gitMetaObject *git.MetaObject, integrationName string, callGraphTimeout int, versionHint bool) *uploadBatch {
+	return &uploadBatch{client: client, fileGroups: fileGroups, gitMetaObject: gitMetaObject, integrationName: integrationName, ciUploadId: 0, callGraphTimeout: callGraphTimeout, versionHint: versionHint}
 }
 
 // upload concurrently posts all file groups to Debricked
@@ -124,11 +124,10 @@ func (uploadBatch *uploadBatch) uploadFile(filePath string, timeout int) error {
 	_ = writer.WriteField("commitName", uploadBatch.gitMetaObject.CommitName)
 	_ = writer.WriteField("repositoryUrl", uploadBatch.gitMetaObject.RepositoryUrl)
 	_ = writer.WriteField("branchName", uploadBatch.gitMetaObject.BranchName)
-	_ = writer.WriteField("versionConsolidation", strconv.Itoa(uploadBatch.versionConsolidation))
+	_ = writer.WriteField("versionHint", strconv.FormatBool(uploadBatch.versionHint))
 	if uploadBatch.initialized() {
 		_ = writer.WriteField("ciUploadId", strconv.Itoa(uploadBatch.ciUploadId))
 	}
-
 	response, err := (*uploadBatch.client).Post(
 		"/api/1.0/open/uploads/dependencies/files",
 		writer.FormDataContentType(),
@@ -138,11 +137,9 @@ func (uploadBatch *uploadBatch) uploadFile(filePath string, timeout int) error {
 	if err != nil {
 		return err
 	}
-
 	if !uploadBatch.initialized() {
 		data, _ := io.ReadAll(response.Body)
 		defer response.Body.Close()
-
 		uFile := uploadedFile{}
 		_ = json.Unmarshal(data, &uFile)
 		if uFile.CiUploadId == 0 {

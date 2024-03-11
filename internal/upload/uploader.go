@@ -15,7 +15,7 @@ type DebrickedOptions struct {
 	GitMetaObject          git.MetaObject
 	IntegrationsName       string
 	CallGraphUploadTimeout int
-	VersionConsolidation   int
+	VersionHint            bool
 }
 
 type IUploader interface {
@@ -36,7 +36,7 @@ func NewUploader(c client.IDebClient) (*Uploader, error) {
 
 func (uploader *Uploader) Upload(o IOptions) (*UploadResult, error) {
 	dOptions := o.(DebrickedOptions)
-	batch := newUploadBatch(uploader.client, dOptions.FileGroups, &dOptions.GitMetaObject, dOptions.IntegrationsName, dOptions.CallGraphUploadTimeout, dOptions.VersionConsolidation)
+	batch := newUploadBatch(uploader.client, dOptions.FileGroups, &dOptions.GitMetaObject, dOptions.IntegrationsName, dOptions.CallGraphUploadTimeout, dOptions.VersionHint)
 
 	err := batch.upload()
 	if err != nil {

@@ -36,7 +36,7 @@ func TestUploadWithBadFiles(t *testing.T) {
 	clientMock.AddMockResponse(mockRes)
 	clientMock.AddMockResponse(mockRes)
 	c = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, 1)
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true)
 	var buf bytes.Buffer
 	log.SetOutput(&buf)
 	err = batch.upload()
@@ -48,7 +48,7 @@ func TestUploadWithBadFiles(t *testing.T) {
 }
 
 func TestInitAnalysisWithoutAnyFiles(t *testing.T) {
-	batch := newUploadBatch(nil, file.Groups{}, nil, "CLI", 10*60, 1)
+	batch := newUploadBatch(nil, file.Groups{}, nil, "CLI", 10*60, true)
 	err := batch.initAnalysis()
 
 	assert.ErrorContains(t, err, "failed to find dependency files")
@@ -71,7 +71,7 @@ func TestWaitWithPollingTerminatedError(t *testing.T) {
 	}
 	clientMock.AddMockResponse(mockRes)
 	c = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, 1)
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true)
 
 	uploadResult, err := batch.wait()
 
@@ -96,7 +96,7 @@ func TestInitUploadBadFile(t *testing.T) {
 	clientMock.AddMockResponse(mockRes)
 
 	var c client.IDebClient = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, 1)
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true)
 
 	files, err := batch.initUpload()
 
@@ -123,7 +123,7 @@ func TestInitUpload(t *testing.T) {
 	clientMock.AddMockResponse(mockRes)
 
 	var c client.IDebClient = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, 1)
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true)
 
 	files, err := batch.initUpload()
 
