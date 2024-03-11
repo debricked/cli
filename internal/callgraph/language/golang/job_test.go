@@ -21,8 +21,6 @@ const (
 	dir     = "dir"
 )
 
-var files = []string{"file"}
-
 func TestNewJob(t *testing.T) {
 	writer := io.FileWriter{}
 	config := conf.Config{}

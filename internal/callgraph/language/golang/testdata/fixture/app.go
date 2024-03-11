@@ -1,9 +1,7 @@
 package main
 
-import "fmt"
-
-func sayHello() {
-	fmt.Println("Hello")
+func sayHello() string {
+	return "Hello, World!"
 }
 
 func main() {

@@ -114,3 +114,15 @@ func (cg *CallGraph) ToBytes() ([]byte, error) {
 
 	return output, nil
 }
+
+func (cg *CallGraph) NodeCount() int {
+	return len(cg.Nodes)
+}
+
+func (cg *CallGraph) EdgeCount() int {
+	count := 0
+	for _, node := range cg.Nodes {
+		count += len(node.Parents)
+	}
+	return count
+}
