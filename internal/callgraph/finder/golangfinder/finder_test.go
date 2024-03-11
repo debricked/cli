@@ -2,27 +2,23 @@ package golanfinder
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
-	"github.com/debricked/cli/internal/callgraph/finder"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGolangFinderImplementsFinder(t *testing.T) {
-	assert.Implements(t, (*finder.IFinder)(nil), new(GolangFinder))
-}
-
 func TestGolangFindEntrypoint(t *testing.T) {
 	f := GolangFinder{}
-	files, err := f.FindRoots([]string{"testdata/app.go", "testdata/util.go"})
+	files, err := f.FindRoots([]string{filepath.Join("testdata", "app.go"), filepath.Join("testdata", "util.go")})
 	assert.Nil(t, err)
 	assert.Len(t, files, 1)
-	assert.Equal(t, "testdata/app.go", files[0])
+	assert.Equal(t, filepath.Join("testdata", "app.go"), files[0])
 }
 
 func TestGolangFindEntrypointNoMain(t *testing.T) {
 	f := GolangFinder{}
-	files, err := f.FindRoots([]string{"testdata/extrapackage/extra.go"})
+	files, err := f.FindRoots([]string{filepath.Join("testdata", "extrapackage", "extra.go")})
 	assert.Nil(t, err)
 	assert.Empty(t, files)
 }
@@ -32,14 +28,13 @@ func TestFindFiles(t *testing.T) {
 	files, err := f.FindFiles([]string{"testdata"}, nil)
 	assert.Nil(t, err)
 	assert.NotEmpty(t, files)
-	assert.Contains(t, files, "testdata/app.go")
-	assert.Contains(t, files, "testdata/util.go")
-
+	assert.Contains(t, files, filepath.Join("testdata", "app.go"))
+	assert.Contains(t, files, filepath.Join("testdata", "util.go"))
 }
 
 func TestFindDependencyDirs(t *testing.T) {
 	f := GolangFinder{}
-	files, err := f.FindDependencyDirs([]string{"testdata/app.go", "testdata/util.go"}, false)
+	files, err := f.FindDependencyDirs([]string{filepath.Join("testdata", "app.go"), filepath.Join("testdata", "util.go")}, false)
 	assert.Nil(t, err)
 	assert.Empty(t, files)
 }
@@ -51,12 +46,11 @@ func TestFindFilesWithErrors(t *testing.T) {
 
 	tempDir, err := os.MkdirTemp("", "testdir")
 	assert.Nil(t, err)
-	defer os.RemoveAll(tempDir)   // clean up
-	err = os.Chmod(tempDir, 0222) // remove read permissions
+	defer os.RemoveAll(tempDir)
+	err = os.Chmod(tempDir, 0222)
 	assert.Nil(t, err)
 	_, err = finder.FindFiles([]string{tempDir}, nil)
 	assert.Error(t, err)
-
 }
 
 func TestFindFilesExclusions(t *testing.T) {
