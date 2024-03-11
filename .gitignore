@@ -44,3 +44,4 @@ test/resolve/testdata/gradle/*/**
 test/resolve/testdata/gradle/gradle.debricked.lock
 /mvnproj/target
 debricked-call-graph-golang
+internal/scan/testdata/npm/result.json
