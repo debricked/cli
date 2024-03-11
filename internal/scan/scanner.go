@@ -207,6 +207,7 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		GitMetaObject:          gitMetaObject,
 		IntegrationsName:       options.IntegrationName,
 		CallGraphUploadTimeout: options.CallGraphUploadTimeout,
+		VersionConsolidation:   options.VersionConsolidation,
 	}
 	result, err := (*dScanner.uploader).Upload(uploaderOptions)
 	if err != nil {
