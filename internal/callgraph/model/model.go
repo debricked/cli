@@ -3,6 +3,8 @@ package model
 import (
 	"bytes"
 	"fmt"
+	"sort"
+	"strings"
 )
 
 const CURRENT_VERSION = "5"
@@ -35,10 +37,16 @@ func (n *Node) ToBytes() []byte {
 
 	buffer.WriteString(fmt.Sprintf("'%s', '%s', %d, %d, [", n.Name, n.Filename, n.LineStart, n.LineEnd))
 
-	for _, parent := range n.Parents {
-		buffer.WriteString(fmt.Sprintf("['%s', %d, '%s'], ", parent.Parent.Symbol, parent.CallLine, parent.Parent.Filename))
+	sort.Slice(n.Parents, func(i, j int) bool {
+		return n.Parents[i].Parent.Symbol < n.Parents[j].Parent.Symbol
+	})
+
+	parents := make([]string, len(n.Parents))
+	for i, parent := range n.Parents {
+		parents[i] = fmt.Sprintf("['%s', %d, '%s']", parent.Parent.Symbol, parent.CallLine, parent.Parent.Filename)
 	}
 
+	buffer.WriteString(strings.Join(parents, ", "))
 	buffer.WriteString("]]")
 
 	return buffer.Bytes()
@@ -57,10 +65,6 @@ func NewCallGraph() *CallGraph {
 }
 
 func (cg *CallGraph) AddNode(filename, name, symbol string, isLibraryNode bool, lineStart, lineEnd int) *Node {
-
-	if cg.Nodes == nil {
-		cg.Nodes = make(map[string]*Node)
-	}
 
 	if node, ok := cg.Nodes[symbol]; ok {
 		return node
@@ -96,9 +100,19 @@ func (cg *CallGraph) GetNode(symbol string) *Node {
 func (cg *CallGraph) ToBytes() ([]byte, error) {
 	output := []byte{}
 
+	// Get the keys of cg.Nodes
+	keys := make([]string, 0, len(cg.Nodes))
+	for key := range cg.Nodes {
+		keys = append(keys, key)
+	}
+
+	// Sort the keys
+	sort.Strings(keys)
+
 	output = append(output, []byte("[")...)
 
-	for _, node := range cg.Nodes {
+	for _, key := range keys {
+		node := cg.Nodes[key]
 		output = append(output, node.ToBytes()...)
 		output = append(output, []byte(",")...)
 	}
@@ -124,5 +138,6 @@ func (cg *CallGraph) EdgeCount() int {
 	for _, node := range cg.Nodes {
 		count += len(node.Parents)
 	}
+
 	return count
 }

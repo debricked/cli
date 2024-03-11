@@ -72,4 +72,30 @@ func TestRunEError(t *testing.T) {
 	err := runE(nil, []string{"."})
 
 	assert.EqualError(t, err, "finder-error", "error doesn't match expected")
+
+	languages = "python2"
+
+	g2 := &callgraphTestdata.GeneratorMock{}
+	runE2 := RunE(g2)
+	err2 := runE2(nil, []string{"."})
+	assert.Error(t, err2)
+
+}
+
+func TestParseAndValidateLanguages(t *testing.T) {
+	languages := "java,golang"
+	parsedLanguages, err := parseAndValidateLanguages(languages)
+
+	assert.Nil(t, err)
+	assert.Equal(t, []string{"java", "golang"}, parsedLanguages)
+
+	languages = ""
+	parsedLanguages, err = parseAndValidateLanguages(languages)
+
+	assert.Nil(t, err)
+	assert.Equal(t, []string{"java", "golang"}, parsedLanguages)
+
+	languages = "java,golang,python2"
+	_, err = parseAndValidateLanguages(languages)
+	assert.Error(t, err)
 }

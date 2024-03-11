@@ -31,6 +31,7 @@ type Command struct {
 
 func NewCommand(osCmd *exec.Cmd) *Command {
 	var stdoutBuf, stderrBuf bytes.Buffer
+
 	return &Command{osCmd, &stdoutBuf, &stderrBuf}
 }
 

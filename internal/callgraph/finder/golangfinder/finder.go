@@ -18,27 +18,13 @@ func (f GolangFinder) FindRoots(files []string) ([]string, error) {
 
 	for _, file := range files {
 		if strings.HasSuffix(file, ".go") {
-			fset := token.NewFileSet()
-			node, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
+			isMain, err := f.isMainFile(file)
 			if err != nil {
 				return nil, err
 			}
 
-			if node.Name.Name == "main" {
-				hasMainFunction := false
-				for _, decl := range node.Decls {
-					if funcDecl, ok := decl.(*ast.FuncDecl); ok {
-						if funcDecl.Name.Name == "main" && funcDecl.Recv == nil &&
-							funcDecl.Type.Params.List == nil {
-							hasMainFunction = true
-							break
-						}
-					}
-				}
-
-				if hasMainFunction {
-					mainFiles = append(mainFiles, file)
-				}
+			if isMain {
+				mainFiles = append(mainFiles, file)
 			}
 		}
 	}
@@ -46,8 +32,38 @@ func (f GolangFinder) FindRoots(files []string) ([]string, error) {
 	return mainFiles, nil
 }
 
+func (f GolangFinder) isMainFile(file string) (bool, error) {
+	fset := token.NewFileSet()
+	node, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
+	if err != nil {
+		return false, err
+	}
+
+	if node.Name.Name != "main" {
+		return false, nil
+	}
+
+	return f.hasMainFunction(node), nil
+}
+
+func (f GolangFinder) hasMainFunction(node *ast.File) bool {
+	for _, decl := range node.Decls {
+		if funcDecl, ok := decl.(*ast.FuncDecl); ok {
+			if f.isMainFunction(funcDecl) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func (f GolangFinder) isMainFunction(funcDecl *ast.FuncDecl) bool {
+	return funcDecl.Name.Name == "main" && funcDecl.Recv == nil && funcDecl.Type.Params.List == nil
+}
+
+// Not needed for golang
 func (f GolangFinder) FindDependencyDirs(files []string, findJars bool) ([]string, error) {
-	// Not needed for golang
 	return []string{}, nil
 }
 

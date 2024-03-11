@@ -61,6 +61,7 @@ func NewCallgraph(
 func cleanSymbol(symbol string) string {
 	symbol = strings.Replace(symbol, "(*", "", 1)
 	symbol = strings.Replace(symbol, ").", ".", 1)
+
 	return symbol
 }
 
@@ -100,7 +101,7 @@ func (cg *Callgraph) constructCallGraph() error {
 
 func (cg *Callgraph) createPackageConfig() (*packages.Config, []string) {
 	cfg := &packages.Config{
-		Mode:  packages.LoadAllSyntax,
+		Mode:  packages.NeedDeps | packages.NeedSyntax | packages.NeedTypesInfo | packages.NeedTypes | packages.NeedTypesSizes | packages.NeedImports | packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles,
 		Tests: cg.includeTests,
 		Dir:   cg.workingDirectory,
 	}
@@ -157,6 +158,7 @@ func (cg *Callgraph) constructRTACallGraph(prog *ssa.Program, pkgs []*ssa.Packag
 		roots = append(roots, main.Func("init"), main.Func("main"))
 	}
 	rtares := rta.Analyze(roots, true)
+
 	return rtares.CallGraph, nil
 }
 
@@ -164,6 +166,7 @@ func isLibraryNode(filename string, pwd string) bool {
 	if len(filename) > len(pwd) && filename[:len(pwd)] == pwd {
 		return false
 	}
+
 	return true
 }
 
@@ -250,6 +253,7 @@ func setLineStartEndFile(nodes []*model.Node, filename string) error {
 				node.LineEnd = end
 			}
 		}
+
 		return true
 	})
 
@@ -289,6 +293,7 @@ func mainPackages(pkgs []*ssa.Package) ([]*ssa.Package, error) {
 	if len(mains) == 0 {
 		return nil, fmt.Errorf("no main packages")
 	}
+
 	return mains, nil
 }
 
@@ -306,6 +311,7 @@ func (e *Edge) pos() *token.Position {
 	if e.position.Offset == -1 {
 		e.position = e.fset.Position(e.edge.Pos()) // called lazily
 	}
+
 	return &e.position
 }
 
@@ -313,6 +319,7 @@ func (e *Edge) calleePos() *token.Position {
 	if e.callePosition.Offset == -1 {
 		e.callePosition = e.fset.Position(e.Callee.Pos()) // called lazily
 	}
+
 	return &e.position
 }
 
