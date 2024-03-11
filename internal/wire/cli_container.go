@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/debricked/cli/internal/callgraph"
-	"github.com/debricked/cli/internal/callgraph/finder"
 	callgraphStrategy "github.com/debricked/cli/internal/callgraph/strategy"
 	"github.com/debricked/cli/internal/ci"
 	"github.com/debricked/cli/internal/client"
@@ -111,7 +110,6 @@ type CliContainer struct {
 	licenseReporter       licenseReport.Reporter
 	vulnerabilityReporter vulnerabilityReport.Reporter
 	callgraph             callgraph.IGenerator
-	cgFinder              finder.IFinder
 	cgScheduler           callgraph.IScheduler
 	cgStrategyFactory     callgraphStrategy.IFactory
 }

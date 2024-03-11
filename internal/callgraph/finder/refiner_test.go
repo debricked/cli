@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -131,4 +132,34 @@ func TestNoGCDPath(t *testing.T) {
 	res := GCDPath(files)
 
 	assert.Equal(t, res, "")
+}
+
+func TestFilterFiles(t *testing.T) {
+	tests := []struct {
+		name    string
+		files   []string
+		pattern string
+		want    []string
+	}{
+		{
+			name:    "Test with matching pattern",
+			files:   []string{"file1.txt", "file2.go", "file3.md"},
+			pattern: `.*\.go`,
+			want:    []string{"file2.go"},
+		},
+		{
+			name:    "Test with no matching pattern",
+			files:   []string{"file1.txt", "file2.go", "file3.md"},
+			pattern: `.*\.js`,
+			want:    []string{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := FilterFiles(tt.files, tt.pattern); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("FilterFiles() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
