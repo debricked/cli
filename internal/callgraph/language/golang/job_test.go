@@ -3,6 +3,7 @@ package golang
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"syscall"
 	"testing"
 
@@ -40,21 +41,28 @@ func TestNewJob(t *testing.T) {
 }
 
 func TestRun(t *testing.T) {
-	fileWriterMock := &ioTestData.FileWriterMock{}
+
+	defer func() {
+		err := os.Remove("testdata/fixture/debricked-call-graph-golang")
+		if err != nil {
+			fmt.Println(err)
+		}
+	}()
+
 	config := conf.NewConfig("golang", nil, nil, true, "go")
 	ctx, _ := ctxTestdata.NewContextMock()
 
-	fsMock := ioTestData.FileSystemMock{}
-	zip := ioTestData.ZipMock{}
-	archiveMock := io.NewArchiveWithStructs("dir", fsMock, zip)
-
-	j := NewJob(dir, "main.go", fileWriterMock, archiveMock, config, ctx, fsMock)
+	rootFileDir := filepath.Dir("testdata/fixture/app.go")
+	j := NewJob(rootFileDir, "app.go", io.FileWriter{}, io.NewArchive("."), config, ctx, io.FileSystem{})
 
 	go jobTestdata.WaitStatus(j)
 	j.Run()
 
 	fmt.Println(j.Errors().GetAll())
 	assert.False(t, j.Errors().HasError())
+
+	_, err := os.Stat("testdata/fixture/debricked-call-graph-golang")
+	assert.False(t, os.IsNotExist(err))
 }
 
 func TestRunCallgraphMockError(t *testing.T) {
