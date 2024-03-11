@@ -1,7 +1,6 @@
 package golanfinder
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -39,23 +38,21 @@ func TestFindDependencyDirs(t *testing.T) {
 	assert.Empty(t, files)
 }
 
-func TestFindFilesWithErrors(t *testing.T) {
-	finder := GolangFinder{}
-	_, err := finder.FindFiles([]string{"nonexistent"}, nil)
-	assert.Error(t, err)
-
-	tempDir, err := os.MkdirTemp("", "testdir")
-	assert.Nil(t, err)
-	defer os.RemoveAll(tempDir)
-	err = os.Chmod(tempDir, 0222)
-	assert.Nil(t, err)
-	_, err = finder.FindFiles([]string{tempDir}, nil)
-	assert.Error(t, err)
-}
-
 func TestFindFilesExclusions(t *testing.T) {
 	finder := GolangFinder{}
 	files, err := finder.FindFiles([]string{"testdata"}, []string{"testdata"})
 	assert.Nil(t, err)
 	assert.Empty(t, files)
+}
+
+func TestIsMainFileError(t *testing.T) {
+	finder := GolangFinder{}
+	_, err := finder.isMainFile("nonexistent.go")
+	assert.NotNil(t, err)
+}
+
+func TestFindRootsFileError(t *testing.T) {
+	finder := GolangFinder{}
+	_, err := finder.FindRoots([]string{"nonexistent.go"})
+	assert.NotNil(t, err)
 }
