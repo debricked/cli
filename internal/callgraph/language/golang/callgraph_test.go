@@ -80,7 +80,7 @@ func TestCallGraphGeneration(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cg := NewCallgraph(
+			cg := NewCallgraphBuilder(
 				rootFileDir,
 				"app.go",
 				outputName,

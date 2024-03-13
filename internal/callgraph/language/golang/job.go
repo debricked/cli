@@ -37,7 +37,7 @@ func NewJob(dir string, mainFile string, writer ioFs.IFileWriter, archive io.IAr
 
 func (j *Job) Run() {
 	workingDirectory := j.GetDir()
-	callgraph := NewCallgraph(
+	callgraph := NewCallgraphBuilder(
 		workingDirectory,
 		j.mainFile,
 		outputName,
@@ -53,7 +53,7 @@ func (j *Job) Run() {
 
 }
 
-func (j *Job) runCallGraph(callgraph ICallgraph) {
+func (j *Job) runCallGraph(callgraph ICallgraphBuilder) {
 	outputFullPath, err := callgraph.RunCallGraph()
 
 	if err != nil {
