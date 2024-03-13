@@ -14,6 +14,8 @@ type Edge struct {
 	CallLine int
 }
 
+// We store the graph in reverse, so child -> parent.
+// This increases the speed of the graph traversal.
 type Node struct {
 	Filename      string
 	Name          string
@@ -100,13 +102,11 @@ func (cg *CallGraph) GetNode(symbol string) *Node {
 func (cg *CallGraph) ToBytes() ([]byte, error) {
 	output := []byte{}
 
-	// Get the keys of cg.Nodes
 	keys := make([]string, 0, len(cg.Nodes))
 	for key := range cg.Nodes {
 		keys = append(keys, key)
 	}
 
-	// Sort the keys
 	sort.Strings(keys)
 
 	output = append(output, []byte("[")...)
