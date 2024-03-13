@@ -1,4 +1,4 @@
-package golanfinder
+package golangfinder
 
 import (
 	"go/ast"
