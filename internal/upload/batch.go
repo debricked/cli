@@ -124,7 +124,6 @@ func (uploadBatch *uploadBatch) uploadFile(filePath string, timeout int) error {
 	_ = writer.WriteField("commitName", uploadBatch.gitMetaObject.CommitName)
 	_ = writer.WriteField("repositoryUrl", uploadBatch.gitMetaObject.RepositoryUrl)
 	_ = writer.WriteField("branchName", uploadBatch.gitMetaObject.BranchName)
-	_ = writer.WriteField("versionHint", strconv.FormatBool(uploadBatch.versionHint))
 	if uploadBatch.initialized() {
 		_ = writer.WriteField("ciUploadId", strconv.Itoa(uploadBatch.ciUploadId))
 	}
@@ -162,6 +161,7 @@ func (uploadBatch *uploadBatch) initAnalysis() error {
 		IntegrationName:      uploadBatch.integrationName,
 		CommitName:           uploadBatch.gitMetaObject.CommitName,
 		Author:               uploadBatch.gitMetaObject.Author,
+		VersionHint:          strconv.FormatBool(uploadBatch.versionHint),
 		DebrickedIntegration: "cli",
 	})
 
@@ -276,6 +276,7 @@ type uploadFinish struct {
 	CommitName           string `json:"commitName"`
 	Author               string `json:"author"`
 	DebrickedIntegration string `json:"debrickedIntegration"`
+	VersionHint          string `json:"versionHint"`
 }
 
 func getRelativeFilePath(filePath string) string {
