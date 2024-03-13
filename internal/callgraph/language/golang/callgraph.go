@@ -22,11 +22,11 @@ import (
 	"golang.org/x/tools/go/ssa/ssautil"
 )
 
-type ICallgraph interface {
+type ICallgraphBuilder interface {
 	RunCallGraph() (string, error)
 }
 
-type Callgraph struct {
+type CallgraphBuilder struct {
 	filesystem       ioFs.IFileSystem
 	workingDirectory string
 	mainFile         string
@@ -37,14 +37,14 @@ type Callgraph struct {
 	algorithm        string
 }
 
-func NewCallgraph(
+func NewCallgraphBuilder(
 	workingDirectory string,
 	mainFile string,
 	outputName string,
 	filesystem ioFs.IFileSystem,
 	ctx cgexec.IContext,
-) Callgraph {
-	return Callgraph{
+) CallgraphBuilder {
+	return CallgraphBuilder{
 		workingDirectory: workingDirectory,
 		mainFile:         mainFile,
 		outputName:       outputName,
@@ -73,7 +73,7 @@ const (
 )
 
 // This is heavely inspired by: https://cs.opensource.google/go/x/tools/+/refs/tags/v0.19.0:cmd/callgraph/main.go
-func (cg *Callgraph) constructCallGraph() error {
+func (cg *CallgraphBuilder) constructCallGraph() error {
 	cfg, args := cg.createPackageConfig()
 	initial, err := packages.Load(cfg, args...)
 	if err != nil {
@@ -99,7 +99,7 @@ func (cg *Callgraph) constructCallGraph() error {
 	return nil
 }
 
-func (cg *Callgraph) createPackageConfig() (*packages.Config, []string) {
+func (cg *CallgraphBuilder) createPackageConfig() (*packages.Config, []string) {
 	cfg := &packages.Config{
 		Mode:  packages.NeedDeps | packages.NeedSyntax | packages.NeedTypesInfo | packages.NeedTypes | packages.NeedTypesSizes | packages.NeedImports | packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles,
 		Tests: cg.includeTests,
@@ -111,7 +111,7 @@ func (cg *Callgraph) createPackageConfig() (*packages.Config, []string) {
 	return cfg, args
 }
 
-func (cg *Callgraph) buildSSAFormProgram(initial []*packages.Package) (*ssa.Program, []*ssa.Package) {
+func (cg *CallgraphBuilder) buildSSAFormProgram(initial []*packages.Package) (*ssa.Program, []*ssa.Package) {
 	mode := ssa.InstantiateGenerics // instantiate generics by default for soundness
 	prog, pkgs := ssautil.AllPackages(initial, mode)
 	prog.Build()
@@ -119,7 +119,7 @@ func (cg *Callgraph) buildSSAFormProgram(initial []*packages.Package) (*ssa.Prog
 	return prog, pkgs
 }
 
-func (cg *Callgraph) constructInternalCallGraph(prog *ssa.Program, pkgs []*ssa.Package) (*callgraph.Graph, error) {
+func (cg *CallgraphBuilder) constructInternalCallGraph(prog *ssa.Program, pkgs []*ssa.Package) (*callgraph.Graph, error) {
 	var icg *callgraph.Graph
 	var err error
 
@@ -148,7 +148,7 @@ func (cg *Callgraph) constructInternalCallGraph(prog *ssa.Program, pkgs []*ssa.P
 	return icg, nil
 }
 
-func (cg *Callgraph) constructRTACallGraph(prog *ssa.Program, pkgs []*ssa.Package) (*callgraph.Graph, error) {
+func (cg *CallgraphBuilder) constructRTACallGraph(prog *ssa.Program, pkgs []*ssa.Package) (*callgraph.Graph, error) {
 	mains, err := mainPackages(pkgs)
 	if err != nil {
 		return nil, err
@@ -170,7 +170,7 @@ func isLibraryNode(filename string, pwd string) bool {
 	return true
 }
 
-func (cg *Callgraph) outputCallGraph(icg *callgraph.Graph, prog *ssa.Program) error {
+func (cg *CallgraphBuilder) outputCallGraph(icg *callgraph.Graph, prog *ssa.Program) error {
 	data := Edge{fset: prog.Fset}
 	pwd, err := os.Getwd()
 	if err != nil {
@@ -260,7 +260,7 @@ func setLineStartEndFile(nodes []*model.Node, filename string) error {
 	return nil
 }
 
-func (cg *Callgraph) RunCallGraph() (string, error) {
+func (cg *CallgraphBuilder) RunCallGraph() (string, error) {
 
 	err := cg.constructCallGraph()
 	if err != nil {
