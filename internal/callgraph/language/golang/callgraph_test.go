@@ -103,7 +103,7 @@ func TestCallGraphGeneration(t *testing.T) {
 	}
 }
 
-func TestIsLibraryNode(t *testing.T) {
+func TestIsApplicationNode(t *testing.T) {
 	tests := []struct {
 		name string
 		pwd  string
@@ -114,20 +114,20 @@ func TestIsLibraryNode(t *testing.T) {
 			name: "Test with standard library",
 			pwd:  "testdata/fixture",
 			in:   "testdata/fixture/main.go.Println",
-			want: false,
+			want: true,
 		},
 		{
 			name: "Test with non-standard library",
 			pwd:  "testdata/fixture",
 			in:   "github.com/spf13/afero/mem.File.Open",
-			want: true,
+			want: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := isLibraryNode(tt.in, tt.pwd); got != tt.want {
-				t.Errorf("isLibraryNode() = %v, want %v", got, tt.want)
+			if got := IsApplicationNode(tt.in, tt.pwd); got != tt.want {
+				t.Errorf("IsApplicationNode() = %v, want %v", got, tt.want)
 			}
 		})
 	}

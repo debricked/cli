@@ -47,8 +47,6 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 		}
 
 		if len(roots) == 0 {
-			strategyWarning("No main.go found")
-
 			return jobs, nil
 		}
 

@@ -17,27 +17,34 @@ type Edge struct {
 // We store the graph in reverse, so child -> parent.
 // This increases the speed of the graph traversal.
 type Node struct {
-	Filename      string
-	Name          string
-	Symbol        string
-	IsLibraryNode bool
-	LineStart     int
-	LineEnd       int
-	Parents       []Edge
+	Filename          string
+	Name              string
+	Symbol            string
+	IsApplicationNode bool
+	IsStdLibNode      bool
+	LineStart         int
+	LineEnd           int
+	Parents           []Edge
 }
 
 func (n *Node) ToBytes() []byte {
 	var buffer bytes.Buffer
 
-	buffer.WriteString(fmt.Sprintf("['%s', ", n.Symbol))
+	buffer.WriteString(fmt.Sprintf("[\"%s\", ", n.Symbol))
 
-	if n.IsLibraryNode {
-		buffer.WriteString("True, True, ")
+	if n.IsApplicationNode {
+		buffer.WriteString("true, ")
 	} else {
-		buffer.WriteString("False, False, ")
+		buffer.WriteString("false, ")
 	}
 
-	buffer.WriteString(fmt.Sprintf("'%s', '%s', %d, %d, [", n.Name, n.Filename, n.LineStart, n.LineEnd))
+	if n.IsStdLibNode {
+		buffer.WriteString("true, ")
+	} else {
+		buffer.WriteString("false, ")
+	}
+
+	buffer.WriteString(fmt.Sprintf("\"%s\", \"%s\", %d, %d, [", n.Name, n.Filename, n.LineStart, n.LineEnd))
 
 	sort.Slice(n.Parents, func(i, j int) bool {
 		return n.Parents[i].Parent.Symbol < n.Parents[j].Parent.Symbol
@@ -45,7 +52,7 @@ func (n *Node) ToBytes() []byte {
 
 	parents := make([]string, len(n.Parents))
 	for i, parent := range n.Parents {
-		parents[i] = fmt.Sprintf("['%s', %d, '%s']", parent.Parent.Symbol, parent.CallLine, parent.Parent.Filename)
+		parents[i] = fmt.Sprintf("[\"%s\", %d, \"%s\"]", parent.Parent.Symbol, parent.CallLine, parent.Parent.Filename)
 	}
 
 	buffer.WriteString(strings.Join(parents, ", "))
@@ -66,20 +73,21 @@ func NewCallGraph() *CallGraph {
 	}
 }
 
-func (cg *CallGraph) AddNode(filename, name, symbol string, isLibraryNode bool, lineStart, lineEnd int) *Node {
+func (cg *CallGraph) AddNode(filename, name, symbol string, IsApplicationNode, IsStdLibNode bool, lineStart, lineEnd int) *Node {
 
 	if node, ok := cg.Nodes[symbol]; ok {
 		return node
 	}
 
 	node := &Node{
-		Filename:      filename,
-		Name:          name,
-		Symbol:        symbol,
-		IsLibraryNode: isLibraryNode,
-		LineStart:     lineStart,
-		LineEnd:       lineEnd,
-		Parents:       []Edge{},
+		Filename:          filename,
+		Name:              name,
+		Symbol:            symbol,
+		IsApplicationNode: IsApplicationNode,
+		IsStdLibNode:      IsStdLibNode,
+		LineStart:         lineStart,
+		LineEnd:           lineEnd,
+		Parents:           []Edge{},
 	}
 
 	cg.Nodes[symbol] = node
@@ -117,7 +125,7 @@ func (cg *CallGraph) ToBytes() ([]byte, error) {
 		output = append(output, []byte(",")...)
 	}
 
-	if len(output) > 0 {
+	if len(output) > 0 && len(keys) > 0 {
 		output = output[:len(output)-1]
 	}
 
