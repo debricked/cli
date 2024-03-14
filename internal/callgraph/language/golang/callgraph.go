@@ -162,12 +162,12 @@ func (cg *CallgraphBuilder) constructRTACallGraph(prog *ssa.Program, pkgs []*ssa
 	return rtares.CallGraph, nil
 }
 
-func isLibraryNode(filename string, pwd string) bool {
+func IsApplicationNode(filename string, pwd string) bool {
 	if len(filename) > len(pwd) && filename[:len(pwd)] == pwd {
-		return false
+		return true
 	}
 
-	return true
+	return false
 }
 
 func (cg *CallgraphBuilder) outputCallGraph(icg *callgraph.Graph, prog *ssa.Program) error {
@@ -189,14 +189,14 @@ func (cg *CallgraphBuilder) outputCallGraph(icg *callgraph.Graph, prog *ssa.Prog
 		var ok bool
 		if callerNode, ok = cg.cgModel.Nodes[callerSymbol]; !ok {
 			callerFilename := data.CallerFilename()
-			callerNode = cg.cgModel.AddNode(callerFilename, data.Caller.Name(), callerSymbol, isLibraryNode(callerFilename, pwd), -1, -1)
+			callerNode = cg.cgModel.AddNode(callerFilename, data.Caller.Name(), callerSymbol, IsApplicationNode(callerFilename, pwd), false, -1, -1)
 		}
 
 		var calleeNode *model.Node
 		calleeSymbol := cleanSymbol(edge.Callee.Func.String())
 		if calleeNode, ok = cg.cgModel.Nodes[calleeSymbol]; !ok {
 			calleeFilename := data.CalleeFilename()
-			calleeNode = cg.cgModel.AddNode(calleeFilename, data.Callee.Name(), calleeSymbol, isLibraryNode(calleeFilename, pwd), -1, -1)
+			calleeNode = cg.cgModel.AddNode(calleeFilename, data.Callee.Name(), calleeSymbol, IsApplicationNode(calleeFilename, pwd), false, -1, -1)
 		}
 
 		cg.cgModel.AddEdge(callerNode, calleeNode, data.CallLine())
