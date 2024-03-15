@@ -59,7 +59,8 @@ func NewCallgraphBuilder(
 // Cleans up the symbol to remove pointer informaiton
 // (*github.com/spf13/afero/mem.File).Open -> github.com/spf13/afero/mem.File.Open
 func cleanSymbol(symbol string) string {
-	symbol = strings.Replace(symbol, "(*", "", 1)
+	symbol = strings.Replace(symbol, "(", "", 1)
+	symbol = strings.Replace(symbol, "*", "", 1)
 	symbol = strings.Replace(symbol, ").", ".", 1)
 
 	return symbol
