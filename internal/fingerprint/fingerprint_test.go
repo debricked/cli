@@ -14,14 +14,14 @@ import (
 func TestIsExcludedFile(t *testing.T) {
 
 	// Test excluded file extensions
-	excludedExts := []string{".doc", ".pdf", ".txt"}
+	excludedExts := []string{".doc", ".pdf", ".txt", ""}
 	for _, ext := range excludedExts {
 		filename := "file" + ext
 		assert.True(t, isExcludedFile(filename), "Expected %q to be excluded", filename)
 	}
 
 	// Test excluded files
-	excludedFiles := []string{"LICENSE", "README.md", "Makefile", "mvnw", "[content_types].xml"}
+	excludedFiles := []string{"LICENSE", "README.md", "Makefile", "mvnw", "[content_types].xml", "Stockholm", "hello.json"}
 	for _, filename := range excludedFiles {
 		assert.True(t, isExcludedFile(filename), "Expected %q to be excluded", filename)
 		filepath := "foo/bar/" + filename
@@ -34,6 +34,20 @@ func TestIsExcludedFile(t *testing.T) {
 	for _, ending := range excludedEndings {
 		filename := "file." + ending
 		assert.True(t, isExcludedFile(filename), "Expected %q to be excluded", filename)
+	}
+
+	// Test excluded dirnames
+	filesInExcludedDir := []string{"package/.idea/test.txt"}
+	for _, filename := range filesInExcludedDir {
+		assert.True(t, isExcludedFile(filename), "Expected %q to be excluded", filename)
+	}
+
+	// Test included files
+	includedFiles := []string{"package.json"}
+	for _, filename := range includedFiles {
+		assert.False(t, isExcludedFile(filename), "Expected %q to not be excluded", filename)
+		filepath := "foo/bar/" + filename
+		assert.False(t, isExcludedFile(filepath), "Expected %q to not be excluded", filepath)
 	}
 
 	// Test non-excluded files
@@ -436,7 +450,7 @@ func TestInMemFingerprintingCompressedContent(t *testing.T) {
 		{
 			name:        "Jar",
 			path:        "testdata/archive/jar",
-			expected:    196,
+			expected:    195,
 			suffix:      "log4j-api-2.18.0.jar",
 			shouldUnzip: true,
 		},
@@ -450,7 +464,7 @@ func TestInMemFingerprintingCompressedContent(t *testing.T) {
 		{
 			name:        "TGz",
 			path:        "testdata/archive/tgz",
-			expected:    1050,
+			expected:    1051,
 			suffix:      "lodash.tgz",
 			shouldUnzip: true,
 		},

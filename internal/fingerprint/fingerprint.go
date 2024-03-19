@@ -34,16 +34,27 @@ var EXCLUDED_EXT = []string{
 	".toml", ".ttf", ".txt", ".utf-8", ".vim", ".wav", ".whl", ".woff", ".woff2", ".xht",
 	".xhtml", ".xls", ".xlsx", ".xpm", ".xsd", ".xul", ".yaml", ".yml", ".wfp",
 	".editorconfig", ".dotcover", ".pid", ".lcov", ".egg", ".manifest", ".cache", ".coverage", ".cover",
-	".gem", ".lst", ".pickle", ".pdb", ".gml", ".pot", ".plt",
+	".gem", ".lst", ".pickle", ".pdb", ".gml", ".pot", ".plt", "", ".pyi",
 }
 
-var EXCLUDED_FILE_ENDINGS = []string{"-doc", "changelog", "config", "copying", "license", "authors", "news", "licenses", "notice",
-	"readme", "swiftdoc", "texidoc", "todo", "version", "ignore", "manifest", "sqlite", "sqlite3"}
+var EXCLUDED_FILE_ENDINGS = []string{
+	"-doc", "changelog", "config", "copying", "license", "authors", "news", "licenses", "notice",
+	"readme", "swiftdoc", "texidoc", "todo", "version", "ignore", "manifest", "sqlite", "sqlite3",
+	"nycrc", "targ", "eslintrc", "prettierrc",
+}
 
 var EXCLUDED_FILES = []string{
 	"gradlew", "gradlew.bat", "mvnw", "mvnw.cmd", "gradle-wrapper.jar", "maven-wrapper.jar",
 	"thumbs.db", "babel.config.js", "license.txt", "license.md", "copying.lib", "makefile",
-	"[content_types].xml",
+	"[content_types].xml", "py.typed", "LICENSE.APACHE2", "LICENSE.MIT",
+}
+
+var EXCLUDED_DIRS = []string{
+	".idea",
+}
+
+var INCLUDED_FILES = []string{
+	"package.json",
 }
 
 var ZIP_FILE_ENDINGS = []string{".jar", ".nupkg", ".war", ".zip", ".ear"}
@@ -65,9 +76,21 @@ const (
 
 func isExcludedFile(path string) bool {
 
-	return isExcludedByExtension(path) ||
+	return (isExcludedByExtension(path) ||
 		isExcludedByFilename(path) ||
-		isExcludedByEnding(path)
+		isExcludedByEnding(path) ||
+		isInExcludedDir(path)) && !isIncludedFile(path)
+}
+
+func isIncludedFile(path string) bool {
+	filename := filepath.Base(path)
+	for _, file := range INCLUDED_FILES {
+		if filename == file {
+			return true
+		}
+	}
+
+	return false
 }
 
 func isExcludedByExtension(path string) bool {
@@ -97,6 +120,16 @@ func isExcludedByEnding(path string) bool {
 	pathLower := strings.ToLower(path)
 	for _, ending := range EXCLUDED_FILE_ENDINGS {
 		if strings.HasSuffix(pathLower, ending) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func isInExcludedDir(path string) bool {
+	for _, dirname := range EXCLUDED_DIRS {
+		if strings.Contains(path, dirname) {
 			return true
 		}
 	}
