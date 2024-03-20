@@ -40,10 +40,10 @@ func TestCleanSymbol(t *testing.T) {
 
 func TestCallGraphGeneration(t *testing.T) {
 	rootFileDir := filepath.Dir("testdata/fixture/app.go")
-	outputName := "debricked-call-graph-golang-test"
+	outputName := "debricked-call-graph.golang-test"
 
 	defer func() {
-		err := os.Remove("testdata/fixture/debricked-call-graph-golang-test")
+		err := os.Remove("testdata/fixture/debricked-call-graph.golang-test")
 		if err != nil {
 			fmt.Println(err)
 		}
