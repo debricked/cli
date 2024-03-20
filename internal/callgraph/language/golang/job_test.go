@@ -41,7 +41,7 @@ func TestNewJob(t *testing.T) {
 func TestRun(t *testing.T) {
 
 	defer func() {
-		err := os.Remove("testdata/fixture/debricked-call-graph-golang")
+		err := os.Remove("testdata/fixture/debricked-call-graph.golang")
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -59,7 +59,7 @@ func TestRun(t *testing.T) {
 	fmt.Println(j.Errors().GetAll())
 	assert.False(t, j.Errors().HasError())
 
-	_, err := os.Stat("testdata/fixture/debricked-call-graph-golang")
+	_, err := os.Stat("testdata/fixture/debricked-call-graph.golang")
 	assert.False(t, os.IsNotExist(err))
 }
 

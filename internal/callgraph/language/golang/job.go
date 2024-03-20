@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	outputName = "debricked-call-graph-golang"
+	outputName = "debricked-call-graph.golang"
 )
 
 type Job struct {
