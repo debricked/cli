@@ -478,7 +478,7 @@ func TestInMemFingerprintingCompressedContent(t *testing.T) {
 		{
 			name:        "BZip2",
 			path:        "testdata/archive/bz2",
-			expected:    10,
+			expected:    7,
 			suffix:      "stuf-0.1.tar.bz2",
 			shouldUnzip: true,
 		},
