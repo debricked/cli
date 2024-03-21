@@ -115,7 +115,7 @@ $ debricked scan . `+exampleFlags)
 	versionHintDoc := strings.Join(
 		[]string{
 			"Toggles version hinting, i.e using manifest versions to help manifestless resolution.\n",
-			"\nExample:\n$ debricked scan . --version-hint=False",
+			"\nExample:\n$ debricked scan . --version-hint=false",
 		}, "\n")
 	cmd.Flags().BoolVar(&versionHint, VersionHintFlag, true, versionHintDoc)
 	verboseDoc := strings.Join(
