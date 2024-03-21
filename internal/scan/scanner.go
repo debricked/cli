@@ -50,6 +50,7 @@ type DebrickedOptions struct {
 	Exclusions               []string
 	Verbose                  bool
 	Regenerate               int
+	VersionHint              bool
 	RepositoryName           string
 	CommitName               string
 	BranchName               string
@@ -206,6 +207,7 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		GitMetaObject:          gitMetaObject,
 		IntegrationsName:       options.IntegrationName,
 		CallGraphUploadTimeout: options.CallGraphUploadTimeout,
+		VersionHint:            options.VersionHint,
 	}
 	result, err := (*dScanner.uploader).Upload(uploaderOptions)
 	if err != nil {

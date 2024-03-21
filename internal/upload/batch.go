@@ -38,10 +38,11 @@ type uploadBatch struct {
 	integrationName  string
 	ciUploadId       int
 	callGraphTimeout int
+	versionHint      bool
 }
 
-func newUploadBatch(client *client.IDebClient, fileGroups file.Groups, gitMetaObject *git.MetaObject, integrationName string, callGraphTimeout int) *uploadBatch {
-	return &uploadBatch{client: client, fileGroups: fileGroups, gitMetaObject: gitMetaObject, integrationName: integrationName, ciUploadId: 0, callGraphTimeout: callGraphTimeout}
+func newUploadBatch(client *client.IDebClient, fileGroups file.Groups, gitMetaObject *git.MetaObject, integrationName string, callGraphTimeout int, versionHint bool) *uploadBatch {
+	return &uploadBatch{client: client, fileGroups: fileGroups, gitMetaObject: gitMetaObject, integrationName: integrationName, ciUploadId: 0, callGraphTimeout: callGraphTimeout, versionHint: versionHint}
 }
 
 // upload concurrently posts all file groups to Debricked
@@ -126,7 +127,6 @@ func (uploadBatch *uploadBatch) uploadFile(filePath string, timeout int) error {
 	if uploadBatch.initialized() {
 		_ = writer.WriteField("ciUploadId", strconv.Itoa(uploadBatch.ciUploadId))
 	}
-
 	response, err := (*uploadBatch.client).Post(
 		"/api/1.0/open/uploads/dependencies/files",
 		writer.FormDataContentType(),
@@ -136,11 +136,9 @@ func (uploadBatch *uploadBatch) uploadFile(filePath string, timeout int) error {
 	if err != nil {
 		return err
 	}
-
 	if !uploadBatch.initialized() {
 		data, _ := io.ReadAll(response.Body)
 		defer response.Body.Close()
-
 		uFile := uploadedFile{}
 		_ = json.Unmarshal(data, &uFile)
 		if uFile.CiUploadId == 0 {
@@ -163,6 +161,7 @@ func (uploadBatch *uploadBatch) initAnalysis() error {
 		IntegrationName:      uploadBatch.integrationName,
 		CommitName:           uploadBatch.gitMetaObject.CommitName,
 		Author:               uploadBatch.gitMetaObject.Author,
+		VersionHint:          uploadBatch.versionHint,
 		DebrickedIntegration: "cli",
 	})
 
@@ -277,6 +276,7 @@ type uploadFinish struct {
 	CommitName           string `json:"commitName"`
 	Author               string `json:"author"`
 	DebrickedIntegration string `json:"debrickedIntegration"`
+	VersionHint          bool   `json:"versionHint"`
 }
 
 func getRelativeFilePath(filePath string) string {
