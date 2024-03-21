@@ -79,6 +79,7 @@ func TestDefaultExclusionsFingerprint(t *testing.T) {
 		filepath.Join("**", ".git", "**"),
 		"**/*.egg-info/**",
 		"**/*venv/**",
+		"**/*venv3/**",
 	}
 
 	exclusions := DefaultExclusionsFingerprint()

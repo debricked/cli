@@ -36,7 +36,7 @@ var EXCLUDED_DIRS_FINGERPRINT = []string{
 	"__pycache__", "_yardoc", "eggs",
 	"wheels", "htmlcov", "__pypackages__", ".git"}
 
-var EXCLUDED_DIRS_FINGERPRINT_RAW = []string{"**/*.egg-info/**", "**/*venv/**"}
+var EXCLUDED_DIRS_FINGERPRINT_RAW = []string{"**/*.egg-info/**", "**/*venv/**", "**/*venv3/**"}
 
 func DefaultExclusionsFingerprint() []string {
 	output := []string{}
