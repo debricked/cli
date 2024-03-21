@@ -353,6 +353,11 @@ func TestIsTarGZip(t *testing.T) {
 			want:     false,
 		},
 		{
+			name:     "tar.bz2",
+			filename: "deep/folder/python-dotenv-1.0.0.tar.bz2",
+			want:     false,
+		},
+		{
 			name:     ".tgz is tar gzip",
 			filename: "test.tgz",
 			want:     true,
@@ -372,6 +377,48 @@ func TestIsTarGZip(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := isTarGZipFile(tt.filename); got != tt.want {
+				t.Errorf("isTarGZipFile() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIsTarBZip2(t *testing.T) {
+	tests := []struct {
+		name     string
+		filename string
+		want     bool
+	}{
+		{
+			name:     ".zip is not tar bz2",
+			filename: "test.zip",
+			want:     false,
+		},
+		{
+			name:     ".tgz is not tar bz2",
+			filename: "test.tgz",
+			want:     false,
+		},
+		{
+			name:     ".tar.gz is not tar bz2",
+			filename: "test.tar.gz",
+			want:     false,
+		},
+		{
+			name:     "Should pick up .tar.bz2 archive in nested folder",
+			filename: "deep/folder/test.tar.bz2",
+			want:     true,
+		},
+		{
+			name:     "tar.bz2",
+			filename: "deep/folder/python-dotenv-1.0.0.tar.bz2",
+			want:     true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isTarBZip2File(tt.filename); got != tt.want {
 				t.Errorf("isTarGZipFile() = %v, want %v", got, tt.want)
 			}
 		})
@@ -413,6 +460,13 @@ func TestInMemFingerprintingCompressedContent(t *testing.T) {
 			expected:    1,
 			suffix:      "newtonsoft.json.13.0.3.nupkg",
 			shouldUnzip: false,
+		},
+		{
+			name:        "BZip2",
+			path:        "testdata/archive/bz2",
+			expected:    10,
+			suffix:      "stuf-0.1.tar.bz2",
+			shouldUnzip: true,
 		},
 	}
 
