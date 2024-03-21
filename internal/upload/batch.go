@@ -161,7 +161,7 @@ func (uploadBatch *uploadBatch) initAnalysis() error {
 		IntegrationName:      uploadBatch.integrationName,
 		CommitName:           uploadBatch.gitMetaObject.CommitName,
 		Author:               uploadBatch.gitMetaObject.Author,
-		VersionHint:          strconv.FormatBool(uploadBatch.versionHint),
+		VersionHint:          uploadBatch.versionHint,
 		DebrickedIntegration: "cli",
 	})
 
@@ -276,7 +276,7 @@ type uploadFinish struct {
 	CommitName           string `json:"commitName"`
 	Author               string `json:"author"`
 	DebrickedIntegration string `json:"debrickedIntegration"`
-	VersionHint          string `json:"versionHint"`
+	VersionHint          bool   `json:"versionHint"`
 }
 
 func getRelativeFilePath(filePath string) string {
