@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"archive/zip"
 	"bufio"
+	"compress/bzip2"
 	"compress/gzip"
 	"errors"
 	"fmt"
@@ -47,6 +48,7 @@ var EXCLUDED_FILES = []string{
 
 var ZIP_FILE_ENDINGS = []string{".jar", ".nupkg", ".war", ".zip", ".ear"}
 var TAR_GZIP_FILE_ENDINGS = []string{".tgz", ".tar.gz"}
+var TAR_BZIP2_FILE_ENDINGS = []string{".tar.bz2"}
 
 const HASH_SIZE = 16
 
@@ -182,6 +184,9 @@ func computeHashForArchive(path string, exclusions []string) ([]FileFingerprint,
 	}
 	if isTarGZipFile(path) {
 		return inMemFingerprintTarGZipContent(path, exclusions)
+	}
+	if isTarBZip2File(path) {
+		return inMemFingerprintTarBZip2Content(path, exclusions)
 	}
 
 	return nil, nil
@@ -340,6 +345,16 @@ func isTarGZipFile(filename string) bool {
 	return false
 }
 
+func isTarBZip2File(filename string) bool {
+	for _, file := range TAR_BZIP2_FILE_ENDINGS {
+		if strings.HasSuffix(filename, file) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func shouldProcessTarHeader(header tar.Header, exclusions []string, longPath string) bool {
 	if header.Typeflag != tar.TypeReg {
 		return false
@@ -352,6 +367,44 @@ func shouldProcessTarHeader(header tar.Header, exclusions []string, longPath str
 	}
 
 	return true
+}
+
+func inMemFingerprintTarBZip2Content(filename string, exclusions []string) ([]FileFingerprint, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	bz2Reader := bzip2.NewReader(file)
+	tarReader := tar.NewReader(bz2Reader)
+	fingerprints := []FileFingerprint{}
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return nil, err
+		}
+		longPath := filepath.Join(filename, header.Name) // #nosec
+		fmt.Println("Extracted:", longPath)
+		if !shouldProcessTarHeader(*header, exclusions, longPath) {
+			continue
+		}
+		hasher := newHasher()
+
+		_, err = io.Copy(hasher, tarReader) // #nosec
+		if err != nil {
+			return nil, err
+		}
+
+		fingerprints = append(fingerprints, FileFingerprint{
+			path:          longPath,
+			contentLength: header.Size,
+			fingerprint:   hasher.Sum(nil),
+		})
+	}
+
+	return fingerprints, nil
 }
 
 func inMemFingerprintTarGZipContent(filename string, exclusions []string) ([]FileFingerprint, error) {
