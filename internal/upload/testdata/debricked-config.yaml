@@ -1,0 +1,6 @@
+overrides:
+  - pURL: "pkg:npm/lodash"
+    version: "1.0.0" # optional: if left out, we will decide version
+    fileRegex: ".*/lodash/.*" # PCRE2 
+  - pURL: "pkg:maven/org.openjfx/javafx-base"
+    fileRegex: "subpath/org.openjfx/.*"

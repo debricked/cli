@@ -31,6 +31,7 @@ var callgraph bool
 var npmPreferred bool
 var callgraphUploadTimeout int
 var callgraphGenerateTimeout int
+var configFilePath string
 
 const (
 	RepositoryFlag               = "repository"
@@ -51,6 +52,7 @@ const (
 	CallGraphGenerateTimeoutFlag = "callgraph-generate-timeout"
 	NpmPreferredFlag             = "prefer-npm"
 	JsonFilePathFlag             = "json-path"
+	ConfigFilePathFlag           = "config-path"
 )
 
 var scanCmdError error
@@ -79,7 +81,7 @@ If the given path contains a git repository all flags but "integration" will be 
 		`name of integration used to trigger scan. For example "GitHub Actions"`,
 	)
 	cmd.Flags().StringVarP(&jsonFilePath, JsonFilePathFlag, "j", "", "write upload result as json to provided path")
-
+	cmd.Flags().StringVar(&configFilePath, ConfigFilePathFlag, "debricked-config.yaml", "read debricked configuration from provided path")
 	fileExclusionExample := filepath.Join("*", "**.lock")
 	dirExclusionExample := filepath.Join("**", "node_modules", "**")
 	exampleFlags := fmt.Sprintf("-e \"%s\" -e \"%s\"", fileExclusionExample, dirExclusionExample)
@@ -177,6 +179,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			CallGraph:                viper.GetBool(CallGraphFlag),
 			CallGraphUploadTimeout:   viper.GetInt(CallGraphUploadTimeoutFlag),
 			CallGraphGenerateTimeout: viper.GetInt(CallGraphGenerateTimeoutFlag),
+			ConfigPath:               viper.GetString(ConfigFilePathFlag),
 		}
 		if s != nil {
 			scanCmdError = (*s).Scan(options)

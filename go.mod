@@ -16,6 +16,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/vifraa/gopom v0.2.1
 	lukechampine.com/blake3 v1.2.1
+	sigs.k8s.io/yaml v1.4.0
 )
 
 require (
