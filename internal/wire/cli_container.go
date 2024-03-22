@@ -4,8 +4,6 @@ import (
 	"fmt"
 
 	"github.com/debricked/cli/internal/callgraph"
-	"github.com/debricked/cli/internal/callgraph/finder"
-	callgraphFinder "github.com/debricked/cli/internal/callgraph/finder"
 	callgraphStrategy "github.com/debricked/cli/internal/callgraph/strategy"
 	"github.com/debricked/cli/internal/ci"
 	"github.com/debricked/cli/internal/client"
@@ -76,9 +74,7 @@ func (cc *CliContainer) wire() error {
 	)
 	cc.cgStrategyFactory = callgraphStrategy.NewStrategyFactory()
 	cc.cgScheduler = callgraph.NewScheduler(10)
-	cc.cgFinder = callgraphFinder.Finder{}
 	cc.callgraph = callgraph.NewGenerator(
-		cc.cgFinder,
 		cc.cgStrategyFactory,
 		cc.cgScheduler,
 	)
@@ -114,7 +110,6 @@ type CliContainer struct {
 	licenseReporter       licenseReport.Reporter
 	vulnerabilityReporter vulnerabilityReport.Reporter
 	callgraph             callgraph.IGenerator
-	cgFinder              finder.IFinder
 	cgScheduler           callgraph.IScheduler
 	cgStrategyFactory     callgraphStrategy.IFactory
 }

@@ -18,7 +18,6 @@ import (
 type Strategy struct {
 	config     conf.IConfig
 	cmdFactory ICmdFactory
-	files      []string
 	paths      []string
 	exclusions []string
 	finder     finder.IFinder
@@ -37,6 +36,13 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 
 	var roots []string
 	var err error
+	files, err := s.finder.FindFiles(s.paths, s.exclusions)
+	if err != nil {
+		strategyWarning("Error while finding files: " + err.Error())
+
+		return jobs, err
+	}
+
 	// NOTE: Removed to meet cyclic complexity limit of 10.
 	// pmConfig := s.config.PackageManager()
 	// switch pmConfig {
@@ -46,14 +52,12 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	// 	roots, err = s.finder.FindMavenRoots(s.files)
 	// }
 
-	roots, err = s.finder.FindMavenRoots(s.files)
+	roots, err = s.finder.FindRoots(files)
 	if err != nil {
 		strategyWarning("Error while finding roots: " + err.Error())
 
 		return jobs, err
 	}
-
-	files := s.files
 
 	if s.config.Build() {
 		err = buildProjects(s, roots)
@@ -66,7 +70,7 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 		files, _ = s.finder.FindFiles(s.paths, s.exclusions)
 	}
 
-	javaClassDirs, _ := s.finder.FindJavaClassDirs(files, false)
+	javaClassDirs, _ := s.finder.FindDependencyDirs(files, false)
 	absRoots, _ := finder.ConvertPathsToAbsPaths(roots)
 	absClassDirs, _ := finder.ConvertPathsToAbsPaths(javaClassDirs)
 	rootClassMapping := finder.MapFilesToDir(absRoots, absClassDirs)
@@ -100,8 +104,8 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	return jobs, nil
 }
 
-func NewStrategy(config conf.IConfig, files []string, paths []string, exclusions []string, finder finder.IFinder, ctx cgexec.IContext) Strategy {
-	return Strategy{config, CmdFactory{}, files, paths, exclusions, finder, ctx}
+func NewStrategy(config conf.IConfig, paths []string, exclusions []string, finder finder.IFinder, ctx cgexec.IContext) Strategy {
+	return Strategy{config, CmdFactory{}, paths, exclusions, finder, ctx}
 }
 
 func strategyWarning(errMsg string) {
