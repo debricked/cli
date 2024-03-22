@@ -138,7 +138,9 @@ func isInExcludedDir(path string) bool {
 }
 
 type IFingerprint interface {
-	FingerprintFiles(rootPath string, exclusions []string, fingerprintCompressedContent bool) (Fingerprints, error)
+	FingerprintFiles(
+		rootPath string, exclusions []string, fingerprintCompressedContent bool, minFingerprintContentLength int,
+	) (Fingerprints, error)
 }
 
 type Fingerprinter struct {
@@ -163,7 +165,9 @@ func (f FileFingerprint) ToString() string {
 	return fmt.Sprintf("file=%x,%d,%s", f.fingerprint, f.contentLength, path)
 }
 
-func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string, fingerprintCompressedContent bool) (Fingerprints, error) {
+func (f *Fingerprinter) FingerprintFiles(
+	rootPath string, exclusions []string, fingerprintCompressedContent bool, minFingerprintContentLength int,
+) (Fingerprints, error) {
 	if len(rootPath) == 0 {
 		rootPath = filepath.Base("")
 	}
@@ -181,14 +185,22 @@ func (f *Fingerprinter) FingerprintFiles(rootPath string, exclusions []string, f
 			return err
 		}
 
-		fingerprintsZip, err := computeHashForFileAndZip(fileInfo, path, exclusions, fingerprintCompressedContent)
+		fileFingerprints, err := computeHashForFileAndZip(fileInfo, path, exclusions, fingerprintCompressedContent)
 		if err != nil {
 			return err
 		}
-		if len(fingerprintsZip) != 0 {
-			fingerprints.Entries = append(fingerprints.Entries, fingerprintsZip...)
 
-			nbFiles += len(fingerprintsZip)
+		var filteredFileFingerprints []FileFingerprint
+		for _, fileFingerprint := range fileFingerprints {
+			if fileFingerprint.contentLength >= int64(minFingerprintContentLength) {
+				filteredFileFingerprints = append(filteredFileFingerprints, fileFingerprint)
+			}
+		}
+
+		if len(filteredFileFingerprints) != 0 {
+			fingerprints.Entries = append(fingerprints.Entries, filteredFileFingerprints...)
+
+			nbFiles += len(filteredFileFingerprints)
 
 			if nbFiles%100 == 0 {
 				f.spinnerManager.SetSpinnerMessage(spinner, spinnerMessage, fmt.Sprintf("%d", nbFiles))
@@ -225,7 +237,9 @@ func computeHashForArchive(path string, exclusions []string) ([]FileFingerprint,
 	return nil, nil
 }
 
-func computeHashForFileAndZip(fileInfo os.FileInfo, path string, exclusions []string, fingerprintCompressedContent bool) ([]FileFingerprint, error) {
+func computeHashForFileAndZip(
+	fileInfo os.FileInfo, path string, exclusions []string, fingerprintCompressedContent bool,
+) ([]FileFingerprint, error) {
 	if !shouldProcessFile(fileInfo, exclusions, path) {
 		return nil, nil
 	}

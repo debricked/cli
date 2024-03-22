@@ -167,7 +167,7 @@ func TestFingerprinterInterface(t *testing.T) {
 
 func TestFingerprintFiles(t *testing.T) {
 	fingerprinter := NewFingerprinter()
-	fingerprints, err := fingerprinter.FingerprintFiles("testdata/fingerprinter", []string{}, true)
+	fingerprints, err := fingerprinter.FingerprintFiles("testdata/fingerprinter", []string{}, true, 0)
 	assert.NoError(t, err)
 	assert.NotNil(t, fingerprints)
 	assert.NotEmpty(t, fingerprints)
@@ -175,7 +175,7 @@ func TestFingerprintFiles(t *testing.T) {
 	assert.Equal(t, "file=634c5485de8e22b27094affadd8a6e3b,21,testdata/fingerprinter/testfile.py", fingerprints.Entries[0].ToString())
 
 	// Test no file
-	fingerprints, err = fingerprinter.FingerprintFiles("", []string{}, true)
+	fingerprints, err = fingerprinter.FingerprintFiles("", []string{}, true, 0)
 	assert.NoError(t, err)
 	assert.NotNil(t, fingerprints)
 	assert.NotEmpty(t, fingerprints)
@@ -487,7 +487,7 @@ func TestInMemFingerprintingCompressedContent(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fingerprinter := NewFingerprinter()
-			fingerprints, err := fingerprinter.FingerprintFiles(tt.path, []string{}, tt.shouldUnzip)
+			fingerprints, err := fingerprinter.FingerprintFiles(tt.path, []string{}, tt.shouldUnzip, 0)
 			assert.NoError(t, err)
 			assert.NotNil(t, fingerprints)
 			assert.NotEmpty(t, fingerprints)

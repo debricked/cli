@@ -43,25 +43,26 @@ type DebrickedScanner struct {
 }
 
 type DebrickedOptions struct {
-	Path                     string
-	Resolve                  bool
-	Fingerprint              bool
-	CallGraph                bool
-	Exclusions               []string
-	Verbose                  bool
-	Regenerate               int
-	VersionHint              bool
-	RepositoryName           string
-	CommitName               string
-	BranchName               string
-	CommitAuthor             string
-	RepositoryUrl            string
-	IntegrationName          string
-	JsonFilePath             string
-	NpmPreferred             bool
-	PassOnTimeOut            bool
-	CallGraphUploadTimeout   int
-	CallGraphGenerateTimeout int
+	Path                        string
+	Resolve                     bool
+	Fingerprint                 bool
+	CallGraph                   bool
+	Exclusions                  []string
+	Verbose                     bool
+	Regenerate                  int
+	VersionHint                 bool
+	RepositoryName              string
+	CommitName                  string
+	BranchName                  string
+	CommitAuthor                string
+	RepositoryUrl               string
+	IntegrationName             string
+	JsonFilePath                string
+	NpmPreferred                bool
+	PassOnTimeOut               bool
+	CallGraphUploadTimeout      int
+	CallGraphGenerateTimeout    int
+	MinFingerprintContentLength int
 }
 
 func NewDebrickedScanner(
@@ -158,7 +159,9 @@ func (dScanner *DebrickedScanner) scanResolve(options DebrickedOptions) error {
 
 func (dScanner *DebrickedScanner) scanFingerprint(options DebrickedOptions) error {
 	if options.Fingerprint {
-		fingerprints, err := dScanner.fingerprint.FingerprintFiles(options.Path, file.DefaultExclusionsFingerprint(), false)
+		fingerprints, err := dScanner.fingerprint.FingerprintFiles(
+			options.Path, file.DefaultExclusionsFingerprint(), false, options.MinFingerprintContentLength,
+		)
 		if err != nil {
 			return err
 		}
