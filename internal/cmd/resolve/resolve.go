@@ -13,6 +13,7 @@ import (
 
 var (
 	exclusions           = file.Exclusions()
+	inclusions           []string
 	verbose              bool
 	npmPreferred         bool
 	regenerate           int
@@ -21,6 +22,7 @@ var (
 
 const (
 	ExclusionFlag        = "exclusion"
+	InclusionFlag        = "inclusion"
 	VerboseFlag          = "verbose"
 	NpmPreferredFlag     = "prefer-npm"
 	RegenerateFlag       = "regenerate"
@@ -56,6 +58,13 @@ Exclude flags could alternatively be set using DEBRICKED_EXCLUSIONS="path1,path2
 
 Example: 
 $ debricked resolve . `+exampleFlags)
+	cmd.Flags().StringArrayVar(
+		&inclusions,
+		InclusionFlag,
+		[]string{},
+		`Forces inclusion of specified terms, see exclusion flag for more information on supported terms.
+Examples: 
+$ debricked scan . --include /node_modules/`)
 	regenerateDoc := strings.Join(
 		[]string{
 			"Toggles regeneration of already existing lock files between 3 modes:\n",
@@ -107,6 +116,7 @@ func RunE(resolver resolution.IResolver) func(_ *cobra.Command, args []string) e
 		}
 		options := resolution.DebrickedOptions{
 			Exclusions:           viper.GetStringSlice(ExclusionFlag),
+			Inclusions:           viper.GetStringSlice(InclusionFlag),
 			Verbose:              viper.GetBool(VerboseFlag),
 			Regenerate:           viper.GetInt(RegenerateFlag),
 			NpmPreferred:         viper.GetBool(NpmPreferredFlag),

@@ -11,7 +11,7 @@ import (
 type IFinder interface {
 	FindMavenRoots(files []string) ([]string, error)
 	FindJavaClassDirs(files []string, findJars bool) ([]string, error)
-	FindFiles(paths []string, exclusions []string) ([]string, error)
+	FindFiles(paths []string, exclusions []string, inclusions []string) ([]string, error)
 }
 
 type Finder struct{}
@@ -44,7 +44,7 @@ func (f Finder) FindJavaClassDirs(files []string, findJars bool) ([]string, erro
 	return dirJarFiles, nil
 }
 
-func (f Finder) FindFiles(roots []string, exclusions []string) ([]string, error) {
+func (f Finder) FindFiles(roots []string, exclusions []string, inclusions []string) ([]string, error) {
 	files := make(map[string]bool)
 	var err error = nil
 
@@ -54,7 +54,7 @@ func (f Finder) FindFiles(roots []string, exclusions []string) ([]string, error)
 				return err
 			}
 
-			excluded := file.Excluded(exclusions, path)
+			excluded := file.Excluded(exclusions, inclusions, path)
 
 			if info.IsDir() && excluded {
 				return filepath.SkipDir

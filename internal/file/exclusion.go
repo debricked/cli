@@ -9,6 +9,7 @@ import (
 )
 
 const debrickedExclusionEnvVar = "DEBRICKED_EXCLUSIONS"
+const debrickedInclusionEnvVar = "DEBRICKED_INCLUSIONS"
 
 func DefaultExclusions() []string {
 	return []string{
@@ -50,7 +51,14 @@ func DefaultExclusionsFingerprint() []string {
 	return output
 }
 
-func Excluded(exclusions []string, path string) bool {
+func Excluded(exclusions []string, inclusions []string, path string) bool {
+	for _, inclusion := range inclusions {
+		ex := filepath.Clean(inclusion)
+		matched, _ := doublestar.PathMatch(ex, path)
+		if matched {
+			return false
+		}
+	}
 	for _, exclusion := range exclusions {
 		ex := filepath.Clean(exclusion)
 		matched, _ := doublestar.PathMatch(ex, path)
