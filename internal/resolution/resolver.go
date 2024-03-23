@@ -60,6 +60,7 @@ type IOptions interface{}
 type DebrickedOptions struct {
 	Path                 string
 	Exclusions           []string
+	Inclusions           []string
 	Verbose              bool
 	Regenerate           int
 	NpmPreferred         bool
@@ -146,7 +147,7 @@ func (r Resolver) Resolve(paths []string, options IOptions) (IResolution, error)
 	if !ok {
 		return nil, ErrBadOpts
 	}
-	files, err := r.refinePaths(paths, dOptions.Exclusions, dOptions.Regenerate)
+	files, err := r.refinePaths(paths, dOptions.Exclusions, dOptions.Inclusions, dOptions.Regenerate)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +192,7 @@ func (r Resolver) Resolve(paths []string, options IOptions) (IResolution, error)
 	return resolution, err
 }
 
-func (r Resolver) refinePaths(paths []string, exclusions []string, regenerate int) ([]string, error) {
+func (r Resolver) refinePaths(paths []string, exclusions []string, inclusions []string, regenerate int) ([]string, error) {
 	var fileSet = map[string]bool{}
 	var dirs []string
 	for _, arg := range paths {
@@ -214,7 +215,7 @@ func (r Resolver) refinePaths(paths []string, exclusions []string, regenerate in
 		}
 	}
 
-	err := r.searchDirs(fileSet, dirs, exclusions, regenerate)
+	err := r.searchDirs(fileSet, dirs, exclusions, inclusions, regenerate)
 	if err != nil {
 		return nil, err
 	}
@@ -227,9 +228,9 @@ func (r Resolver) refinePaths(paths []string, exclusions []string, regenerate in
 	return files, nil
 }
 
-func (r Resolver) searchDirs(fileSet map[string]bool, dirs []string, exclusions []string, regenerate int) error {
+func (r Resolver) searchDirs(fileSet map[string]bool, dirs []string, exclusions []string, inclusions []string, regenerate int) error {
 	for _, dir := range dirs {
-		err := r.processDir(fileSet, dir, exclusions, regenerate)
+		err := r.processDir(fileSet, dir, exclusions, inclusions, regenerate)
 		if err != nil {
 			return err
 		}
@@ -238,10 +239,11 @@ func (r Resolver) searchDirs(fileSet map[string]bool, dirs []string, exclusions 
 	return nil
 }
 
-func (r Resolver) processDir(fileSet map[string]bool, dir string, exclusions []string, regenerate int) error {
+func (r Resolver) processDir(fileSet map[string]bool, dir string, exclusions []string, inclusions []string, regenerate int) error {
 	fileGroups, err := r.finder.GetGroups(
 		dir,
 		exclusions,
+		inclusions,
 		false,
 		file.StrictAll,
 	)

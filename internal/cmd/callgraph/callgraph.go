@@ -13,25 +13,26 @@ import (
 	"github.com/spf13/viper"
 )
 
-var exclusions = file.DefaultExclusions()
+var (
+	exclusions         = file.DefaultExclusions()
+	inclusions         []string
+	buildDisabled      bool
+	generateTimeout    int
+	languages          string
+	supportedLanguages = []string{"java", "golang"}
+	languageMap        = map[string]string{
+		"java":   "maven",
+		"golang": "go",
+	}
+)
 
 const (
 	ExclusionFlag       = "exclusion"
+	InclusionFlag       = "inclusion"
 	NoBuildFlag         = "no-build"
 	GenerateTimeoutFlag = "generate-timeout"
 	LanguagesFlag       = "languages"
 )
-
-var buildDisabled bool
-var generateTimeout int
-var languages string
-
-var supportedLanguages = []string{"java", "golang"}
-
-var languageMap = map[string]string{
-	"java":   "maven",
-	"golang": "go",
-}
 
 func NewCallgraphCmd(generator callgraph.IGenerator) *cobra.Command {
 	cmd := &cobra.Command{
@@ -68,6 +69,13 @@ Exclude flags could alternatively be set using DEBRICKED_EXCLUSIONS="path1,path2
 
 Example: 
 $ debricked callgraph . `+exampleFlags)
+	cmd.Flags().StringArrayVar(
+		&inclusions,
+		InclusionFlag,
+		[]string{},
+		`Forces inclusion of specified terms, see exclusion flag for more information on supported terms.
+Examples: 
+$ debricked scan . --include /node_modules/`)
 	cmd.Flags().BoolVar(&buildDisabled, NoBuildFlag, false, `Do not automatically build all source code in the project to enable call graph generation.
 This option requires a pre-built project. For more detailed documentation on the callgraph generation, visit our portal:
 https://portal.debricked.com/debricked-cli-63/debricked-cli-documentation-298?tid=298&fid=63#callgraph`)
@@ -123,7 +131,7 @@ func RunE(callgraph callgraph.IGenerator) func(_ *cobra.Command, args []string) 
 			configs = append(configs, conf.NewConfig(language, args, map[string]string{}, !buildDisabled, languageMap[language]))
 		}
 
-		err = callgraph.GenerateWithTimer(args, viper.GetStringSlice(ExclusionFlag), configs, viper.GetInt(GenerateTimeoutFlag))
+		err = callgraph.GenerateWithTimer(args, viper.GetStringSlice(ExclusionFlag), viper.GetStringSlice(InclusionFlag), configs, viper.GetInt(GenerateTimeoutFlag))
 
 		return err
 	}

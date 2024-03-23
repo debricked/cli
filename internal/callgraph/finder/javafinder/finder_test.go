@@ -36,14 +36,14 @@ func TestFindDependencyDirs(t *testing.T) {
 
 func TestFindFiles(t *testing.T) {
 	f := JavaFinder{}
-	files, err := f.FindFiles([]string{"."}, nil)
+	files, err := f.FindFiles([]string{"."}, nil, nil)
 	assert.Nil(t, err)
 	assert.NotEmpty(t, files)
 }
 
 func TestFindFilesErr(t *testing.T) {
 	f := JavaFinder{}
-	files, err := f.FindFiles([]string{"totaly-not-a-valid-path-123123123"}, nil)
+	files, err := f.FindFiles([]string{"totaly-not-a-valid-path-123123123"}, nil, nil)
 	assert.NotNil(t, err)
 	assert.Empty(t, files)
 }
@@ -52,19 +52,19 @@ func TestFindFilesExcluded(t *testing.T) {
 	f := JavaFinder{}
 	project_path, err := filepath.Abs("testdata/test_project")
 	assert.Nil(t, err)
-	files, err := f.FindFiles([]string{project_path}, nil)
+	files, err := f.FindFiles([]string{project_path}, nil, nil)
 	assert.Nil(t, err)
 	assert.Len(t, files, 2)
-	files, err = f.FindFiles([]string{project_path}, []string{"**/excluded_folder/**"})
+	files, err = f.FindFiles([]string{project_path}, []string{"**/excluded_folder/**"}, nil)
 	assert.Nil(t, err)
 	assert.Len(t, files, 1)
-	files, err = f.FindFiles([]string{project_path}, []string{"excluded_folder"})
+	files, err = f.FindFiles([]string{project_path}, []string{"excluded_folder"}, nil)
 	assert.Nil(t, err)
 	assert.Len(t, files, 2)
-	files, err = f.FindFiles([]string{project_path}, []string{"**/excluded*/**"})
+	files, err = f.FindFiles([]string{project_path}, []string{"**/excluded*/**"}, nil)
 	assert.Nil(t, err)
 	assert.Len(t, files, 1)
-	files, err = f.FindFiles([]string{project_path}, []string{"**/excluded_file.txt"})
+	files, err = f.FindFiles([]string{project_path}, []string{"**/excluded_file.txt"}, nil)
 	assert.Nil(t, err)
 	assert.Len(t, files, 1)
 }

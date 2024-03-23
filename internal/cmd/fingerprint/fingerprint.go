@@ -11,12 +11,14 @@ import (
 )
 
 var exclusions = file.DefaultExclusionsFingerprint()
+var inclusions []string
 var shouldFingerprintCompressedContent bool
 var outputDir string
 var minFingerprintContentLength int
 
 const (
 	ExclusionFlag                   = "exclusion"
+	InclusionFlag                   = "inclusion"
 	FingerprintCompressedContent    = "fingerprint-compressed-content"
 	OutputDirFlag                   = "output-dir"
 	MinFingerprintContentLengthFlag = "min-fingerprint-content-length"
@@ -49,6 +51,13 @@ Special Terms | Meaning
 
 Example: 
 $ debricked files fingerprint . `+exampleFlags)
+	cmd.Flags().StringArrayVar(
+		&inclusions,
+		InclusionFlag,
+		[]string{},
+		`Forces inclusion of specified terms, see exclusion flag for more information on supported terms.
+Examples: 
+$ debricked scan . --include /node_modules/`)
 	cmd.Flags().BoolVar(&shouldFingerprintCompressedContent, FingerprintCompressedContent, false, `Fingerprint the contents of compressed files by unpacking them in memory, Supported files: `+fmt.Sprintf("%v", fingerprint.ZIP_FILE_ENDINGS))
 	cmd.Flags().StringVar(&outputDir, OutputDirFlag, ".", "The directory to write the output file to")
 	cmd.Flags().IntVar(&minFingerprintContentLength, MinFingerprintContentLengthFlag, 45, "Set minimum content length (in bytes) for files to fingerprint. Defaults to 45 bytes.")
@@ -64,7 +73,7 @@ func RunE(f fingerprint.IFingerprint) func(_ *cobra.Command, args []string) erro
 			path = args[0]
 		}
 
-		output, err := f.FingerprintFiles(path, exclusions, shouldFingerprintCompressedContent, minFingerprintContentLength)
+		output, err := f.FingerprintFiles(path, exclusions, inclusions, shouldFingerprintCompressedContent, minFingerprintContentLength)
 
 		if err != nil {
 			return err

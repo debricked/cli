@@ -139,7 +139,7 @@ func isInExcludedDir(path string) bool {
 
 type IFingerprint interface {
 	FingerprintFiles(
-		rootPath string, exclusions []string, fingerprintCompressedContent bool, minFingerprintContentLength int,
+		rootPath string, exclusions []string, inclusions []string, fingerprintCompressedContent bool, minFingerprintContentLength int,
 	) (Fingerprints, error)
 }
 
@@ -166,7 +166,7 @@ func (f FileFingerprint) ToString() string {
 }
 
 func (f *Fingerprinter) FingerprintFiles(
-	rootPath string, exclusions []string, fingerprintCompressedContent bool, minFingerprintContentLength int,
+	rootPath string, exclusions []string, inclusions []string, fingerprintCompressedContent bool, minFingerprintContentLength int,
 ) (Fingerprints, error) {
 	if len(rootPath) == 0 {
 		rootPath = filepath.Base("")
@@ -185,7 +185,7 @@ func (f *Fingerprinter) FingerprintFiles(
 			return err
 		}
 
-		fileFingerprints, err := computeHashForFileAndZip(fileInfo, path, exclusions, fingerprintCompressedContent)
+		fileFingerprints, err := computeHashForFileAndZip(fileInfo, path, exclusions, inclusions, fingerprintCompressedContent)
 		if err != nil {
 			return err
 		}
@@ -223,31 +223,31 @@ func (f *Fingerprinter) FingerprintFiles(
 	return fingerprints, err
 }
 
-func computeHashForArchive(path string, exclusions []string) ([]FileFingerprint, error) {
+func computeHashForArchive(path string, exclusions []string, inclusions []string) ([]FileFingerprint, error) {
 	if isZipFile(path) {
-		return inMemFingerprintZipContent(path, exclusions)
+		return inMemFingerprintZipContent(path, exclusions, inclusions)
 	}
 	if isTarGZipFile(path) {
-		return inMemFingerprintTarGZipContent(path, exclusions)
+		return inMemFingerprintTarGZipContent(path, exclusions, inclusions)
 	}
 	if isTarBZip2File(path) {
-		return inMemFingerprintTarBZip2Content(path, exclusions)
+		return inMemFingerprintTarBZip2Content(path, exclusions, inclusions)
 	}
 
 	return nil, nil
 }
 
 func computeHashForFileAndZip(
-	fileInfo os.FileInfo, path string, exclusions []string, fingerprintCompressedContent bool,
+	fileInfo os.FileInfo, path string, exclusions []string, inclusions []string, fingerprintCompressedContent bool,
 ) ([]FileFingerprint, error) {
-	if !shouldProcessFile(fileInfo, exclusions, path) {
+	if !shouldProcessFile(fileInfo, exclusions, inclusions, path) {
 		return nil, nil
 	}
 
 	var fingerprints []FileFingerprint
 
 	if fingerprintCompressedContent {
-		fingerprintsArchive, err := computeHashForArchive(path, exclusions)
+		fingerprintsArchive, err := computeHashForArchive(path, exclusions, inclusions)
 		if err != nil {
 			if errors.Is(err, zip.ErrFormat) {
 				fmt.Printf("WARNING: Could not unpack and fingerprint contents of compressed file [%s]. Error: %v\n", path, err)
@@ -277,12 +277,12 @@ func isSymlink(filename string) (bool, error) {
 
 var isSymlinkFunc = isSymlink
 
-func shouldProcessFile(fileInfo os.FileInfo, exclusions []string, path string) bool {
+func shouldProcessFile(fileInfo os.FileInfo, exclusions []string, inclusions []string, path string) bool {
 	if fileInfo.IsDir() {
 		return false
 	}
 
-	if file.Excluded(exclusions, path) {
+	if file.Excluded(exclusions, inclusions, path) {
 		return false
 	}
 
@@ -402,21 +402,21 @@ func isTarBZip2File(filename string) bool {
 	return false
 }
 
-func shouldProcessTarHeader(header tar.Header, exclusions []string, longPath string) bool {
+func shouldProcessTarHeader(header tar.Header, exclusions []string, inclusions []string, longPath string) bool {
 	if header.Typeflag != tar.TypeReg {
 		return false
 	}
 	if filepath.IsAbs(header.Name) || strings.HasPrefix(header.Name, "..") {
 		return false
 	}
-	if !shouldProcessFile(header.FileInfo(), exclusions, longPath) {
+	if !shouldProcessFile(header.FileInfo(), exclusions, inclusions, longPath) {
 		return false
 	}
 
 	return true
 }
 
-func inMemFingerprintTarBZip2Content(filename string, exclusions []string) ([]FileFingerprint, error) {
+func inMemFingerprintTarBZip2Content(filename string, exclusions []string, inclusions []string) ([]FileFingerprint, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -434,7 +434,7 @@ func inMemFingerprintTarBZip2Content(filename string, exclusions []string) ([]Fi
 		}
 		longPath := filepath.Join(filename, header.Name) // #nosec
 		fmt.Println("Extracted:", longPath)
-		if !shouldProcessTarHeader(*header, exclusions, longPath) {
+		if !shouldProcessTarHeader(*header, exclusions, inclusions, longPath) {
 			continue
 		}
 		hasher := newHasher()
@@ -454,7 +454,7 @@ func inMemFingerprintTarBZip2Content(filename string, exclusions []string) ([]Fi
 	return fingerprints, nil
 }
 
-func inMemFingerprintTarGZipContent(filename string, exclusions []string) ([]FileFingerprint, error) {
+func inMemFingerprintTarGZipContent(filename string, exclusions []string, inclusions []string) ([]FileFingerprint, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -474,7 +474,7 @@ func inMemFingerprintTarGZipContent(filename string, exclusions []string) ([]Fil
 			return nil, err
 		}
 		longPath := filepath.Join(filename, header.Name) // #nosec
-		if !shouldProcessTarHeader(*header, exclusions, longPath) {
+		if !shouldProcessTarHeader(*header, exclusions, inclusions, longPath) {
 			continue
 		}
 		hasher := newHasher()
@@ -494,7 +494,7 @@ func inMemFingerprintTarGZipContent(filename string, exclusions []string) ([]Fil
 	return fingerprints, nil
 }
 
-func inMemFingerprintZipContent(filename string, exclusions []string) ([]FileFingerprint, error) {
+func inMemFingerprintZipContent(filename string, exclusions []string, inclusions []string) ([]FileFingerprint, error) {
 	r, err := zip.OpenReader(filename)
 
 	if err != nil {
@@ -510,7 +510,7 @@ func inMemFingerprintZipContent(filename string, exclusions []string) ([]FileFin
 		}
 		longFileName := filepath.Join(filename, f.Name) // #nosec
 
-		if !shouldProcessFile(f.FileInfo(), exclusions, longFileName) {
+		if !shouldProcessFile(f.FileInfo(), exclusions, inclusions, longFileName) {
 			continue
 		}
 		rc, err := f.Open()

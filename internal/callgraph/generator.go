@@ -11,8 +11,8 @@ import (
 )
 
 type IGenerator interface {
-	GenerateWithTimer(paths []string, exclusions []string, configs []config.IConfig, timeout int) error
-	Generate(paths []string, exclusions []string, configs []config.IConfig, ctx cgexec.IContext) error
+	GenerateWithTimer(paths []string, exclusions []string, inclusions []string, configs []config.IConfig, timeout int) error
+	Generate(paths []string, exclusions []string, inclusions []string, configs []config.IConfig, ctx cgexec.IContext) error
 }
 
 type Generator struct {
@@ -32,13 +32,13 @@ func NewGenerator(
 	}
 }
 
-func (g *Generator) GenerateWithTimer(paths []string, exclusions []string, configs []config.IConfig, timeout int) error {
+func (g *Generator) GenerateWithTimer(paths []string, exclusions []string, inclusions []string, configs []config.IConfig, timeout int) error {
 	result := make(chan error)
 	ctx, cancel := cgexec.NewContext(timeout)
 	defer cancel()
 
 	go func() {
-		result <- g.Generate(paths, exclusions, configs, &ctx)
+		result <- g.Generate(paths, exclusions, inclusions, configs, &ctx)
 	}()
 
 	// Wait for the result or timeout
@@ -47,14 +47,14 @@ func (g *Generator) GenerateWithTimer(paths []string, exclusions []string, confi
 	return err
 }
 
-func (g *Generator) Generate(paths []string, exclusions []string, configs []config.IConfig, ctx cgexec.IContext) error {
+func (g *Generator) Generate(paths []string, exclusions []string, inclusions []string, configs []config.IConfig, ctx cgexec.IContext) error {
 	targetPath := ".debrickedTmpFolder"
 	debrickedExclusions := []string{targetPath}
 	exclusions = append(exclusions, debrickedExclusions...)
 
 	var jobs []job.IJob
 	for _, config := range configs {
-		s, strategyErr := g.strategyFactory.Make(config, paths, exclusions, ctx)
+		s, strategyErr := g.strategyFactory.Make(config, paths, exclusions, inclusions, ctx)
 		if strategyErr == nil {
 			newJobs, err := s.Invoke()
 			if err != nil {

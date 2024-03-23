@@ -38,7 +38,7 @@ func (f JavaFinder) FindDependencyDirs(files []string, findJars bool) ([]string,
 	return dirJarFiles, nil
 }
 
-func (f JavaFinder) FindFiles(roots []string, exclusions []string) ([]string, error) {
+func (f JavaFinder) FindFiles(roots []string, exclusions []string, inclusions []string) ([]string, error) {
 	files := make(map[string]bool)
 	var err error = nil
 
@@ -48,7 +48,7 @@ func (f JavaFinder) FindFiles(roots []string, exclusions []string) ([]string, er
 				return err
 			}
 
-			excluded := file.Excluded(exclusions, path)
+			excluded := file.Excluded(exclusions, inclusions, path)
 
 			if info.IsDir() && excluded {
 				return filepath.SkipDir

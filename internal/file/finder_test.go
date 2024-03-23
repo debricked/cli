@@ -108,10 +108,11 @@ func TestGetGroups(t *testing.T) {
 	path := ""
 
 	exclusions := []string{"testdata/go/*.mod", "testdata/misc/**"}
+	inclusions := []string{"**/package.json"}
 	excludedFiles := []string{"testdata/go/go.mod", "testdata/misc/requirements.txt", "testdata/misc/Cargo.lock"}
-	const nbrOfGroups = 5
+	const nbrOfGroups = 6
 
-	fileGroups, err := finder.GetGroups(path, exclusions, false, StrictAll)
+	fileGroups, err := finder.GetGroups(path, exclusions, inclusions, false, StrictAll)
 
 	assert.NoError(t, err)
 	assert.Equalf(t, nbrOfGroups, fileGroups.Size(), "failed to assert that %d groups were created. %d was found", nbrOfGroups, fileGroups.Size())
@@ -136,7 +137,7 @@ func TestGetGroupsPIP(t *testing.T) {
 	const nbrOfGroups = 3
 
 	lockfileOnly := false
-	fileGroups, err := finder.GetGroups(path, []string{}, lockfileOnly, StrictAll)
+	fileGroups, err := finder.GetGroups(path, []string{}, []string{}, lockfileOnly, StrictAll)
 
 	assert.NoError(t, err)
 	assert.Equalf(t, nbrOfGroups, fileGroups.Size(), "failed to assert that %d groups were created. %d was found", nbrOfGroups, fileGroups.Size())
@@ -176,7 +177,7 @@ func TestGetGroupsWithOnlyLockFiles(t *testing.T) {
 	setUp(true)
 	path := "testdata/misc"
 	const nbrOfGroups = 2
-	fileGroups, err := finder.GetGroups(path, []string{"**/requirements*.txt", "**/composer.json", "**/composer.lock", "**/go.mod"}, false, StrictAll)
+	fileGroups, err := finder.GetGroups(path, []string{"**/requirements*.txt", "**/composer.json", "**/composer.lock", "**/go.mod"}, []string{}, false, StrictAll)
 	assert.NoError(t, err)
 	assert.Equalf(t, nbrOfGroups, fileGroups.Size(), "failed to assert that %d groups were created. %d was found", nbrOfGroups, fileGroups.Size())
 
@@ -193,7 +194,7 @@ func TestGetGroupsWithTwoFileMatchesInSameDir(t *testing.T) {
 	setUp(true)
 	path := "testdata/pip"
 	const nbrOfGroups = 3
-	fileGroups, err := finder.GetGroups(path, []string{}, false, StrictAll)
+	fileGroups, err := finder.GetGroups(path, []string{}, []string{}, false, StrictAll)
 	assert.NoError(t, err)
 	assert.Equalf(t, nbrOfGroups, fileGroups.Size(), "failed to assert that %d groups were created. %d was found", nbrOfGroups, fileGroups.Size())
 
@@ -220,7 +221,7 @@ func TestGetGroupsWithTwoFileMatchesInSameDir(t *testing.T) {
 
 func TestGetDebrickedConfig(t *testing.T) {
 	path := "testdata"
-	configPath := finder.GetConfigPath(path, nil)
+	configPath := finder.GetConfigPath(path, nil, nil)
 	assert.Equal(t, filepath.Join("testdata", "misc", "debricked-config.yaml"), configPath)
 }
 
@@ -267,7 +268,7 @@ func TestGetGroupsWithStrictFlag(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			filePath := "testdata"
-			fileGroups, err := finder.GetGroups(filePath, []string{}, false, c.strictness)
+			fileGroups, err := finder.GetGroups(filePath, []string{}, []string{}, false, c.strictness)
 			fileGroup := fileGroups.groups[c.testedGroupIndex]
 
 			assert.Nilf(t, err, "failed to assert that no error occurred. Error: %s", err)

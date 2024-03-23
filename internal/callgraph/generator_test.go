@@ -33,7 +33,7 @@ func TestGenerate(t *testing.T) {
 		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven"),
 	}
 	ctx, _ := ctxTestdata.NewContextMock()
-	err := g.Generate([]string{"../../go.mod"}, nil, configs, ctx)
+	err := g.Generate([]string{"../../go.mod"}, []string{}, nil, configs, ctx)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, g.Generation.Jobs())
 }
@@ -47,7 +47,7 @@ func TestGenerateWithTimer(t *testing.T) {
 	configs := []config.IConfig{
 		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven"),
 	}
-	err := g.GenerateWithTimer([]string{"../../go.mod"}, nil, configs, 1000)
+	err := g.GenerateWithTimer([]string{"../../go.mod"}, []string{}, nil, configs, 1000)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, g.Generation.Jobs())
 }
@@ -62,7 +62,7 @@ func TestGenerateInvokeError(t *testing.T) {
 		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven"),
 	}
 	ctx, _ := ctxTestdata.NewContextMock()
-	err := g.Generate([]string{"../../go.mod"}, nil, configs, ctx)
+	err := g.Generate([]string{"../../go.mod"}, []string{}, nil, configs, ctx)
 	assert.NotNil(t, err)
 }
 
@@ -77,7 +77,7 @@ func TestGenerateScheduleError(t *testing.T) {
 		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven"),
 	}
 	ctx, _ := ctxTestdata.NewContextMock()
-	err := g.Generate([]string{"../../go.mod"}, nil, configs, ctx)
+	err := g.Generate([]string{"../../go.mod"}, []string{}, nil, configs, ctx)
 	assert.NotEmpty(t, g.Generation.Jobs())
 	assert.ErrorIs(t, err, errAssertion)
 }
@@ -89,7 +89,7 @@ func TestGenerateDirWithoutConfig(t *testing.T) {
 	)
 
 	ctx, _ := ctxTestdata.NewContextMock()
-	err := g.Generate([]string{"invalid-dir"}, nil, nil, ctx)
+	err := g.Generate([]string{"invalid-dir"}, []string{}, nil, nil, ctx)
 	assert.Empty(t, g.Generation.Jobs())
 	assert.NoError(t, err)
 }

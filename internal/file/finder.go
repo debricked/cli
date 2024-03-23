@@ -23,9 +23,9 @@ const SupportedFormatsFallbackFilePath = "embedded/supported_formats.json"
 const SupportedFormatsUri = "/api/1.0/open/files/supported-formats"
 
 type IFinder interface {
-	GetGroups(rootPath string, exclusions []string, lockfileOnly bool, strictness int) (Groups, error)
+	GetGroups(rootPath string, exclusions []string, inclusions []string, lockfileOnly bool, strictness int) (Groups, error)
 	GetSupportedFormats() ([]*CompiledFormat, error)
-	GetConfigPath(rootPath string, exclusions []string) string
+	GetConfigPath(rootPath string, exclusions []string, inclusions []string) string
 }
 
 type Finder struct {
@@ -41,7 +41,7 @@ func NewFinder(c client.IDebClient, fs ioFs.IFileSystem) (*Finder, error) {
 	return &Finder{c, fs}, nil
 }
 
-func (finder *Finder) GetConfigPath(rootPath string, exclusions []string) string {
+func (finder *Finder) GetConfigPath(rootPath string, exclusions []string, inclusions []string) string {
 	var configPath string
 
 	if len(rootPath) == 0 {
@@ -53,7 +53,7 @@ func (finder *Finder) GetConfigPath(rootPath string, exclusions []string) string
 			if err != nil {
 				return err
 			}
-			if !fileInfo.IsDir() && !Excluded(exclusions, path) {
+			if !fileInfo.IsDir() && !Excluded(exclusions, inclusions, path) {
 				if filepath.Base(path) == "debricked-config.yaml" {
 					configPath = path
 				}
@@ -70,7 +70,7 @@ func (finder *Finder) GetConfigPath(rootPath string, exclusions []string) string
 }
 
 // GetGroups return all file groups in specified path recursively.
-func (finder *Finder) GetGroups(rootPath string, exclusions []string, lockfileOnly bool, strictness int) (Groups, error) {
+func (finder *Finder) GetGroups(rootPath string, exclusions []string, inclusions []string, lockfileOnly bool, strictness int) (Groups, error) {
 	var groups Groups
 
 	formats, err := finder.GetSupportedFormats()
@@ -88,7 +88,7 @@ func (finder *Finder) GetGroups(rootPath string, exclusions []string, lockfileOn
 			if err != nil {
 				return err
 			}
-			if !fileInfo.IsDir() && !Excluded(exclusions, path) {
+			if !fileInfo.IsDir() && !Excluded(exclusions, inclusions, path) {
 				for _, format := range formats {
 					if groups.Match(format, path, lockfileOnly) {
 

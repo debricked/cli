@@ -85,6 +85,7 @@ func TestShouldProcessFile(t *testing.T) {
 		name     string
 		filePath string
 		excludes []string
+		includes []string
 		mock     func()
 		want     bool
 	}{
@@ -99,6 +100,7 @@ func TestShouldProcessFile(t *testing.T) {
 			name:     "Test with a symbolic link",
 			filePath: testLink,
 			excludes: []string{},
+			includes: []string{},
 			mock:     func() {},
 			want:     false,
 		},
@@ -106,13 +108,23 @@ func TestShouldProcessFile(t *testing.T) {
 			name:     "Test Excluded",
 			filePath: testFile,
 			excludes: []string{"**/test.py"},
+			includes: []string{},
 			mock:     func() {},
 			want:     false,
+		},
+		{
+			name:     "Test Excluded and Included",
+			filePath: testFile,
+			excludes: []string{"**/test.py"},
+			includes: []string{"**/test.py"},
+			mock:     func() {},
+			want:     true,
 		},
 		{
 			name:     "Test with mockSymlink",
 			filePath: testFile,
 			excludes: []string{},
+			includes: []string{},
 			mock:     func() { isSymlinkFunc = mockSymlink },
 			want:     false,
 		},
@@ -120,6 +132,7 @@ func TestShouldProcessFile(t *testing.T) {
 			name:     "Test with errorString: The system cannot find the path specified.",
 			filePath: testFile,
 			excludes: []string{},
+			includes: []string{},
 			mock:     func() { errorString = "The system cannot find the path specified." },
 			want:     true,
 		},
@@ -127,6 +140,7 @@ func TestShouldProcessFile(t *testing.T) {
 			name:     "Test with errorString: not a directory",
 			filePath: testFile,
 			excludes: []string{},
+			includes: []string{},
 			mock:     func() { errorString = "not a directory" },
 			want:     true,
 		},
@@ -134,6 +148,7 @@ func TestShouldProcessFile(t *testing.T) {
 			name:     "Test with generic error",
 			filePath: testFile,
 			excludes: []string{},
+			includes: []string{},
 			mock:     func() { errorString = "generic error" },
 			want:     false,
 		},
@@ -147,7 +162,7 @@ func TestShouldProcessFile(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Failed to get file info for %s: %v", tt.filePath, err)
 			}
-			if got := shouldProcessFile(fileInfo, tt.excludes, tt.filePath); got != tt.want {
+			if got := shouldProcessFile(fileInfo, tt.excludes, tt.includes, tt.filePath); got != tt.want {
 				t.Errorf("Expected shouldProcessFile to return %v for %s, but it returned %v", tt.want, tt.filePath, got)
 			}
 		})
@@ -167,7 +182,7 @@ func TestFingerprinterInterface(t *testing.T) {
 
 func TestFingerprintFiles(t *testing.T) {
 	fingerprinter := NewFingerprinter()
-	fingerprints, err := fingerprinter.FingerprintFiles("testdata/fingerprinter", []string{}, true, 0)
+	fingerprints, err := fingerprinter.FingerprintFiles("testdata/fingerprinter", []string{}, []string{}, true, 0)
 	assert.NoError(t, err)
 	assert.NotNil(t, fingerprints)
 	assert.NotEmpty(t, fingerprints)
@@ -175,7 +190,7 @@ func TestFingerprintFiles(t *testing.T) {
 	assert.Equal(t, "file=634c5485de8e22b27094affadd8a6e3b,21,testdata/fingerprinter/testfile.py", fingerprints.Entries[0].ToString())
 
 	// Test no file
-	fingerprints, err = fingerprinter.FingerprintFiles("", []string{}, true, 0)
+	fingerprints, err = fingerprinter.FingerprintFiles("", []string{}, []string{}, true, 0)
 	assert.NoError(t, err)
 	assert.NotNil(t, fingerprints)
 	assert.NotEmpty(t, fingerprints)
@@ -499,7 +514,7 @@ func TestInMemFingerprintingCompressedContent(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fingerprinter := NewFingerprinter()
-			fingerprints, err := fingerprinter.FingerprintFiles(tt.path, []string{}, tt.shouldUnzip, 0)
+			fingerprints, err := fingerprinter.FingerprintFiles(tt.path, []string{}, []string{}, tt.shouldUnzip, 0)
 			assert.NoError(t, err)
 			assert.NotNil(t, fingerprints)
 			assert.NotEmpty(t, fingerprints)

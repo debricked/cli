@@ -21,6 +21,7 @@ var repositoryUrl string
 var integrationName string
 var jsonFilePath string
 var exclusions = file.Exclusions()
+var inclusions = file.Exclusions()
 var verbose bool
 var regenerate int
 var versionHint bool
@@ -41,6 +42,7 @@ const (
 	RepositoryUrlFlag               = "repository-url"
 	IntegrationFlag                 = "integration"
 	ExclusionFlag                   = "exclusion"
+	InclusionFlag                   = "inclusion"
 	VerboseFlag                     = "verbose"
 	VersionHintFlag                 = "version-hint"
 	RegenerateFlag                  = "regenerate"
@@ -108,6 +110,13 @@ Exclude flags could alternatively be set using DEBRICKED_EXCLUSIONS="path1,path2
 
 Examples: 
 $ debricked scan . `+exampleFlags)
+	cmd.Flags().StringArrayVar(
+		&inclusions,
+		InclusionFlag,
+		inclusions,
+		`Forces inclusion of specified terms, see exclusion flag for more information on supported terms.
+Examples: 
+$ debricked scan . --include /node_modules/`)
 	regenerateDoc := strings.Join(
 		[]string{
 			"Toggles regeneration of already existing lock files between 3 modes:\n",
@@ -144,7 +153,6 @@ For example, if there is a "go.mod" in the target path, its dependencies are goi
 			"This flag allows you to select which package manager will be used as a resolver: Yarn (default) or NPM.",
 			"Example: debricked resolve --prefer-npm",
 		}, "\n")
-
 	cmd.Flags().BoolP(NpmPreferredFlag, "", npmPreferred, npmPreferredDoc)
 
 	viper.MustBindEnv(RepositoryFlag)

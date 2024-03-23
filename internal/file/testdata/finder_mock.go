@@ -19,11 +19,11 @@ func NewFinderMock() *FinderMock {
 }
 
 // GetGroups return all file groups in specified path recursively.
-func (f *FinderMock) GetGroups(_ string, _ []string, _ bool, _ int) (file.Groups, error) {
+func (f *FinderMock) GetGroups(_ string, _ []string, _ []string, _ bool, _ int) (file.Groups, error) {
 	return f.groups, f.error
 }
 
-func (f *FinderMock) GetConfigPath(_ string, _ []string) string {
+func (f *FinderMock) GetConfigPath(_ string, _ []string, _ []string) string {
 	return ""
 }
 

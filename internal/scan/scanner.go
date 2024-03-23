@@ -48,6 +48,7 @@ type DebrickedOptions struct {
 	Fingerprint                 bool
 	CallGraph                   bool
 	Exclusions                  []string
+	Inclusions                  []string
 	Verbose                     bool
 	Regenerate                  int
 	VersionHint                 bool
@@ -145,6 +146,7 @@ func (dScanner *DebrickedScanner) scanResolve(options DebrickedOptions) error {
 		Verbose:      options.Verbose,
 		Regenerate:   options.Regenerate,
 		Exclusions:   options.Exclusions,
+		Inclusions:   options.Inclusions,
 		NpmPreferred: options.NpmPreferred,
 	}
 	if options.Resolve {
@@ -164,7 +166,7 @@ func (dScanner *DebrickedScanner) scanFingerprint(options DebrickedOptions) erro
 			return nil
 		}
 		fingerprints, err := dScanner.fingerprint.FingerprintFiles(
-			options.Path, file.DefaultExclusionsFingerprint(), false, options.MinFingerprintContentLength,
+			options.Path, file.DefaultExclusionsFingerprint(), options.Inclusions, false, options.MinFingerprintContentLength,
 		)
 		if err != nil {
 			return err
@@ -199,13 +201,13 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		if path == "" {
 			path = "."
 		}
-		resErr := dScanner.callgraph.GenerateWithTimer([]string{path}, options.Exclusions, configs, timeout)
+		resErr := dScanner.callgraph.GenerateWithTimer([]string{path}, options.Exclusions, options.Inclusions, configs, timeout)
 		if resErr != nil {
 			return nil, resErr
 		}
 	}
 
-	fileGroups, err := dScanner.finder.GetGroups(options.Path, options.Exclusions, false, file.StrictAll)
+	fileGroups, err := dScanner.finder.GetGroups(options.Path, options.Exclusions, options.Inclusions, false, file.StrictAll)
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +218,7 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		IntegrationsName:       options.IntegrationName,
 		CallGraphUploadTimeout: options.CallGraphUploadTimeout,
 		VersionHint:            options.VersionHint,
-		DebrickedConfig:        dScanner.getDebrickedConfig(options.Path, options.Exclusions),
+		DebrickedConfig:        dScanner.getDebrickedConfig(options.Path, options.Exclusions, options.Inclusions),
 	}
 	result, err := (*dScanner.uploader).Upload(uploaderOptions)
 	if err != nil {
@@ -226,8 +228,8 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 	return result, nil
 }
 
-func (dScanner *DebrickedScanner) getDebrickedConfig(path string, exclusions []string) *upload.DebrickedConfig {
-	configPath := dScanner.finder.GetConfigPath(path, exclusions)
+func (dScanner *DebrickedScanner) getDebrickedConfig(path string, exclusions []string, inclusions []string) *upload.DebrickedConfig {
+	configPath := dScanner.finder.GetConfigPath(path, exclusions, inclusions)
 	if configPath == "" {
 		return nil
 	}

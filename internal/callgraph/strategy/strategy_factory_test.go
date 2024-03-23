@@ -17,7 +17,7 @@ func TestNewStrategyFactory(t *testing.T) {
 func TestMakeErr(t *testing.T) {
 	f := NewStrategyFactory()
 	conf := config.NewConfig("test", nil, nil, true, "")
-	s, err := f.Make(conf, nil, nil, nil)
+	s, err := f.Make(conf, nil, nil, nil, nil)
 	assert.Nil(t, s)
 	assert.ErrorContains(t, err, "failed to make strategy from test")
 }
@@ -25,12 +25,12 @@ func TestMakeErr(t *testing.T) {
 func TestMake(t *testing.T) {
 	conf := config.NewConfig(java.Name, nil, nil, true, "")
 	cases := map[string]IStrategy{
-		java.Name: java.NewStrategy(conf, []string{}, []string{}, javafinder.JavaFinder{}, nil),
+		java.Name: java.NewStrategy(conf, []string{}, []string{}, []string{}, javafinder.JavaFinder{}, nil),
 	}
 	f := NewStrategyFactory()
 	for name, strategy := range cases {
 		t.Run(name, func(t *testing.T) {
-			s, err := f.Make(conf, []string{}, []string{}, nil)
+			s, err := f.Make(conf, []string{}, []string{}, []string{}, nil)
 			assert.NoError(t, err)
 			assert.Equal(t, strategy, s)
 		})

@@ -20,6 +20,7 @@ type Strategy struct {
 	cmdFactory ICmdFactory
 	paths      []string
 	exclusions []string
+	inclusions []string
 	finder     finder.IFinder
 	ctx        cgexec.IContext
 }
@@ -36,7 +37,7 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 
 	var roots []string
 	var err error
-	files, err := s.finder.FindFiles(s.paths, s.exclusions)
+	files, err := s.finder.FindFiles(s.paths, s.exclusions, s.inclusions)
 	if err != nil {
 		strategyWarning("Error while finding files: " + err.Error())
 
@@ -67,7 +68,7 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 		}
 
 		// If build, then we need to find the newly built files
-		files, _ = s.finder.FindFiles(s.paths, s.exclusions)
+		files, _ = s.finder.FindFiles(s.paths, s.exclusions, s.inclusions)
 	}
 
 	javaClassDirs, _ := s.finder.FindDependencyDirs(files, false)
@@ -104,8 +105,8 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	return jobs, nil
 }
 
-func NewStrategy(config conf.IConfig, paths []string, exclusions []string, finder finder.IFinder, ctx cgexec.IContext) Strategy {
-	return Strategy{config, CmdFactory{}, paths, exclusions, finder, ctx}
+func NewStrategy(config conf.IConfig, paths []string, exclusions []string, inclusions []string, finder finder.IFinder, ctx cgexec.IContext) Strategy {
+	return Strategy{config, CmdFactory{}, paths, exclusions, inclusions, finder, ctx}
 }
 
 func strategyWarning(errMsg string) {

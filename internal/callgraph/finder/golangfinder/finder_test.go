@@ -24,7 +24,7 @@ func TestGolangFindEntrypointNoMain(t *testing.T) {
 
 func TestFindFiles(t *testing.T) {
 	f := GolangFinder{}
-	files, err := f.FindFiles([]string{"testdata"}, nil)
+	files, err := f.FindFiles([]string{"testdata"}, nil, nil)
 	assert.Nil(t, err)
 	assert.NotEmpty(t, files)
 	assert.Contains(t, files, filepath.Join("testdata", "app.go"))
@@ -40,7 +40,7 @@ func TestFindDependencyDirs(t *testing.T) {
 
 func TestFindFilesExclusions(t *testing.T) {
 	finder := GolangFinder{}
-	files, err := finder.FindFiles([]string{"testdata"}, []string{"testdata"})
+	files, err := finder.FindFiles([]string{"testdata"}, []string{"testdata"}, nil)
 	assert.Nil(t, err)
 	assert.Empty(t, files)
 }
