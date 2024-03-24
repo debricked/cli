@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/debricked/cli/internal/file"
 	"github.com/debricked/cli/internal/fingerprint"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var exclusions = file.DefaultExclusionsFingerprint()
+var exclusions = fingerprint.DefaultExclusionsFingerprint()
 var inclusions []string
 var shouldFingerprintCompressedContent bool
 var outputDir string
@@ -61,6 +60,7 @@ $ debricked scan . --include /node_modules/`)
 	cmd.Flags().BoolVar(&shouldFingerprintCompressedContent, FingerprintCompressedContent, false, `Fingerprint the contents of compressed files by unpacking them in memory, Supported files: `+fmt.Sprintf("%v", fingerprint.ZIP_FILE_ENDINGS))
 	cmd.Flags().StringVar(&outputDir, OutputDirFlag, ".", "The directory to write the output file to")
 	cmd.Flags().IntVar(&minFingerprintContentLength, MinFingerprintContentLengthFlag, 45, "Set minimum content length (in bytes) for files to fingerprint. Defaults to 45 bytes.")
+
 	viper.MustBindEnv(ExclusionFlag)
 
 	return cmd
@@ -72,8 +72,14 @@ func RunE(f fingerprint.IFingerprint) func(_ *cobra.Command, args []string) erro
 		if len(args) > 0 {
 			path = args[0]
 		}
-
-		output, err := f.FingerprintFiles(path, exclusions, inclusions, shouldFingerprintCompressedContent, minFingerprintContentLength)
+		options := fingerprint.DebrickedOptions{
+			Path:                         path,
+			Exclusions:                   exclusions,
+			Inclusions:                   inclusions,
+			FingerprintCompressedContent: shouldFingerprintCompressedContent,
+			MinFingerprintContentLength:  minFingerprintContentLength,
+		}
+		output, err := f.FingerprintFiles(options)
 
 		if err != nil {
 			return err

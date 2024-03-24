@@ -64,29 +64,6 @@ func TestExclusionsWithEmptyTokenEnvVariable(t *testing.T) {
 	assert.Equal(t, gt, defaultExclusions)
 }
 
-func TestDefaultExclusionsFingerprint(t *testing.T) {
-	expectedExclusions := []string{
-		filepath.Join("**", "nbproject", "**"),
-		filepath.Join("**", "nbbuild", "**"),
-		filepath.Join("**", "nbdist", "**"),
-		filepath.Join("**", "node_modules", "**"),
-		filepath.Join("**", "__pycache__", "**"),
-		filepath.Join("**", "_yardoc", "**"),
-		filepath.Join("**", "eggs", "**"),
-		filepath.Join("**", "wheels", "**"),
-		filepath.Join("**", "htmlcov", "**"),
-		filepath.Join("**", "__pypackages__", "**"),
-		filepath.Join("**", ".git", "**"),
-		"**/*.egg-info/**",
-		"**/*venv/**",
-		"**/*venv3/**",
-	}
-
-	exclusions := DefaultExclusionsFingerprint()
-
-	assert.ElementsMatch(t, expectedExclusions, exclusions, "DefaultExclusionsFingerprint did not return the expected exclusions")
-}
-
 func TestExclude(t *testing.T) {
 	var files []string
 	_ = filepath.Walk(".",
