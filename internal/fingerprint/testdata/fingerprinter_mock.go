@@ -15,7 +15,7 @@ func NewFingerprintMock() *FingerprintMock {
 }
 
 func (f *FingerprintMock) FingerprintFiles(
-	rootPath string, exclusions []string, inclusions []string, fingerprintCompressedContent bool, minFingerprintContentLength int,
+	options fingerprint.DebrickedOptions,
 ) (fingerprint.Fingerprints, error) {
 	return fingerprint.Fingerprints{}, f.error
 }

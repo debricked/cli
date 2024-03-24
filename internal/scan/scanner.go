@@ -162,7 +162,13 @@ func (dScanner *DebrickedScanner) scanResolve(options DebrickedOptions) error {
 func (dScanner *DebrickedScanner) scanFingerprint(options DebrickedOptions) error {
 	if options.Fingerprint {
 		fingerprints, err := dScanner.fingerprint.FingerprintFiles(
-			options.Path, file.DefaultExclusionsFingerprint(), options.Inclusions, false, options.MinFingerprintContentLength,
+			fingerprint.DebrickedOptions{
+				Path:                         options.Path,
+				Exclusions:                   append(options.Exclusions, fingerprint.DefaultExclusionsFingerprint()...),
+				Inclusions:                   append(options.Inclusions, fingerprint.DefaultInclusionsFingerprint()...),
+				MinFingerprintContentLength:  options.MinFingerprintContentLength,
+				FingerprintCompressedContent: false,
+			},
 		)
 		if err != nil {
 			return err
