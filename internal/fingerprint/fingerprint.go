@@ -88,27 +88,19 @@ func (f *Fingerprinter) FingerprintFiles(options DebrickedOptions) (Fingerprints
 		if err != nil {
 			return err
 		}
-
-		fileFingerprints, err := computeHashForFileAndZip(fileInfo, path, options.Exclusions, options.Inclusions, options.FingerprintCompressedContent)
+		fileFingerprints, err := fingerprintFile(path, fileInfo, options)
 		if err != nil {
 			return err
 		}
+		nbFiles += len(fileFingerprints)
 
-		var filteredFileFingerprints []FileFingerprint
-		for _, fileFingerprint := range fileFingerprints {
-			if fileFingerprint.contentLength >= int64(options.MinFingerprintContentLength) {
-				filteredFileFingerprints = append(filteredFileFingerprints, fileFingerprint)
-			}
+		if nbFiles%100 == 0 {
+			f.spinnerManager.SetSpinnerMessage(spinner, spinnerMessage, fmt.Sprintf("%d", nbFiles))
 		}
 
-		if len(filteredFileFingerprints) != 0 {
-			fingerprints.Entries = append(fingerprints.Entries, filteredFileFingerprints...)
+		if len(fileFingerprints) != 0 {
+			fingerprints.Entries = append(fingerprints.Entries, fileFingerprints...)
 
-			nbFiles += len(filteredFileFingerprints)
-
-			if nbFiles%100 == 0 {
-				f.spinnerManager.SetSpinnerMessage(spinner, spinnerMessage, fmt.Sprintf("%d", nbFiles))
-			}
 		}
 
 		return nil
@@ -127,6 +119,22 @@ func (f *Fingerprinter) FingerprintFiles(options DebrickedOptions) (Fingerprints
 	return fingerprints, err
 }
 
+func fingerprintFile(path string, fileInfo os.FileInfo, options DebrickedOptions) ([]FileFingerprint, error) {
+	fileFingerprints, err := computeHashForFileAndZip(fileInfo, path, options)
+	if err != nil {
+		return nil, err
+	}
+
+	var filteredFileFingerprints []FileFingerprint
+	for _, fileFingerprint := range fileFingerprints {
+		if fileFingerprint.contentLength >= int64(options.MinFingerprintContentLength) {
+			filteredFileFingerprints = append(filteredFileFingerprints, fileFingerprint)
+		}
+	}
+
+	return filteredFileFingerprints, nil
+}
+
 func computeHashForArchive(path string, exclusions []string, inclusions []string) ([]FileFingerprint, error) {
 	if isZipFile(path) {
 		return inMemFingerprintZipContent(path, exclusions, inclusions)
@@ -142,16 +150,16 @@ func computeHashForArchive(path string, exclusions []string, inclusions []string
 }
 
 func computeHashForFileAndZip(
-	fileInfo os.FileInfo, path string, exclusions []string, inclusions []string, fingerprintCompressedContent bool,
+	fileInfo os.FileInfo, path string, options DebrickedOptions,
 ) ([]FileFingerprint, error) {
-	if !shouldProcessFile(fileInfo, exclusions, inclusions, path) {
+	if !shouldProcessFile(fileInfo, options.Exclusions, options.Inclusions, path) {
 		return nil, nil
 	}
 
 	var fingerprints []FileFingerprint
 
-	if fingerprintCompressedContent {
-		fingerprintsArchive, err := computeHashForArchive(path, exclusions, inclusions)
+	if options.FingerprintCompressedContent {
+		fingerprintsArchive, err := computeHashForArchive(path, options.Exclusions, options.Inclusions)
 		if err != nil {
 			if errors.Is(err, zip.ErrFormat) {
 				fmt.Printf("WARNING: Could not unpack and fingerprint contents of compressed file [%s]. Error: %v\n", path, err)

@@ -207,13 +207,29 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		if path == "" {
 			path = "."
 		}
-		resErr := dScanner.callgraph.GenerateWithTimer([]string{path}, options.Exclusions, options.Inclusions, configs, timeout)
+		resErr := dScanner.callgraph.GenerateWithTimer(
+			callgraph.DebrickedOptions{
+				Paths:      []string{path},
+				Exclusions: options.Exclusions,
+				Inclusions: options.Inclusions,
+				Configs:    configs,
+				Timeout:    timeout,
+			},
+		)
 		if resErr != nil {
 			return nil, resErr
 		}
 	}
 
-	fileGroups, err := dScanner.finder.GetGroups(options.Path, options.Exclusions, options.Inclusions, false, file.StrictAll)
+	fileGroups, err := dScanner.finder.GetGroups(
+		file.DebrickedOptions{
+			RootPath:     options.Path,
+			Exclusions:   options.Exclusions,
+			Inclusions:   options.Inclusions,
+			LockFileOnly: false,
+			Strictness:   file.StrictAll,
+		},
+	)
 	if err != nil {
 		return nil, err
 	}

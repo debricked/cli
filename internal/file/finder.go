@@ -22,8 +22,16 @@ var supportedFormats embed.FS
 const SupportedFormatsFallbackFilePath = "embedded/supported_formats.json"
 const SupportedFormatsUri = "/api/1.0/open/files/supported-formats"
 
+type DebrickedOptions struct {
+	RootPath     string
+	Exclusions   []string
+	Inclusions   []string
+	LockFileOnly bool
+	Strictness   int
+}
+
 type IFinder interface {
-	GetGroups(rootPath string, exclusions []string, inclusions []string, lockfileOnly bool, strictness int) (Groups, error)
+	GetGroups(options DebrickedOptions) (Groups, error)
 	GetSupportedFormats() ([]*CompiledFormat, error)
 	GetConfigPath(rootPath string, exclusions []string, inclusions []string) string
 }
@@ -70,27 +78,27 @@ func (finder *Finder) GetConfigPath(rootPath string, exclusions []string, inclus
 }
 
 // GetGroups return all file groups in specified path recursively.
-func (finder *Finder) GetGroups(rootPath string, exclusions []string, inclusions []string, lockfileOnly bool, strictness int) (Groups, error) {
+func (finder *Finder) GetGroups(options DebrickedOptions) (Groups, error) {
 	var groups Groups
 
 	formats, err := finder.GetSupportedFormats()
 	if err != nil {
 		return groups, err
 	}
-	if len(rootPath) == 0 {
-		rootPath = filepath.Base("")
+	if len(options.RootPath) == 0 {
+		options.RootPath = filepath.Base("")
 	}
 
 	// Traverse files to find dependency file groups
 	err = filepath.Walk(
-		rootPath,
+		options.RootPath,
 		func(path string, fileInfo os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
-			if !fileInfo.IsDir() && !Excluded(exclusions, inclusions, path) {
+			if !fileInfo.IsDir() && !Excluded(options.Exclusions, options.Inclusions, path) {
 				for _, format := range formats {
-					if groups.Match(format, path, lockfileOnly) {
+					if groups.Match(format, path, options.LockFileOnly) {
 
 						break
 					}
@@ -101,7 +109,7 @@ func (finder *Finder) GetGroups(rootPath string, exclusions []string, inclusions
 		},
 	)
 
-	groups.FilterGroupsByStrictness(strictness)
+	groups.FilterGroupsByStrictness(options.Strictness)
 
 	return groups, err
 }

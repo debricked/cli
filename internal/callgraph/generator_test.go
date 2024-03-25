@@ -33,7 +33,13 @@ func TestGenerate(t *testing.T) {
 		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven"),
 	}
 	ctx, _ := ctxTestdata.NewContextMock()
-	err := g.Generate([]string{"../../go.mod"}, []string{}, nil, configs, ctx)
+	err := g.Generate(
+		DebrickedOptions{
+			Paths:      []string{"../../go.mod"},
+			Exclusions: []string{},
+			Inclusions: []string{},
+			Configs:    configs,
+		}, ctx)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, g.Generation.Jobs())
 }
@@ -47,7 +53,15 @@ func TestGenerateWithTimer(t *testing.T) {
 	configs := []config.IConfig{
 		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven"),
 	}
-	err := g.GenerateWithTimer([]string{"../../go.mod"}, []string{}, nil, configs, 1000)
+	err := g.GenerateWithTimer(
+		DebrickedOptions{
+			Paths:      []string{"../../go.mod"},
+			Exclusions: nil,
+			Inclusions: nil,
+			Configs:    configs,
+			Timeout:    1000,
+		},
+	)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, g.Generation.Jobs())
 }
@@ -62,7 +76,13 @@ func TestGenerateInvokeError(t *testing.T) {
 		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven"),
 	}
 	ctx, _ := ctxTestdata.NewContextMock()
-	err := g.Generate([]string{"../../go.mod"}, []string{}, nil, configs, ctx)
+	err := g.Generate(
+		DebrickedOptions{
+			Paths:      []string{"../../go.mod"},
+			Exclusions: []string{},
+			Inclusions: []string{},
+			Configs:    configs,
+		}, ctx)
 	assert.NotNil(t, err)
 }
 
@@ -77,7 +97,13 @@ func TestGenerateScheduleError(t *testing.T) {
 		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven"),
 	}
 	ctx, _ := ctxTestdata.NewContextMock()
-	err := g.Generate([]string{"../../go.mod"}, []string{}, nil, configs, ctx)
+	err := g.Generate(
+		DebrickedOptions{
+			Paths:      []string{"../../go.mod"},
+			Exclusions: []string{},
+			Inclusions: []string{},
+			Configs:    configs,
+		}, ctx)
 	assert.NotEmpty(t, g.Generation.Jobs())
 	assert.ErrorIs(t, err, errAssertion)
 }
@@ -89,7 +115,13 @@ func TestGenerateDirWithoutConfig(t *testing.T) {
 	)
 
 	ctx, _ := ctxTestdata.NewContextMock()
-	err := g.Generate([]string{"invalid-dir"}, []string{}, nil, nil, ctx)
+	err := g.Generate(
+		DebrickedOptions{
+			Paths:      []string{"invalid-dir"},
+			Exclusions: []string{},
+			Inclusions: []string{},
+			Configs:    nil,
+		}, ctx)
 	assert.Empty(t, g.Generation.Jobs())
 	assert.NoError(t, err)
 }
