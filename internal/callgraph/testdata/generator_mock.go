@@ -4,8 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/debricked/cli/internal/callgraph"
 	"github.com/debricked/cli/internal/callgraph/cgexec"
-	"github.com/debricked/cli/internal/callgraph/config"
 )
 
 type GeneratorMock struct {
@@ -13,11 +13,11 @@ type GeneratorMock struct {
 	files []string
 }
 
-func (r *GeneratorMock) GenerateWithTimer(_ []string, _ []string, _ []string, _ []config.IConfig, _ int) error {
+func (r *GeneratorMock) GenerateWithTimer(_ callgraph.DebrickedOptions) error {
 	return r.Err
 }
 
-func (r *GeneratorMock) Generate(_ []string, _ []string, _ []string, _ []config.IConfig, _ cgexec.IContext) error {
+func (r *GeneratorMock) Generate(_ callgraph.DebrickedOptions, _ cgexec.IContext) error {
 	for _, f := range r.files {
 		createdFile, err := os.Create(f)
 		if err != nil {

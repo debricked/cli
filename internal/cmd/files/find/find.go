@@ -101,11 +101,13 @@ func RunE(f file.IFinder) func(_ *cobra.Command, args []string) error {
 		}
 
 		fileGroups, err := f.GetGroups(
-			path,
-			viper.GetStringSlice(ExclusionFlag),
-			viper.GetStringSlice(InclusionFlag),
-			viper.GetBool(LockfileOnlyFlag),
-			viper.GetInt(StrictFlag),
+			file.DebrickedOptions{
+				RootPath:     path,
+				Exclusions:   viper.GetStringSlice(ExclusionFlag),
+				Inclusions:   viper.GetStringSlice(InclusionFlag),
+				LockFileOnly: viper.GetBool(LockfileOnlyFlag),
+				Strictness:   viper.GetInt(StrictFlag),
+			},
 		)
 		if err != nil {
 			return err

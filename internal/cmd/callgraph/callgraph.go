@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/debricked/cli/internal/callgraph"
+	cg "github.com/debricked/cli/internal/callgraph"
 	conf "github.com/debricked/cli/internal/callgraph/config"
 	"github.com/debricked/cli/internal/file"
 	"github.com/spf13/cobra"
@@ -25,7 +25,7 @@ const (
 	GenerateTimeoutFlag = "generate-timeout"
 )
 
-func NewCallgraphCmd(generator callgraph.IGenerator) *cobra.Command {
+func NewCallgraphCmd(generator cg.IGenerator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "callgraph [path]",
 		Short: "Generate a static call graph for the given directory and subdirectories",
@@ -77,7 +77,7 @@ https://portal.debricked.com/debricked-cli-63/debricked-cli-documentation-298?ti
 	return cmd
 }
 
-func RunE(callgraph callgraph.IGenerator) func(_ *cobra.Command, args []string) error {
+func RunE(callgraph cg.IGenerator) func(_ *cobra.Command, args []string) error {
 	return func(_ *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			args = append(args, ".")
@@ -85,8 +85,14 @@ func RunE(callgraph callgraph.IGenerator) func(_ *cobra.Command, args []string) 
 		configs := []conf.IConfig{
 			conf.NewConfig("java", []string{}, map[string]string{}, !viper.GetBool(NoBuildFlag), "maven"),
 		}
-
-		err := callgraph.GenerateWithTimer(args, viper.GetStringSlice(ExclusionFlag), viper.GetStringSlice(InclusionFlag), configs, viper.GetInt(GenerateTimeoutFlag))
+		options := cg.DebrickedOptions{
+			Paths:      args,
+			Exclusions: viper.GetStringSlice(ExclusionFlag),
+			Inclusions: viper.GetStringSlice(InclusionFlag),
+			Configs:    configs,
+			Timeout:    viper.GetInt(GenerateTimeoutFlag),
+		}
+		err := callgraph.GenerateWithTimer(options)
 
 		return err
 	}
