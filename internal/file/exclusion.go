@@ -29,6 +29,7 @@ func DefaultExclusions() []string {
 	for _, excluded_dir := range defaultExclusions.Directories {
 		exclusions = append(exclusions, filepath.Join("**", excluded_dir, "**"))
 	}
+
 	return exclusions
 }
 
