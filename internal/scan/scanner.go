@@ -222,13 +222,11 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 	}
 
 	fileGroups, err := dScanner.finder.GetGroups(
-		file.DebrickedOptions{
-			RootPath:     options.Path,
-			Exclusions:   options.Exclusions,
-			Inclusions:   options.Inclusions,
-			LockFileOnly: false,
-			Strictness:   file.StrictAll,
-		},
+		options.Path,
+		options.Exclusions,
+		options.Inclusions,
+		false,
+		file.StrictAll,
 	)
 	if err != nil {
 		return nil, err

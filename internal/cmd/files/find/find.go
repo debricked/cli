@@ -36,8 +36,8 @@ For example ` + "`package.json`" + ` with ` + "`package-lock.json`.",
 		},
 		RunE: RunE(finder),
 	}
-	fileExclusionExample := filepath.Join("*", "**.lock")
-	dirExclusionExample := filepath.Join("**", "node_modules", "**")
+	fileExclusionExample := filepath.Join("'*", "**.lock'")
+	dirExclusionExample := filepath.Join("'**", "node_modules", "**'")
 	exampleFlags := fmt.Sprintf("-e \"%s\" -e \"%s\"", fileExclusionExample, dirExclusionExample)
 	cmd.Flags().StringArrayVarP(&exclusions, ExclusionFlag, "e", exclusions, `The following terms are supported to exclude paths:
 Special Terms | Meaning
@@ -58,7 +58,7 @@ $ debricked files find . `+exampleFlags)
 		[]string{},
 		`Forces inclusion of specified terms, see exclusion flag for more information on supported terms.
 Examples: 
-$ debricked scan . --include /node_modules/`)
+$ debricked scan . --include '**/node_modules/**'`)
 	cmd.Flags().BoolVarP(&jsonPrint, JsonFlag, "j", false, `Print files in JSON format
 Format:
 [

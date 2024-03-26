@@ -42,8 +42,8 @@ $ debricked resolve go.mod pkg/
 		},
 		RunE: RunE(resolver),
 	}
-	fileExclusionExample := filepath.Join("*", "**.lock")
-	dirExclusionExample := filepath.Join("**", "node_modules", "**")
+	fileExclusionExample := filepath.Join("'*", "**.lock'")
+	dirExclusionExample := filepath.Join("'**", "node_modules", "**'")
 	exampleFlags := fmt.Sprintf("-e \"%s\" -e \"%s\"", fileExclusionExample, dirExclusionExample)
 	cmd.Flags().StringArrayVarP(&exclusions, ExclusionFlag, "e", exclusions, `The following terms are supported to exclude paths:
 Special Terms | Meaning
@@ -64,7 +64,7 @@ $ debricked resolve . `+exampleFlags)
 		[]string{},
 		`Forces inclusion of specified terms, see exclusion flag for more information on supported terms.
 Examples: 
-$ debricked scan . --include /node_modules/`)
+$ debricked scan . --include '**/node_modules/**'`)
 	regenerateDoc := strings.Join(
 		[]string{
 			"Toggles regeneration of already existing lock files between 3 modes:\n",

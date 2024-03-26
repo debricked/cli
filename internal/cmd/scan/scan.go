@@ -89,8 +89,8 @@ If the given path contains a git repository all flags but "integration" will be 
 		`name of integration used to trigger scan. For example "GitHub Actions"`,
 	)
 	cmd.Flags().StringVarP(&jsonFilePath, JsonFilePathFlag, "j", "", "write upload result as json to provided path")
-	fileExclusionExample := filepath.Join("*", "**.lock")
-	dirExclusionExample := filepath.Join("**", "node_modules", "**")
+	fileExclusionExample := filepath.Join("'*", "**.lock'")
+	dirExclusionExample := filepath.Join("'**", "node_modules", "**'")
 	exampleFlags := fmt.Sprintf("-e \"%s\" -e \"%s\"", fileExclusionExample, dirExclusionExample)
 	cmd.Flags().StringArrayVarP(
 		&exclusions,
@@ -116,7 +116,7 @@ $ debricked scan . `+exampleFlags)
 		inclusions,
 		`Forces inclusion of specified terms, see exclusion flag for more information on supported terms.
 Examples: 
-$ debricked scan . --include /node_modules/`)
+$ debricked scan . --include '**/node_modules/**'`)
 	regenerateDoc := strings.Join(
 		[]string{
 			"Toggles regeneration of already existing lock files between 3 modes:\n",

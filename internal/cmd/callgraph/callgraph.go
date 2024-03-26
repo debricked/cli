@@ -53,8 +53,8 @@ $ debricked callgraph
 		},
 		RunE: RunE(generator),
 	}
-	fileExclusionExample := filepath.Join("*", "**.lock")
-	dirExclusionExample := filepath.Join("**", "node_modules", "**")
+	fileExclusionExample := filepath.Join("'*", "**.lock'")
+	dirExclusionExample := filepath.Join("'**", "node_modules", "**'")
 	exampleFlags := fmt.Sprintf("-e \"%s\" -e \"%s\"", fileExclusionExample, dirExclusionExample)
 
 	cmd.Flags().StringArrayVarP(&exclusions, ExclusionFlag, "e", exclusions, `The following terms are supported to exclude paths:
@@ -76,7 +76,7 @@ $ debricked callgraph . `+exampleFlags)
 		[]string{},
 		`Forces inclusion of specified terms, see exclusion flag for more information on supported terms.
 Examples: 
-$ debricked scan . --include /node_modules/`)
+$ debricked scan . --include '**/node_modules/**'`)
 	cmd.Flags().BoolVar(&buildDisabled, NoBuildFlag, false, `Do not automatically build all source code in the project to enable call graph generation.
 This option requires a pre-built project. For more detailed documentation on the callgraph generation, visit our portal:
 https://portal.debricked.com/debricked-cli-63/debricked-cli-documentation-298?tid=298&fid=63#callgraph`)

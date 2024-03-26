@@ -1,7 +1,5 @@
 package fingerprint
 
-import "path/filepath"
-
 type DefaultFingerprintExclusionList struct {
 	Directories []string
 	Files       []string
@@ -25,6 +23,11 @@ var defaultFingerprintExclusions = DefaultFingerprintExclusionList{
 		"*.egg-info",
 		"*venv",
 		"*venv3",
+		"node_modules",
+		"vendor",
+		".git",
+		"obj",
+		"bower_components",
 	},
 	Files: []string{
 		"gradlew", "gradlew.bat", "mvnw", "mvnw.cmd", "gradle-wrapper.jar", "maven-wrapper.jar",
@@ -59,16 +62,16 @@ var defaultFingerprintExclusions = DefaultFingerprintExclusionList{
 func DefaultExclusionsFingerprint() []string {
 	var default_exclusions []string
 	for _, excluded_dir := range defaultFingerprintExclusions.Directories {
-		default_exclusions = append(default_exclusions, filepath.Join("**", excluded_dir, "**"))
+		default_exclusions = append(default_exclusions, "**/"+excluded_dir+"/**")
 	}
 	for _, excluded_file := range defaultFingerprintExclusions.Files {
-		default_exclusions = append(default_exclusions, filepath.Join("**", excluded_file))
+		default_exclusions = append(default_exclusions, "**/"+excluded_file)
 	}
 	for _, excluded_extension := range defaultFingerprintExclusions.Extensions {
-		default_exclusions = append(default_exclusions, filepath.Join("**", "*"+excluded_extension))
+		default_exclusions = append(default_exclusions, "**/*"+excluded_extension)
 	}
 	for _, excluded_ending := range defaultFingerprintExclusions.Extensions {
-		default_exclusions = append(default_exclusions, filepath.Join("**", "*"+excluded_ending))
+		default_exclusions = append(default_exclusions, "**/*"+excluded_ending)
 	}
 
 	return default_exclusions

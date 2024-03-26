@@ -299,7 +299,7 @@ func TestGetGroupsWithStrictFlag(t *testing.T) {
 			fileGroups, err := finder.GetGroups(
 				DebrickedOptions{
 					RootPath:     filePath,
-					Exclusions:   []string{},
+					Exclusions:   []string{"**/node_modules/**"},
 					Inclusions:   []string{},
 					LockFileOnly: false,
 					Strictness:   c.strictness,

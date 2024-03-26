@@ -54,11 +54,11 @@ func TestExclusionsWithEmptyTokenEnvVariable(t *testing.T) {
 	}(debrickedExclusionEnvVar, oldEnvValue)
 
 	gt := []string{
-		filepath.Join("**", "node_modules", "**"),
-		filepath.Join("**", "vendor", "**"),
-		filepath.Join("**", ".git", "**"),
-		filepath.Join("**", "obj", "**"),
-		filepath.Join("**", "bower_components", "**"),
+		"**/node_modules/**",
+		"**/vendor/**",
+		"**/.git/**",
+		"**/obj/**",
+		"**/bower_components/**",
 	}
 	defaultExclusions := Exclusions()
 	assert.Equal(t, gt, defaultExclusions)
@@ -144,4 +144,36 @@ func TestExclude(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestExcluded(t *testing.T) {
+	cases := []struct {
+		name       string
+		exclusions []string
+		inclusions []string
+		path       string
+		expected   bool
+	}{
+		{
+			name:       "NodeModules",
+			exclusions: []string{"**/node_modules/**"},
+			inclusions: []string{},
+			path:       "node_modules/package.json",
+			expected:   true,
+		},
+		{
+			name:       "Inclusions",
+			exclusions: []string{"**/node_modules/**"},
+			inclusions: []string{"**/package.json"},
+			path:       "node_modules/package.json",
+			expected:   false,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			assert.Equal(t, c.expected, Excluded(c.exclusions, c.inclusions, c.path))
+		})
+	}
+
 }

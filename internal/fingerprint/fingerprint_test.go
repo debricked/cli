@@ -446,7 +446,7 @@ func TestInMemFingerprintingCompressedContent(t *testing.T) {
 		},
 		{
 			name:        "Nupkg",
-			path:        "testdata/archive/nupkg",
+			path:        filepath.Join("testdata", "archive", "nupkg"),
 			expected:    21,
 			suffix:      "newtonsoft.json.13.0.3.nupkg",
 			shouldUnzip: true,
