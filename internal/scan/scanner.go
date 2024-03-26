@@ -62,7 +62,6 @@ type DebrickedOptions struct {
 	PassOnTimeOut            bool
 	CallGraphUploadTimeout   int
 	CallGraphGenerateTimeout int
-	ConfigPath               string
 }
 
 func NewDebrickedScanner(
@@ -203,18 +202,13 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		return nil, err
 	}
 
-	debrickedConfig := upload.DebrickedConfig{Overrides: nil}
-	if options.ConfigPath != "" {
-		debrickedConfig = upload.GetDebrickedConfig(options.ConfigPath)
-	}
-
 	uploaderOptions := upload.DebrickedOptions{
 		FileGroups:             fileGroups,
 		GitMetaObject:          gitMetaObject,
 		IntegrationsName:       options.IntegrationName,
 		CallGraphUploadTimeout: options.CallGraphUploadTimeout,
 		VersionHint:            options.VersionHint,
-		DebrickedConfig:        debrickedConfig,
+		DebrickedConfig:        dScanner.getDebrickedConfig(options.Path, options.Exclusions),
 	}
 	result, err := (*dScanner.uploader).Upload(uploaderOptions)
 	if err != nil {
@@ -222,6 +216,15 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 	}
 
 	return result, nil
+}
+
+func (dScanner *DebrickedScanner) getDebrickedConfig(path string, exclusions []string) upload.DebrickedConfig {
+	configPath := dScanner.finder.GetConfigPath(path, exclusions)
+	if configPath == "" {
+		return upload.DebrickedConfig{}
+	}
+
+	return upload.GetDebrickedConfig(configPath)
 }
 
 func (dScanner *DebrickedScanner) handleScanError(err error, passOnTimeOut bool) error {

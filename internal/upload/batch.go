@@ -183,7 +183,6 @@ func (uploadBatch *uploadBatch) initAnalysis() error {
 	if err != nil {
 		return err
 	}
-	print(string(body))
 
 	response, err := (*uploadBatch.client).Post(
 		"/api/1.0/open/finishes/dependencies/files/uploads",

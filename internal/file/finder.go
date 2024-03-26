@@ -25,6 +25,7 @@ const SupportedFormatsUri = "/api/1.0/open/files/supported-formats"
 type IFinder interface {
 	GetGroups(rootPath string, exclusions []string, lockfileOnly bool, strictness int) (Groups, error)
 	GetSupportedFormats() ([]*CompiledFormat, error)
+	GetConfigPath(rootPath string, exclusions []string) string
 }
 
 type Finder struct {
@@ -38,6 +39,30 @@ func NewFinder(c client.IDebClient, fs ioFs.IFileSystem) (*Finder, error) {
 	}
 
 	return &Finder{c, fs}, nil
+}
+
+func (finder *Finder) GetConfigPath(rootPath string, exclusions []string) string {
+	var configPath string
+	err := filepath.Walk(
+		rootPath,
+		func(path string, fileInfo os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if !fileInfo.IsDir() && !Excluded(exclusions, path) {
+				if filepath.Base(path) == "debricked-config.yaml" {
+					configPath = path
+				}
+			}
+
+			return nil
+		},
+	)
+	if err != nil {
+		return ""
+	}
+
+	return configPath
 }
 
 // GetGroups return all file groups in specified path recursively.

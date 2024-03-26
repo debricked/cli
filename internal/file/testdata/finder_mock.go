@@ -23,6 +23,10 @@ func (f *FinderMock) GetGroups(_ string, _ []string, _ bool, _ int) (file.Groups
 	return f.groups, f.error
 }
 
+func (f *FinderMock) GetConfigPath(_ string, _ []string) string {
+	return ""
+}
+
 func (f *FinderMock) GetSupportedFormats() ([]*file.CompiledFormat, error) {
 	return f.compiledFormats, f.error
 }
