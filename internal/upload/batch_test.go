@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -134,7 +135,7 @@ func TestInitUpload(t *testing.T) {
 }
 
 func TestGetDebrickedConfig(t *testing.T) {
-	config := GetDebrickedConfig("testdata/debricked-config.yaml")
+	config := GetDebrickedConfig(filepath.Join("testdata", "debricked-config.yaml"))
 	configJSON, err := json.Marshal(config)
 	assert.Nil(t, err)
 	expectedJSON, err := json.Marshal(DebrickedConfig{
@@ -156,7 +157,7 @@ func TestGetDebrickedConfig(t *testing.T) {
 }
 
 func TestGetDebrickedConfigUnmarshalError(t *testing.T) {
-	config := GetDebrickedConfig("testdata/debricked-config-error.yaml")
+	config := GetDebrickedConfig(filepath.Join("testdata", "debricked-config-error.yaml"))
 	configJSON, err := json.Marshal(config)
 	assert.Nil(t, err)
 	expectedJSON, err := json.Marshal(DebrickedConfig{
