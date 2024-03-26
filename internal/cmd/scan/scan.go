@@ -79,7 +79,6 @@ If the given path contains a git repository all flags but "integration" will be 
 		`name of integration used to trigger scan. For example "GitHub Actions"`,
 	)
 	cmd.Flags().StringVarP(&jsonFilePath, JsonFilePathFlag, "j", "", "write upload result as json to provided path")
-
 	fileExclusionExample := filepath.Join("*", "**.lock")
 	dirExclusionExample := filepath.Join("**", "node_modules", "**")
 	exampleFlags := fmt.Sprintf("-e \"%s\" -e \"%s\"", fileExclusionExample, dirExclusionExample)

@@ -2,11 +2,13 @@ package upload
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -36,7 +38,7 @@ func TestUploadWithBadFiles(t *testing.T) {
 	clientMock.AddMockResponse(mockRes)
 	clientMock.AddMockResponse(mockRes)
 	c = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true)
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, DebrickedConfig{})
 	var buf bytes.Buffer
 	log.SetOutput(&buf)
 	err = batch.upload()
@@ -48,7 +50,7 @@ func TestUploadWithBadFiles(t *testing.T) {
 }
 
 func TestInitAnalysisWithoutAnyFiles(t *testing.T) {
-	batch := newUploadBatch(nil, file.Groups{}, nil, "CLI", 10*60, true)
+	batch := newUploadBatch(nil, file.Groups{}, nil, "CLI", 10*60, true, DebrickedConfig{})
 	err := batch.initAnalysis()
 
 	assert.ErrorContains(t, err, "failed to find dependency files")
@@ -71,7 +73,7 @@ func TestWaitWithPollingTerminatedError(t *testing.T) {
 	}
 	clientMock.AddMockResponse(mockRes)
 	c = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true)
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, DebrickedConfig{})
 
 	uploadResult, err := batch.wait()
 
@@ -96,7 +98,7 @@ func TestInitUploadBadFile(t *testing.T) {
 	clientMock.AddMockResponse(mockRes)
 
 	var c client.IDebClient = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true)
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, DebrickedConfig{})
 
 	files, err := batch.initUpload()
 
@@ -123,11 +125,73 @@ func TestInitUpload(t *testing.T) {
 	clientMock.AddMockResponse(mockRes)
 
 	var c client.IDebClient = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true)
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, DebrickedConfig{})
 
 	files, err := batch.initUpload()
 
 	assert.Len(t, files, 1, "failed to assert that the init deleted one file from the files to be uploaded")
 	assert.NoError(t, err)
 	assert.Equal(t, 1, batch.ciUploadId)
+}
+
+func TestGetDebrickedConfig(t *testing.T) {
+	config := GetDebrickedConfig(filepath.Join("testdata", "debricked-config.yaml"))
+	configJSON, err := json.Marshal(config)
+	assert.Nil(t, err)
+	expectedJSON, err := json.Marshal(DebrickedConfig{
+		Overrides: []purlConfig{
+			{
+				PackageURL: "pkg:npm/lodash",
+				Version:    boolOrString{Version: "1.0.0", HasVersion: true},
+				FileRegex:  ".*/lodash/.*",
+			},
+			{
+				PackageURL: "pkg:maven/org.openjfx/javafx-base",
+				Version:    boolOrString{Version: "", HasVersion: false},
+				FileRegex:  "subpath/org.openjfx/.*",
+			},
+		},
+	})
+	assert.Nil(t, err)
+	assert.JSONEq(t, string(configJSON), string(expectedJSON))
+}
+
+func TestGetDebrickedConfigUnmarshalError(t *testing.T) {
+	config := GetDebrickedConfig(filepath.Join("testdata", "debricked-config-error.yaml"))
+	configJSON, err := json.Marshal(config)
+	assert.Nil(t, err)
+	expectedJSON, err := json.Marshal(DebrickedConfig{
+		Overrides: nil})
+	assert.Nil(t, err)
+	assert.JSONEq(t, string(configJSON), string(expectedJSON))
+}
+
+func TestGetDebrickedConfigFailure(t *testing.T) {
+	config := GetDebrickedConfig("")
+	configJSON, err := json.Marshal(config)
+	assert.Nil(t, err)
+	expectedJSON, err := json.Marshal(DebrickedConfig{
+		Overrides: nil})
+	assert.Nil(t, err)
+	assert.JSONEq(t, string(configJSON), string(expectedJSON))
+}
+
+func TestMarshalJSONDebrickedConfig(t *testing.T) {
+	config, err := json.Marshal(DebrickedConfig{
+		Overrides: []purlConfig{
+			{
+				PackageURL: "pkg:npm/lodash",
+				Version:    boolOrString{Version: "1.0.0", HasVersion: true},
+				FileRegex:  ".*/lodash/.*",
+			},
+			{
+				PackageURL: "pkg:maven/org.openjfx/javafx-base",
+				Version:    boolOrString{Version: "", HasVersion: false},
+				FileRegex:  "subpath/org.openjfx/.*",
+			},
+		},
+	})
+	expectedJSON := "{\"overrides\":[{\"pURL\":\"pkg:npm/lodash\",\"version\":\"1.0.0\",\"fileRegex\":\".*/lodash/.*\"},{\"pURL\":\"pkg:maven/org.openjfx/javafx-base\",\"version\":false,\"fileRegex\":\"subpath/org.openjfx/.*\"}]}"
+	assert.Nil(t, err)
+	assert.Equal(t, []byte(expectedJSON), config)
 }

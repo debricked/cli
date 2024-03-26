@@ -20,6 +20,7 @@ import (
 	"github.com/debricked/cli/internal/git"
 	"github.com/debricked/cli/internal/tui"
 	"github.com/fatih/color"
+	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -39,10 +40,23 @@ type uploadBatch struct {
 	ciUploadId       int
 	callGraphTimeout int
 	versionHint      bool
+	debrickedConfig  DebrickedConfig // JSON Config
 }
 
-func newUploadBatch(client *client.IDebClient, fileGroups file.Groups, gitMetaObject *git.MetaObject, integrationName string, callGraphTimeout int, versionHint bool) *uploadBatch {
-	return &uploadBatch{client: client, fileGroups: fileGroups, gitMetaObject: gitMetaObject, integrationName: integrationName, ciUploadId: 0, callGraphTimeout: callGraphTimeout, versionHint: versionHint}
+func newUploadBatch(
+	client *client.IDebClient, fileGroups file.Groups, gitMetaObject *git.MetaObject,
+	integrationName string, callGraphTimeout int, versionHint bool, debrickedConfig DebrickedConfig,
+) *uploadBatch {
+	return &uploadBatch{
+		client:           client,
+		fileGroups:       fileGroups,
+		gitMetaObject:    gitMetaObject,
+		integrationName:  integrationName,
+		ciUploadId:       0,
+		callGraphTimeout: callGraphTimeout,
+		versionHint:      versionHint,
+		debrickedConfig:  debrickedConfig,
+	}
 }
 
 // upload concurrently posts all file groups to Debricked
@@ -162,12 +176,14 @@ func (uploadBatch *uploadBatch) initAnalysis() error {
 		CommitName:           uploadBatch.gitMetaObject.CommitName,
 		Author:               uploadBatch.gitMetaObject.Author,
 		VersionHint:          uploadBatch.versionHint,
+		DebrickedConfig:      uploadBatch.debrickedConfig,
 		DebrickedIntegration: "cli",
 	})
 
 	if err != nil {
 		return err
 	}
+
 	response, err := (*uploadBatch.client).Post(
 		"/api/1.0/open/finishes/dependencies/files/uploads",
 		"application/json",
@@ -269,14 +285,38 @@ type uploadedFile struct {
 	EstimateDaysLeft     int    `json:"estimateDaysLeft"`
 }
 
+type boolOrString struct {
+	Version    string `json:"version"`
+	HasVersion bool   `json:"hasVersion"`
+}
+
+func (boolOrString *boolOrString) MarshalJSON() ([]byte, error) {
+	if !boolOrString.HasVersion {
+		return json.Marshal(&boolOrString.HasVersion)
+	}
+
+	return json.Marshal(&boolOrString.Version)
+}
+
+type purlConfig struct {
+	PackageURL string       `json:"pURL" yaml:"pURL"`
+	Version    boolOrString `json:"version" yaml:"version"` // Either false or version string
+	FileRegex  string       `json:"fileRegex" yaml:"fileRegex"`
+}
+
+type DebrickedConfig struct {
+	Overrides []purlConfig `json:"overrides" yaml:"overrides"`
+}
+
 type uploadFinish struct {
-	CiUploadId           string `json:"ciUploadId"`
-	RepositoryName       string `json:"repositoryName"`
-	IntegrationName      string `json:"integrationName"`
-	CommitName           string `json:"commitName"`
-	Author               string `json:"author"`
-	DebrickedIntegration string `json:"debrickedIntegration"`
-	VersionHint          bool   `json:"versionHint"`
+	CiUploadId           string          `json:"ciUploadId"`
+	RepositoryName       string          `json:"repositoryName"`
+	IntegrationName      string          `json:"integrationName"`
+	CommitName           string          `json:"commitName"`
+	Author               string          `json:"author"`
+	DebrickedIntegration string          `json:"debrickedIntegration"`
+	VersionHint          bool            `json:"versionHint"`
+	DebrickedConfig      DebrickedConfig `json:"debrickedConfig"`
 }
 
 func getRelativeFilePath(filePath string) string {
@@ -290,4 +330,43 @@ func getRelativeFilePath(filePath string) string {
 
 func printSuccessfulUpload(f string) {
 	fmt.Printf("Successfully uploaded: %s\n", color.YellowString(f))
+}
+
+type DebrickedConfigYAML struct {
+	Overrides []map[string]string `yaml:"overrides"`
+}
+
+func GetDebrickedConfig(path string) DebrickedConfig {
+	var overrides []purlConfig
+	var yamlConfig DebrickedConfigYAML
+	yamlFile, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Printf("Failed to read debricked config file on path \"%s\"", path)
+
+		return DebrickedConfig{Overrides: nil}
+	}
+	err = yaml.Unmarshal(yamlFile, &yamlConfig)
+	if err != nil {
+		fmt.Printf("Failed to unmarshal debricked config, is the format correct? \"%s\"", yamlFile)
+
+		return DebrickedConfig{Overrides: nil}
+	}
+	for _, entry := range yamlConfig.Overrides {
+		var version string
+		var exist bool
+		pURL := entry["pURL"]
+		fileRegex := entry["fileRegex"]
+		if _, exist = entry["version"]; exist {
+			version = entry["version"]
+			exist = true
+		} else {
+			version = ""
+			exist = false
+		}
+		overrides = append(overrides, purlConfig{PackageURL: pURL, Version: boolOrString{Version: version, HasVersion: exist}, FileRegex: fileRegex})
+	}
+
+	return DebrickedConfig{
+		Overrides: overrides,
+	}
 }

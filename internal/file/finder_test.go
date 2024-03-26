@@ -214,6 +214,12 @@ func TestGetGroupsWithTwoFileMatchesInSameDir(t *testing.T) {
 	assert.Contains(t, files, "requirements-dev.txt")
 }
 
+func TestGetDebrickedConfig(t *testing.T) {
+	path := "testdata"
+	configPath := finder.GetConfigPath(path, nil)
+	assert.Equal(t, filepath.Join("testdata", "misc", "debricked-config.yaml"), configPath)
+}
+
 func TestGetGroupsWithStrictFlag(t *testing.T) {
 	setUp(true)
 	cases := []struct {
