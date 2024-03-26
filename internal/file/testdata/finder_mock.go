@@ -23,7 +23,7 @@ func (f *FinderMock) GetGroups(_ file.DebrickedOptions) (file.Groups, error) {
 	return f.groups, f.error
 }
 
-func (f *FinderMock) GetConfigPath(_ string, _ []string) string {
+func (f *FinderMock) GetConfigPath(_ string, _ []string, _ []string) string {
 	return ""
 }
 

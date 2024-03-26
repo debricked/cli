@@ -27,7 +27,7 @@ var defaultExclusions = DefaultExclusionList{
 func DefaultExclusions() []string {
 	var exclusions []string
 	for _, excluded_dir := range defaultExclusions.Directories {
-		exclusions = append(exclusions, filepath.Join("**", excluded_dir, "**"))
+		exclusions = append(exclusions, "**/"+excluded_dir+"/**")
 	}
 
 	return exclusions
@@ -45,16 +45,17 @@ func Exclusions() []string {
 }
 
 func Excluded(exclusions []string, inclusions []string, path string) bool {
+	path = filepath.ToSlash(path)
 	for _, inclusion := range inclusions {
-		ex := filepath.Clean(inclusion)
-		matched, _ := doublestar.PathMatch(ex, path)
+		inclusion = filepath.ToSlash(inclusion)
+		matched, _ := doublestar.Match(inclusion, path)
 		if matched {
 			return false
 		}
 	}
 	for _, exclusion := range exclusions {
-		ex := filepath.Clean(exclusion)
-		matched, _ := doublestar.PathMatch(ex, path)
+		exclusion = filepath.ToSlash(exclusion)
+		matched, _ := doublestar.Match(exclusion, path)
 		if matched {
 			return true
 		}

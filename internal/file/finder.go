@@ -33,7 +33,7 @@ type DebrickedOptions struct {
 type IFinder interface {
 	GetGroups(options DebrickedOptions) (Groups, error)
 	GetSupportedFormats() ([]*CompiledFormat, error)
-	GetConfigPath(rootPath string, exclusions []string) string
+	GetConfigPath(rootPath string, exclusions []string, inclusions []string) string
 }
 
 type Finder struct {
@@ -49,7 +49,7 @@ func NewFinder(c client.IDebClient, fs ioFs.IFileSystem) (*Finder, error) {
 	return &Finder{c, fs}, nil
 }
 
-func (finder *Finder) GetConfigPath(rootPath string, exclusions []string) string {
+func (finder *Finder) GetConfigPath(rootPath string, exclusions []string, inclusions []string) string {
 	var configPath string
 	err := filepath.Walk(
 		rootPath,
@@ -57,7 +57,7 @@ func (finder *Finder) GetConfigPath(rootPath string, exclusions []string) string
 			if err != nil {
 				return err
 			}
-			if !fileInfo.IsDir() && !Excluded(exclusions, path) {
+			if !fileInfo.IsDir() && !Excluded(exclusions, inclusions, path) {
 				if filepath.Base(path) == "debricked-config.yaml" {
 					configPath = path
 				}

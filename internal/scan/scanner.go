@@ -235,7 +235,7 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		IntegrationsName:       options.IntegrationName,
 		CallGraphUploadTimeout: options.CallGraphUploadTimeout,
 		VersionHint:            options.VersionHint,
-		DebrickedConfig:        dScanner.getDebrickedConfig(options.Path, options.Exclusions),
+		DebrickedConfig:        dScanner.getDebrickedConfig(options.Path, options.Exclusions, options.Inclusions),
 	}
 	result, err := (*dScanner.uploader).Upload(uploaderOptions)
 	if err != nil {
@@ -245,8 +245,8 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 	return result, nil
 }
 
-func (dScanner *DebrickedScanner) getDebrickedConfig(path string, exclusions []string) upload.DebrickedConfig {
-	configPath := dScanner.finder.GetConfigPath(path, exclusions)
+func (dScanner *DebrickedScanner) getDebrickedConfig(path string, exclusions []string, inclusions []string) upload.DebrickedConfig {
+	configPath := dScanner.finder.GetConfigPath(path, exclusions, inclusions)
 	if configPath == "" {
 		return upload.DebrickedConfig{}
 	}

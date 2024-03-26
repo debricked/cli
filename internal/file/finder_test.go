@@ -245,7 +245,7 @@ func TestGetGroupsWithTwoFileMatchesInSameDir(t *testing.T) {
 
 func TestGetDebrickedConfig(t *testing.T) {
 	path := "testdata"
-	configPath := finder.GetConfigPath(path, nil)
+	configPath := finder.GetConfigPath(path, nil, nil)
 	assert.Equal(t, filepath.Join("testdata", "misc", "debricked-config.yaml"), configPath)
 }
 
@@ -295,7 +295,7 @@ func TestGetGroupsWithStrictFlag(t *testing.T) {
 			fileGroups, err := finder.GetGroups(
 				DebrickedOptions{
 					RootPath:     filePath,
-					Exclusions:   []string{},
+					Exclusions:   []string{"**/node_modules/**"},
 					Inclusions:   []string{},
 					LockFileOnly: false,
 					Strictness:   c.strictness,
