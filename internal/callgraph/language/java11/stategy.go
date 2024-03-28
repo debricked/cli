@@ -21,6 +21,7 @@ type Strategy struct {
 	files      []string
 	paths      []string
 	exclusions []string
+	inclusions []string
 	finder     finder.IFinder
 	ctx        cgexec.IContext
 }
@@ -63,7 +64,7 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 		}
 
 		// If build, then we need to find the newly built files
-		files, _ = s.finder.FindFiles(s.paths, s.exclusions)
+		files, _ = s.finder.FindFiles(s.paths, s.exclusions, s.inclusions)
 	}
 
 	javaClassDirs, _ := s.finder.FindJavaClassDirs(files, false)
@@ -100,8 +101,8 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	return jobs, nil
 }
 
-func NewStrategy(config conf.IConfig, files []string, paths []string, exclusions []string, finder finder.IFinder, ctx cgexec.IContext) Strategy {
-	return Strategy{config, CmdFactory{}, files, paths, exclusions, finder, ctx}
+func NewStrategy(config conf.IConfig, files []string, paths []string, exclusions []string, inclusions []string, finder finder.IFinder, ctx cgexec.IContext) Strategy {
+	return Strategy{config, CmdFactory{}, files, paths, exclusions, inclusions, finder, ctx}
 }
 
 func strategyWarning(errMsg string) {

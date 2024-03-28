@@ -21,6 +21,7 @@ var repositoryUrl string
 var integrationName string
 var jsonFilePath string
 var exclusions = file.Exclusions()
+var inclusions = file.Exclusions()
 var verbose bool
 var regenerate int
 var versionHint bool
@@ -31,26 +32,29 @@ var callgraph bool
 var npmPreferred bool
 var callgraphUploadTimeout int
 var callgraphGenerateTimeout int
+var minFingerprintContentLength int
 
 const (
-	RepositoryFlag               = "repository"
-	CommitFlag                   = "commit"
-	BranchFlag                   = "branch"
-	CommitAuthorFlag             = "author"
-	RepositoryUrlFlag            = "repository-url"
-	IntegrationFlag              = "integration"
-	ExclusionFlag                = "exclusion"
-	VerboseFlag                  = "verbose"
-	VersionHintFlag              = "version-hint"
-	RegenerateFlag               = "regenerate"
-	NoResolveFlag                = "no-resolve"
-	FingerprintFlag              = "fingerprint"
-	PassOnTimeOut                = "pass-on-timeout"
-	CallGraphFlag                = "callgraph"
-	CallGraphUploadTimeoutFlag   = "callgraph-upload-timeout"
-	CallGraphGenerateTimeoutFlag = "callgraph-generate-timeout"
-	NpmPreferredFlag             = "prefer-npm"
-	JsonFilePathFlag             = "json-path"
+	RepositoryFlag                  = "repository"
+	CommitFlag                      = "commit"
+	BranchFlag                      = "branch"
+	CommitAuthorFlag                = "author"
+	RepositoryUrlFlag               = "repository-url"
+	IntegrationFlag                 = "integration"
+	ExclusionFlag                   = "exclusion"
+	InclusionFlag                   = "inclusion"
+	VerboseFlag                     = "verbose"
+	VersionHintFlag                 = "version-hint"
+	RegenerateFlag                  = "regenerate"
+	NoResolveFlag                   = "no-resolve"
+	FingerprintFlag                 = "fingerprint"
+	PassOnTimeOut                   = "pass-on-timeout"
+	CallGraphFlag                   = "callgraph"
+	CallGraphUploadTimeoutFlag      = "callgraph-upload-timeout"
+	CallGraphGenerateTimeoutFlag    = "callgraph-generate-timeout"
+	NpmPreferredFlag                = "prefer-npm"
+	JsonFilePathFlag                = "json-path"
+	MinFingerprintContentLengthFlag = "min-fingerprint-content-length"
 )
 
 var scanCmdError error
@@ -79,8 +83,8 @@ If the given path contains a git repository all flags but "integration" will be 
 		`name of integration used to trigger scan. For example "GitHub Actions"`,
 	)
 	cmd.Flags().StringVarP(&jsonFilePath, JsonFilePathFlag, "j", "", "write upload result as json to provided path")
-	fileExclusionExample := filepath.Join("*", "**.lock")
-	dirExclusionExample := filepath.Join("**", "node_modules", "**")
+	fileExclusionExample := filepath.Join("'*", "**.lock'")
+	dirExclusionExample := filepath.Join("'**", "node_modules", "**'")
 	exampleFlags := fmt.Sprintf("-e \"%s\" -e \"%s\"", fileExclusionExample, dirExclusionExample)
 	cmd.Flags().StringArrayVarP(
 		&exclusions,
@@ -100,6 +104,13 @@ Exclude flags could alternatively be set using DEBRICKED_EXCLUSIONS="path1,path2
 
 Examples: 
 $ debricked scan . `+exampleFlags)
+	cmd.Flags().StringArrayVar(
+		&inclusions,
+		InclusionFlag,
+		inclusions,
+		`Forces inclusion of specified terms, see exclusion flag for more information on supported terms.
+Examples: 
+$ debricked scan . --include '**/node_modules/**'`)
 	regenerateDoc := strings.Join(
 		[]string{
 			"Toggles regeneration of already existing lock files between 3 modes:\n",
@@ -130,12 +141,12 @@ For example, if there is a "go.mod" in the target path, its dependencies are goi
 	cmd.Flags().BoolVar(&callgraph, CallGraphFlag, false, `Enables call graph generation during scan.`)
 	cmd.Flags().IntVar(&callgraphUploadTimeout, CallGraphUploadTimeoutFlag, 10*60, "Set a timeout (in seconds) on call graph upload.")
 	cmd.Flags().IntVar(&callgraphGenerateTimeout, CallGraphGenerateTimeoutFlag, 60*60, "Set a timeout (in seconds) on call graph generation.")
+	cmd.Flags().IntVar(&minFingerprintContentLength, MinFingerprintContentLengthFlag, 0, "Set minimum content length (in bytes) for files to fingerprint.")
 	npmPreferredDoc := strings.Join(
 		[]string{
 			"This flag allows you to select which package manager will be used as a resolver: Yarn (default) or NPM.",
 			"Example: debricked resolve --prefer-npm",
 		}, "\n")
-
 	cmd.Flags().BoolP(NpmPreferredFlag, "", npmPreferred, npmPreferredDoc)
 
 	viper.MustBindEnv(RepositoryFlag)
@@ -157,25 +168,26 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			path = args[0]
 		}
 		options := scan.DebrickedOptions{
-			Path:                     path,
-			Resolve:                  !viper.GetBool(NoResolveFlag),
-			Fingerprint:              viper.GetBool(FingerprintFlag),
-			Exclusions:               viper.GetStringSlice(ExclusionFlag),
-			Verbose:                  viper.GetBool(VerboseFlag),
-			Regenerate:               viper.GetInt(RegenerateFlag),
-			VersionHint:              viper.GetBool(VersionHintFlag),
-			RepositoryName:           viper.GetString(RepositoryFlag),
-			CommitName:               viper.GetString(CommitFlag),
-			BranchName:               viper.GetString(BranchFlag),
-			CommitAuthor:             viper.GetString(CommitAuthorFlag),
-			RepositoryUrl:            viper.GetString(RepositoryUrlFlag),
-			IntegrationName:          viper.GetString(IntegrationFlag),
-			JsonFilePath:             viper.GetString(JsonFilePathFlag),
-			NpmPreferred:             viper.GetBool(NpmPreferredFlag),
-			PassOnTimeOut:            viper.GetBool(PassOnTimeOut),
-			CallGraph:                viper.GetBool(CallGraphFlag),
-			CallGraphUploadTimeout:   viper.GetInt(CallGraphUploadTimeoutFlag),
-			CallGraphGenerateTimeout: viper.GetInt(CallGraphGenerateTimeoutFlag),
+			Path:                        path,
+			Resolve:                     !viper.GetBool(NoResolveFlag),
+			Fingerprint:                 viper.GetBool(FingerprintFlag),
+			Exclusions:                  viper.GetStringSlice(ExclusionFlag),
+			Verbose:                     viper.GetBool(VerboseFlag),
+			Regenerate:                  viper.GetInt(RegenerateFlag),
+			VersionHint:                 viper.GetBool(VersionHintFlag),
+			RepositoryName:              viper.GetString(RepositoryFlag),
+			CommitName:                  viper.GetString(CommitFlag),
+			BranchName:                  viper.GetString(BranchFlag),
+			CommitAuthor:                viper.GetString(CommitAuthorFlag),
+			RepositoryUrl:               viper.GetString(RepositoryUrlFlag),
+			IntegrationName:             viper.GetString(IntegrationFlag),
+			JsonFilePath:                viper.GetString(JsonFilePathFlag),
+			NpmPreferred:                viper.GetBool(NpmPreferredFlag),
+			PassOnTimeOut:               viper.GetBool(PassOnTimeOut),
+			CallGraph:                   viper.GetBool(CallGraphFlag),
+			CallGraphUploadTimeout:      viper.GetInt(CallGraphUploadTimeoutFlag),
+			CallGraphGenerateTimeout:    viper.GetInt(CallGraphGenerateTimeoutFlag),
+			MinFingerprintContentLength: viper.GetInt(MinFingerprintContentLengthFlag),
 		}
 		if s != nil {
 			scanCmdError = (*s).Scan(options)

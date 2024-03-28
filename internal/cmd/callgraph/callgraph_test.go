@@ -21,6 +21,7 @@ func TestNewCallgraphCmd(t *testing.T) {
 	flags := cmd.Flags()
 	flagAssertions := map[string]string{
 		ExclusionFlag:       "e",
+		InclusionFlag:       "",
 		NoBuildFlag:         "",
 		GenerateTimeoutFlag: "",
 	}

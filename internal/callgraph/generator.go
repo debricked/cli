@@ -11,9 +11,17 @@ import (
 	"github.com/debricked/cli/internal/tui"
 )
 
+type DebrickedOptions struct {
+	Paths      []string
+	Exclusions []string
+	Inclusions []string
+	Configs    []config.IConfig
+	Timeout    int
+}
+
 type IGenerator interface {
-	GenerateWithTimer(paths []string, exclusions []string, configs []config.IConfig, timeout int) error
-	Generate(paths []string, exclusions []string, configs []config.IConfig, ctx cgexec.IContext) error
+	GenerateWithTimer(options DebrickedOptions) error
+	Generate(options DebrickedOptions, ctx cgexec.IContext) error
 }
 
 type Generator struct {
@@ -36,13 +44,13 @@ func NewGenerator(
 	}
 }
 
-func (g *Generator) GenerateWithTimer(paths []string, exclusions []string, configs []config.IConfig, timeout int) error {
+func (g *Generator) GenerateWithTimer(options DebrickedOptions) error {
 	result := make(chan error)
-	ctx, cancel := cgexec.NewContext(timeout)
+	ctx, cancel := cgexec.NewContext(options.Timeout)
 	defer cancel()
 
 	go func() {
-		result <- g.Generate(paths, exclusions, configs, &ctx)
+		result <- g.Generate(options, &ctx)
 	}()
 
 	// Wait for the result or timeout
@@ -51,15 +59,15 @@ func (g *Generator) GenerateWithTimer(paths []string, exclusions []string, confi
 	return err
 }
 
-func (g *Generator) Generate(paths []string, exclusions []string, configs []config.IConfig, ctx cgexec.IContext) error {
+func (g *Generator) Generate(options DebrickedOptions, ctx cgexec.IContext) error {
 	targetPath := ".debrickedTmpFolder"
 	debrickedExclusions := []string{targetPath}
-	exclusions = append(exclusions, debrickedExclusions...)
-	files, _ := g.finder.FindFiles(paths, exclusions)
+	exclusions := append(options.Exclusions, debrickedExclusions...)
+	files, _ := g.finder.FindFiles(options.Paths, exclusions, options.Inclusions)
 
 	var jobs []job.IJob
-	for _, config := range configs {
-		s, strategyErr := g.strategyFactory.Make(config, files, paths, exclusions, g.finder, ctx)
+	for _, config := range options.Configs {
+		s, strategyErr := g.strategyFactory.Make(config, files, options.Paths, exclusions, options.Inclusions, g.finder, ctx)
 		if strategyErr == nil {
 			newJobs, err := s.Invoke()
 			if err != nil {

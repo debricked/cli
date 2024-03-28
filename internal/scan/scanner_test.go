@@ -384,6 +384,7 @@ func TestScanWithResolveErr(t *testing.T) {
 var dOptionsTemplate = DebrickedOptions{
 	Path:            "path",
 	Exclusions:      nil,
+	Inclusions:      nil,
 	RepositoryName:  "repository",
 	CommitName:      "commit",
 	BranchName:      "branch",
@@ -518,6 +519,7 @@ func TestMapEnvToOptions(t *testing.T) {
 			MapEnvToOptions(&c.opts, c.env)
 			assert.Equal(t, c.template.Path, c.opts.Path)
 			assert.Nil(t, c.opts.Exclusions)
+			assert.Nil(t, c.opts.Inclusions)
 			assert.Equal(t, c.template.RepositoryName, c.opts.RepositoryName)
 			assert.Equal(t, c.template.CommitName, c.opts.CommitName)
 			assert.Equal(t, c.template.BranchName, c.opts.BranchName)
@@ -712,6 +714,7 @@ func TestScanWithFingerprint(t *testing.T) {
 		Resolve:         true,
 		Fingerprint:     true,
 		Exclusions:      nil,
+		Inclusions:      nil,
 		RepositoryName:  repositoryName,
 		CommitName:      commitName,
 		BranchName:      "",
