@@ -47,14 +47,12 @@ func Exclusions() []string {
 func Excluded(exclusions []string, inclusions []string, path string) bool {
 	path = filepath.ToSlash(path)
 	for _, inclusion := range inclusions {
-		inclusion = filepath.ToSlash(inclusion)
 		matched, _ := doublestar.Match(inclusion, path)
 		if matched {
 			return false
 		}
 	}
 	for _, exclusion := range exclusions {
-		exclusion = filepath.ToSlash(exclusion)
 		matched, _ := doublestar.Match(exclusion, path)
 		if matched {
 			return true
