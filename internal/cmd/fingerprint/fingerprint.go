@@ -51,8 +51,7 @@ Example:
 $ debricked files fingerprint . `+exampleFlags)
 	cmd.Flags().BoolVar(&shouldFingerprintCompressedContent, FingerprintCompressedContent, false, `Fingerprint the contents of compressed files by unpacking them in memory, Supported files: `+fmt.Sprintf("%v", fingerprint.ZIP_FILE_ENDINGS))
 	cmd.Flags().StringVar(&outputDir, OutputDirFlag, ".", "The directory to write the output file to")
-	cmd.Flags().IntVar(&minFingerprintContentLength, MinFingerprintContentLengthFlag, 0, "Set minimum content length (in bytes) for files to fingerprint.")
-
+	cmd.Flags().IntVar(&minFingerprintContentLength, MinFingerprintContentLengthFlag, 45, "Set minimum content length (in bytes) for files to fingerprint. Defaults to 45 bytes.")
 	viper.MustBindEnv(ExclusionFlag)
 
 	return cmd
