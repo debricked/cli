@@ -413,3 +413,9 @@ func TestErrorStillClean(t *testing.T) {
 	assert.Len(t, j.Errors().GetAll(), 1)
 	assert.True(t, wasCalled)
 }
+
+func TestFormatLockFileContent(t *testing.T) {
+	manifestContent := "azure-identity==1.15.0\r\nazure-storage-blob==12.19.0\r\nfastapi==0.110.0"
+	formattedLockFileContent := formatLockFileContent(manifestContent, manifestContent, manifestContent)
+	assert.False(t, strings.Contains(string(formattedLockFileContent), "\r"))
+}

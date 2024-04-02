@@ -247,17 +247,12 @@ func (j *Job) writeLockContent() job.IError {
 	}
 	defer closeFile(j, lockFile)
 
-	var fileContents []string
-	fileContents = append(fileContents, string(catCmdOutput))
-	fileContents = append(fileContents, lockFileDelimiter)
-	fileContents = append(fileContents, string(listCmdOutput))
-	fileContents = append(fileContents, lockFileDelimiter)
-	fileContents = append(fileContents, string(ShowCmdOutput))
-	res := []byte(strings.Join(fileContents, "\n"))
-
 	status = "writing lock file"
 	j.SendStatus(status)
-	err = j.fileWriter.Write(lockFile, res)
+	err = j.fileWriter.Write(
+		lockFile,
+		formatLockFileContent(string(catCmdOutput), string(listCmdOutput), string(ShowCmdOutput)),
+	)
 	if err != nil {
 		cmdErr = util.NewPMJobError(err.Error())
 		cmdErr.SetStatus(status)
@@ -266,6 +261,17 @@ func (j *Job) writeLockContent() job.IError {
 	}
 
 	return nil
+}
+
+func formatLockFileContent(manifestContent string, pipListOutput string, pipShowOutput string) []byte {
+	var fileContents []string
+	fileContents = append(fileContents, manifestContent)
+	fileContents = append(fileContents, lockFileDelimiter)
+	fileContents = append(fileContents, pipListOutput)
+	fileContents = append(fileContents, lockFileDelimiter)
+	fileContents = append(fileContents, pipShowOutput)
+
+	return []byte(strings.Join(fileContents, "\n"))
 }
 
 func (j *Job) runCreateVenvCmd() ([]byte, job.IError) {
