@@ -264,12 +264,13 @@ func (j *Job) writeLockContent() job.IError {
 }
 
 func formatLockFileContent(manifestContent string, pipListOutput string, pipShowOutput string) []byte {
+	var replacer = strings.NewReplacer("\r\n", "\n") // replace CRLF (Windows newline) with just LF (Unix newline)
 	var fileContents []string
-	fileContents = append(fileContents, manifestContent)
+	fileContents = append(fileContents, replacer.Replace(manifestContent))
 	fileContents = append(fileContents, lockFileDelimiter)
-	fileContents = append(fileContents, pipListOutput)
+	fileContents = append(fileContents, replacer.Replace(pipListOutput))
 	fileContents = append(fileContents, lockFileDelimiter)
-	fileContents = append(fileContents, pipShowOutput)
+	fileContents = append(fileContents, replacer.Replace(pipShowOutput))
 
 	return []byte(strings.Join(fileContents, "\n"))
 }
