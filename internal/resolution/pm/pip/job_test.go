@@ -280,6 +280,20 @@ func TestRun(t *testing.T) {
 	assert.Equal(t, string(res), string(fileWriterMock.Contents))
 }
 
+func TestRunCRLFFiles(t *testing.T) {
+
+	fileWriterMock := &writerTestdata.FileWriterMock{}
+	cmdFactoryMock := testdata.NewCRLFEchoCmdFactory()
+	j := NewJob("file", true, cmdFactoryMock, fileWriterMock, pipCleaner{})
+
+	go jobTestdata.WaitStatus(j)
+	j.Run()
+
+	assert.False(t, j.Errors().HasError())
+	fmt.Println(string(fileWriterMock.Contents))
+	assert.False(t, strings.Contains(string(fileWriterMock.Contents), "\r\n"))
+}
+
 func TestRunInstall(t *testing.T) {
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	fileWriterMock := &writerTestdata.FileWriterMock{}
@@ -412,10 +426,4 @@ func TestErrorStillClean(t *testing.T) {
 
 	assert.Len(t, j.Errors().GetAll(), 1)
 	assert.True(t, wasCalled)
-}
-
-func TestFormatLockFileContent(t *testing.T) {
-	manifestContent := "azure-identity==1.15.0\r\nazure-storage-blob==12.19.0\r\nfastapi==0.110.0"
-	formattedLockFileContent := formatLockFileContent(manifestContent, manifestContent, manifestContent)
-	assert.False(t, strings.Contains(string(formattedLockFileContent), "\r"))
 }

@@ -214,6 +214,7 @@ func (j *Job) getCouldNotFindVersionErrorDocumentation(cmdError job.IError) stri
 
 func (j *Job) writeLockContent() job.IError {
 	status := "generating lock file"
+	var replacer = strings.NewReplacer("\r\n", "\n") // replace CRLF (Windows newline) with just LF (Unix newline)
 	j.SendStatus(status)
 	catCmdOutput, cmdErr := j.runCatCmd()
 	if cmdErr != nil {
@@ -247,11 +248,20 @@ func (j *Job) writeLockContent() job.IError {
 	}
 	defer closeFile(j, lockFile)
 
+	var fileContents []string
+	fileContents = append(fileContents, replacer.Replace(string(catCmdOutput)))
+	fileContents = append(fileContents, lockFileDelimiter)
+	fileContents = append(fileContents, replacer.Replace(string(listCmdOutput)))
+	fileContents = append(fileContents, lockFileDelimiter)
+	fileContents = append(fileContents, replacer.Replace(string(ShowCmdOutput)))
+
+	res := []byte(strings.Join(fileContents, "\n"))
+
 	status = "writing lock file"
 	j.SendStatus(status)
 	err = j.fileWriter.Write(
 		lockFile,
-		formatLockFileContent(string(catCmdOutput), string(listCmdOutput), string(ShowCmdOutput)),
+		res,
 	)
 	if err != nil {
 		cmdErr = util.NewPMJobError(err.Error())
@@ -261,18 +271,6 @@ func (j *Job) writeLockContent() job.IError {
 	}
 
 	return nil
-}
-
-func formatLockFileContent(manifestContent string, pipListOutput string, pipShowOutput string) []byte {
-	var replacer = strings.NewReplacer("\r\n", "\n") // replace CRLF (Windows newline) with just LF (Unix newline)
-	var fileContents []string
-	fileContents = append(fileContents, replacer.Replace(manifestContent))
-	fileContents = append(fileContents, lockFileDelimiter)
-	fileContents = append(fileContents, replacer.Replace(pipListOutput))
-	fileContents = append(fileContents, lockFileDelimiter)
-	fileContents = append(fileContents, replacer.Replace(pipShowOutput))
-
-	return []byte(strings.Join(fileContents, "\n"))
 }
 
 func (j *Job) runCreateVenvCmd() ([]byte, job.IError) {
