@@ -1,28 +1,28 @@
 package testdata
 
 type FinderMock struct {
-	FindJavaClassDirsNames []string
-	FindJavaClassDirsErr   error
-	FindMavenRootsNames    []string
-	FindMavenRootsErr      error
-	FindFilesNames         []string
-	FindFilesErr           error
+	FindDependencyDirsNames []string
+	FindDependencyDirsErr   error
+	FindRootsNames          []string
+	FindRootsErr            error
+	FindFilesNames          []string
+	FindFilesErr            error
 }
 
 func NewEmptyFinderMock() FinderMock {
 	return FinderMock{
-		FindJavaClassDirsNames: []string{},
-		FindMavenRootsNames:    []string{},
-		FindFilesNames:         []string{},
+		FindDependencyDirsNames: []string{},
+		FindRootsNames:          []string{},
+		FindFilesNames:          []string{},
 	}
 }
 
-func (f FinderMock) FindJavaClassDirs(_ []string, _ bool) ([]string, error) {
-	return f.FindJavaClassDirsNames, f.FindJavaClassDirsErr
+func (f FinderMock) FindDependencyDirs(_ []string, _ bool) ([]string, error) {
+	return f.FindDependencyDirsNames, f.FindDependencyDirsErr
 }
 
-func (f FinderMock) FindMavenRoots(_ []string) ([]string, error) {
-	return f.FindMavenRootsNames, f.FindMavenRootsErr
+func (f FinderMock) FindRoots(_ []string) ([]string, error) {
+	return f.FindRootsNames, f.FindRootsErr
 }
 
 func (f FinderMock) FindFiles(_ []string, _ []string) ([]string, error) {

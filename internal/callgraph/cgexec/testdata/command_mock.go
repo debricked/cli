@@ -63,3 +63,11 @@ func (m CommandMock) GetDir() string {
 func (m CommandMock) Signal(process *os.Process, signal os.Signal) error {
 	return m.SignalError
 }
+
+func (m CommandMock) GetStdOut() *bytes.Buffer {
+	return &bytes.Buffer{}
+}
+
+func (m CommandMock) GetStdErr() *bytes.Buffer {
+	return &bytes.Buffer{}
+}

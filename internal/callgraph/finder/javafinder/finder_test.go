@@ -1,4 +1,4 @@
-package finder
+package javafinder
 
 import (
 	"path/filepath"
@@ -10,17 +10,17 @@ import (
 func TestFindMavenRoots(t *testing.T) {
 
 	files := []string{"test/asd/pom.xml", "test2/pom.xml", "test2/test/asd/pom.xml", "test3/tes"}
-	f := Finder{}
-	roots, err := f.FindMavenRoots(files)
+	f := JavaFinder{}
+	roots, err := f.FindRoots(files)
 
 	assert.Nil(t, err)
 	assert.Len(t, roots, 0)
 }
 
-func TestFindJavaClassDirs(t *testing.T) {
+func TestFindDependencyDirs(t *testing.T) {
 	files := []string{"test/asd/pom.xml", "test2/basd/qwe/asd.class", "test2/test/asd", "test3/tes.jar"}
-	f := Finder{}
-	files, err := f.FindJavaClassDirs(files, false)
+	f := JavaFinder{}
+	files, err := f.FindDependencyDirs(files, false)
 
 	assert.Nil(t, err)
 	assert.Len(t, files, 1)
@@ -28,29 +28,30 @@ func TestFindJavaClassDirs(t *testing.T) {
 	assert.Equal(t, files[0], gt)
 
 	files = []string{"test/asd/pom.xml", "test2/basd/qwe/asd.class", "test2/test/asd", "test3/tes.jar"}
-	files, err = f.FindJavaClassDirs(files, true)
+	files, err = f.FindDependencyDirs(files, true)
 
 	assert.Nil(t, err)
 	assert.Len(t, files, 2)
 }
 
 func TestFindFiles(t *testing.T) {
-	f := Finder{}
+	f := JavaFinder{}
 	files, err := f.FindFiles([]string{"."}, nil)
 	assert.Nil(t, err)
 	assert.NotEmpty(t, files)
 }
 
 func TestFindFilesErr(t *testing.T) {
-	f := Finder{}
+	f := JavaFinder{}
 	files, err := f.FindFiles([]string{"totaly-not-a-valid-path-123123123"}, nil)
 	assert.NotNil(t, err)
 	assert.Empty(t, files)
 }
 
 func TestFindFilesExcluded(t *testing.T) {
-	f := Finder{}
-	project_path, _ := filepath.Abs("testdata/test_project")
+	f := JavaFinder{}
+	project_path, err := filepath.Abs("testdata/test_project")
+	assert.Nil(t, err)
 	files, err := f.FindFiles([]string{project_path}, nil)
 	assert.Nil(t, err)
 	assert.Len(t, files, 2)

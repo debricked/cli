@@ -19,14 +19,20 @@ type ICommand interface {
 	GetArgs() []string
 	GetDir() string
 	Signal(process *os.Process, signal os.Signal) error
+	GetStdOut() *bytes.Buffer
+	GetStdErr() *bytes.Buffer
 }
 
 type Command struct {
-	osCmd *exec.Cmd
+	osCmd     *exec.Cmd
+	stdoutBuf *bytes.Buffer
+	stderrBuf *bytes.Buffer
 }
 
 func NewCommand(osCmd *exec.Cmd) *Command {
-	return &Command{osCmd}
+	var stdoutBuf, stderrBuf bytes.Buffer
+
+	return &Command{osCmd, &stdoutBuf, &stderrBuf}
 }
 
 func (cmd Command) SetStderr(stderr *bytes.Buffer) {
@@ -65,9 +71,17 @@ func (cmd Command) Signal(process *os.Process, signal os.Signal) error {
 	return process.Signal(signal)
 }
 
+func (cmd Command) GetStdOut() *bytes.Buffer {
+	return cmd.stdoutBuf
+}
+
+func (cmd Command) GetStdErr() *bytes.Buffer {
+	return cmd.stderrBuf
+}
+
 func RunCommand(cmd ICommand, ctx IContext) error {
 	args := strings.Join(cmd.GetArgs(), " ")
-	var stdoutBuf, stderrBuf bytes.Buffer
+
 	var err error
 	var outputCmd []byte
 	if ctx == nil {
@@ -79,8 +93,8 @@ func RunCommand(cmd ICommand, ctx IContext) error {
 		return err
 	}
 
-	cmd.SetStderr(&stderrBuf)
-	cmd.SetStdout(&stdoutBuf)
+	cmd.SetStderr(cmd.GetStdErr())
+	cmd.SetStdout(cmd.GetStdOut())
 
 	// Start the external process
 	if err := cmd.Start(); err != nil {
@@ -95,7 +109,7 @@ func RunCommand(cmd ICommand, ctx IContext) error {
 	go func() {
 		err := cmd.Wait()
 		if err != nil {
-			err = fmt.Errorf("Command '%s' executed in folder '%s' gave the following error: \n%s\n%s", args, cmd.GetDir(), stdoutBuf.String(), stderrBuf.String())
+			err = fmt.Errorf("Command '%s' executed in folder '%s' gave the following error: \n%s\n%s", args, cmd.GetDir(), cmd.GetStdOut().String(), cmd.GetStdErr().String())
 		}
 
 		done <- err
