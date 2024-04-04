@@ -214,6 +214,7 @@ func (j *Job) getCouldNotFindVersionErrorDocumentation(cmdError job.IError) stri
 
 func (j *Job) writeLockContent() job.IError {
 	status := "generating lock file"
+	var replacer = strings.NewReplacer("\r\n", "\n") // replace CRLF (Windows newline) with just LF (Unix newline)
 	j.SendStatus(status)
 	catCmdOutput, cmdErr := j.runCatCmd()
 	if cmdErr != nil {
@@ -248,16 +249,20 @@ func (j *Job) writeLockContent() job.IError {
 	defer closeFile(j, lockFile)
 
 	var fileContents []string
-	fileContents = append(fileContents, string(catCmdOutput))
+	fileContents = append(fileContents, replacer.Replace(string(catCmdOutput)))
 	fileContents = append(fileContents, lockFileDelimiter)
-	fileContents = append(fileContents, string(listCmdOutput))
+	fileContents = append(fileContents, replacer.Replace(string(listCmdOutput)))
 	fileContents = append(fileContents, lockFileDelimiter)
-	fileContents = append(fileContents, string(ShowCmdOutput))
+	fileContents = append(fileContents, replacer.Replace(string(ShowCmdOutput)))
+
 	res := []byte(strings.Join(fileContents, "\n"))
 
 	status = "writing lock file"
 	j.SendStatus(status)
-	err = j.fileWriter.Write(lockFile, res)
+	err = j.fileWriter.Write(
+		lockFile,
+		res,
+	)
 	if err != nil {
 		cmdErr = util.NewPMJobError(err.Error())
 		cmdErr.SetStatus(status)

@@ -280,6 +280,20 @@ func TestRun(t *testing.T) {
 	assert.Equal(t, string(res), string(fileWriterMock.Contents))
 }
 
+func TestRunCRLFFiles(t *testing.T) {
+
+	fileWriterMock := &writerTestdata.FileWriterMock{}
+	cmdFactoryMock := testdata.NewCRLFEchoCmdFactory()
+	j := NewJob("file", true, cmdFactoryMock, fileWriterMock, pipCleaner{})
+
+	go jobTestdata.WaitStatus(j)
+	j.Run()
+
+	assert.False(t, j.Errors().HasError())
+	fmt.Println(string(fileWriterMock.Contents))
+	assert.False(t, strings.Contains(string(fileWriterMock.Contents), "\r\n"))
+}
+
 func TestRunInstall(t *testing.T) {
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	fileWriterMock := &writerTestdata.FileWriterMock{}
