@@ -191,7 +191,7 @@ func TestMarshalJSONDebrickedConfig(t *testing.T) {
 			},
 		},
 	})
-	expectedJSON := "{\"overrides\":[{\"pURL\":\"pkg:npm/lodash\",\"version\":\"1.0.0\",\"fileRegex\":\".*/lodash/.*\"},{\"pURL\":\"pkg:maven/org.openjfx/javafx-base\",\"version\":false,\"fileRegex\":\"subpath/org.openjfx/.*\"}]}"
+	expectedJSON := "{\"overrides\":[{\"pURL\":\"pkg:npm/lodash\",\"version\":\"1.0.0\",\"fileRegexes\":[\".*/lodash/.*\"]},{\"pURL\":\"pkg:maven/org.openjfx/javafx-base\",\"version\":false,\"fileRegexes\":[\"subpath/org.openjfx/.*\"]}]}"
 	assert.Nil(t, err)
 	assert.Equal(t, []byte(expectedJSON), config)
 }
