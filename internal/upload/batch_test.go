@@ -141,14 +141,14 @@ func TestGetDebrickedConfig(t *testing.T) {
 	expectedJSON, err := json.Marshal(DebrickedConfig{
 		Overrides: []purlConfig{
 			{
-				PackageURL: "pkg:npm/lodash",
-				Version:    boolOrString{Version: "1.0.0", HasVersion: true},
-				FileRegex:  ".*/lodash/.*",
+				PackageURL:  "pkg:npm/lodash",
+				Version:     boolOrString{Version: "1.0.0", HasVersion: true},
+				FileRegexes: []string{".*/lodash/.*"},
 			},
 			{
-				PackageURL: "pkg:maven/org.openjfx/javafx-base",
-				Version:    boolOrString{Version: "", HasVersion: false},
-				FileRegex:  "subpath/org.openjfx/.*",
+				PackageURL:  "pkg:maven/org.openjfx/javafx-base",
+				Version:     boolOrString{Version: "", HasVersion: false},
+				FileRegexes: []string{"subpath/org.openjfx/.*"},
 			},
 		},
 	})
@@ -180,14 +180,14 @@ func TestMarshalJSONDebrickedConfig(t *testing.T) {
 	config, err := json.Marshal(DebrickedConfig{
 		Overrides: []purlConfig{
 			{
-				PackageURL: "pkg:npm/lodash",
-				Version:    boolOrString{Version: "1.0.0", HasVersion: true},
-				FileRegex:  ".*/lodash/.*",
+				PackageURL:  "pkg:npm/lodash",
+				Version:     boolOrString{Version: "1.0.0", HasVersion: true},
+				FileRegexes: []string{".*/lodash/.*"},
 			},
 			{
-				PackageURL: "pkg:maven/org.openjfx/javafx-base",
-				Version:    boolOrString{Version: "", HasVersion: false},
-				FileRegex:  "subpath/org.openjfx/.*",
+				PackageURL:  "pkg:maven/org.openjfx/javafx-base",
+				Version:     boolOrString{Version: "", HasVersion: false},
+				FileRegexes: []string{"subpath/org.openjfx/.*"},
 			},
 		},
 	})

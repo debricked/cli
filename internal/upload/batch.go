@@ -299,9 +299,9 @@ func (boolOrString *boolOrString) MarshalJSON() ([]byte, error) {
 }
 
 type purlConfig struct {
-	PackageURL string       `json:"pURL" yaml:"pURL"`
-	Version    boolOrString `json:"version" yaml:"version"` // Either false or version string
-	FileRegex  string       `json:"fileRegex" yaml:"fileRegex"`
+	PackageURL  string       `json:"pURL" yaml:"pURL"`
+	Version     boolOrString `json:"version" yaml:"version"` // Either false or version string
+	FileRegexes []string     `json:"fileRegexes" yaml:"fileRegexes"`
 }
 
 type DebrickedConfig struct {
@@ -332,8 +332,14 @@ func printSuccessfulUpload(f string) {
 	fmt.Printf("Successfully uploaded: %s\n", color.YellowString(f))
 }
 
+type pURLConfigYAML struct {
+	PackageURL  string   `yaml:"pURL"`
+	Version     *string  `yaml:"version"`
+	FileRegexes []string `yaml:"fileRegexes"`
+}
+
 type DebrickedConfigYAML struct {
-	Overrides []map[string]string `yaml:"overrides"`
+	Overrides []pURLConfigYAML `yaml:"overrides"`
 }
 
 func GetDebrickedConfig(path string) DebrickedConfig {
@@ -354,16 +360,16 @@ func GetDebrickedConfig(path string) DebrickedConfig {
 	for _, entry := range yamlConfig.Overrides {
 		var version string
 		var exist bool
-		pURL := entry["pURL"]
-		fileRegex := entry["fileRegex"]
-		if _, exist = entry["version"]; exist {
-			version = entry["version"]
-			exist = true
-		} else {
+		pURL := entry.PackageURL
+		fileRegexes := entry.FileRegexes
+		if entry.Version == nil {
 			version = ""
 			exist = false
+		} else {
+			version = *entry.Version
+			exist = true
 		}
-		overrides = append(overrides, purlConfig{PackageURL: pURL, Version: boolOrString{Version: version, HasVersion: exist}, FileRegex: fileRegex})
+		overrides = append(overrides, purlConfig{PackageURL: pURL, Version: boolOrString{Version: version, HasVersion: exist}, FileRegexes: fileRegexes})
 	}
 
 	return DebrickedConfig{
