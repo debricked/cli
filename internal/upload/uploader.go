@@ -16,7 +16,7 @@ type DebrickedOptions struct {
 	IntegrationsName       string
 	CallGraphUploadTimeout int
 	VersionHint            bool
-	DebrickedConfig        DebrickedConfig
+	DebrickedConfig        *DebrickedConfig
 }
 
 type IUploader interface {

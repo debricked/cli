@@ -40,12 +40,12 @@ type uploadBatch struct {
 	ciUploadId       int
 	callGraphTimeout int
 	versionHint      bool
-	debrickedConfig  DebrickedConfig // JSON Config
+	debrickedConfig  *DebrickedConfig // JSON Config
 }
 
 func newUploadBatch(
 	client *client.IDebClient, fileGroups file.Groups, gitMetaObject *git.MetaObject,
-	integrationName string, callGraphTimeout int, versionHint bool, debrickedConfig DebrickedConfig,
+	integrationName string, callGraphTimeout int, versionHint bool, debrickedConfig *DebrickedConfig,
 ) *uploadBatch {
 	return &uploadBatch{
 		client:           client,
@@ -309,14 +309,14 @@ type DebrickedConfig struct {
 }
 
 type uploadFinish struct {
-	CiUploadId           string          `json:"ciUploadId"`
-	RepositoryName       string          `json:"repositoryName"`
-	IntegrationName      string          `json:"integrationName"`
-	CommitName           string          `json:"commitName"`
-	Author               string          `json:"author"`
-	DebrickedIntegration string          `json:"debrickedIntegration"`
-	VersionHint          bool            `json:"versionHint"`
-	DebrickedConfig      DebrickedConfig `json:"debrickedConfig"`
+	CiUploadId           string           `json:"ciUploadId"`
+	RepositoryName       string           `json:"repositoryName"`
+	IntegrationName      string           `json:"integrationName"`
+	CommitName           string           `json:"commitName"`
+	Author               string           `json:"author"`
+	DebrickedIntegration string           `json:"debrickedIntegration"`
+	VersionHint          bool             `json:"versionHint"`
+	DebrickedConfig      *DebrickedConfig `json:"debrickedConfig"`
 }
 
 func getRelativeFilePath(filePath string) string {
@@ -342,20 +342,20 @@ type DebrickedConfigYAML struct {
 	Overrides []pURLConfigYAML `yaml:"overrides"`
 }
 
-func GetDebrickedConfig(path string) DebrickedConfig {
+func GetDebrickedConfig(path string) *DebrickedConfig {
 	var overrides []purlConfig
 	var yamlConfig DebrickedConfigYAML
 	yamlFile, err := os.ReadFile(path)
 	if err != nil {
 		fmt.Printf("Failed to read debricked config file on path \"%s\"", path)
 
-		return DebrickedConfig{Overrides: nil}
+		return nil
 	}
 	err = yaml.Unmarshal(yamlFile, &yamlConfig)
 	if err != nil {
 		fmt.Printf("Failed to unmarshal debricked config, is the format correct? \"%s\"", yamlFile)
 
-		return DebrickedConfig{Overrides: nil}
+		return nil
 	}
 	for _, entry := range yamlConfig.Overrides {
 		var version string
@@ -372,7 +372,7 @@ func GetDebrickedConfig(path string) DebrickedConfig {
 		overrides = append(overrides, purlConfig{PackageURL: pURL, Version: boolOrString{Version: version, HasVersion: exist}, FileRegexes: fileRegexes})
 	}
 
-	return DebrickedConfig{
+	return &DebrickedConfig{
 		Overrides: overrides,
 	}
 }

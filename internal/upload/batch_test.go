@@ -38,7 +38,7 @@ func TestUploadWithBadFiles(t *testing.T) {
 	clientMock.AddMockResponse(mockRes)
 	clientMock.AddMockResponse(mockRes)
 	c = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, DebrickedConfig{})
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{})
 	var buf bytes.Buffer
 	log.SetOutput(&buf)
 	err = batch.upload()
@@ -50,7 +50,7 @@ func TestUploadWithBadFiles(t *testing.T) {
 }
 
 func TestInitAnalysisWithoutAnyFiles(t *testing.T) {
-	batch := newUploadBatch(nil, file.Groups{}, nil, "CLI", 10*60, true, DebrickedConfig{})
+	batch := newUploadBatch(nil, file.Groups{}, nil, "CLI", 10*60, true, &DebrickedConfig{})
 	err := batch.initAnalysis()
 
 	assert.ErrorContains(t, err, "failed to find dependency files")
@@ -73,7 +73,7 @@ func TestWaitWithPollingTerminatedError(t *testing.T) {
 	}
 	clientMock.AddMockResponse(mockRes)
 	c = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, DebrickedConfig{})
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{})
 
 	uploadResult, err := batch.wait()
 
@@ -98,7 +98,7 @@ func TestInitUploadBadFile(t *testing.T) {
 	clientMock.AddMockResponse(mockRes)
 
 	var c client.IDebClient = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, DebrickedConfig{})
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{})
 
 	files, err := batch.initUpload()
 
@@ -125,7 +125,7 @@ func TestInitUpload(t *testing.T) {
 	clientMock.AddMockResponse(mockRes)
 
 	var c client.IDebClient = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, DebrickedConfig{})
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{})
 
 	files, err := batch.initUpload()
 
@@ -160,20 +160,18 @@ func TestGetDebrickedConfigUnmarshalError(t *testing.T) {
 	config := GetDebrickedConfig(filepath.Join("testdata", "debricked-config-error.yaml"))
 	configJSON, err := json.Marshal(config)
 	assert.Nil(t, err)
-	expectedJSON, err := json.Marshal(DebrickedConfig{
-		Overrides: nil})
+	expectedJSON, err := json.Marshal(nil)
 	assert.Nil(t, err)
-	assert.JSONEq(t, string(configJSON), string(expectedJSON))
+	assert.JSONEq(t, string(expectedJSON), string(configJSON))
 }
 
 func TestGetDebrickedConfigFailure(t *testing.T) {
 	config := GetDebrickedConfig("")
 	configJSON, err := json.Marshal(config)
 	assert.Nil(t, err)
-	expectedJSON, err := json.Marshal(DebrickedConfig{
-		Overrides: nil})
+	expectedJSON, err := json.Marshal(nil)
 	assert.Nil(t, err)
-	assert.JSONEq(t, string(configJSON), string(expectedJSON))
+	assert.JSONEq(t, string(expectedJSON), string(configJSON))
 }
 
 func TestMarshalJSONDebrickedConfig(t *testing.T) {
