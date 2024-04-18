@@ -222,10 +222,10 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 	return result, nil
 }
 
-func (dScanner *DebrickedScanner) getDebrickedConfig(path string, exclusions []string) upload.DebrickedConfig {
+func (dScanner *DebrickedScanner) getDebrickedConfig(path string, exclusions []string) *upload.DebrickedConfig {
 	configPath := dScanner.finder.GetConfigPath(path, exclusions)
 	if configPath == "" {
-		return upload.DebrickedConfig{}
+		return nil
 	}
 
 	return upload.GetDebrickedConfig(configPath)

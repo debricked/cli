@@ -43,6 +43,7 @@ func NewFinder(c client.IDebClient, fs ioFs.IFileSystem) (*Finder, error) {
 
 func (finder *Finder) GetConfigPath(rootPath string, exclusions []string) string {
 	var configPath string
+
 	if len(rootPath) == 0 {
 		rootPath = filepath.Base("")
 	}
