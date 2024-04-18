@@ -180,6 +180,8 @@ func (uploadBatch *uploadBatch) initAnalysis() error {
 		DebrickedIntegration: "cli",
 	})
 
+	fmt.Println(string(body))
+
 	if err != nil {
 		return err
 	}
