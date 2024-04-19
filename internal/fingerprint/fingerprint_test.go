@@ -316,6 +316,11 @@ func TestShouldUnzip(t *testing.T) {
 			want:     true,
 		},
 		{
+			name:     "Should unzip .whl file",
+			filename: "test.whl",
+			want:     true,
+		},
+		{
 			name:     "Should not unzip .txt file",
 			filename: "test.txt",
 			want:     false,
@@ -480,6 +485,13 @@ func TestInMemFingerprintingCompressedContent(t *testing.T) {
 			path:        "testdata/archive/bz2",
 			expected:    7,
 			suffix:      "stuf-0.1.tar.bz2",
+			shouldUnzip: true,
+		},
+		{
+			name:        "whl",
+			path:        "testdata/archive/whl",
+			expected:    19,
+			suffix:      "requests-2.31.0-py3-none-any.whl",
 			shouldUnzip: true,
 		},
 	}

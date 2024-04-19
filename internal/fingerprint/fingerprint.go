@@ -31,7 +31,7 @@ var EXCLUDED_EXT = []string{
 	".po", ".ppt", ".prefs", ".properties", ".pyc", ".qdoc", ".result", ".rgb",
 	".rst", ".scss", ".sha", ".sha1", ".sha2", ".sha256", ".sln", ".spec", ".sql",
 	".sub", ".svg", ".svn-base", ".tab", ".template", ".test", ".tex", ".tiff",
-	".toml", ".ttf", ".txt", ".utf-8", ".vim", ".wav", ".whl", ".woff", ".woff2", ".xht",
+	".toml", ".ttf", ".txt", ".utf-8", ".vim", ".wav", ".woff", ".woff2", ".xht",
 	".xhtml", ".xls", ".xlsx", ".xpm", ".xsd", ".xul", ".yaml", ".yml", ".wfp",
 	".editorconfig", ".dotcover", ".pid", ".lcov", ".egg", ".manifest", ".cache", ".coverage", ".cover",
 	".gem", ".lst", ".pickle", ".pdb", ".gml", ".pot", ".plt", "", ".pyi",
@@ -57,7 +57,7 @@ var INCLUDED_FILES = []string{
 	"package.json",
 }
 
-var ZIP_FILE_ENDINGS = []string{".jar", ".nupkg", ".war", ".zip", ".ear"}
+var ZIP_FILE_ENDINGS = []string{".jar", ".nupkg", ".war", ".zip", ".ear", ".whl"}
 var TAR_GZIP_FILE_ENDINGS = []string{".tgz", ".tar.gz"}
 var TAR_BZIP2_FILE_ENDINGS = []string{".tar.bz2"}
 
