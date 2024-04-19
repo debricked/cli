@@ -316,6 +316,11 @@ func TestShouldUnzip(t *testing.T) {
 			want:     true,
 		},
 		{
+			name:     "Should unzip .whl file",
+			filename: "test.whl",
+			want:     true,
+		},
+		{
 			name:     "Should not unzip .txt file",
 			filename: "test.txt",
 			want:     false,
