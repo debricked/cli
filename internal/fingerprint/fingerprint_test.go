@@ -487,6 +487,13 @@ func TestInMemFingerprintingCompressedContent(t *testing.T) {
 			suffix:      "stuf-0.1.tar.bz2",
 			shouldUnzip: true,
 		},
+		{
+			name:        "whl",
+			path:        "testdata/archive/whl",
+			expected:    19,
+			suffix:      "requests-2.31.0-py3-none-any.whl",
+			shouldUnzip: true,
+		},
 	}
 
 	for _, tt := range tests {
