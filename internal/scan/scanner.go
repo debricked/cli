@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -25,6 +27,8 @@ var (
 	BadOptsErr      = errors.New("failed to type case IOptions")
 	FailPipelineErr = errors.New("")
 )
+
+const enterpriseCheckUri = "/api/1.0/open/user-profile/get-billing-info"
 
 type IScanner interface {
 	Scan(o IOptions) error
@@ -157,8 +161,19 @@ func (dScanner *DebrickedScanner) scanResolve(options DebrickedOptions) error {
 	return nil
 }
 
+type BillingPlanError struct {
+	errorMessage string
+}
+
+func (billingPlanError BillingPlanError) Error() string {
+	return billingPlanError.errorMessage
+}
+
 func (dScanner *DebrickedScanner) scanFingerprint(options DebrickedOptions) error {
 	if options.Fingerprint {
+		if !dScanner.IsEnterpriseCustomer() {
+			return BillingPlanError{errorMessage: "Could not validate Enterprise billing plan, which is a requirement for fingerprinting and manifestless matching."}
+		}
 		fingerprints, err := dScanner.fingerprint.FingerprintFiles(
 			options.Path, file.DefaultExclusionsFingerprint(), false, options.MinFingerprintContentLength,
 		)
@@ -171,6 +186,45 @@ func (dScanner *DebrickedScanner) scanFingerprint(options DebrickedOptions) erro
 	}
 
 	return nil
+}
+
+type BillingPlan struct {
+	SCA    string `json:"sca"`
+	Select string `json:"select"`
+}
+
+func (dScanner *DebrickedScanner) IsEnterpriseCustomer() bool {
+	res, err := (*dScanner.client).Get(enterpriseCheckUri, "application/json")
+	if err != nil {
+		fmt.Printf("%s Unable to get billing plan from the server. Defaulting to non-enterprise plan.\n", color.YellowString("⚠️"))
+
+		return false
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		fmt.Printf("%s Unable to get billing plan from the server. Defaulting to non-enterprise plan.\n", color.YellowString("⚠️"))
+
+		return false
+	}
+
+	billingPlanJSON, err := io.ReadAll(res.Body)
+	if err != nil {
+		fmt.Printf("%s Unable to get billing plan correctly formatted from the server. Defaulting to non-enterprise plan.\n", color.YellowString("⚠️"))
+
+		return false
+	}
+
+	var billingPlan BillingPlan
+
+	err = json.Unmarshal(billingPlanJSON, &billingPlan)
+	if err != nil {
+		fmt.Printf("%s Unable to get billing plan correctly formatted from the server. Defaulting to non-enterprise plan.\n", color.YellowString("⚠️"))
+
+		return false
+	}
+
+	return billingPlan.SCA == "enterprise"
 }
 
 func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject git.MetaObject) (*upload.UploadResult, error) {
