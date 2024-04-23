@@ -668,9 +668,54 @@ func TestScanWithFingerprint(t *testing.T) {
 	assert.Contains(t, cwd, path)
 }
 
+func TestScanWithCallgraph(t *testing.T) {
+	if runtime.GOOS == windowsOS {
+		t.Skipf("TestScan is skipped due to Windows env")
+	}
+	clientMock := testdata.NewDebClientMock()
+	addMockedFormatsResponse(clientMock, "yarn\\.lock")
+	addMockedFileUploadResponse(clientMock)
+	addMockedFinishResponse(clientMock, http.StatusNoContent)
+	addMockedStatusResponse(clientMock, http.StatusOK, 100)
+
+	generatorMock := callgraphTestdata.GeneratorMock{}
+
+	scanner := makeScanner(clientMock, nil, &generatorMock)
+	scanner.fingerprint = fingerprint.NewFingerprinter()
+
+	cwd, _ := os.Getwd()
+	defer resetWd(t, cwd)
+
+	path := testdataNpm
+	repositoryName := path
+	commitName := "testdata/npm-commit-callgraph"
+	opts := DebrickedOptions{
+		Path:            path,
+		Resolve:         false,
+		Fingerprint:     false,
+		CallGraph:       true,
+		Exclusions:      nil,
+		RepositoryName:  repositoryName,
+		CommitName:      commitName,
+		BranchName:      "",
+		CommitAuthor:    "",
+		RepositoryUrl:   "",
+		IntegrationName: "",
+	}
+	err := scanner.Scan(opts)
+	assert.ErrorContains(t, err, "failed to find dependency files")
+	cwd, _ = os.Getwd()
+	assert.Contains(t, cwd, path)
+}
+
 func TestScanFingerprintWithoutEnterprise(t *testing.T) {
 	clientMock := testdata.NewDebClientMock()
-	clientMock.SetServiceUp(false)
+	addMockedFormatsResponse(clientMock, "yarn\\.lock")
+	addMockedFileUploadResponse(clientMock)
+	addMockedBillingPlanResponse(clientMock, "free")
+	addMockedFinishResponse(clientMock, http.StatusNoContent)
+	addMockedStatusResponse(clientMock, http.StatusOK, 100)
+	clientMock.SetServiceUp(true)
 
 	scanner := makeScanner(clientMock, nil, nil)
 	path := testdataNpm
@@ -693,13 +738,12 @@ func TestScanFingerprintWithoutEnterprise(t *testing.T) {
 	os.Stdout = w
 
 	err := scanner.Scan(opts)
-
+	assert.NotNil(t, err)
 	_ = w.Close()
 	output, _ := io.ReadAll(r)
 	os.Stdout = rescueStdout
 
-	assert.ErrorContains(t, err, "Could not validate Enterprise billing plan")
-	assert.Contains(t, string(output), "Unable to get billing plan from the server")
+	assert.Contains(t, string(output), "Could not validate enterprise billing plan")
 }
 
 func TestScanWithFingerprintMalformedBilling(t *testing.T) {
@@ -736,8 +780,16 @@ func TestScanWithFingerprintMalformedBilling(t *testing.T) {
 		RepositoryUrl:   "",
 		IntegrationName: "",
 	}
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
 	err := scanner.Scan(opts)
-	assert.ErrorContains(t, err, "Could not validate Enterprise billing plan")
+	assert.Equal(t, err, nil)
+	_ = w.Close()
+	output, _ := io.ReadAll(r)
+	os.Stdout = rescueStdout
+
+	assert.Contains(t, string(output), "Could not validate enterprise billing plan")
 	cwd, _ = os.Getwd()
 	assert.Contains(t, cwd, path)
 }
@@ -776,8 +828,16 @@ func TestScanWithFingerprintBillingStatusCodeError(t *testing.T) {
 		RepositoryUrl:   "",
 		IntegrationName: "",
 	}
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
 	err := scanner.Scan(opts)
-	assert.ErrorContains(t, err, "Could not validate Enterprise billing plan")
+	assert.Equal(t, err, nil)
+	_ = w.Close()
+	output, _ := io.ReadAll(r)
+	os.Stdout = rescueStdout
+
+	assert.Contains(t, string(output), "Could not validate enterprise billing plan")
 	cwd, _ = os.Getwd()
 	assert.Contains(t, cwd, path)
 }

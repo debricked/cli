@@ -172,7 +172,12 @@ func (billingPlanError BillingPlanError) Error() string {
 func (dScanner *DebrickedScanner) scanFingerprint(options DebrickedOptions) error {
 	if options.Fingerprint {
 		if !dScanner.IsEnterpriseCustomer() {
-			return BillingPlanError{errorMessage: "Could not validate Enterprise billing plan, which is a requirement for fingerprinting and manifestless matching."}
+			fmt.Printf(
+				"%s Could not validate enterprise billing plan, which is a requirement for fingerprinting and manifestless matching.",
+				color.YellowString("⚠️"),
+			)
+
+			return nil
 		}
 		fingerprints, err := dScanner.fingerprint.FingerprintFiles(
 			options.Path, file.DefaultExclusionsFingerprint(), false, options.MinFingerprintContentLength,
@@ -196,21 +201,18 @@ type BillingPlan struct {
 func (dScanner *DebrickedScanner) IsEnterpriseCustomer() bool {
 	res, err := (*dScanner.client).Get(enterpriseCheckUri, "application/json")
 	if err != nil {
-		fmt.Printf("%s Unable to get billing plan from the server. Defaulting to non-enterprise plan.\n", color.YellowString("⚠️"))
 
 		return false
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		fmt.Printf("%s Unable to get billing plan from the server. Defaulting to non-enterprise plan.\n", color.YellowString("⚠️"))
 
 		return false
 	}
 
 	billingPlanJSON, err := io.ReadAll(res.Body)
 	if err != nil {
-		fmt.Printf("%s Unable to get billing plan correctly formatted from the server. Defaulting to non-enterprise plan.\n", color.YellowString("⚠️"))
 
 		return false
 	}
@@ -219,7 +221,6 @@ func (dScanner *DebrickedScanner) IsEnterpriseCustomer() bool {
 
 	err = json.Unmarshal(billingPlanJSON, &billingPlan)
 	if err != nil {
-		fmt.Printf("%s Unable to get billing plan correctly formatted from the server. Defaulting to non-enterprise plan.\n", color.YellowString("⚠️"))
 
 		return false
 	}
