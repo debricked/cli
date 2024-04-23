@@ -1,4 +1,4 @@
-FROM golang:1.21-bullseye AS dev
+FROM golang:1.22-bookworm AS dev
 WORKDIR /cli
 RUN apt -y update && apt -y upgrade && apt -y install git && \
     apt -y clean && rm -rf /var/lib/apt/lists/*
@@ -8,9 +8,9 @@ RUN mkdir -p internal/file/embedded && \
 RUN go mod download && go mod verify
 COPY . .
 RUN go build -o debricked ./cmd/debricked
-ENTRYPOINT ["debricked"]
+CMD [ "debricked" ]
 
-FROM debian:bullseye-slim AS cli-base
+FROM debian:bookworm-slim AS cli-base
 ENV DEBRICKED_TOKEN=""
 RUN apt -y update && apt -y upgrade && apt -y install git && \
     apt -y clean && rm -rf /var/lib/apt/lists/*
@@ -21,7 +21,7 @@ FROM cli-base AS cli
 COPY --from=dev /cli/debricked /usr/bin/debricked
 
 FROM cli AS scan
-ENTRYPOINT [ "debricked",  "scan" ]
+CMD [ "debricked",  "scan" ]
 
 FROM cli-base AS resolution
 RUN apt -y update && apt -y upgrade && apt -y install curl gnupg unzip && \
@@ -29,7 +29,7 @@ RUN apt -y update && apt -y upgrade && apt -y install curl gnupg unzip && \
 
 RUN mkdir -p /etc/apt/keyrings
 
-ENV MAVEN_VERSION 3.9.2
+ENV MAVEN_VERSION 3.9.6
 ENV MAVEN_HOME /usr/lib/mvn
 ENV PATH $MAVEN_HOME/bin:$PATH
 RUN curl -fsSLO http://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz && \
@@ -37,14 +37,14 @@ RUN curl -fsSLO http://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/bina
     rm apache-maven-$MAVEN_VERSION-bin.tar.gz && \
     mv apache-maven-$MAVEN_VERSION $MAVEN_HOME
 
-ENV GRADLE_VERSION 8.1.1
+ENV GRADLE_VERSION 8.7
 ENV GRADLE_HOME /usr/lib/gradle
 ENV PATH $GRADLE_HOME/gradle-$GRADLE_VERSION/bin:$PATH
 RUN curl -fsSLO https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip && \
     unzip gradle-$GRADLE_VERSION-bin.zip -d $GRADLE_HOME && \
     rm gradle-$GRADLE_VERSION-bin.zip
 
-ENV NODE_MAJOR 18
+ENV NODE_MAJOR 20
 RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
 RUN echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
 RUN apt -y update && apt -y upgrade && apt -y install nodejs && \
@@ -59,7 +59,7 @@ RUN npm -v && yarn -v && bower -v
 # https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian
 # Package manager installs are only supported on the x64 architecture. Other architectures, such as Arm, must install .NET by some other means such as with Snap, an installer script, or through a manual binary installation.
 ENV DOTNET_ROOT /usr/lib/dotnet
-ENV DOTNET_MAJOR 7.0
+ENV DOTNET_MAJOR 8.0
 RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh
 RUN chmod u+x ./dotnet-install.sh
 RUN ./dotnet-install.sh --channel $DOTNET_MAJOR --install-dir $DOTNET_ROOT
@@ -72,32 +72,35 @@ RUN echo "deb http://ftp.us.debian.org/debian testing-updates main" >> /etc/apt/
     echo "Pin: release a=testing" >> /etc/apt/preferences && \
     echo "Pin-Priority: -2" >> /etc/apt/preferences
 
-RUN apt -y update && apt -y upgrade && apt -y install openjdk-11-jre \
+ENV GOLANG_VERSION 1.22
+RUN apt -y update && apt -y upgrade && apt -y install \
     python3 \
     python3-venv \
     ca-certificates \
     python3-pip && \
-    apt -y install -t testing golang-1.21 && \
+    apt -y install -t testing \
+    golang-$GOLANG_VERSION \
+    openjdk-21-jre && \
     apt -y clean && rm -rf /var/lib/apt/lists/* && \
     # Symlink pip3 to pip, we assume that "pip" works in CLI
     ln -sf /usr/bin/pip3 /usr/bin/pip && \
     ln -sf /usr/bin/python3 /usr/bin/python && \
     # Symlink go binary to bin directory which is in path
-    ln -s /usr/lib/go-1.21/bin/go /usr/bin/go
+    ln -s /usr/lib/go-$GOLANG_VERSION/bin/go /usr/bin/go
 
 RUN dotnet --version
 
 RUN apt update -y && \
-    apt install lsb-release apt-transport-https ca-certificates software-properties-common -y && \
+    apt install -t testing lsb-release apt-transport-https ca-certificates software-properties-common -y && \
     curl -o /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
     sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list' && \
     apt -y clean && rm -rf /var/lib/apt/lists/*
 
 RUN apt -y update && apt -y install \
-    php8.2 \
-    php8.2-curl \
-    php8.2-mbstring \
-    php8.2-phar && \
+    php8.3 \
+    php8.3-curl \
+    php8.3-mbstring \
+    php8.3-phar && \
     apt -y clean && rm -rf /var/lib/apt/lists/*
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
