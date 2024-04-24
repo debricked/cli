@@ -195,7 +195,7 @@ func (uploadBatch *uploadBatch) initAnalysis() error {
 	}
 	defer response.Body.Close()
 	if response.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("Failed to initialize scan due to status code %d", response.StatusCode)
+		return fmt.Errorf("failed to initialize scan due to status code %d", response.StatusCode)
 	} else {
 		fmt.Println("Successfully initialized scan")
 	}
@@ -347,13 +347,20 @@ func GetDebrickedConfig(path string) *DebrickedConfig {
 	var yamlConfig DebrickedConfigYAML
 	yamlFile, err := os.ReadFile(path)
 	if err != nil {
-		fmt.Printf("Failed to read debricked config file on path \"%s\"", path)
+		fmt.Printf(
+			"%s Failed to read debricked config file on path \"%s\"",
+			color.YellowString("⚠️"),
+			path,
+		)
 
 		return nil
 	}
 	err = yaml.Unmarshal(yamlFile, &yamlConfig)
 	if err != nil {
-		fmt.Printf("Failed to unmarshal debricked config, is the format correct? \"%s\"", yamlFile)
+		fmt.Printf("%s Failed to unmarshal debricked config: \"%s\"\n",
+			color.YellowString("⚠️"),
+			color.RedString(err.Error()),
+		)
 
 		return nil
 	}
