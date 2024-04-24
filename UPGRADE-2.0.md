@@ -3,6 +3,8 @@
 ## Changed behaviours
 - Changes default strictness of resolve command to 1 (Exit with code 1 if all files failed to resolve, otherwise exit with code 0 instead of always exiting with code 0)
 - File Fingerprint analysis is on by default, rolling roll-out starting with all repositories that start with the letter "C".
+- Added inclusion option to commands to force include patterns which are by default ignored by the CLI
+- Refactored how exclusion works for fingerprinting to align it with the rest of the CLI, this includes a breaking change for windows where Unix path separators must be used in patterns.
 
 ## Runtime upgrades
 
