@@ -81,11 +81,11 @@ $ debricked resolve . `+exampleFlags)
 
 	cmd.Flags().BoolP(NpmPreferredFlag, "", npmPreferred, npmPreferredDoc)
 
-	cmd.Flags().IntVar(&resolutionStrictness, ResolutionStrictFlag, file.StrictAll, `Allows you to configure exit code 1 or 0 depending on if the resolution was successful or not.
+	cmd.Flags().IntVar(&resolutionStrictness, ResolutionStrictFlag, file.StrictLockAndPairs, `Allows you to configure exit code 1 or 0 depending on if the resolution was successful or not.
 Strictness Level | Meaning
 ---------------- | -------
-0 (default)      | Always exit with code 0, even if any or all files failed to resolve
-1                | Exit with code 1 if all files failed to resolve, otherwise exit with code 0
+0                | Always exit with code 0, even if any or all files failed to resolve
+1 (default)      | Exit with code 1 if all files failed to resolve, otherwise exit with code 0
 2                | Exit with code 1 if any file failed to resolve, otherwise exit with code 0
 3                | Exit with code 1 if all files failed to resolve, if any but not all files failed to resolve exit with code 3, otherwise exit with code 0
 `)
