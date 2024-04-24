@@ -629,6 +629,9 @@ func TestScanServiceDowntime(t *testing.T) {
 }
 
 func TestScanWithFingerprint(t *testing.T) {
+	if runtime.GOOS == windowsOS {
+		t.Skipf("TestScan is skipped due to Windows env")
+	}
 	clientMock := testdata.NewDebClientMock()
 	addMockedFormatsResponse(clientMock, "yarn\\.lock")
 	addMockedFileUploadResponse(clientMock)
@@ -709,6 +712,9 @@ func TestScanWithCallgraph(t *testing.T) {
 }
 
 func TestScanFingerprintWithoutEnterprise(t *testing.T) {
+	if runtime.GOOS == windowsOS {
+		t.Skipf("TestScan is skipped due to Windows env")
+	}
 	clientMock := testdata.NewDebClientMock()
 	addMockedFormatsResponse(clientMock, "yarn\\.lock")
 	addMockedFileUploadResponse(clientMock)
@@ -747,6 +753,9 @@ func TestScanFingerprintWithoutEnterprise(t *testing.T) {
 }
 
 func TestScanWithFingerprintMalformedBilling(t *testing.T) {
+	if runtime.GOOS == windowsOS {
+		t.Skipf("TestScan is skipped due to Windows env")
+	}
 	clientMock := testdata.NewDebClientMock()
 	addMockedFormatsResponse(clientMock, "yarn\\.lock")
 	addMockedMalformedBillingPlanResponse(clientMock)
@@ -795,6 +804,9 @@ func TestScanWithFingerprintMalformedBilling(t *testing.T) {
 }
 
 func TestScanWithFingerprintBillingStatusCodeError(t *testing.T) {
+	if runtime.GOOS == windowsOS {
+		t.Skipf("TestScan is skipped due to Windows env")
+	}
 	clientMock := testdata.NewDebClientMock()
 	addMockedFormatsResponse(clientMock, "yarn\\.lock")
 	addMockedNotOKBillingPlanResponse(clientMock, "enterprise")
