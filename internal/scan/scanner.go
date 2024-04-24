@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/debricked/cli/internal/callgraph"
 	"github.com/debricked/cli/internal/callgraph/config"
@@ -167,6 +168,20 @@ type BillingPlanError struct {
 
 func (billingPlanError BillingPlanError) Error() string {
 	return billingPlanError.errorMessage
+}
+
+func RollingFingerprintEnabled(repositoryName string) bool {
+	fmt.Println("Repository name = ", repositoryName)
+	if strings.HasPrefix(strings.ToLower(repositoryName), "c") {
+		fmt.Print(
+			"Your repository starts with letter \"C\", file fingerprinting has been enabled by default as part of our gradual rollout of ",
+			"this feature. For more details see https://docs.debricked.com/tools-and-integrations/cli/debricked-cli/file-fingerprinting",
+		)
+
+		return true
+	}
+
+	return false
 }
 
 func (dScanner *DebrickedScanner) scanFingerprint(options DebrickedOptions) error {

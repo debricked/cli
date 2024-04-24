@@ -2,6 +2,8 @@
 
 ## Changed behaviours
 - Changes default strictness of resolve command to 1 (Exit with code 1 if all files failed to resolve, otherwise exit with code 0 instead of always exiting with code 0)
+- File Fingerprint analysis is on by default, rolling roll-out starting with all repositories that start with the letter "C".
+
 ## Runtime upgrades
 
 - Base Docker images have been upgraded from Go 1.21 to 1.22
