@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - '*'
+      - 'v*'
 
 permissions:
   contents: write
@@ -119,7 +119,7 @@ jobs:
         uses: actions/download-artifact@v4
 
       - name: Add archives with JARs to release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           tag_name: ${{ github.ref_name }}
@@ -128,6 +128,40 @@ jobs:
             soot-wrapper-11.zip/soot-wrapper-11.zip
             soot-wrapper-17.zip/soot-wrapper-17.zip
             soot-wrapper-21.zip/soot-wrapper-21.zip
+
+  major-release:
+    runs-on: ubuntu-latest
+    needs: goreleaser
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Update major release tag
+        id: major-tag
+        run: |
+          # returns v1, v2, etc, everything to the left of the leftmost dot.
+          MAJOR_VERSION="${GITHUB_REF_NAME%%.*}"
+          MAJOR_TAG="release-${MAJOR_VERSION}"
+          echo "MAJOR_VERSION=${MAJOR_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "MAJOR_TAG=${MAJOR_TAG}" >> "$GITHUB_OUTPUT"
+          git tag -f "${MAJOR_TAG}"
+          git push -f origin "${MAJOR_TAG}"
+      - name: Fetch assets from actual release
+        env:
+          MAJOR_TAG: ${{ steps.major-tag.outputs.MAJOR_TAG }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download --pattern="cli_*.tar.gz" "${GITHUB_REF_NAME}"
+      - name: Create or update release
+        uses: softprops/action-gh-release@v2
+        with:
+          body: Latest release for the ${{ steps.major-tag.outputs.MAJOR_VERSION }} branch of the CLI
+          name: Latest ${{ steps.major-tag.outputs.MAJOR_VERSION }} CLI
+          tag_name: ${{ steps.major-tag.outputs.MAJOR_TAG }}
+          fail_on_unmatched_files: true
+          make_latest: false
+          files: "cli_*.tar.gz"
+
 
   aur:
     runs-on: ubuntu-latest
