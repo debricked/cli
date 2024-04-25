@@ -25,7 +25,7 @@ project via the command prompt.
     <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg" />
   </a>
-  <a href="https://github.com/debricked/cli/releases/latest">
+  <a href="https://github.com/debricked/cli/releases/tag/release-v1">
     <img src="https://img.shields.io/github/v/release/debricked/cli" />
   </a>
   <a href="https://twitter.com/debrickedab">
@@ -40,24 +40,24 @@ project via the command prompt.
 </p>
 
 ## Installation
-Check out the [releases](https://github.com/debricked/cli/releases/latest) page. Choose the asset that is applicable for your system.
+Check out the [releases](https://github.com/debricked/cli/releases/tag/release-v1) page. Choose the asset that is applicable for your system.
 Below follow some common ways to install the CLI.
 ### Linux
 ```sh
-curl -L https://github.com/debricked/cli/releases/latest/download/cli_linux_x86_64.tar.gz | tar -xz debricked
+curl -L https://github.com/debricked/cli/releases/download/release-v1/cli_linux_x86_64.tar.gz | tar -xz debricked
 ```
 ```sh
 ./debricked
 ```
 ### Mac
 ```sh
-curl -L https://github.com/debricked/cli/releases/latest/download/cli_macOS_arm64.tar.gz | tar -xz debricked
+curl -L https://github.com/debricked/cli/releases/download/release-v1/cli_macOS_arm64.tar.gz | tar -xz debricked
 ```
 ```sh
 ./debricked
 ```
 ### Windows
-1. [Download zip](https://github.com/debricked/cli/releases/latest/download/cli_windows_x86_64.tar.gz)
+1. [Download zip](https://github.com/debricked/cli/releases/download/release-v1/cli_windows_x86_64.tar.gz)
 2. Unpack zip
 ```sh
 .\debricked
