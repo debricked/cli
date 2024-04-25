@@ -6,7 +6,7 @@ jobs:
       - image: cimg/base:current
     steps:
       - checkout
-      - run: curl -L https://github.com/debricked/cli/releases/latest/download/cli_linux_x86_64.tar.gz | tar -xz debricked
+      - run: curl -L https://github.com/debricked/cli/releases/download/release-v1/cli_linux_x86_64.tar.gz | tar -xz debricked
       - run: ./debricked scan
 
 workflows:
