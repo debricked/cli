@@ -108,6 +108,26 @@ func TestInitUploadBadFile(t *testing.T) {
 	assert.ErrorContains(t, err, "tried to upload empty file")
 }
 
+func TestInitUploadFingerprintsFree(t *testing.T) {
+	group := file.NewGroup("testdata/misc/debricked.fingerprints.txt", nil, nil)
+	var groups file.Groups
+	groups.Add(*group)
+	metaObj, err := git.NewMetaObject("", "repository-name", "commit-name", "", "", "")
+	if err != nil {
+		t.Fatal("failed to create new MetaObject")
+	}
+
+	clientMock := testdata.NewDebClientMock()
+	clientMock.SetEnterpriseCustomer(false)
+	var c client.IDebClient = clientMock
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{})
+
+	files, err := batch.initUpload()
+
+	assert.Empty(t, files)
+	assert.ErrorContains(t, err, "non-enterprise")
+}
+
 func TestInitUpload(t *testing.T) {
 	group := file.NewGroup("testdata/yarn/package.json", nil, []string{"testdata/yarn/package.json"})
 	var groups file.Groups

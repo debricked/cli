@@ -200,3 +200,110 @@ func TestSetAccessToken(t *testing.T) {
 
 	assert.Equal(t, &testTkn, debClient.accessToken)
 }
+
+func TestIsEnterpriseCustomerServer(t *testing.T) {
+	clientMock := testdataClient.NewMock()
+	billingPlan := BillingPlan{SCA: "enterprise", Select: "free"}
+	billingPlanBytes, _ := json.Marshal(billingPlan)
+	billingPlanMockRes := testdataClient.MockResponse{
+		StatusCode:   http.StatusOK,
+		ResponseBody: io.NopCloser(bytes.NewReader(billingPlanBytes)),
+		Error:        nil,
+	}
+	clientMock.AddMockResponse(billingPlanMockRes)
+	client = NewDebClient(&tkn, clientMock)
+
+	isEnterpriseCustomer := client.IsEnterpriseCustomer(false)
+	assert.Equal(t, true, isEnterpriseCustomer)
+}
+
+func TestIsEnterpriseCustomerServerError(t *testing.T) {
+	clientMock := testdataClient.NewMock()
+	billingPlan := BillingPlan{SCA: "enterprise", Select: "free"}
+	billingPlanBytes, _ := json.Marshal(billingPlan)
+	billingPlanMockRes := testdataClient.MockResponse{
+		StatusCode:   http.StatusInternalServerError,
+		ResponseBody: io.NopCloser(bytes.NewReader(billingPlanBytes)),
+		Error:        nil,
+	}
+	clientMock.AddMockResponse(billingPlanMockRes)
+	client = NewDebClient(&tkn, clientMock)
+
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+	isEnterpriseCustomer := client.IsEnterpriseCustomer(false)
+	_ = w.Close()
+	output, _ := io.ReadAll(r)
+	os.Stdout = rescueStdout
+
+	assert.Equal(t, false, isEnterpriseCustomer)
+	assert.Contains(t, string(output), "Could not validate enterprise billing plan due to HTTP error.")
+}
+
+func TestIsEnterpriseCustomerMalformedJSON(t *testing.T) {
+	clientMock := testdataClient.NewMock()
+	billingPlanMockRes := testdataClient.MockResponse{
+		StatusCode: http.StatusOK,
+		Error:      nil,
+	}
+	clientMock.AddMockResponse(billingPlanMockRes)
+	client = NewDebClient(&tkn, clientMock)
+
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+	isEnterpriseCustomer := client.IsEnterpriseCustomer(false)
+	_ = w.Close()
+	output, _ := io.ReadAll(r)
+	os.Stdout = rescueStdout
+
+	assert.Equal(t, false, isEnterpriseCustomer)
+	assert.Contains(t, string(output), "malformed response")
+}
+
+func TestIsEnterpriseCustomerMalformedData(t *testing.T) {
+	clientMock := testdataClient.NewMock()
+	billingPlanMockRes := testdataClient.MockResponse{
+		StatusCode:   http.StatusOK,
+		ResponseBody: io.NopCloser(strings.NewReader("{hello: hello}")),
+		Error:        nil,
+	}
+	clientMock.AddMockResponse(billingPlanMockRes)
+	client = NewDebClient(&tkn, clientMock)
+
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+	isEnterpriseCustomer := client.IsEnterpriseCustomer(false)
+	_ = w.Close()
+	output, _ := io.ReadAll(r)
+	os.Stdout = rescueStdout
+
+	assert.Equal(t, false, isEnterpriseCustomer)
+	assert.Contains(t, string(output), "malformed response")
+}
+
+func TestIsEnterpriseCustomerFree(t *testing.T) {
+	clientMock := testdataClient.NewMock()
+	billingPlan := BillingPlan{SCA: "free", Select: "free"}
+	billingPlanBytes, _ := json.Marshal(billingPlan)
+	billingPlanMockRes := testdataClient.MockResponse{
+		StatusCode:   http.StatusOK,
+		ResponseBody: io.NopCloser(bytes.NewReader(billingPlanBytes)),
+		Error:        nil,
+	}
+	clientMock.AddMockResponse(billingPlanMockRes)
+	client = NewDebClient(&tkn, clientMock)
+
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+	isEnterpriseCustomer := client.IsEnterpriseCustomer(false)
+	_ = w.Close()
+	output, _ := io.ReadAll(r)
+	os.Stdout = rescueStdout
+
+	assert.Equal(t, false, isEnterpriseCustomer)
+	assert.Contains(t, string(output), "To upgrade your plan")
+}

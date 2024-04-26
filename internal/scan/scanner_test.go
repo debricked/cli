@@ -71,7 +71,6 @@ func TestScan(t *testing.T) {
 	}
 	clientMock := testdata.NewDebClientMock()
 	addMockedFormatsResponse(clientMock, "package\\.json")
-	addMockedBillingPlanResponse(clientMock, "enterprise")
 	addMockedFileUploadResponse(clientMock)
 	addMockedFinishResponse(clientMock, http.StatusNoContent)
 	addMockedStatusResponse(clientMock, http.StatusOK, 50)
@@ -135,7 +134,6 @@ func TestScanWithJsonPath(t *testing.T) {
 	}
 	clientMock := testdata.NewDebClientMock()
 	addMockedFormatsResponse(clientMock, "package\\.json")
-	addMockedBillingPlanResponse(clientMock, "enterprise")
 	addMockedFileUploadResponse(clientMock)
 	addMockedFinishResponse(clientMock, http.StatusNoContent)
 	addMockedStatusResponse(clientMock, http.StatusOK, 50)
@@ -226,7 +224,6 @@ func TestScanFailingMetaObject(t *testing.T) {
 func TestScanFailingNoFiles(t *testing.T) {
 	clientMock := testdata.NewDebClientMock()
 	addMockedFormatsResponse(clientMock, "package\\.json")
-	addMockedBillingPlanResponse(clientMock, "enterprise")
 	scanner := makeScanner(clientMock, nil, nil)
 	opts := DebrickedOptions{
 		Path:            "",
@@ -259,7 +256,6 @@ func TestScanEmptyResult(t *testing.T) {
 	}
 	clientMock := testdata.NewDebClientMock()
 	addMockedFormatsResponse(clientMock, "package\\.json")
-	addMockedBillingPlanResponse(clientMock, "enterprise")
 	addMockedFileUploadResponse(clientMock)
 	addMockedFinishResponse(clientMock, http.StatusNoContent)
 	addMockedStatusResponse(clientMock, http.StatusOK, 50)
@@ -330,7 +326,6 @@ func TestScanInCiWithPathSet(t *testing.T) {
 func TestScanWithResolve(t *testing.T) {
 	clientMock := testdata.NewDebClientMock()
 	addMockedFormatsResponse(clientMock, "yarn\\.lock")
-	addMockedBillingPlanResponse(clientMock, "enterprise")
 	addMockedFileUploadResponse(clientMock)
 	addMockedFinishResponse(clientMock, http.StatusNoContent)
 	addMockedStatusResponse(clientMock, http.StatusOK, 100)
@@ -633,9 +628,9 @@ func TestScanWithFingerprint(t *testing.T) {
 		t.Skipf("TestScan is skipped due to Windows env")
 	}
 	clientMock := testdata.NewDebClientMock()
+	clientMock.SetEnterpriseCustomer(true)
 	addMockedFormatsResponse(clientMock, "yarn\\.lock")
 	addMockedFileUploadResponse(clientMock)
-	addMockedBillingPlanResponse(clientMock, "enterprise")
 	addMockedFinishResponse(clientMock, http.StatusNoContent)
 	addMockedStatusResponse(clientMock, http.StatusOK, 100)
 
@@ -648,6 +643,47 @@ func TestScanWithFingerprint(t *testing.T) {
 	cwd, _ := os.Getwd()
 	defer resetWd(t, cwd)
 	// Clean up resolution must be done before wd reset, otherwise files cannot be deleted
+	defer cleanUpResolution(t, resolverMock)
+
+	path := testdataNpm
+	repositoryName := path
+	commitName := "testdata/npm-commit-fingerprint"
+	opts := DebrickedOptions{
+		Path:            path,
+		Resolve:         true,
+		Fingerprint:     true,
+		Exclusions:      nil,
+		RepositoryName:  repositoryName,
+		CommitName:      commitName,
+		BranchName:      "",
+		CommitAuthor:    "",
+		RepositoryUrl:   "",
+		IntegrationName: "",
+	}
+	err := scanner.Scan(opts)
+	assert.NoError(t, err)
+	cwd, _ = os.Getwd()
+	assert.Contains(t, cwd, path)
+}
+
+func TestScanWithFingerprintNoEnterprise(t *testing.T) {
+	if runtime.GOOS == windowsOS {
+		t.Skipf("TestScan is skipped due to Windows env")
+	}
+	clientMock := testdata.NewDebClientMock()
+	addMockedFormatsResponse(clientMock, "yarn\\.lock")
+	addMockedFileUploadResponse(clientMock)
+	addMockedFinishResponse(clientMock, http.StatusNoContent)
+	addMockedStatusResponse(clientMock, http.StatusOK, 100)
+
+	resolverMock := resolveTestdata.ResolverMock{}
+	resolverMock.SetFiles([]string{"yarn.lock"})
+
+	scanner := makeScanner(clientMock, &resolverMock, nil)
+	scanner.fingerprint = fingerprint.NewFingerprinter()
+
+	cwd, _ := os.Getwd()
+	defer resetWd(t, cwd)
 	defer cleanUpResolution(t, resolverMock)
 
 	path := testdataNpm
@@ -711,149 +747,6 @@ func TestScanWithCallgraph(t *testing.T) {
 	assert.Contains(t, cwd, path)
 }
 
-func TestScanFingerprintWithoutEnterprise(t *testing.T) {
-	if runtime.GOOS == windowsOS {
-		t.Skipf("TestScan is skipped due to Windows env")
-	}
-	clientMock := testdata.NewDebClientMock()
-	addMockedFormatsResponse(clientMock, "yarn\\.lock")
-	addMockedFileUploadResponse(clientMock)
-	addMockedBillingPlanResponse(clientMock, "free")
-	addMockedFinishResponse(clientMock, http.StatusNoContent)
-	addMockedStatusResponse(clientMock, http.StatusOK, 100)
-	clientMock.SetServiceUp(true)
-
-	scanner := makeScanner(clientMock, nil, nil)
-	path := testdataNpm
-	repositoryName := path
-	commitName := "testdata/yarn-commit-fingerprint-without-enterprise"
-	cwd, _ := os.Getwd()
-	// reset working directory that has been manipulated in scanner.Scan
-	defer resetWd(t, cwd)
-	opts := DebrickedOptions{
-		Path:           path,
-		Exclusions:     nil,
-		RepositoryName: repositoryName,
-		CommitName:     commitName,
-		Fingerprint:    true,
-		PassOnTimeOut:  true,
-	}
-
-	rescueStdout := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
-
-	err := scanner.Scan(opts)
-	assert.NotNil(t, err)
-	_ = w.Close()
-	output, _ := io.ReadAll(r)
-	os.Stdout = rescueStdout
-
-	assert.Contains(t, string(output), "Could not validate enterprise billing plan")
-}
-
-func TestScanWithFingerprintMalformedBilling(t *testing.T) {
-	if runtime.GOOS == windowsOS {
-		t.Skipf("TestScan is skipped due to Windows env")
-	}
-	clientMock := testdata.NewDebClientMock()
-	addMockedFormatsResponse(clientMock, "yarn\\.lock")
-	addMockedMalformedBillingPlanResponse(clientMock)
-	addMockedFileUploadResponse(clientMock)
-	addMockedFinishResponse(clientMock, http.StatusNoContent)
-	addMockedStatusResponse(clientMock, http.StatusOK, 100)
-
-	resolverMock := resolveTestdata.ResolverMock{}
-	resolverMock.SetFiles([]string{"yarn.lock"})
-
-	scanner := makeScanner(clientMock, &resolverMock, nil)
-	scanner.fingerprint = fingerprint.NewFingerprinter()
-
-	cwd, _ := os.Getwd()
-	defer resetWd(t, cwd)
-	// Clean up resolution must be done before wd reset, otherwise files cannot be deleted
-	defer cleanUpResolution(t, resolverMock)
-
-	path := testdataNpm
-	repositoryName := path
-	commitName := "testdata/npm-commit-fingerprint-malformed"
-	opts := DebrickedOptions{
-		Path:            path,
-		Resolve:         true,
-		Fingerprint:     true,
-		Exclusions:      nil,
-		RepositoryName:  repositoryName,
-		CommitName:      commitName,
-		BranchName:      "",
-		CommitAuthor:    "",
-		RepositoryUrl:   "",
-		IntegrationName: "",
-	}
-	rescueStdout := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
-	err := scanner.Scan(opts)
-	assert.Equal(t, err, nil)
-	_ = w.Close()
-	output, _ := io.ReadAll(r)
-	os.Stdout = rescueStdout
-
-	assert.Contains(t, string(output), "Could not validate enterprise billing plan")
-	cwd, _ = os.Getwd()
-	assert.Contains(t, cwd, path)
-}
-
-func TestScanWithFingerprintBillingStatusCodeError(t *testing.T) {
-	if runtime.GOOS == windowsOS {
-		t.Skipf("TestScan is skipped due to Windows env")
-	}
-	clientMock := testdata.NewDebClientMock()
-	addMockedFormatsResponse(clientMock, "yarn\\.lock")
-	addMockedNotOKBillingPlanResponse(clientMock, "enterprise")
-	addMockedFileUploadResponse(clientMock)
-	addMockedFinishResponse(clientMock, http.StatusNoContent)
-	addMockedStatusResponse(clientMock, http.StatusOK, 100)
-
-	resolverMock := resolveTestdata.ResolverMock{}
-	resolverMock.SetFiles([]string{"yarn.lock"})
-
-	scanner := makeScanner(clientMock, &resolverMock, nil)
-	scanner.fingerprint = fingerprint.NewFingerprinter()
-
-	cwd, _ := os.Getwd()
-	defer resetWd(t, cwd)
-	// Clean up resolution must be done before wd reset, otherwise files cannot be deleted
-	defer cleanUpResolution(t, resolverMock)
-
-	path := testdataNpm
-	repositoryName := path
-	commitName := "testdata/npm-commit-fingerprint-billing-status-code"
-	opts := DebrickedOptions{
-		Path:            path,
-		Resolve:         true,
-		Fingerprint:     true,
-		Exclusions:      nil,
-		RepositoryName:  repositoryName,
-		CommitName:      commitName,
-		BranchName:      "",
-		CommitAuthor:    "",
-		RepositoryUrl:   "",
-		IntegrationName: "",
-	}
-	rescueStdout := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
-	err := scanner.Scan(opts)
-	assert.Equal(t, err, nil)
-	_ = w.Close()
-	output, _ := io.ReadAll(r)
-	os.Stdout = rescueStdout
-
-	assert.Contains(t, string(output), "Could not validate enterprise billing plan")
-	cwd, _ = os.Getwd()
-	assert.Contains(t, cwd, path)
-}
-
 func addMockedFormatsResponse(clientMock *testdata.DebClientMock, regex string) {
 	formats := []file.Format{{
 		ManifestFileRegex: "",
@@ -865,39 +758,6 @@ func addMockedFormatsResponse(clientMock *testdata.DebClientMock, regex string) 
 		ResponseBody: io.NopCloser(bytes.NewReader(formatsBytes)),
 	}
 	clientMock.AddMockUriResponse("/api/1.0/open/files/supported-formats", formatsMockRes)
-}
-
-func addMockedBillingPlanResponse(clientMock *testdata.DebClientMock, billlingPlan string) {
-	billingPlan := BillingPlan{SCA: billlingPlan, Select: billlingPlan}
-	billingPlanBytes, _ := json.Marshal(billingPlan)
-	billingPlanMockRes := testdata.MockResponse{
-		StatusCode:   http.StatusOK,
-		ResponseBody: io.NopCloser(bytes.NewReader(billingPlanBytes)),
-	}
-	clientMock.AddMockUriResponse("/api/1.0/open/user-profile/get-billing-info", billingPlanMockRes)
-}
-
-func addMockedNotOKBillingPlanResponse(clientMock *testdata.DebClientMock, billlingPlan string) {
-	billingPlan := BillingPlan{SCA: billlingPlan, Select: billlingPlan}
-	billingPlanBytes, _ := json.Marshal(billingPlan)
-	billingPlanMockRes := testdata.MockResponse{
-		StatusCode:   http.StatusBadRequest,
-		ResponseBody: io.NopCloser(bytes.NewReader(billingPlanBytes)),
-	}
-	clientMock.AddMockUriResponse("/api/1.0/open/user-profile/get-billing-info", billingPlanMockRes)
-}
-
-func addMockedMalformedBillingPlanResponse(clientMock *testdata.DebClientMock) {
-	formats := []file.Format{{
-		ManifestFileRegex: "",
-		LockFileRegexes:   []string{""},
-	}}
-	formatsBytes, _ := json.Marshal(formats)
-	formatsMockRes := testdata.MockResponse{
-		StatusCode:   http.StatusOK,
-		ResponseBody: io.NopCloser(bytes.NewReader(formatsBytes)),
-	}
-	clientMock.AddMockUriResponse("/api/1.0/open/user-profile/get-billing-info", formatsMockRes)
 }
 
 func addMockedFileUploadResponse(clientMock *testdata.DebClientMock) {

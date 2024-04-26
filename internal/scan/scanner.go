@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 
@@ -27,8 +25,6 @@ var (
 	BadOptsErr      = errors.New("failed to type case IOptions")
 	FailPipelineErr = errors.New("")
 )
-
-const enterpriseCheckUri = "/api/1.0/open/user-profile/get-billing-info"
 
 type IScanner interface {
 	Scan(o IOptions) error
@@ -163,11 +159,7 @@ func (dScanner *DebrickedScanner) scanResolve(options DebrickedOptions) error {
 
 func (dScanner *DebrickedScanner) scanFingerprint(options DebrickedOptions) error {
 	if options.Fingerprint {
-		if !dScanner.IsEnterpriseCustomer() {
-			fmt.Printf(
-				"%s Could not validate enterprise billing plan, which is a requirement for fingerprinting and manifestless matching.",
-				color.YellowString("⚠️"),
-			)
+		if !(*dScanner.client).IsEnterpriseCustomer(false) {
 
 			return nil
 		}
@@ -183,41 +175,6 @@ func (dScanner *DebrickedScanner) scanFingerprint(options DebrickedOptions) erro
 	}
 
 	return nil
-}
-
-type BillingPlan struct {
-	SCA    string `json:"sca"`
-	Select string `json:"select"`
-}
-
-func (dScanner *DebrickedScanner) IsEnterpriseCustomer() bool {
-	res, err := (*dScanner.client).Get(enterpriseCheckUri, "application/json")
-	if err != nil {
-
-		return false
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-
-		return false
-	}
-
-	billingPlanJSON, err := io.ReadAll(res.Body)
-	if err != nil {
-
-		return false
-	}
-
-	var billingPlan BillingPlan
-
-	err = json.Unmarshal(billingPlanJSON, &billingPlan)
-	if err != nil {
-
-		return false
-	}
-
-	return billingPlan.SCA == "enterprise"
 }
 
 func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject git.MetaObject) (*upload.UploadResult, error) {

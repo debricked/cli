@@ -64,6 +64,7 @@ func (uploadBatch *uploadBatch) upload() error {
 	uploadWorker := func(fileQueue <-chan string, fileResults chan<- int) {
 		const ok = 0
 		const fail = 1
+
 		for f := range fileQueue {
 			fileName := filepath.Base(f)
 			var err error
@@ -117,6 +118,10 @@ func (uploadBatch *uploadBatch) upload() error {
 
 // uploadFile Reads file content from filepath and uploads it to Debricked. Returns HTTP status code or 0 if other error occur
 func (uploadBatch *uploadBatch) uploadFile(filePath string, timeout int) error {
+	if strings.HasSuffix(filePath, "debricked.fingerprints.txt") && !(*uploadBatch.client).IsEnterpriseCustomer(true) {
+		return errors.New("non-enterprise customer trying to upload fingerprints")
+	}
+
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 	defer writer.Close()

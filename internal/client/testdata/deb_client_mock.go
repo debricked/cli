@@ -15,6 +15,7 @@ type DebClientMock struct {
 	responseQueue    []MockResponse
 	responseUriQueue map[string][]MockResponse
 	serviceUp        bool
+	isEnterprise     bool
 }
 
 func (mock *DebClientMock) SetServiceUp(serviceUp bool) {
@@ -29,6 +30,7 @@ func NewDebClientMock() *DebClientMock {
 		responseQueue:    []MockResponse{},
 		responseUriQueue: map[string][]MockResponse{},
 		serviceUp:        true,
+		isEnterprise:     false,
 	}
 }
 
@@ -130,4 +132,13 @@ func (mock *DebClientMock) popResponse(uri string) (*http.Response, error) {
 	}
 
 	return &res, responseMock.Error
+}
+
+func (mock *DebClientMock) SetEnterpriseCustomer(isEnterprise bool) {
+	mock.isEnterprise = isEnterprise
+}
+
+func (mock *DebClientMock) IsEnterpriseCustomer(silent bool) bool {
+
+	return mock.isEnterprise
 }
