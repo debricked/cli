@@ -159,6 +159,10 @@ func (dScanner *DebrickedScanner) scanResolve(options DebrickedOptions) error {
 
 func (dScanner *DebrickedScanner) scanFingerprint(options DebrickedOptions) error {
 	if options.Fingerprint {
+		if !(*dScanner.client).IsEnterpriseCustomer(false) {
+
+			return nil
+		}
 		fingerprints, err := dScanner.fingerprint.FingerprintFiles(
 			options.Path, file.DefaultExclusionsFingerprint(), false, options.MinFingerprintContentLength,
 		)

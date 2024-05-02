@@ -87,6 +87,7 @@ func TestScan(t *testing.T) {
 		Exclusions:               nil,
 		RepositoryName:           repositoryName,
 		CommitName:               "commit",
+		Fingerprint:              false,
 		BranchName:               "",
 		CommitAuthor:             "",
 		RepositoryUrl:            "",
@@ -593,6 +594,7 @@ func TestScanServiceDowntime(t *testing.T) {
 		Exclusions:     nil,
 		RepositoryName: repositoryName,
 		CommitName:     commitName,
+		Fingerprint:    false,
 		PassOnTimeOut:  true,
 	}
 
@@ -619,6 +621,130 @@ func TestScanServiceDowntime(t *testing.T) {
 	_ = w.Close()
 	os.Stdout = rescueStdout
 	assert.ErrorContains(t, err, client.NoResErr.Error())
+}
+
+func TestScanWithFingerprint(t *testing.T) {
+	if runtime.GOOS == windowsOS {
+		t.Skipf("TestScan is skipped due to Windows env")
+	}
+	clientMock := testdata.NewDebClientMock()
+	clientMock.SetEnterpriseCustomer(true)
+	addMockedFormatsResponse(clientMock, "yarn\\.lock")
+	addMockedFileUploadResponse(clientMock)
+	addMockedFinishResponse(clientMock, http.StatusNoContent)
+	addMockedStatusResponse(clientMock, http.StatusOK, 100)
+
+	resolverMock := resolveTestdata.ResolverMock{}
+	resolverMock.SetFiles([]string{"yarn.lock"})
+
+	scanner := makeScanner(clientMock, &resolverMock, nil)
+	scanner.fingerprint = fingerprint.NewFingerprinter()
+
+	cwd, _ := os.Getwd()
+	defer resetWd(t, cwd)
+	// Clean up resolution must be done before wd reset, otherwise files cannot be deleted
+	defer cleanUpResolution(t, resolverMock)
+
+	path := testdataNpm
+	repositoryName := path
+	commitName := "testdata/npm-commit-fingerprint"
+	opts := DebrickedOptions{
+		Path:            path,
+		Resolve:         true,
+		Fingerprint:     true,
+		Exclusions:      nil,
+		RepositoryName:  repositoryName,
+		CommitName:      commitName,
+		BranchName:      "",
+		CommitAuthor:    "",
+		RepositoryUrl:   "",
+		IntegrationName: "",
+	}
+	err := scanner.Scan(opts)
+	assert.NoError(t, err)
+	cwd, _ = os.Getwd()
+	assert.Contains(t, cwd, path)
+}
+
+func TestScanWithFingerprintNoEnterprise(t *testing.T) {
+	if runtime.GOOS == windowsOS {
+		t.Skipf("TestScan is skipped due to Windows env")
+	}
+	clientMock := testdata.NewDebClientMock()
+	addMockedFormatsResponse(clientMock, "yarn\\.lock")
+	addMockedFileUploadResponse(clientMock)
+	addMockedFinishResponse(clientMock, http.StatusNoContent)
+	addMockedStatusResponse(clientMock, http.StatusOK, 100)
+
+	resolverMock := resolveTestdata.ResolverMock{}
+	resolverMock.SetFiles([]string{"yarn.lock"})
+
+	scanner := makeScanner(clientMock, &resolverMock, nil)
+	scanner.fingerprint = fingerprint.NewFingerprinter()
+
+	cwd, _ := os.Getwd()
+	defer resetWd(t, cwd)
+	defer cleanUpResolution(t, resolverMock)
+
+	path := testdataNpm
+	repositoryName := path
+	commitName := "testdata/npm-commit-fingerprint"
+	opts := DebrickedOptions{
+		Path:            path,
+		Resolve:         true,
+		Fingerprint:     true,
+		Exclusions:      nil,
+		RepositoryName:  repositoryName,
+		CommitName:      commitName,
+		BranchName:      "",
+		CommitAuthor:    "",
+		RepositoryUrl:   "",
+		IntegrationName: "",
+	}
+	err := scanner.Scan(opts)
+	assert.NoError(t, err)
+	cwd, _ = os.Getwd()
+	assert.Contains(t, cwd, path)
+}
+
+func TestScanWithCallgraph(t *testing.T) {
+	if runtime.GOOS == windowsOS {
+		t.Skipf("TestScan is skipped due to Windows env")
+	}
+	clientMock := testdata.NewDebClientMock()
+	addMockedFormatsResponse(clientMock, "yarn\\.lock")
+	addMockedFileUploadResponse(clientMock)
+	addMockedFinishResponse(clientMock, http.StatusNoContent)
+	addMockedStatusResponse(clientMock, http.StatusOK, 100)
+
+	generatorMock := callgraphTestdata.GeneratorMock{}
+
+	scanner := makeScanner(clientMock, nil, &generatorMock)
+	scanner.fingerprint = fingerprint.NewFingerprinter()
+
+	cwd, _ := os.Getwd()
+	defer resetWd(t, cwd)
+
+	path := testdataNpm
+	repositoryName := path
+	commitName := "testdata/npm-commit-callgraph"
+	opts := DebrickedOptions{
+		Path:            path,
+		Resolve:         false,
+		Fingerprint:     false,
+		CallGraph:       true,
+		Exclusions:      nil,
+		RepositoryName:  repositoryName,
+		CommitName:      commitName,
+		BranchName:      "",
+		CommitAuthor:    "",
+		RepositoryUrl:   "",
+		IntegrationName: "",
+	}
+	err := scanner.Scan(opts)
+	assert.ErrorContains(t, err, "failed to find dependency files")
+	cwd, _ = os.Getwd()
+	assert.Contains(t, cwd, path)
 }
 
 func addMockedFormatsResponse(clientMock *testdata.DebClientMock, regex string) {
@@ -684,43 +810,4 @@ func cleanUpResolution(t *testing.T, resolverMock resolveTestdata.ResolverMock) 
 	if err != nil {
 		t.Error(err)
 	}
-}
-
-func TestScanWithFingerprint(t *testing.T) {
-	clientMock := testdata.NewDebClientMock()
-	addMockedFormatsResponse(clientMock, "yarn\\.lock")
-	addMockedFileUploadResponse(clientMock)
-	addMockedFinishResponse(clientMock, http.StatusNoContent)
-	addMockedStatusResponse(clientMock, http.StatusOK, 100)
-
-	resolverMock := resolveTestdata.ResolverMock{}
-	resolverMock.SetFiles([]string{"yarn.lock"})
-
-	scanner := makeScanner(clientMock, &resolverMock, nil)
-	scanner.fingerprint = fingerprint.NewFingerprinter()
-
-	cwd, _ := os.Getwd()
-	defer resetWd(t, cwd)
-	// Clean up resolution must be done before wd reset, otherwise files cannot be deleted
-	defer cleanUpResolution(t, resolverMock)
-
-	path := testdataNpm
-	repositoryName := path
-	commitName := "testdata/npm-commit"
-	opts := DebrickedOptions{
-		Path:            path,
-		Resolve:         true,
-		Fingerprint:     true,
-		Exclusions:      nil,
-		RepositoryName:  repositoryName,
-		CommitName:      commitName,
-		BranchName:      "",
-		CommitAuthor:    "",
-		RepositoryUrl:   "",
-		IntegrationName: "",
-	}
-	err := scanner.Scan(opts)
-	assert.NoError(t, err)
-	cwd, _ = os.Getwd()
-	assert.Contains(t, cwd, path)
 }

@@ -58,6 +58,10 @@ func (mock *debClientMock) SetAccessToken(_ *string) {}
 
 func (mock *debClientMock) ConfigureClientSettings(retry bool, timeout int) {}
 
+func (mock *debClientMock) IsEnterpriseCustomer(silent bool) bool {
+	return true
+}
+
 var finder *Finder
 
 func setUp(auth bool) {

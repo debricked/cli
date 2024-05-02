@@ -2,12 +2,18 @@ package client
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"os"
+
+	"github.com/fatih/color"
 )
 
 const DefaultDebrickedUri = "https://debricked.com"
 const DefaultTimeout = 15
+const enterpriseCheckUri = "/api/1.0/open/user-profile/get-billing-info"
 
 type IDebClient interface {
 	// Post makes a POST request to one of Debricked's API endpoints
@@ -15,6 +21,7 @@ type IDebClient interface {
 	// Get makes a GET request to one of Debricked's API endpoints
 	Get(uri string, format string) (*http.Response, error)
 	SetAccessToken(accessToken *string)
+	IsEnterpriseCustomer(silent bool) bool
 }
 
 type DebClient struct {
@@ -63,4 +70,63 @@ func initAccessToken(accessToken *string) *string {
 	}
 
 	return accessToken
+}
+
+type BillingPlan struct {
+	SCA    string `json:"sca"`
+	Select string `json:"select"`
+}
+
+func printNonEnterpriseMessage(specificError string, finalMessage string, silent bool) {
+	if !silent {
+		fmt.Print(
+			color.YellowString("⚠️"),
+			" Could not validate enterprise billing plan due to ",
+			specificError,
+			". File fingerprint will not be run or analyzed, since ",
+			"it requires a verified enterprise SCA subscription.",
+			finalMessage,
+		)
+	}
+}
+
+func (debClient *DebClient) IsEnterpriseCustomer(silent bool) bool {
+	res, err := debClient.Get(enterpriseCheckUri, "application/json")
+	if err != nil {
+		printNonEnterpriseMessage("connection error", "If this issue persists please create an issue on github: https://github.com/debricked/cli/issues\n", silent)
+
+		return false
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		printNonEnterpriseMessage("HTTP error", "If this issue persists please create an issue on github: https://github.com/debricked/cli/issues\n", silent)
+
+		return false
+	}
+
+	billingPlanJSON, err := io.ReadAll(res.Body)
+	if err != nil {
+		printNonEnterpriseMessage("response JSON formatting error", "If this issue persists please create an issue on github: https://github.com/debricked/cli/issues\n", silent)
+
+		return false
+	}
+
+	var billingPlan BillingPlan
+
+	err = json.Unmarshal(billingPlanJSON, &billingPlan)
+	if err != nil {
+		printNonEnterpriseMessage("malformed response", "If this issue persists please create an issue on github: https://github.com/debricked/cli/issues\n", silent)
+
+		return false
+	}
+
+	if billingPlan.SCA != "enterprise" {
+		response := "billing plan currently being \"" + string(billingPlan.SCA) + "\""
+		printNonEnterpriseMessage(response, "To upgrade your plan to enterpise visit https://debricked.com/app/en/repositories?billingModal=enterprise,free\n", silent)
+
+		return false
+	}
+
+	return true
 }

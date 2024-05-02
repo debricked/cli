@@ -151,3 +151,7 @@ func (mock *debClientMock) Get(_ string, _ string) (*http.Response, error) {
 }
 
 func (mock *debClientMock) SetAccessToken(_ *string) {}
+
+func (mock *debClientMock) IsEnterpriseCustomer(silent bool) bool {
+	return true
+}

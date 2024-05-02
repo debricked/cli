@@ -45,7 +45,7 @@ const (
 	VersionHintFlag                 = "version-hint"
 	RegenerateFlag                  = "regenerate"
 	NoResolveFlag                   = "no-resolve"
-	FingerprintFlag                 = "fingerprint"
+	NoFingerprintFlag               = "no-fingerprint"
 	PassOnTimeOut                   = "pass-on-timeout"
 	CallGraphFlag                   = "callgraph"
 	CallGraphUploadTimeoutFlag      = "callgraph-upload-timeout"
@@ -66,7 +66,13 @@ If the given path contains a git repository all flags but "integration" will be 
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			_ = viper.BindPFlags(cmd.Flags())
 		},
-		RunE: RunE(&scanner),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if strings.HasPrefix(strings.ToLower(viper.GetString(RepositoryFlag)), "c") && !cmd.Flags().Changed(NoFingerprintFlag) {
+				viper.Set(NoFingerprintFlag, false)
+			} // Temporary addition for rolling release of fingerprinting enabled by default
+
+			return RunE(&scanner)(cmd, args)
+		},
 	}
 	cmd.Flags().StringVarP(&repositoryName, RepositoryFlag, "r", "", "repository name")
 	cmd.Flags().StringVarP(&commitName, CommitFlag, "c", "", "commit hash")
@@ -128,7 +134,7 @@ $ debricked scan . `+exampleFlags)
 	cmd.Flags().BoolVarP(&passOnDowntime, PassOnTimeOut, "p", false, "pass scan if there is a service access timeout")
 	cmd.Flags().BoolVar(&noResolve, NoResolveFlag, false, `disables resolution of manifest files that lack lock files. Resolving manifest files enables more accurate dependency scanning since the whole dependency tree will be analysed.
 For example, if there is a "go.mod" in the target path, its dependencies are going to get resolved onto a lock file, and latter scanned.`)
-	cmd.Flags().BoolVar(&noFingerprint, FingerprintFlag, false, "enables fingerprinting for undeclared component identification. Can be run as a standalone command [files fingerprint] with more granular options. Will be default in an upcoming major release.")
+	cmd.Flags().BoolVar(&noFingerprint, NoFingerprintFlag, true, "toggles fingerprinting for undeclared component identification. Can be run as a standalone command [fingerprint] with more granular options.")
 	cmd.Flags().BoolVar(&callgraph, CallGraphFlag, false, `Enables call graph generation during scan.`)
 	cmd.Flags().IntVar(&callgraphUploadTimeout, CallGraphUploadTimeoutFlag, 10*60, "Set a timeout (in seconds) on call graph upload.")
 	cmd.Flags().IntVar(&callgraphGenerateTimeout, CallGraphGenerateTimeoutFlag, 60*60, "Set a timeout (in seconds) on call graph generation.")
@@ -162,7 +168,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 		options := scan.DebrickedOptions{
 			Path:                        path,
 			Resolve:                     !viper.GetBool(NoResolveFlag),
-			Fingerprint:                 viper.GetBool(FingerprintFlag),
+			Fingerprint:                 !viper.GetBool(NoFingerprintFlag),
 			Exclusions:                  viper.GetStringSlice(ExclusionFlag),
 			Verbose:                     viper.GetBool(VerboseFlag),
 			Regenerate:                  viper.GetInt(RegenerateFlag),
