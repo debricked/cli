@@ -123,7 +123,8 @@ func (debClient *DebClient) IsEnterpriseCustomer(silent bool) bool {
 
 	if billingPlan.SCA != "enterprise" {
 		response := "billing plan currently being \"" + string(billingPlan.SCA) + "\""
-		printNonEnterpriseMessage(response, "To upgrade your plan to enterpise visit https://debricked.com/app/en/repositories?billingModal=enterprise,free\n", silent)
+		final := "To upgrade your plan visit: " + color.BlueString("https://debricked.com/app/en/repositories?billingModal=enterprise,free") + "\n"
+		printNonEnterpriseMessage(response, final, silent)
 
 		return false
 	}
