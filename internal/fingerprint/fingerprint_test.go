@@ -11,52 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIsExcludedFile(t *testing.T) {
-
-	// Test excluded file extensions
-	excludedExts := []string{".doc", ".pdf", ".txt", ""}
-	for _, ext := range excludedExts {
-		filename := "file" + ext
-		assert.True(t, isExcludedFile(filename), "Expected %q to be excluded", filename)
-	}
-
-	// Test excluded files
-	excludedFiles := []string{"LICENSE", "README.md", "Makefile", "mvnw", "[content_types].xml", "Stockholm", "hello.json"}
-	for _, filename := range excludedFiles {
-		assert.True(t, isExcludedFile(filename), "Expected %q to be excluded", filename)
-		filepath := "foo/bar/" + filename
-		assert.True(t, isExcludedFile(filepath), "Expected %q to be excluded", filepath)
-	}
-
-	// Test excluded file endings
-	excludedEndings := []string{"-doc", "changelog", "config", "copying", "license", "authors", "news", "licenses", "notice",
-		"readme", "swiftdoc", "texidoc", "todo", "version", "ignore", "manifest", "sqlite", "sqlite3"}
-	for _, ending := range excludedEndings {
-		filename := "file." + ending
-		assert.True(t, isExcludedFile(filename), "Expected %q to be excluded", filename)
-	}
-
-	// Test excluded dirnames
-	filesInExcludedDir := []string{"package/.idea/test.txt"}
-	for _, filename := range filesInExcludedDir {
-		assert.True(t, isExcludedFile(filename), "Expected %q to be excluded", filename)
-	}
-
-	// Test included files
-	includedFiles := []string{"package.json"}
-	for _, filename := range includedFiles {
-		assert.False(t, isExcludedFile(filename), "Expected %q to not be excluded", filename)
-		filepath := "foo/bar/" + filename
-		assert.False(t, isExcludedFile(filepath), "Expected %q to not be excluded", filepath)
-	}
-
-	// Test non-excluded files
-	assert.False(t, isExcludedFile("file.py"), "Expected file.txt to not be excluded")
-	assert.False(t, isExcludedFile("file.go"), "Expected .go to not be excluded")
-	assert.False(t, isExcludedFile("file.dll"), "Expected .dll to not be excluded")
-	assert.False(t, isExcludedFile("file.jar"), "Expected .jar to not be excluded")
-}
-
 var errorString = "mock error"
 
 // Test errors in symlink
@@ -85,6 +39,7 @@ func TestShouldProcessFile(t *testing.T) {
 		name     string
 		filePath string
 		excludes []string
+		includes []string
 		mock     func()
 		want     bool
 	}{
@@ -99,6 +54,7 @@ func TestShouldProcessFile(t *testing.T) {
 			name:     "Test with a symbolic link",
 			filePath: testLink,
 			excludes: []string{},
+			includes: []string{},
 			mock:     func() {},
 			want:     false,
 		},
@@ -106,13 +62,23 @@ func TestShouldProcessFile(t *testing.T) {
 			name:     "Test Excluded",
 			filePath: testFile,
 			excludes: []string{"**/test.py"},
+			includes: []string{},
 			mock:     func() {},
 			want:     false,
+		},
+		{
+			name:     "Test Excluded and Included",
+			filePath: testFile,
+			excludes: []string{"**/test.py"},
+			includes: []string{"**/test.py"},
+			mock:     func() {},
+			want:     true,
 		},
 		{
 			name:     "Test with mockSymlink",
 			filePath: testFile,
 			excludes: []string{},
+			includes: []string{},
 			mock:     func() { isSymlinkFunc = mockSymlink },
 			want:     false,
 		},
@@ -120,6 +86,7 @@ func TestShouldProcessFile(t *testing.T) {
 			name:     "Test with errorString: The system cannot find the path specified.",
 			filePath: testFile,
 			excludes: []string{},
+			includes: []string{},
 			mock:     func() { errorString = "The system cannot find the path specified." },
 			want:     true,
 		},
@@ -127,6 +94,7 @@ func TestShouldProcessFile(t *testing.T) {
 			name:     "Test with errorString: not a directory",
 			filePath: testFile,
 			excludes: []string{},
+			includes: []string{},
 			mock:     func() { errorString = "not a directory" },
 			want:     true,
 		},
@@ -134,6 +102,7 @@ func TestShouldProcessFile(t *testing.T) {
 			name:     "Test with generic error",
 			filePath: testFile,
 			excludes: []string{},
+			includes: []string{},
 			mock:     func() { errorString = "generic error" },
 			want:     false,
 		},
@@ -147,7 +116,7 @@ func TestShouldProcessFile(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Failed to get file info for %s: %v", tt.filePath, err)
 			}
-			if got := shouldProcessFile(fileInfo, tt.excludes, tt.filePath); got != tt.want {
+			if got := shouldProcessFile(fileInfo, tt.excludes, tt.includes, tt.filePath); got != tt.want {
 				t.Errorf("Expected shouldProcessFile to return %v for %s, but it returned %v", tt.want, tt.filePath, got)
 			}
 		})
@@ -167,7 +136,15 @@ func TestFingerprinterInterface(t *testing.T) {
 
 func TestFingerprintFiles(t *testing.T) {
 	fingerprinter := NewFingerprinter()
-	fingerprints, err := fingerprinter.FingerprintFiles("testdata/fingerprinter", []string{}, true, 0)
+	fingerprints, err := fingerprinter.FingerprintFiles(
+		DebrickedOptions{
+			Path:                         "testdata/fingerprinter",
+			Exclusions:                   []string{},
+			Inclusions:                   []string{},
+			FingerprintCompressedContent: true,
+			MinFingerprintContentLength:  0,
+		},
+	)
 	assert.NoError(t, err)
 	assert.NotNil(t, fingerprints)
 	assert.NotEmpty(t, fingerprints)
@@ -175,7 +152,15 @@ func TestFingerprintFiles(t *testing.T) {
 	assert.Equal(t, "file=634c5485de8e22b27094affadd8a6e3b,21,testdata/fingerprinter/testfile.py", fingerprints.Entries[0].ToString())
 
 	// Test no file
-	fingerprints, err = fingerprinter.FingerprintFiles("", []string{}, true, 0)
+	fingerprints, err = fingerprinter.FingerprintFiles(
+		DebrickedOptions{
+			Path:                         "",
+			Exclusions:                   []string{},
+			Inclusions:                   []string{},
+			FingerprintCompressedContent: true,
+			MinFingerprintContentLength:  0,
+		},
+	)
 	assert.NoError(t, err)
 	assert.NotNil(t, fingerprints)
 	assert.NotEmpty(t, fingerprints)
@@ -461,7 +446,7 @@ func TestInMemFingerprintingCompressedContent(t *testing.T) {
 		},
 		{
 			name:        "Nupkg",
-			path:        "testdata/archive/nupkg",
+			path:        filepath.Join("testdata", "archive", "nupkg"),
 			expected:    21,
 			suffix:      "newtonsoft.json.13.0.3.nupkg",
 			shouldUnzip: true,
@@ -469,7 +454,7 @@ func TestInMemFingerprintingCompressedContent(t *testing.T) {
 		{
 			name:        "TGz",
 			path:        "testdata/archive/tgz",
-			expected:    1051,
+			expected:    984,
 			suffix:      "lodash.tgz",
 			shouldUnzip: true,
 		},
@@ -499,7 +484,15 @@ func TestInMemFingerprintingCompressedContent(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fingerprinter := NewFingerprinter()
-			fingerprints, err := fingerprinter.FingerprintFiles(tt.path, []string{}, tt.shouldUnzip, 0)
+			fingerprints, err := fingerprinter.FingerprintFiles(
+				DebrickedOptions{
+					Path:                         tt.path,
+					Exclusions:                   []string{},
+					Inclusions:                   []string{},
+					FingerprintCompressedContent: tt.shouldUnzip,
+					MinFingerprintContentLength:  45,
+				},
+			)
 			assert.NoError(t, err)
 			assert.NotNil(t, fingerprints)
 			assert.NotEmpty(t, fingerprints)

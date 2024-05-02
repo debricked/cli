@@ -17,6 +17,7 @@ type Strategy struct {
 	config     conf.IConfig
 	paths      []string
 	exclusions []string
+	inclusions []string
 	finder     finder.IFinder
 	ctx        cgexec.IContext
 }
@@ -32,7 +33,7 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 
 	for _, path := range s.paths {
 
-		files, err := s.finder.FindFiles([]string{path}, s.exclusions)
+		files, err := s.finder.FindFiles([]string{path}, s.exclusions, s.inclusions)
 		if err != nil {
 			strategyWarning("Error while finding files: " + err.Error())
 
@@ -71,8 +72,8 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	return jobs, nil
 }
 
-func NewStrategy(config conf.IConfig, paths []string, exclusions []string, finder finder.IFinder, ctx cgexec.IContext) Strategy {
-	return Strategy{config, paths, exclusions, finder, ctx}
+func NewStrategy(config conf.IConfig, paths []string, exclusions []string, inclusions []string, finder finder.IFinder, ctx cgexec.IContext) Strategy {
+	return Strategy{config, paths, exclusions, inclusions, finder, ctx}
 }
 
 func strategyWarning(errMsg string) {

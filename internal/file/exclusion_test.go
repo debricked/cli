@@ -54,37 +54,14 @@ func TestExclusionsWithEmptyTokenEnvVariable(t *testing.T) {
 	}(debrickedExclusionEnvVar, oldEnvValue)
 
 	gt := []string{
-		filepath.Join("**", "node_modules", "**"),
-		filepath.Join("**", "vendor", "**"),
-		filepath.Join("**", ".git", "**"),
-		filepath.Join("**", "obj", "**"),
-		filepath.Join("**", "bower_components", "**"),
+		"**/node_modules/**",
+		"**/vendor/**",
+		"**/.git/**",
+		"**/obj/**",
+		"**/bower_components/**",
 	}
 	defaultExclusions := Exclusions()
 	assert.Equal(t, gt, defaultExclusions)
-}
-
-func TestDefaultExclusionsFingerprint(t *testing.T) {
-	expectedExclusions := []string{
-		filepath.Join("**", "nbproject", "**"),
-		filepath.Join("**", "nbbuild", "**"),
-		filepath.Join("**", "nbdist", "**"),
-		filepath.Join("**", "node_modules", "**"),
-		filepath.Join("**", "__pycache__", "**"),
-		filepath.Join("**", "_yardoc", "**"),
-		filepath.Join("**", "eggs", "**"),
-		filepath.Join("**", "wheels", "**"),
-		filepath.Join("**", "htmlcov", "**"),
-		filepath.Join("**", "__pypackages__", "**"),
-		filepath.Join("**", ".git", "**"),
-		"**/*.egg-info/**",
-		"**/*venv/**",
-		"**/*venv3/**",
-	}
-
-	exclusions := DefaultExclusionsFingerprint()
-
-	assert.ElementsMatch(t, expectedExclusions, exclusions, "DefaultExclusionsFingerprint did not return the expected exclusions")
 }
 
 func TestExclude(t *testing.T) {
@@ -145,7 +122,7 @@ func TestExclude(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			var excludedFiles []string
 			for _, file := range files {
-				if Excluded(c.exclusions, file) {
+				if Excluded(c.exclusions, []string{}, file) {
 					excludedFiles = append(excludedFiles, file)
 				}
 			}
@@ -167,4 +144,36 @@ func TestExclude(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestExcluded(t *testing.T) {
+	cases := []struct {
+		name       string
+		exclusions []string
+		inclusions []string
+		path       string
+		expected   bool
+	}{
+		{
+			name:       "NodeModules",
+			exclusions: []string{"**/node_modules/**"},
+			inclusions: []string{},
+			path:       "node_modules/package.json",
+			expected:   true,
+		},
+		{
+			name:       "Inclusions",
+			exclusions: []string{"**/node_modules/**"},
+			inclusions: []string{"**/package.json"},
+			path:       "node_modules/package.json",
+			expected:   false,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			assert.Equal(t, c.expected, Excluded(c.exclusions, c.inclusions, c.path))
+		})
+	}
+
 }

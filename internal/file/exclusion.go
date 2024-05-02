@@ -10,14 +10,27 @@ import (
 
 const debrickedExclusionEnvVar = "DEBRICKED_EXCLUSIONS"
 
+type DefaultExclusionList struct {
+	Directories []string
+}
+
+var defaultExclusions = DefaultExclusionList{
+	Directories: []string{
+		"node_modules",
+		"vendor",
+		".git",
+		"obj",              // nuget
+		"bower_components", // bower
+	},
+}
+
 func DefaultExclusions() []string {
-	return []string{
-		filepath.Join("**", "node_modules", "**"),
-		filepath.Join("**", "vendor", "**"),
-		filepath.Join("**", ".git", "**"),
-		filepath.Join("**", "obj", "**"),              // nuget
-		filepath.Join("**", "bower_components", "**"), // bower
+	var exclusions []string
+	for _, excluded_dir := range defaultExclusions.Directories {
+		exclusions = append(exclusions, "**/"+excluded_dir+"/**")
 	}
+
+	return exclusions
 }
 
 func Exclusions() []string {
@@ -31,29 +44,16 @@ func Exclusions() []string {
 	return values
 }
 
-var EXCLUDED_DIRS_FINGERPRINT = []string{
-	"nbproject", "nbbuild", "nbdist", "node_modules",
-	"__pycache__", "_yardoc", "eggs",
-	"wheels", "htmlcov", "__pypackages__", ".git"}
-
-var EXCLUDED_DIRS_FINGERPRINT_RAW = []string{"**/*.egg-info/**", "**/*venv/**", "**/*venv3/**"}
-
-func DefaultExclusionsFingerprint() []string {
-	output := []string{}
-
-	for _, pattern := range EXCLUDED_DIRS_FINGERPRINT {
-		output = append(output, filepath.Join("**", pattern, "**"))
+func Excluded(exclusions []string, inclusions []string, path string) bool {
+	path = filepath.ToSlash(path)
+	for _, inclusion := range inclusions {
+		matched, _ := doublestar.Match(inclusion, path)
+		if matched {
+			return false
+		}
 	}
-
-	output = append(output, EXCLUDED_DIRS_FINGERPRINT_RAW...)
-
-	return output
-}
-
-func Excluded(exclusions []string, path string) bool {
 	for _, exclusion := range exclusions {
-		ex := filepath.Clean(exclusion)
-		matched, _ := doublestar.PathMatch(ex, path)
+		matched, _ := doublestar.Match(exclusion, path)
 		if matched {
 			return true
 		}

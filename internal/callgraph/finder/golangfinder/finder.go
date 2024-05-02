@@ -67,7 +67,7 @@ func (f GolangFinder) FindDependencyDirs(files []string, findJars bool) ([]strin
 	return []string{}, nil
 }
 
-func (f GolangFinder) FindFiles(roots []string, exclusions []string) ([]string, error) {
+func (f GolangFinder) FindFiles(roots []string, exclusions []string, inclusions []string) ([]string, error) {
 	files := make(map[string]bool)
 	var err error = nil
 
@@ -78,7 +78,7 @@ func (f GolangFinder) FindFiles(roots []string, exclusions []string) ([]string, 
 				return err
 			}
 
-			excluded := file.Excluded(exclusions, path)
+			excluded := file.Excluded(exclusions, inclusions, path)
 
 			if info.IsDir() && excluded {
 				return filepath.SkipDir

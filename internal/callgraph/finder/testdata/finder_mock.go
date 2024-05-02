@@ -25,6 +25,6 @@ func (f FinderMock) FindRoots(_ []string) ([]string, error) {
 	return f.FindRootsNames, f.FindRootsErr
 }
 
-func (f FinderMock) FindFiles(_ []string, _ []string) ([]string, error) {
+func (f FinderMock) FindFiles(_ []string, _ []string, _ []string) ([]string, error) {
 	return f.FindFilesNames, f.FindFilesErr
 }

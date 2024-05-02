@@ -12,7 +12,7 @@ import (
 )
 
 type IFactory interface {
-	Make(config conf.IConfig, paths []string, exclusions []string, ctx cgexec.IContext) (IStrategy, error)
+	Make(config conf.IConfig, paths []string, exclusions []string, inclusions []string, ctx cgexec.IContext) (IStrategy, error)
 }
 
 type Factory struct{}
@@ -21,13 +21,13 @@ func NewStrategyFactory() Factory {
 	return Factory{}
 }
 
-func (sf Factory) Make(config conf.IConfig, paths []string, exclusions []string, ctx cgexec.IContext) (IStrategy, error) {
+func (sf Factory) Make(config conf.IConfig, paths []string, exclusions []string, inclusions []string, ctx cgexec.IContext) (IStrategy, error) {
 	name := config.Language()
 	switch name {
 	case java.Name:
-		return java.NewStrategy(config, paths, exclusions, javafinder.JavaFinder{}, ctx), nil
+		return java.NewStrategy(config, paths, exclusions, inclusions, javafinder.JavaFinder{}, ctx), nil
 	case golang.Name:
-		return golang.NewStrategy(config, paths, exclusions, golangfinder.GolangFinder{}, ctx), nil
+		return golang.NewStrategy(config, paths, exclusions, inclusions, golangfinder.GolangFinder{}, ctx), nil
 	default:
 		return nil, fmt.Errorf("failed to make strategy from %s", name)
 	}
