@@ -14,6 +14,7 @@ import (
 var version string // Set at compile time
 
 func main() {
+
 	if err := root.NewRootCmd(version, wire.GetCliContainer()).Execute(); err != nil {
 		var cmdErr cmderror.CommandError
 		if errors.As(err, &cmdErr) {
