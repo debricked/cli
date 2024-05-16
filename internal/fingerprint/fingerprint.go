@@ -83,6 +83,7 @@ func (f *Fingerprinter) FingerprintFiles(options DebrickedOptions) (Fingerprints
 	spinner := f.spinnerManager.AddSpinner(spinnerMessage)
 
 	nbFiles := 0
+	lastLogNb := 0
 
 	err := filepath.Walk(options.Path, func(path string, fileInfo os.FileInfo, err error) error {
 		if err != nil {
@@ -93,8 +94,8 @@ func (f *Fingerprinter) FingerprintFiles(options DebrickedOptions) (Fingerprints
 			return err
 		}
 		nbFiles += len(fileFingerprints)
-
-		if nbFiles%100 == 0 {
+		if nbFiles-lastLogNb >= 100 {
+			lastLogNb = nbFiles
 			f.spinnerManager.SetSpinnerMessage(spinner, spinnerMessage, fmt.Sprintf("%d", nbFiles))
 		}
 
@@ -341,7 +342,6 @@ func inMemFingerprintTarBZip2Content(filename string, exclusions []string, inclu
 			return nil, err
 		}
 		longPath := filepath.Join(filename, header.Name) // #nosec
-		fmt.Println("Extracted:", longPath)
 		if !shouldProcessTarHeader(*header, exclusions, inclusions, longPath) {
 			continue
 		}
