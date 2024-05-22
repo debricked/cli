@@ -95,6 +95,9 @@ will be shown in the output.
 
 For more information on how resolution works, check out https://portal.debricked.com/debricked-cli-63/high-performance-scan-faster-more-accurate-and-more-secure-dependency-scanning-293.
 
+#### Private Registries
+If a dependency is hosted on a private registry some configuration may be needed, depending on package manager. For more details see package manager specific resolution README files or search the documentation of your package manager of choice.
+
 ### CI/CD integration
 If you would rather use `debricked` in your CI/CD pipelines, you can check out the [templates](examples/templates/README.md) for inspiration, replacing `scan` with `resolve`.
 

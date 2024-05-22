@@ -52,7 +52,7 @@ func TestRunCmdErr(t *testing.T) {
 		{
 			name:  "Invalid version",
 			error: "    |[ERROR] Failed to execute goal on project jackpot: Could not resolve dependencies for project com.jeteo:jackpot:war:1.0-SNAPSHOT: The following artifacts could not be resolved: javax.servlet:com.springsource.javax.servlet:jar:2.5.0, javax.servlet:com.springsource.javax.servlet.jsp.jstl:jar:1.2.0 (http://repository.springsource.com/maven/bundles/release) -> [Help 1]\n",
-			doc:   "An error occurred during dependencies resolve for: com.jeteo:jackpot:war:1.0-SNAPSHOT\nTry to run `mvn dependency:tree -e` to get more details.\nIf this is a private dependency, please make sure that the debricked CLI has access to install it or pre-install it before running the debricked CLI.",
+			doc:   "An error occurred during dependencies resolve for: com.jeteo:jackpot:war:1.0-SNAPSHOT\nTry to run `mvn dependency:tree -e` to get more details.\nIf this is a private dependency, please make sure that the debricked CLI has access to install it or pre-install it before running the debricked CLI.\nFor more information see https://github.com/debricked/cli/blob/main/internal/resolution/pm/maven/README.md",
 		},
 	}
 
