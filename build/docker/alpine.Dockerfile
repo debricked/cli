@@ -63,7 +63,7 @@ RUN apk add --no-cache \
     php83-mbstring \
     php83-openssl \
     php83-phar \
-    && ln -s /usr/bin/php83 /usr/bin/php
+    && ln -sf /usr/bin/php83 /usr/bin/php
 
 RUN apk add --no-cache --virtual build-dependencies curl && \
     curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
