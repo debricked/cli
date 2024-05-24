@@ -146,9 +146,8 @@ func (j *Job) runListJsonCmd(workingDirectory string) ([]byte, string, error) {
 	return listJsonOutput, listJsonCmd.String(), nil
 }
 
-func (j *Job) parseDependencies(jsonOutput []byte, listCmdOutput []byte) ([]byte, []byte) {
+func (j *Job) getImports(jsonOutput []byte) (map[string]bool, map[string]bool) {
 	decoder := json.NewDecoder(bytes.NewReader(jsonOutput))
-	modules := j.parseModules(string(listCmdOutput))
 	imports := make(map[string]bool)
 	testImports := make(map[string]bool)
 
@@ -167,27 +166,20 @@ func (j *Job) parseDependencies(jsonOutput []byte, listCmdOutput []byte) ([]byte
 		}
 	}
 
+	return imports, testImports
+}
+
+func (j *Job) parseDependencies(jsonOutput []byte, listCmdOutput []byte) ([]byte, []byte) {
+	modules := j.parseModules(string(listCmdOutput))
+	imports, testImports := j.getImports(jsonOutput)
+
 	prodDependencies := make([]string, 0)
 	devDependencies := make([]string, 0)
 	for dependency, version := range modules {
-		depFoundInImports := false
-		depFoundInTestImports := false
-
-		// Check if the module (or a path within it) is referenced in Imports or TestImports
-		for importPath := range imports {
-			if strings.Contains(importPath, dependency) {
-				depFoundInImports = true
-				break
-			}
-		}
-		for testImportPath := range testImports {
-			if strings.Contains(testImportPath, dependency) {
-				depFoundInTestImports = true
-				break
-			}
-		}
-
+		depFoundInImports := j.isModuleFound(dependency, imports)
+		depFoundInTestImports := j.isModuleFound(dependency, testImports)
 		module := strings.TrimSpace(dependency + " " + version)
+
 		if depFoundInTestImports && !depFoundInImports {
 			devDependencies = append(devDependencies, module)
 		} else {
@@ -199,6 +191,20 @@ func (j *Job) parseDependencies(jsonOutput []byte, listCmdOutput []byte) ([]byte
 	sort.Strings(devDependencies)
 
 	return []byte(strings.Join(prodDependencies, "\n")), []byte(strings.Join(devDependencies, "\n"))
+}
+
+func (j *Job) isModuleFound(module string, imports map[string]bool) bool {
+	result := false
+
+	for importPath := range imports {
+		if strings.Contains(importPath, module) {
+			result = true
+
+			break
+		}
+	}
+
+	return result
 }
 
 func (j *Job) parseModules(output string) map[string]string {
