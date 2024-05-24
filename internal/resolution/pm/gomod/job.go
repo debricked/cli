@@ -3,6 +3,7 @@ package gomod
 import (
 	"bytes"
 	"encoding/json"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -110,12 +111,7 @@ func (j *Job) runGraphCmd(workingDirectory string) ([]byte, string, error) {
 		return nil, graphCmd.String(), err
 	}
 
-	graphCmdOutput, err := graphCmd.Output()
-	if err != nil {
-		return nil, graphCmd.String(), j.GetExitError(err, "")
-	}
-
-	return graphCmdOutput, graphCmd.String(), nil
+	return j.handleCmdOutput(graphCmd)
 }
 
 func (j *Job) runListCmd(workingDirectory string) ([]byte, string, error) {
@@ -124,12 +120,7 @@ func (j *Job) runListCmd(workingDirectory string) ([]byte, string, error) {
 		return nil, listCmd.String(), err
 	}
 
-	listCmdOutput, err := listCmd.Output()
-	if err != nil {
-		return nil, listCmd.String(), j.GetExitError(err, "")
-	}
-
-	return listCmdOutput, listCmd.String(), nil
+	return j.handleCmdOutput(listCmd)
 }
 
 func (j *Job) runListJsonCmd(workingDirectory string) ([]byte, string, error) {
@@ -138,12 +129,16 @@ func (j *Job) runListJsonCmd(workingDirectory string) ([]byte, string, error) {
 		return nil, listJsonCmd.String(), err
 	}
 
-	listJsonOutput, err := listJsonCmd.Output()
+	return j.handleCmdOutput(listJsonCmd)
+}
+
+func (j *Job) handleCmdOutput(cmd *exec.Cmd) ([]byte, string, error) {
+	output, err := cmd.Output()
 	if err != nil {
-		return nil, listJsonCmd.String(), j.GetExitError(err, "")
+		return nil, cmd.String(), j.GetExitError(err, "")
 	}
 
-	return listJsonOutput, listJsonCmd.String(), nil
+	return output, cmd.String(), nil
 }
 
 func (j *Job) getImports(jsonOutput []byte) (map[string]bool, map[string]bool) {
