@@ -50,9 +50,7 @@ func (j *Job) Run() {
 	status := "creating dependency graph"
 	j.SendStatus(status)
 
-	workingDirectory := filepath.Dir(filepath.Clean(j.GetFile()))
-
-	graphCmdOutput, cmd, err := j.runGraphCmd(workingDirectory)
+	graphCmdOutput, cmd, err := j.runGraphCmd()
 	if err != nil {
 		j.handleError(j.createError(err.Error(), cmd, status))
 
@@ -61,7 +59,7 @@ func (j *Job) Run() {
 
 	status = "creating dependency version list"
 	j.SendStatus(status)
-	listCmdOutput, cmd, err := j.runListCmd(workingDirectory)
+	listCmdOutput, cmd, err := j.runListCmd()
 	if err != nil {
 		j.handleError(j.createError(err.Error(), cmd, status))
 
@@ -70,7 +68,7 @@ func (j *Job) Run() {
 
 	status = "analyzing package dependencies"
 	j.SendStatus(status)
-	listJsonOutput, cmd, err := j.runListJsonCmd(workingDirectory)
+	listJsonOutput, cmd, err := j.runListJsonCmd()
 	if err != nil {
 		j.handleError(j.createError(err.Error(), cmd, status))
 
@@ -105,8 +103,12 @@ func (j *Job) Run() {
 	}
 }
 
-func (j *Job) runGraphCmd(workingDirectory string) ([]byte, string, error) {
-	graphCmd, err := j.cmdFactory.MakeGraphCmd(workingDirectory)
+func (j *Job) getWorkingDir() string {
+	return filepath.Dir(filepath.Clean(j.GetFile()))
+}
+
+func (j *Job) runGraphCmd() ([]byte, string, error) {
+	graphCmd, err := j.cmdFactory.MakeGraphCmd(j.getWorkingDir())
 	if err != nil {
 		return nil, graphCmd.String(), err
 	}
@@ -114,8 +116,8 @@ func (j *Job) runGraphCmd(workingDirectory string) ([]byte, string, error) {
 	return j.handleCmdOutput(graphCmd)
 }
 
-func (j *Job) runListCmd(workingDirectory string) ([]byte, string, error) {
-	listCmd, err := j.cmdFactory.MakeListCmd(workingDirectory)
+func (j *Job) runListCmd() ([]byte, string, error) {
+	listCmd, err := j.cmdFactory.MakeListCmd(j.getWorkingDir())
 	if err != nil {
 		return nil, listCmd.String(), err
 	}
@@ -123,8 +125,8 @@ func (j *Job) runListCmd(workingDirectory string) ([]byte, string, error) {
 	return j.handleCmdOutput(listCmd)
 }
 
-func (j *Job) runListJsonCmd(workingDirectory string) ([]byte, string, error) {
-	listJsonCmd, err := j.cmdFactory.MakeListJsonCmd(workingDirectory)
+func (j *Job) runListJsonCmd() ([]byte, string, error) {
+	listJsonCmd, err := j.cmdFactory.MakeListJsonCmd(j.getWorkingDir())
 	if err != nil {
 		return nil, listJsonCmd.String(), err
 	}
@@ -165,7 +167,7 @@ func (j *Job) getImports(jsonOutput []byte) (map[string]bool, map[string]bool) {
 }
 
 func (j *Job) parseDependencies(jsonOutput []byte, listCmdOutput []byte) ([]byte, []byte) {
-	modules := j.parseModules(string(listCmdOutput))
+	modules := j.parseModules(listCmdOutput)
 	imports, testImports := j.getImports(jsonOutput)
 
 	prodDependencies := make([]string, 0)
@@ -202,8 +204,8 @@ func (j *Job) isModuleFound(module string, imports map[string]bool) bool {
 	return result
 }
 
-func (j *Job) parseModules(output string) map[string]string {
-	lines := strings.Split(strings.TrimSpace(output), "\n")
+func (j *Job) parseModules(output []byte) map[string]string {
+	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
 	modules := make(map[string]string)
 	for _, line := range lines {
 		parts := strings.Fields(line)
