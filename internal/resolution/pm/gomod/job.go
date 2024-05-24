@@ -1,8 +1,11 @@
 package gomod
 
 import (
+	"bytes"
+	"encoding/json"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/debricked/cli/internal/resolution/job"
@@ -28,11 +31,13 @@ type Job struct {
 	fileWriter writer.IFileWriter
 }
 
-func NewJob(
-	file string,
-	cmdFactory ICmdFactory,
-	fileWriter writer.IFileWriter,
-) *Job {
+type PackageDetail struct {
+	ImportPath  string   `json:"ImportPath"`
+	Imports     []string `json:"Imports"`
+	TestImports []string `json:"TestImports"`
+}
+
+func NewJob(file string, cmdFactory ICmdFactory, fileWriter writer.IFileWriter) *Job {
 	return &Job{
 		BaseJob:    job.NewBaseJob(file),
 		cmdFactory: cmdFactory,
@@ -62,6 +67,17 @@ func (j *Job) Run() {
 		return
 	}
 
+	status = "analyzing package dependencies"
+	j.SendStatus(status)
+	listJsonOutput, cmd, err := j.runListJsonCmd(workingDirectory)
+	if err != nil {
+		j.handleError(j.createError(err.Error(), cmd, status))
+
+		return
+	}
+
+	prodListCmdOutput, devListCmdOutput := j.parseDependencies(listJsonOutput, listCmdOutput)
+
 	status = "creating lock file"
 	j.SendStatus(status)
 	lockFile, err := j.fileWriter.Create(util.MakePathFromManifestFile(j.GetFile(), fileName))
@@ -75,7 +91,12 @@ func (j *Job) Run() {
 	var fileContents []byte
 	fileContents = append(fileContents, graphCmdOutput...)
 	fileContents = append(fileContents, []byte("\n")...)
-	fileContents = append(fileContents, listCmdOutput...)
+	fileContents = append(fileContents, prodListCmdOutput...)
+
+	if len(devListCmdOutput) > 0 {
+		fileContents = append(fileContents, []byte("\n\n")...)
+		fileContents = append(fileContents, devListCmdOutput...)
+	}
 
 	err = j.fileWriter.Write(lockFile, fileContents)
 	if err != nil {
@@ -109,6 +130,92 @@ func (j *Job) runListCmd(workingDirectory string) ([]byte, string, error) {
 	}
 
 	return listCmdOutput, listCmd.String(), nil
+}
+
+func (j *Job) runListJsonCmd(workingDirectory string) ([]byte, string, error) {
+	listJsonCmd, err := j.cmdFactory.MakeListJsonCmd(workingDirectory)
+	if err != nil {
+		return nil, listJsonCmd.String(), err
+	}
+
+	listJsonOutput, err := listJsonCmd.Output()
+	if err != nil {
+		return nil, listJsonCmd.String(), j.GetExitError(err, "")
+	}
+
+	return listJsonOutput, listJsonCmd.String(), nil
+}
+
+func (j *Job) parseDependencies(jsonOutput []byte, listCmdOutput []byte) ([]byte, []byte) {
+	decoder := json.NewDecoder(bytes.NewReader(jsonOutput))
+	modules := j.parseModules(string(listCmdOutput))
+	imports := make(map[string]bool)
+	testImports := make(map[string]bool)
+
+	for {
+		var pkg PackageDetail
+		if err := decoder.Decode(&pkg); err != nil {
+			break
+		}
+
+		for _, imported := range pkg.Imports {
+			imports[imported] = true
+		}
+
+		for _, imported := range pkg.TestImports {
+			testImports[imported] = true
+		}
+	}
+
+	prodDependencies := make([]string, 0)
+	devDependencies := make([]string, 0)
+	for dependency, version := range modules {
+		depFoundInImports := false
+		depFoundInTestImports := false
+
+		// Check if the module (or a path within it) is referenced in Imports or TestImports
+		for importPath := range imports {
+			if strings.Contains(importPath, dependency) {
+				depFoundInImports = true
+				break
+			}
+		}
+		for testImportPath := range testImports {
+			if strings.Contains(testImportPath, dependency) {
+				depFoundInTestImports = true
+				break
+			}
+		}
+
+		module := strings.TrimSpace(dependency + " " + version)
+		if depFoundInTestImports && !depFoundInImports {
+			devDependencies = append(devDependencies, module)
+		} else {
+			prodDependencies = append(prodDependencies, module)
+		}
+	}
+
+	sort.Strings(prodDependencies)
+	sort.Strings(devDependencies)
+
+	return []byte(strings.Join(prodDependencies, "\n")), []byte(strings.Join(devDependencies, "\n"))
+}
+
+func (j *Job) parseModules(output string) map[string]string {
+	lines := strings.Split(strings.TrimSpace(output), "\n")
+	modules := make(map[string]string)
+	for _, line := range lines {
+		parts := strings.Fields(line)
+		moduleName := parts[0]
+		if len(parts) > 1 {
+			version := strings.Join(parts[1:], " ")
+			modules[moduleName] = version
+		} else {
+			modules[moduleName] = ""
+		}
+	}
+
+	return modules
 }
 
 func (j *Job) createError(error string, cmd string, status string) job.IError {

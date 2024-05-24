@@ -147,7 +147,7 @@ func TestRunCreateErr(t *testing.T) {
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	j := NewJob("file", cmdFactoryMock, fileWriterMock)
 
-	cmd, _ := cmdFactoryMock.MakeListCmd("echo")
+	cmd, _ := cmdFactoryMock.MakeListJsonCmd("echo")
 	expectedError := util.NewPMJobError(createErr.Error())
 	expectedError.SetStatus("creating lock file")
 	expectedError.SetCommand(cmd.String())
@@ -168,7 +168,7 @@ func TestRunWriteErr(t *testing.T) {
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	j := NewJob("file", cmdFactoryMock, fileWriterMock)
 
-	cmd, _ := cmdFactoryMock.MakeListCmd("echo")
+	cmd, _ := cmdFactoryMock.MakeListJsonCmd("echo")
 	expectedError := util.NewPMJobError(writeErr.Error())
 	expectedError.SetStatus("creating lock file")
 	expectedError.SetCommand(cmd.String())
@@ -198,7 +198,7 @@ func TestRunCloseErr(t *testing.T) {
 }
 
 func TestRun(t *testing.T) {
-	fileContents := []byte("MakeGraphCmd\n\nMakeListCmd\n")
+	fileContents := []byte("MakeGraphCmd\n\ngithub.com/debricked/cli\nmodule1 v1.1.0\nmodule2 v0.4.0 => ./localDepOne\nmodule3 v1.1.4\n\nmodule4 v0.0.0-20170915032832-14c0d48ead0c")
 	fileWriterMock := &writerTestdata.FileWriterMock{}
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 	j := NewJob("file", cmdFactoryMock, fileWriterMock)
