@@ -4,11 +4,10 @@ jobs:
   pool:
     vmImage: 'ubuntu-latest'
   steps:
-    # - task: MavenAuthenticate@0
-    #   displayName: 'Maven Authenticate'
-    #   inputs:
-    #     artifactsFeeds: <your-private-repository-id>
-    # Uncomment the above lines if you need to authenticate private maven registries
+    - task: MavenAuthenticate@0
+      displayName: 'Maven Authenticate'
+      inputs:
+        artifactsFeeds: <your-private-repository-id>
     - script: |
         curl -L https://github.com/debricked/cli/releases/download/release-v1/cli_linux_x86_64.tar.gz | tar -xz debricked
         ./debricked scan

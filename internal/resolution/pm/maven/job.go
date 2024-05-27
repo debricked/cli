@@ -177,5 +177,6 @@ func (j *Job) addDependenciesResolveErrorDocumentation(matches [][]string) strin
 			message,
 			"\nTry to run `mvn dependency:tree -e` to get more details.\n",
 			util.InstallPrivateDependencyMessage,
+			"\nFor more information see https://github.com/debricked/cli/blob/main/internal/resolution/pm/maven/README.md",
 		}, "")
 }
