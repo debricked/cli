@@ -26,3 +26,13 @@ func TestMakeListCmd(t *testing.T) {
 	assert.Contains(t, args, "-m")
 	assert.Contains(t, args, "all")
 }
+
+func TestMakeListJsonCmd(t *testing.T) {
+	factory := CmdFactory{}
+	cmd, err := factory.MakeListJsonCmd(".")
+	assert.Nil(t, err)
+	assert.NotNil(t, cmd)
+	assert.Contains(t, cmd.Args, "list")
+	assert.Contains(t, cmd.Args, "-json")
+	assert.Contains(t, cmd.Args, "./...")
+}

@@ -1,8 +1,12 @@
 package gomod
 
 import (
+	"bytes"
+	"encoding/json"
+	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/debricked/cli/internal/resolution/job"
@@ -28,11 +32,13 @@ type Job struct {
 	fileWriter writer.IFileWriter
 }
 
-func NewJob(
-	file string,
-	cmdFactory ICmdFactory,
-	fileWriter writer.IFileWriter,
-) *Job {
+type PackageDetail struct {
+	ImportPath  string   `json:"ImportPath"`
+	Imports     []string `json:"Imports"`
+	TestImports []string `json:"TestImports"`
+}
+
+func NewJob(file string, cmdFactory ICmdFactory, fileWriter writer.IFileWriter) *Job {
 	return &Job{
 		BaseJob:    job.NewBaseJob(file),
 		cmdFactory: cmdFactory,
@@ -44,9 +50,7 @@ func (j *Job) Run() {
 	status := "creating dependency graph"
 	j.SendStatus(status)
 
-	workingDirectory := filepath.Dir(filepath.Clean(j.GetFile()))
-
-	graphCmdOutput, cmd, err := j.runGraphCmd(workingDirectory)
+	graphCmdOutput, cmd, err := j.runGraphCmd()
 	if err != nil {
 		j.handleError(j.createError(err.Error(), cmd, status))
 
@@ -55,12 +59,23 @@ func (j *Job) Run() {
 
 	status = "creating dependency version list"
 	j.SendStatus(status)
-	listCmdOutput, cmd, err := j.runListCmd(workingDirectory)
+	listCmdOutput, cmd, err := j.runListCmd()
 	if err != nil {
 		j.handleError(j.createError(err.Error(), cmd, status))
 
 		return
 	}
+
+	status = "analyzing package dependencies"
+	j.SendStatus(status)
+	listJsonOutput, cmd, err := j.runListJsonCmd()
+	if err != nil {
+		j.handleError(j.createError(err.Error(), cmd, status))
+
+		return
+	}
+
+	prodListCmdOutput, devListCmdOutput := j.parseDependencies(listJsonOutput, listCmdOutput)
 
 	status = "creating lock file"
 	j.SendStatus(status)
@@ -75,7 +90,12 @@ func (j *Job) Run() {
 	var fileContents []byte
 	fileContents = append(fileContents, graphCmdOutput...)
 	fileContents = append(fileContents, []byte("\n")...)
-	fileContents = append(fileContents, listCmdOutput...)
+	fileContents = append(fileContents, prodListCmdOutput...)
+
+	if len(devListCmdOutput) > 0 {
+		fileContents = append(fileContents, []byte("\n\n")...)
+		fileContents = append(fileContents, devListCmdOutput...)
+	}
 
 	err = j.fileWriter.Write(lockFile, fileContents)
 	if err != nil {
@@ -83,32 +103,122 @@ func (j *Job) Run() {
 	}
 }
 
-func (j *Job) runGraphCmd(workingDirectory string) ([]byte, string, error) {
-	graphCmd, err := j.cmdFactory.MakeGraphCmd(workingDirectory)
+func (j *Job) getWorkingDir() string {
+	return filepath.Dir(filepath.Clean(j.GetFile()))
+}
+
+func (j *Job) runGraphCmd() ([]byte, string, error) {
+	graphCmd, err := j.cmdFactory.MakeGraphCmd(j.getWorkingDir())
 	if err != nil {
 		return nil, graphCmd.String(), err
 	}
 
-	graphCmdOutput, err := graphCmd.Output()
-	if err != nil {
-		return nil, graphCmd.String(), j.GetExitError(err, "")
-	}
-
-	return graphCmdOutput, graphCmd.String(), nil
+	return j.handleCmdOutput(graphCmd)
 }
 
-func (j *Job) runListCmd(workingDirectory string) ([]byte, string, error) {
-	listCmd, err := j.cmdFactory.MakeListCmd(workingDirectory)
+func (j *Job) runListCmd() ([]byte, string, error) {
+	listCmd, err := j.cmdFactory.MakeListCmd(j.getWorkingDir())
 	if err != nil {
 		return nil, listCmd.String(), err
 	}
 
-	listCmdOutput, err := listCmd.Output()
+	return j.handleCmdOutput(listCmd)
+}
+
+func (j *Job) runListJsonCmd() ([]byte, string, error) {
+	listJsonCmd, err := j.cmdFactory.MakeListJsonCmd(j.getWorkingDir())
 	if err != nil {
-		return nil, listCmd.String(), j.GetExitError(err, "")
+		return nil, listJsonCmd.String(), err
 	}
 
-	return listCmdOutput, listCmd.String(), nil
+	return j.handleCmdOutput(listJsonCmd)
+}
+
+func (j *Job) handleCmdOutput(cmd *exec.Cmd) ([]byte, string, error) {
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, cmd.String(), j.GetExitError(err, "")
+	}
+
+	return output, cmd.String(), nil
+}
+
+func (j *Job) getImports(jsonOutput []byte) (map[string]bool, map[string]bool) {
+	decoder := json.NewDecoder(bytes.NewReader(jsonOutput))
+	imports := make(map[string]bool)
+	testImports := make(map[string]bool)
+
+	for {
+		var pkg PackageDetail
+		if err := decoder.Decode(&pkg); err != nil {
+			break
+		}
+
+		for _, imported := range pkg.Imports {
+			imports[imported] = true
+		}
+
+		for _, imported := range pkg.TestImports {
+			testImports[imported] = true
+		}
+	}
+
+	return imports, testImports
+}
+
+func (j *Job) parseDependencies(jsonOutput []byte, listCmdOutput []byte) ([]byte, []byte) {
+	modules := j.parseModules(listCmdOutput)
+	imports, testImports := j.getImports(jsonOutput)
+
+	prodDependencies := make([]string, 0)
+	devDependencies := make([]string, 0)
+	for dependency, version := range modules {
+		depFoundInImports := j.isModuleFound(dependency, imports)
+		depFoundInTestImports := j.isModuleFound(dependency, testImports)
+		module := strings.TrimSpace(dependency + " " + version)
+
+		if depFoundInTestImports && !depFoundInImports {
+			devDependencies = append(devDependencies, module)
+		} else {
+			prodDependencies = append(prodDependencies, module)
+		}
+	}
+
+	sort.Strings(prodDependencies)
+	sort.Strings(devDependencies)
+
+	return []byte(strings.Join(prodDependencies, "\n")), []byte(strings.Join(devDependencies, "\n"))
+}
+
+func (j *Job) isModuleFound(module string, imports map[string]bool) bool {
+	result := false
+
+	for importPath := range imports {
+		if strings.Contains(importPath, module) {
+			result = true
+
+			break
+		}
+	}
+
+	return result
+}
+
+func (j *Job) parseModules(output []byte) map[string]string {
+	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+	modules := make(map[string]string)
+	for _, line := range lines {
+		parts := strings.Fields(line)
+		moduleName := parts[0]
+		if len(parts) > 1 {
+			version := strings.Join(parts[1:], " ")
+			modules[moduleName] = version
+		} else {
+			modules[moduleName] = ""
+		}
+	}
+
+	return modules
 }
 
 func (j *Job) createError(error string, cmd string, status string) job.IError {
