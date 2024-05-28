@@ -33,6 +33,7 @@ var defaultFingerprintExclusions = DefaultFingerprintExclusionList{
 		"gradlew", "gradlew.bat", "mvnw", "mvnw.cmd", "gradle-wrapper.jar", "maven-wrapper.jar",
 		"thumbs.db", "babel.config.js", "license.txt", "license.md", "copying.lib", "makefile",
 		"\\[content_types\\].xml", "\\[Content_Types\\].xml", "py.typed", "LICENSE.APACHE2", "LICENSE.MIT",
+		".nycrc", ".jshintrc", ".tm_properties",
 	},
 	Endings: []string{
 		"-doc", "changelog", "config", "copying", "license", "authors", "news", "licenses", "notice",
