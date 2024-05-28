@@ -35,12 +35,12 @@ var defaultFingerprintExclusions = DefaultFingerprintExclusionList{
 		"\\[content_types\\].xml", "\\[Content_Types\\].xml", "py.typed", "LICENSE.APACHE2", "LICENSE.MIT",
 		".nycrc", ".jshintrc", ".tm_properties", "webpack.config.js", "eslint.config.js",
 		"eslint.config.mjs", "eslint.config.cjs", ".eslintrc.yaml", ".eslintrc.js", ".eslintrc.mjs",
-		".eslintrc.cjs", "jest.config.js", "vite.config.mjs", "vite.config.js", ".resx",
+		".eslintrc.cjs", "jest.config.js", "vite.config.mjs", "vite.config.js",
 	},
 	Endings: []string{
 		"-doc", "changelog", "config", "copying", "license", "authors", "news", "licenses", "notice",
 		"readme", "swiftdoc", "texidoc", "todo", "version", "ignore", "manifest", "sqlite", "sqlite3",
-		"nycrc", "targ", "eslintrc", "prettierrc",
+		"nycrc", "targ", "eslintrc", "prettierrc", "resx",
 	},
 	Extensions: []string{
 		".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".9", ".ac", ".adoc", ".am",
