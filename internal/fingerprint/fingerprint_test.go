@@ -106,6 +106,22 @@ func TestShouldProcessFile(t *testing.T) {
 			mock:     func() { errorString = "generic error" },
 			want:     false,
 		},
+		{
+			name:     "Test excluded file",
+			filePath: testFile,
+			excludes: []string{"foo/webpack.config.js"},
+			includes: []string{},
+			mock:     func() {},
+			want:     false,
+		},
+		{
+			name:     "Test excluded file",
+			filePath: testFile,
+			excludes: []string{".tm_properties"},
+			includes: []string{},
+			mock:     func() {},
+			want:     false,
+		},
 	}
 
 	for _, tt := range tests {
