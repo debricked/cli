@@ -69,9 +69,11 @@ If the given path contains a git repository all flags but "integration" will be 
 			_ = viper.BindPFlags(cmd.Flags())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if strings.HasPrefix(strings.ToLower(viper.GetString(RepositoryFlag)), "c") && !cmd.Flags().Changed(NoFingerprintFlag) {
-				viper.Set(NoFingerprintFlag, false)
-			} // Temporary addition for rolling release of fingerprinting enabled by default
+			if len(viper.GetString(RepositoryFlag)) > 0 {
+				if strings.ToLower(viper.GetString(RepositoryFlag))[0] < 'd' && !cmd.Flags().Changed(NoFingerprintFlag) {
+					viper.Set(NoFingerprintFlag, false)
+				} // Temporary addition for rolling release of fingerprinting enabled by default
+			}
 
 			return RunE(&scanner)(cmd, args)
 		},
