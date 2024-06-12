@@ -24,6 +24,19 @@ FROM cli AS scan
 CMD [ "debricked",  "scan" ]
 
 FROM cli-base AS resolution
+
+RUN echo "deb http://deb.debian.org/debian unstable main" >> /etc/apt/sources.list && \
+    echo "Package: *" >> /etc/apt/preferences && \
+    echo "Pin: release a=unstable" >> /etc/apt/preferences && \
+    echo "Pin-Priority: -2" >> /etc/apt/preferences
+
+# Uncomment below if testing packages are needed
+#RUN echo "deb http://deb.debian.org/debian testing-updates main" >> /etc/apt/sources.list && \
+#    echo "deb http://deb.debian.org/debian testing main" >> /etc/apt/sources.list && \
+#    echo "Package: *" >> /etc/apt/preferences && \
+#    echo "Pin: release a=testing" >> /etc/apt/preferences && \
+#    echo "Pin-Priority: -3" >> /etc/apt/preferences
+
 RUN apt -y update && apt -y upgrade && apt -y install curl gnupg unzip && \
     apt -y clean && rm -rf /var/lib/apt/lists/*
 
@@ -66,19 +79,13 @@ RUN ./dotnet-install.sh --channel $DOTNET_MAJOR --install-dir $DOTNET_ROOT
 RUN rm ./dotnet-install.sh
 ENV PATH $DOTNET_ROOT:$PATH
 
-RUN echo "deb http://ftp.us.debian.org/debian testing-updates main" >> /etc/apt/sources.list && \
-    echo "deb http://ftp.us.debian.org/debian testing main" >> /etc/apt/sources.list && \
-    echo "Package: *" >> /etc/apt/preferences && \
-    echo "Pin: release a=testing" >> /etc/apt/preferences && \
-    echo "Pin-Priority: -2" >> /etc/apt/preferences
-
 ENV GOLANG_VERSION 1.22
 RUN apt -y update && apt -y upgrade && apt -y install \
     python3 \
     python3-venv \
     ca-certificates \
     python3-pip && \
-    apt -y install -t testing \
+    apt -y install -t unstable \
     golang-$GOLANG_VERSION \
     openjdk-21-jre && \
     apt -y clean && rm -rf /var/lib/apt/lists/* && \
@@ -91,7 +98,7 @@ RUN apt -y update && apt -y upgrade && apt -y install \
 RUN dotnet --version
 
 RUN apt update -y && \
-    apt install -t testing lsb-release apt-transport-https ca-certificates software-properties-common -y && \
+    apt install -t unstable lsb-release apt-transport-https ca-certificates software-properties-common -y && \
     curl -o /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
     sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list' && \
     apt -y clean && rm -rf /var/lib/apt/lists/*

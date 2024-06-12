@@ -13,48 +13,48 @@ import (
 	"github.com/spf13/viper"
 )
 
-var repositoryName string
-var commitName string
 var branchName string
+var callgraph bool
+var callgraphGenerateTimeout int
+var callgraphUploadTimeout int
 var commitAuthor string
-var repositoryUrl string
-var integrationName string
-var jsonFilePath string
+var commitName string
 var exclusions = file.Exclusions()
 var inclusions = file.Exclusions()
-var verbose bool
-var regenerate int
-var versionHint bool
-var noResolve bool
-var noFingerprint bool
-var passOnDowntime bool
-var callgraph bool
-var npmPreferred bool
-var callgraphUploadTimeout int
-var callgraphGenerateTimeout int
+var integrationName string
+var jsonFilePath string
 var minFingerprintContentLength int
+var noFingerprint bool
+var noResolve bool
+var npmPreferred bool
+var passOnDowntime bool
+var regenerate int
+var repositoryName string
+var repositoryUrl string
+var verbose bool
+var versionHint bool
 
 const (
-	RepositoryFlag                  = "repository"
-	CommitFlag                      = "commit"
 	BranchFlag                      = "branch"
-	CommitAuthorFlag                = "author"
-	RepositoryUrlFlag               = "repository-url"
-	IntegrationFlag                 = "integration"
-	ExclusionFlag                   = "exclusion"
-	InclusionFlag                   = "inclusion"
-	VerboseFlag                     = "verbose"
-	VersionHintFlag                 = "version-hint"
-	RegenerateFlag                  = "regenerate"
-	NoResolveFlag                   = "no-resolve"
-	NoFingerprintFlag               = "no-fingerprint"
-	PassOnTimeOut                   = "pass-on-timeout"
 	CallGraphFlag                   = "callgraph"
-	CallGraphUploadTimeoutFlag      = "callgraph-upload-timeout"
 	CallGraphGenerateTimeoutFlag    = "callgraph-generate-timeout"
-	NpmPreferredFlag                = "prefer-npm"
+	CallGraphUploadTimeoutFlag      = "callgraph-upload-timeout"
+	CommitFlag                      = "commit"
+	CommitAuthorFlag                = "author"
+	ExclusionFlag                   = "exclusion"
+	IntegrationFlag                 = "integration"
+	InclusionFlag                   = "inclusion"
 	JsonFilePathFlag                = "json-path"
 	MinFingerprintContentLengthFlag = "min-fingerprint-content-length"
+	NoResolveFlag                   = "no-resolve"
+	NoFingerprintFlag               = "no-fingerprint"
+	NpmPreferredFlag                = "prefer-npm"
+	PassOnTimeOut                   = "pass-on-timeout"
+	RegenerateFlag                  = "regenerate"
+	RepositoryFlag                  = "repository"
+	RepositoryUrlFlag               = "repository-url"
+	VerboseFlag                     = "verbose"
+	VersionHintFlag                 = "version-hint"
 )
 
 var scanCmdError error
@@ -69,9 +69,11 @@ If the given path contains a git repository all flags but "integration" will be 
 			_ = viper.BindPFlags(cmd.Flags())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if strings.HasPrefix(strings.ToLower(viper.GetString(RepositoryFlag)), "c") && !cmd.Flags().Changed(NoFingerprintFlag) {
-				viper.Set(NoFingerprintFlag, false)
-			} // Temporary addition for rolling release of fingerprinting enabled by default
+			if len(viper.GetString(RepositoryFlag)) > 0 {
+				if strings.ToLower(viper.GetString(RepositoryFlag))[0] < 'd' && !cmd.Flags().Changed(NoFingerprintFlag) {
+					viper.Set(NoFingerprintFlag, false)
+				} // Temporary addition for rolling release of fingerprinting enabled by default
+			}
 
 			return RunE(&scanner)(cmd, args)
 		},
