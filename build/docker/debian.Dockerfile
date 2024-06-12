@@ -1,5 +1,8 @@
 FROM golang:1.22-bookworm AS dev
 WORKDIR /cli
+
+ARG DEBIAN_FRONTEND=noninteractive
+
 RUN apt -y update && apt -y upgrade && apt -y install git && \
     apt -y clean && rm -rf /var/lib/apt/lists/*
 COPY go.mod go.sum ./
@@ -11,6 +14,9 @@ RUN go build -o debricked ./cmd/debricked
 CMD [ "debricked" ]
 
 FROM debian:bookworm-slim AS cli-base
+
+ARG DEBIAN_FRONTEND=noninteractive
+
 ENV DEBRICKED_TOKEN=""
 RUN apt -y update && apt -y upgrade && apt -y install git && \
     apt -y clean && rm -rf /var/lib/apt/lists/*
@@ -24,6 +30,8 @@ FROM cli AS scan
 CMD [ "debricked",  "scan" ]
 
 FROM cli-base AS resolution
+
+ARG DEBIAN_FRONTEND=noninteractive
 
 RUN echo "deb http://deb.debian.org/debian unstable main" >> /etc/apt/sources.list && \
     echo "Package: *" >> /etc/apt/preferences && \
