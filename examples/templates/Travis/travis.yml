@@ -5,7 +5,7 @@ jobs:
         branch: "*"
       env:
         -  DEBRICKED_TOKEN=${DEBRICKED_TOKEN}
-      before_install: curl -L https://github.com/debricked/cli/releases/download/release-v1/cli_linux_x86_64.tar.gz | tar -xz debricked
+      before_install: curl -L https://github.com/debricked/cli/releases/download/release-v2/cli_linux_x86_64.tar.gz | tar -xz debricked
       before_cache:
         - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
         - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
