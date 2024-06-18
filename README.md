@@ -69,7 +69,7 @@ docker pull debricked/cli:1-resolution-debian
 ## Scan
 Once you've installed the CLI, you're ready to scan your project. You can scan a local project, or integrate a scanning mechanism in your CI/CD pipeline.
 1. [Sign up to Debricked](https://debricked.com/app/en/register)
-2. [Create an access token](https://portal.debricked.com/administration-47/how-do-i-generate-an-access-token-130)
+2. [Create an access token](https://docs.debricked.com/product/administration/generate-access-token)
 3. `debricked scan -t <access-token>`
 
 When the scan is complete, you will see the total number of vulnerabilities found and a list of automation rules that have been evaluated. Read more about automations [here](https://debricked.com/docs/automation/automation-overview.html#automation-overview).

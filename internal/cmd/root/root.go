@@ -21,7 +21,7 @@ func NewRootCmd(version string, container *wire.CliContainer) *cobra.Command {
 		Use:   "debricked",
 		Short: "Debricked CLI - Keep track of your dependencies!",
 		Long: `A fast and flexible software composition analysis CLI tool, given to you by Debricked.
-Complete documentation is available at https://portal.debricked.com/debricked-cli-63/debricked-cli-documentation-298`,
+Complete documentation is available at https://docs.debricked.com/tools-and-integrations/cli/debricked-cli`,
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			_ = viper.BindPFlags(cmd.PersistentFlags())
 		},
@@ -35,7 +35,7 @@ Complete documentation is available at https://portal.debricked.com/debricked-cl
 		"t",
 		"",
 		`Debricked access token. 
-Read more: https://portal.debricked.com/administration-47/how-do-i-generate-an-access-token-130`,
+Read more: https://docs.debricked.com/product/administration/generate-access-token`,
 	)
 
 	var debClient = container.DebClient()
