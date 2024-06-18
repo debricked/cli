@@ -81,11 +81,14 @@ RUN npm -v && yarn -v && bower -v
 # Package manager installs are only supported on the x64 architecture. Other architectures, such as Arm, must install .NET by some other means such as with Snap, an installer script, or through a manual binary installation.
 ENV DOTNET_ROOT /usr/lib/dotnet
 ENV DOTNET_MAJOR 8.0
-RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh
-RUN chmod u+x ./dotnet-install.sh
-RUN ./dotnet-install.sh --channel $DOTNET_MAJOR --install-dir $DOTNET_ROOT
-RUN rm ./dotnet-install.sh
 ENV PATH $DOTNET_ROOT:$PATH
+RUN apt -y update && apt -y install libicu72 && \
+    apt -y clean && rm -rf /var/lib/apt/lists/*
+RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh \
+    && chmod u+x ./dotnet-install.sh \
+    && ./dotnet-install.sh --channel $DOTNET_MAJOR --install-dir $DOTNET_ROOT \
+    && rm ./dotnet-install.sh \
+    && dotnet help
 
 ENV GOLANG_VERSION 1.22
 RUN apt -y update && apt -y upgrade && apt -y install \
