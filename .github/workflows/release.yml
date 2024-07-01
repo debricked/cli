@@ -175,7 +175,7 @@ jobs:
           useradd -m aur
 
       # Setup SSH access to aur.archlinux.org
-      - uses: webfactory/ssh-agent@v0.8.0
+      - uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
 

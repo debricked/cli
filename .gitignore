@@ -45,3 +45,4 @@ test/resolve/testdata/gradle/gradle.debricked.lock
 /mvnproj/target
 debricked-call-graph.*
 internal/scan/testdata/npm/result.json
+/internal/file/testdata/misc/yarn.lock
