@@ -77,26 +77,18 @@ func (finder *Finder) GetConfigPath(rootPath string, exclusions []string, inclus
 	return configPath
 }
 
-// GetGroups return all file groups in specified path recursively.
-func (finder *Finder) GetGroups(options DebrickedOptions) (Groups, error) {
+func (finder *Finder) GetIncludedGroups(formats []*CompiledFormat, options DebrickedOptions) (Groups, error) {
+	// NOTE: inefficient because it walks into excluded directories
 	var groups Groups
-
-	formats, err := finder.GetSupportedFormats()
-	if err != nil {
-		return groups, err
-	}
-	if len(options.RootPath) == 0 {
-		options.RootPath = filepath.Base("")
-	}
-
-	// Traverse files to find dependency file groups
-	err = filepath.Walk(
+	err := filepath.Walk(
 		options.RootPath,
 		func(path string, fileInfo os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
-			if !fileInfo.IsDir() && !Excluded(options.Exclusions, options.Inclusions, path) {
+			var excluded = Excluded(options.Exclusions, options.Inclusions, path)
+
+			if !fileInfo.IsDir() && !excluded {
 				for _, format := range formats {
 					if groups.Match(format, path, options.LockFileOnly) {
 
@@ -108,6 +100,73 @@ func (finder *Finder) GetGroups(options DebrickedOptions) (Groups, error) {
 			return nil
 		},
 	)
+
+	return groups, err
+}
+
+func (finder *Finder) GetExcludedGroups(formats []*CompiledFormat, options DebrickedOptions) (Groups, []string, error) {
+	var excludedGroups Groups
+	var excludedFiles []string
+	err := filepath.Walk(
+		options.RootPath,
+		func(path string, fileInfo os.FileInfo, err error) error {
+			if err != nil {
+
+				return err
+			}
+			if !fileInfo.IsDir() {
+				for _, format := range formats {
+					if excludedGroups.Match(format, path, options.LockFileOnly) {
+						excludedFiles = append(excludedFiles, path)
+
+						break
+					}
+				}
+			}
+
+			return nil
+		},
+	)
+
+	return excludedGroups, excludedFiles, err
+}
+
+// GetGroups return all file groups in specified path recursively.
+func (finder *Finder) GetGroups(options DebrickedOptions) (Groups, error) {
+	var groups Groups
+	var noGroupsFound bool
+
+	formats, err := finder.GetSupportedFormats()
+	if err != nil {
+
+		return groups, err
+	}
+	if len(options.RootPath) == 0 {
+		options.RootPath = filepath.Base("")
+	}
+
+	// Traverse files to find dependency file groups
+	groups, err = finder.GetIncludedGroups(formats, options)
+	noGroupsFound = len(groups.groups) == 0
+	if noGroupsFound {
+		// No dependencies found. (should rarely happen)
+		// Traverse again to see if dependency files were excluded.
+		_, excludedFiles, excludedErr := finder.GetExcludedGroups(formats, options)
+		if len(excludedFiles) > 0 {
+			fmt.Println("The following files were excluded, resulting in no dependency files found.")
+			for _, file := range excludedFiles {
+				fmt.Println(file)
+			}
+			fmt.Println("Please change the inclusion and exclusion options if an important file or directory was missed.")
+		} else {
+			fmt.Println("No dependency file matches found with current configuration.")
+			fmt.Println("Please change the inclusion and exclusion options if an important file or directory was missed.")
+		}
+		if excludedErr != nil {
+
+			return groups, err
+		}
+	}
 
 	groups.FilterGroupsByStrictness(options.Strictness)
 

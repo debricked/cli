@@ -3,8 +3,10 @@ package file
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"path"
 	"path/filepath"
 	"sort"
@@ -183,6 +185,85 @@ func TestGetGroupsPIP(t *testing.T) {
 		assert.Truef(t, found == expected, "Lock files do not match! Found: %s | Expected: %s", found, expected)
 	}
 
+}
+
+func CaptureStdout(function func(options DebrickedOptions) (Groups, error), options DebrickedOptions) string {
+	oldStdout := os.Stdout
+	read, write, _ := os.Pipe()
+	os.Stdout = write
+
+	_, err := function(options)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+
+		return ""
+	}
+
+	write.Close()
+	os.Stdout = oldStdout
+	var buf bytes.Buffer
+	_, err = io.Copy(&buf, read)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+
+		return ""
+	}
+
+	return buf.String()
+}
+
+func TestGetGroupsAllExcluded(t *testing.T) {
+	setUp(true)
+
+	options := DebrickedOptions{
+		RootPath:     "testdata/misc",
+		Exclusions:   []string{"**/**"},
+		Inclusions:   []string{},
+		LockFileOnly: false,
+		Strictness:   StrictAll,
+	}
+	actualOutput := CaptureStdout(finder.GetGroups, options)
+
+	// Define the expected output
+	expectedStart := "The following files were excluded, resulting in no dependency files found."
+	expectedEnd := "Please change the inclusion and exclusion options if an important file or directory was missed."
+	expectedExcludedFile := "requirements.txt"
+
+	// Compare the actual output to the expected output
+	if !strings.Contains(actualOutput, expectedStart) {
+		t.Errorf("Expected %q but got %q", expectedStart, actualOutput)
+	}
+	if !strings.Contains(actualOutput, expectedEnd) {
+		t.Errorf("Expected %q but got %q", expectedEnd, actualOutput)
+	}
+	if !strings.Contains(actualOutput, expectedExcludedFile) {
+		t.Errorf("Expected %q but got %q", expectedExcludedFile, actualOutput)
+	}
+}
+
+func TestGetGroupsAllExcludedByStrictness(t *testing.T) {
+	setUp(true)
+
+	options := DebrickedOptions{
+		RootPath:     "testdata/misc",
+		Exclusions:   []string{"**/composer.**"}, //the only manifest+lock pair in testdata/misc
+		Inclusions:   []string{},
+		LockFileOnly: false,
+		Strictness:   StrictPairs,
+	}
+	actualOutput := CaptureStdout(finder.GetGroups, options)
+
+	// Define the expected output
+	expectedStart := "The following files and directories were filtered out by strictness flag, resulting in no file matches."
+	expectedEnd := "Please change the inclusion and exclusion options if an important file or directory was missed."
+
+	// Compare the actual output to the expected output
+	if !strings.Contains(actualOutput, expectedStart) {
+		t.Errorf("Expected %q but got %q", expectedStart, actualOutput)
+	}
+	if !strings.Contains(actualOutput, expectedEnd) {
+		t.Errorf("Expected %q but got %q", expectedEnd, actualOutput)
+	}
 }
 
 func TestGetGroupsWithOnlyLockFiles(t *testing.T) {

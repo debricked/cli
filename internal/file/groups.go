@@ -1,6 +1,7 @@
 package file
 
 import (
+	"fmt"
 	"path/filepath"
 )
 
@@ -77,6 +78,14 @@ func (gs *Groups) FilterGroupsByStrictness(strictness int) {
 		if strictness == StrictLockAndPairs || (strictness == StrictPairs && group.HasFile()) {
 			groups = append(groups, group)
 		}
+	}
+
+	if len(groups) == 0 && len(gs.groups) > 0 {
+		fmt.Println("The following files and directories were filtered out by strictness flag, resulting in no file matches.")
+		for _, group := range gs.groups {
+			fmt.Println(group.GetAllFiles())
+		}
+		fmt.Println("Please change the inclusion and exclusion options if an important file or directory was missed.")
 	}
 
 	gs.groups = groups
