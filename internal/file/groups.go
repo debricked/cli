@@ -85,7 +85,6 @@ func (gs *Groups) FilterGroupsByStrictness(strictness int) {
 		for _, group := range gs.groups {
 			fmt.Println(group.GetAllFiles())
 		}
-		fmt.Println("Please change the inclusion and exclusion options if an important file or directory was missed.")
 	}
 
 	gs.groups = groups

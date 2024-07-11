@@ -218,26 +218,31 @@ func TestGetGroupsAllExcluded(t *testing.T) {
 	options := DebrickedOptions{
 		RootPath:     "testdata/misc",
 		Exclusions:   []string{"**/**"},
-		Inclusions:   []string{},
+		Inclusions:   []string{"**/**.zip"},
 		LockFileOnly: false,
 		Strictness:   StrictAll,
 	}
 	actualOutput := CaptureStdout(finder.GetGroups, options)
 
-	// Define the expected output
 	expectedStart := "The following files were excluded, resulting in no dependency files found."
-	expectedEnd := "Please change the inclusion and exclusion options if an important file or directory was missed."
-	expectedExcludedFile := "requirements.txt"
-
-	// Compare the actual output to the expected output
 	if !strings.Contains(actualOutput, expectedStart) {
 		t.Errorf("Expected %q but got %q", expectedStart, actualOutput)
 	}
+	expectedEnd := "Change the inclusion and exclusion options if a file or directory was missed."
 	if !strings.Contains(actualOutput, expectedEnd) {
 		t.Errorf("Expected %q but got %q", expectedEnd, actualOutput)
 	}
-	if !strings.Contains(actualOutput, expectedExcludedFile) {
-		t.Errorf("Expected %q but got %q", expectedExcludedFile, actualOutput)
+	expectedCompressionWarning := "Compressed file found, but contained files cannot be scanned. Decompress to scan content."
+	if !strings.Contains(actualOutput, expectedCompressionWarning) {
+		t.Errorf("Expected %q but got %q", expectedCompressionWarning, actualOutput)
+	}
+	expectedExcludedDependencyFile := "requirements.txt"
+	if !strings.Contains(actualOutput, expectedExcludedDependencyFile) {
+		t.Errorf("Expected %q but got %q", expectedExcludedDependencyFile, actualOutput)
+	}
+	expectedSkippedCompressedFile := "zipped.zip"
+	if !strings.Contains(actualOutput, expectedSkippedCompressedFile) {
+		t.Errorf("Expected %q but got %q", expectedExcludedDependencyFile, actualOutput)
 	}
 }
 
@@ -255,14 +260,10 @@ func TestGetGroupsAllExcludedByStrictness(t *testing.T) {
 
 	// Define the expected output
 	expectedStart := "The following files and directories were filtered out by strictness flag, resulting in no file matches."
-	expectedEnd := "Please change the inclusion and exclusion options if an important file or directory was missed."
 
 	// Compare the actual output to the expected output
 	if !strings.Contains(actualOutput, expectedStart) {
 		t.Errorf("Expected %q but got %q", expectedStart, actualOutput)
-	}
-	if !strings.Contains(actualOutput, expectedEnd) {
-		t.Errorf("Expected %q but got %q", expectedEnd, actualOutput)
 	}
 }
 

@@ -77,6 +77,22 @@ func (finder *Finder) GetConfigPath(rootPath string, exclusions []string, inclus
 	return configPath
 }
 
+func isCompressed(filename string) bool {
+	compressionExtensions := map[string]struct{}{
+		".gz":  {},
+		".zip": {},
+		".tar": {},
+		".rar": {},
+		".bz2": {},
+		".xz":  {},
+		".7z":  {},
+	}
+	myExt := filepath.Ext(filename)
+	_, compressed := compressionExtensions[myExt]
+
+	return compressed
+}
+
 func (finder *Finder) GetIncludedGroups(formats []*CompiledFormat, options DebrickedOptions) (Groups, error) {
 	// NOTE: inefficient because it walks into excluded directories
 	var groups Groups
@@ -114,7 +130,9 @@ func (finder *Finder) GetExcludedGroups(formats []*CompiledFormat, options Debri
 
 				return err
 			}
-			if !fileInfo.IsDir() {
+			if isCompressed(path) {
+				excludedFiles = append(excludedFiles, path)
+			} else if !fileInfo.IsDir() {
 				for _, format := range formats {
 					if excludedGroups.Match(format, path, options.LockFileOnly) {
 						excludedFiles = append(excludedFiles, path)
@@ -131,10 +149,29 @@ func (finder *Finder) GetExcludedGroups(formats []*CompiledFormat, options Debri
 	return excludedGroups, excludedFiles, err
 }
 
+func reportExclusions(excludedFiles []string) {
+	if len(excludedFiles) > 0 {
+		containsCompressedFile := false
+		fmt.Println("The following files were excluded, resulting in no dependency files found.")
+		for _, file := range excludedFiles {
+			if !containsCompressedFile && isCompressed(file) {
+				containsCompressedFile = true
+			}
+			fmt.Println(file)
+		}
+		if containsCompressedFile {
+			fmt.Println("Compressed file found, but contained files cannot be scanned. Decompress to scan content.")
+		}
+	} else {
+		fmt.Println("No dependency file matches found with current configuration.")
+	}
+	fmt.Println("Change the inclusion and exclusion options if a file or directory was missed.")
+
+}
+
 // GetGroups return all file groups in specified path recursively.
 func (finder *Finder) GetGroups(options DebrickedOptions) (Groups, error) {
 	var groups Groups
-	var noGroupsFound bool
 
 	formats, err := finder.GetSupportedFormats()
 	if err != nil {
@@ -147,21 +184,11 @@ func (finder *Finder) GetGroups(options DebrickedOptions) (Groups, error) {
 
 	// Traverse files to find dependency file groups
 	groups, err = finder.GetIncludedGroups(formats, options)
-	noGroupsFound = len(groups.groups) == 0
-	if noGroupsFound {
+	if len(groups.groups) == 0 {
 		// No dependencies found. (should rarely happen)
-		// Traverse again to see if dependency files were excluded.
+		// Traverse again to see if dependency or zip files were excluded.
 		_, excludedFiles, excludedErr := finder.GetExcludedGroups(formats, options)
-		if len(excludedFiles) > 0 {
-			fmt.Println("The following files were excluded, resulting in no dependency files found.")
-			for _, file := range excludedFiles {
-				fmt.Println(file)
-			}
-			fmt.Println("Please change the inclusion and exclusion options if an important file or directory was missed.")
-		} else {
-			fmt.Println("No dependency file matches found with current configuration.")
-			fmt.Println("Please change the inclusion and exclusion options if an important file or directory was missed.")
-		}
+		reportExclusions(excludedFiles)
 		if excludedErr != nil {
 
 			return groups, err
