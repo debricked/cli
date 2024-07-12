@@ -44,7 +44,7 @@ func TestNewFingerprintCmd(t *testing.T) {
 
 func TestRunE(t *testing.T) {
 	defer func() {
-		os.Remove(fingerprint.OutputFileNameFingerprints)
+		os.Remove(fingerprint.OutputFileNameFingerprints) // TODO: make sure it will remove all generated fingerprint files (e.g. with date suffix)
 	}()
 	fingerprintMock := testdata.NewFingerprintMock()
 	runE := RunE(fingerprintMock)
@@ -52,5 +52,8 @@ func TestRunE(t *testing.T) {
 	err := runE(nil, []string{"."})
 
 	assert.NoError(t, err)
+	// TODO: Run command again, first with regenerate=true (default) to ensure no extra file is generated (check only one exists)
+	// 		 Run command a third time, without regenerate,
+	//		 asserting that a date-stamped debricked fingerprint file is created when regenerate=false
 
 }
