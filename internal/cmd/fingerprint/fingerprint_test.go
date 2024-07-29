@@ -1,6 +1,7 @@
 package fingerprint
 
 import (
+	"io"
 	"os"
 	"testing"
 
@@ -44,7 +45,7 @@ func TestNewFingerprintCmd(t *testing.T) {
 
 func TestRunE(t *testing.T) {
 	defer func() {
-		os.Remove(fingerprint.OutputFileNameFingerprints) // TODO: make sure it will remove all generated fingerprint files (e.g. with date suffix)
+		os.Remove(fingerprint.OutputFileNameFingerprints)
 	}()
 	fingerprintMock := testdata.NewFingerprintMock()
 	runE := RunE(fingerprintMock)
@@ -52,8 +53,25 @@ func TestRunE(t *testing.T) {
 	err := runE(nil, []string{"."})
 
 	assert.NoError(t, err)
-	// TODO: Run command again, first with regenerate=true (default) to ensure no extra file is generated (check only one exists)
-	// 		 Run command a third time, without regenerate,
-	//		 asserting that a date-stamped debricked fingerprint file is created when regenerate=false
+}
 
+func TestRunEFileExistsError(t *testing.T) {
+	defer func() {
+		os.Remove(fingerprint.OutputFileNameFingerprints)
+	}()
+	fingerprintMock := testdata.NewFingerprintMockFileExistsError()
+	runE := RunE(fingerprintMock)
+
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := runE(nil, []string{"."})
+
+	_ = w.Close()
+	output, _ := io.ReadAll(r)
+	os.Stdout = rescueStdout
+
+	assert.NoError(t, err)
+	assert.Contains(t, string(output), "change flag '--regenerate' to 'true'")
 }
