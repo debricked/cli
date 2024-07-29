@@ -24,6 +24,8 @@ type DebrickedOptions struct {
 	Inclusions                   []string
 	FingerprintCompressedContent bool
 	MinFingerprintContentLength  int
+	OutputPath                   string
+	Regenerate                   bool
 }
 
 var ZIP_FILE_ENDINGS = []string{".jar", ".nupkg", ".war", ".zip", ".ear", ".whl"}
@@ -59,6 +61,12 @@ func NewFingerprinter() *Fingerprinter {
 	}
 }
 
+type FingerprintFileExistsError struct{}
+
+func (_ *FingerprintFileExistsError) Error() string {
+	return "Fingerprint file already exists and command is configured to not overwrite."
+}
+
 type FileFingerprint struct {
 	path          string
 	contentLength int64
@@ -78,6 +86,17 @@ func (f *Fingerprinter) FingerprintFiles(options DebrickedOptions) (Fingerprints
 
 	fingerprints := Fingerprints{}
 
+	_, err := os.Open(options.OutputPath)
+	var fingerprintFileExists = false
+	if !errors.Is(err, os.ErrNotExist) {
+		fingerprintFileExists = true
+	}
+	fmt.Printf("output path=%s", options.OutputPath)
+	fmt.Printf("regen=%t, file=%t\n", options.Regenerate, fingerprintFileExists)
+	if !options.Regenerate && fingerprintFileExists {
+		return fingerprints, &FingerprintFileExistsError{}
+	}
+
 	f.spinnerManager.Start()
 	spinnerMessage := "files processed"
 	spinner := f.spinnerManager.AddSpinner(spinnerMessage)
@@ -85,7 +104,7 @@ func (f *Fingerprinter) FingerprintFiles(options DebrickedOptions) (Fingerprints
 	nbFiles := 0
 	lastLogNb := 0
 
-	err := filepath.Walk(options.Path, func(path string, fileInfo os.FileInfo, err error) error {
+	err = filepath.Walk(options.Path, func(path string, fileInfo os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}

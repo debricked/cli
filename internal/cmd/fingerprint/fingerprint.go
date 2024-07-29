@@ -1,9 +1,9 @@
 package fingerprint
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
-	"time"
 
 	"github.com/debricked/cli/internal/fingerprint"
 	"github.com/spf13/cobra"
@@ -63,7 +63,7 @@ $ debricked scan . --include '**/node_modules/**'`)
 	cmd.Flags().BoolVar(&shouldFingerprintCompressedContent, FingerprintCompressedContent, false, `Fingerprint the contents of compressed files by unpacking them in memory, Supported files: `+fmt.Sprintf("%v", fingerprint.ZIP_FILE_ENDINGS))
 	cmd.Flags().StringVar(&outputDir, OutputDirFlag, ".", "The directory to write the output file to")
 	cmd.Flags().IntVar(&minFingerprintContentLength, MinFingerprintContentLengthFlag, 45, "Set minimum content length (in bytes) for files to fingerprint. Defaults to 45 bytes.")
-	cmd.Flags().BoolVar(&shouldRegenerateFingerprintFile, RegenerateFingerprintFile, true, `If generated fingerprint file should be overwritten on subequent scans. Defaults to true`)
+	cmd.Flags().BoolVar(&shouldRegenerateFingerprintFile, RegenerateFingerprintFile, true, `Toggle if generated fingerprint file should be overwritten on subequent scans. Defaults to true`)
 
 	viper.MustBindEnv(ExclusionFlag)
 
@@ -76,7 +76,10 @@ func RunE(f fingerprint.IFingerprint) func(_ *cobra.Command, args []string) erro
 		if len(args) > 0 {
 			path = args[0]
 		}
+		var outputFilePath = filepath.Join(outputDir, fingerprint.OutputFileNameFingerprints)
 		options := fingerprint.DebrickedOptions{
+			OutputPath:                   outputFilePath,
+			Regenerate:                   shouldRegenerateFingerprintFile,
 			Path:                         path,
 			Exclusions:                   exclusions,
 			Inclusions:                   inclusions,
@@ -84,21 +87,16 @@ func RunE(f fingerprint.IFingerprint) func(_ *cobra.Command, args []string) erro
 			MinFingerprintContentLength:  minFingerprintContentLength,
 		}
 		output, err := f.FingerprintFiles(options)
-
 		if err != nil {
+			if errors.Is(err, &fingerprint.FingerprintFileExistsError{}) {
+				fmt.Println(
+					"Fingerprint file exists and command is configured to not overwrite. ",
+					"To generate new fingerprint file either remove/rename old file or ",
+					"change flag '--regenerate' to 'true'",
+				)
+				return nil
+			}
 			return err
-		}
-		var outputFilePath string
-		// TODO: decide if we should only create a date-suffix file if a file without date-suffix already exists.
-		//       Depending on decision, check for existence of debricked.fingerprints.txt here.
-		if shouldRegenerateFingerprintFile {
-			outputFilePath = filepath.Join(outputDir, fingerprint.OutputFileNameFingerprints)
-		} else {
-			// TODO: decide on if date suffix is what we want or if an incrementing integer should be used.
-			timestamp := time.Now().Format("2006-01-02_15-04-05") // reference date, do not change the date, only format
-			ext := filepath.Ext(fingerprint.OutputFileNameFingerprints)
-			ouputFileName := fmt.Sprintf("%s_%s%s", fingerprint.OutputFileNameFingerprints, timestamp, ext)
-			outputFilePath = filepath.Join(outputDir, ouputFileName)
 		}
 
 		err = output.ToFile(outputFilePath)

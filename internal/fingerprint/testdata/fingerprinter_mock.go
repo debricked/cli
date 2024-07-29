@@ -14,6 +14,12 @@ func NewFingerprintMock() *FingerprintMock {
 	}
 }
 
+func NewFingerprintMockFileExistsError() *FingerprintMock {
+	return &FingerprintMock{
+		error: &fingerprint.FingerprintFileExistsError{},
+	}
+}
+
 func (f *FingerprintMock) FingerprintFiles(
 	options fingerprint.DebrickedOptions,
 ) (fingerprint.Fingerprints, error) {
