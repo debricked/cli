@@ -92,10 +92,10 @@ RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh \
 
 ENV GOLANG_VERSION 1.22
 RUN apt -y update && apt -y upgrade && apt -y install \
-    python3 \
-    python3-venv \
+    python3.10 \
+    python3.10-venv \
     ca-certificates \
-    python3-pip && \
+    python3.10-pip && \
     apt -y install -t unstable \
     golang-$GOLANG_VERSION \
     openjdk-21-jre && \

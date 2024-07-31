@@ -91,8 +91,6 @@ func (f *Fingerprinter) FingerprintFiles(options DebrickedOptions) (Fingerprints
 	if !errors.Is(err, os.ErrNotExist) {
 		fingerprintFileExists = true
 	}
-	fmt.Printf("output path=%s", options.OutputPath)
-	fmt.Printf("regen=%t, file=%t\n", options.Regenerate, fingerprintFileExists)
 	if !options.Regenerate && fingerprintFileExists {
 		return fingerprints, &FingerprintFileExistsError{}
 	}
