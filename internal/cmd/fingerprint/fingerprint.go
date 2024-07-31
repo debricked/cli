@@ -91,11 +91,13 @@ func RunE(f fingerprint.IFingerprint) func(_ *cobra.Command, args []string) erro
 			if errors.Is(err, &fingerprint.FingerprintFileExistsError{}) {
 				fmt.Println(
 					"Fingerprint file exists and command is configured to not overwrite. ",
-					"To generate new fingerprint file either remove/rename old file or ",
+					"To generate a new fingerprint file either remove/rename old file or ",
 					"change flag '--regenerate' to 'true'",
 				)
+
 				return nil
 			}
+
 			return err
 		}
 

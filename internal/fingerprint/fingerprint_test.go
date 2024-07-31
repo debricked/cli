@@ -184,9 +184,9 @@ func TestFingerprintFiles(t *testing.T) {
 }
 
 func TestFingerprintFilesAlreadyExists(t *testing.T) {
-	temp, err := os.CreateTemp("testdata/fingerprinter", "temp-fingerprint-*.txt")
+	temp, _ := os.CreateTemp("testdata/fingerprinter", "temp-fingerprint-*.txt")
 	fingerprinter := NewFingerprinter()
-	_, err = fingerprinter.FingerprintFiles(
+	_, err := fingerprinter.FingerprintFiles(
 		DebrickedOptions{
 			OutputPath:                   temp.Name(),
 			Path:                         "testdata/fingerprinter",
