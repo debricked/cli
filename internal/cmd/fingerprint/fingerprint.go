@@ -94,8 +94,10 @@ func RunE(f fingerprint.IFingerprint) func(_ *cobra.Command, args []string) erro
 					"To generate a new fingerprint file either remove/rename old file or ",
 					"change flag '--regenerate' to 'true'",
 				)
+
 				return nil
 			}
+
 			return err
 		}
 
