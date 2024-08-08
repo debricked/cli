@@ -172,6 +172,7 @@ func (dScanner *DebrickedScanner) scanFingerprint(options DebrickedOptions) erro
 				Inclusions:                   append(options.Inclusions, fingerprint.DefaultInclusionsFingerprint()...),
 				MinFingerprintContentLength:  options.MinFingerprintContentLength,
 				FingerprintCompressedContent: false,
+				Regenerate:                   options.Regenerate > 0,
 			},
 		)
 		if err != nil {

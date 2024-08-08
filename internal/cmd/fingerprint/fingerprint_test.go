@@ -1,6 +1,7 @@
 package fingerprint
 
 import (
+	"io"
 	"os"
 	"testing"
 
@@ -52,5 +53,25 @@ func TestRunE(t *testing.T) {
 	err := runE(nil, []string{"."})
 
 	assert.NoError(t, err)
+}
 
+func TestRunEFileExistsError(t *testing.T) {
+	defer func() {
+		os.Remove(fingerprint.OutputFileNameFingerprints)
+	}()
+	fingerprintMock := testdata.NewFingerprintMockFileExistsError()
+	runE := RunE(fingerprintMock)
+
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := runE(nil, []string{"."})
+
+	_ = w.Close()
+	output, _ := io.ReadAll(r)
+	os.Stdout = rescueStdout
+
+	assert.NoError(t, err)
+	assert.Contains(t, string(output), "change flag '--regenerate' to 'true'")
 }

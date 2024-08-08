@@ -93,9 +93,8 @@ RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh \
 ENV GOLANG_VERSION 1.22
 RUN apt -y update && apt -y upgrade && apt -y install \
     python3 \
-    python3-venv \
-    ca-certificates \
-    python3-pip && \
+    python3-pip \
+    ca-certificates && \
     apt -y install -t unstable \
     golang-$GOLANG_VERSION \
     openjdk-21-jre && \
@@ -105,6 +104,8 @@ RUN apt -y update && apt -y upgrade && apt -y install \
     ln -sf /usr/bin/python3 /usr/bin/python && \
     # Symlink go binary to bin directory which is in path
     ln -s /usr/lib/go-$GOLANG_VERSION/bin/go /usr/bin/go
+RUN rm /usr/lib/python3.11/EXTERNALLY-MANAGED
+RUN python3 -m pip install --user virtualenv
 
 RUN dotnet --version
 

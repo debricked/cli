@@ -183,6 +183,25 @@ func TestFingerprintFiles(t *testing.T) {
 
 }
 
+func TestFingerprintFilesAlreadyExists(t *testing.T) {
+	temp, _ := os.CreateTemp("testdata/fingerprinter", "temp-fingerprint-*.txt")
+	fingerprinter := NewFingerprinter()
+	_, err := fingerprinter.FingerprintFiles(
+		DebrickedOptions{
+			OutputPath:                   temp.Name(),
+			Path:                         "testdata/fingerprinter",
+			Exclusions:                   []string{},
+			Inclusions:                   []string{},
+			FingerprintCompressedContent: false,
+			MinFingerprintContentLength:  0,
+			Regenerate:                   false,
+		},
+	)
+	os.Remove(temp.Name())
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Fingerprint file already exists")
+}
+
 func TestFingerprintFilesBackslash(t *testing.T) {
 
 	tempDir, err := os.MkdirTemp("", "slash-test")
