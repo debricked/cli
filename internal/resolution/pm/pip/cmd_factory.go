@@ -33,7 +33,7 @@ type CmdFactory struct {
 
 func (cmdf CmdFactory) MakeCreateVenvCmd(fpath string) (*exec.Cmd, error) {
 	python, err := cmdf.execPath.LookPath("python3")
-	pythonCommand := "python3.11"
+	pythonCommand := "python3"
 	if err != nil {
 		if strings.Contains(err.Error(), "executable file not found in ") {
 			// Python 3 not found, try Python
