@@ -92,17 +92,14 @@ RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh \
 
 ENV GOLANG_VERSION 1.22
 RUN apt -y update && apt -y upgrade && apt -y install \
-    python3 \
-    python3-venv \
-    ca-certificates \
-    python3-pip && \
+    python-is-python3 \
+    ca-certificates && \
     apt -y install -t unstable \
+    python3.12\
+    python3.12-venv \
     golang-$GOLANG_VERSION \
     openjdk-21-jre && \
     apt -y clean && rm -rf /var/lib/apt/lists/* && \
-    # Symlink pip3 to pip, we assume that "pip" works in CLI
-    ln -sf /usr/bin/pip3 /usr/bin/pip && \
-    ln -sf /usr/bin/python3 /usr/bin/python && \
     # Symlink go binary to bin directory which is in path
     ln -s /usr/lib/go-$GOLANG_VERSION/bin/go /usr/bin/go
 
