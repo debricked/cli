@@ -110,7 +110,7 @@ func TestGetGroups(t *testing.T) {
 	path := ""
 
 	excludedFiles := []string{"testdata/go/go.mod", "testdata/misc/requirements.txt", "testdata/misc/Cargo.lock"}
-	const nbrOfGroups = 6
+	const nbrOfGroups = 10
 
 	fileGroups, err := finder.GetGroups(
 		DebrickedOptions{
@@ -349,7 +349,7 @@ func TestGetGroupsWithStrictFlag(t *testing.T) {
 			name:                   "StrictnessSetTo0",
 			strictness:             StrictAll,
 			testedGroupIndex:       3,
-			expectedNumberOfGroups: 11,
+			expectedNumberOfGroups: 14,
 			expectedManifestFile:   "composer.json",
 			expectedLockFiles:      []string{"composer.lock", "go.mod", "Cargo.lock", "requirements.txt.pip.debricked"},
 		},
@@ -357,7 +357,7 @@ func TestGetGroupsWithStrictFlag(t *testing.T) {
 			name:                   "StrictnessSetTo1",
 			strictness:             StrictLockAndPairs,
 			testedGroupIndex:       1,
-			expectedNumberOfGroups: 6,
+			expectedNumberOfGroups: 7,
 			expectedManifestFile:   "",
 			expectedLockFiles: []string{
 				"composer.lock", "composer.lock", "go.mod", "Cargo.lock", "requirements.txt.pip.debricked", "requirements-dev.txt.pip.debricked",
@@ -367,7 +367,7 @@ func TestGetGroupsWithStrictFlag(t *testing.T) {
 			name:                   "StrictnessSetTo2",
 			strictness:             StrictPairs,
 			testedGroupIndex:       0,
-			expectedNumberOfGroups: 4,
+			expectedNumberOfGroups: 5,
 			expectedManifestFile:   "composer.json",
 			expectedLockFiles: []string{
 				"composer.lock", "requirements-dev.txt.pip.debricked.lock", "requirements.txt.pip.debricked.lock",
