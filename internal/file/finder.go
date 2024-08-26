@@ -93,12 +93,6 @@ func isCompressed(filename string) bool {
 	return compressed
 }
 
-func (finder *Finder) getWorkspaces(options DebrickedOptions) ([]string, error) {
-	var workspaces []string
-
-	return workspaces, nil
-}
-
 func (finder *Finder) GetIncludedGroups(formats []*CompiledFormat, options DebrickedOptions) (Groups, error) {
 	// NOTE: inefficient because it walks into excluded directories
 	var groups Groups

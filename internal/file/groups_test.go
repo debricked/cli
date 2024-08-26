@@ -202,8 +202,7 @@ func TestGroupsMatchWorkspaces(t *testing.T) {
 		RootManifest: "package.json",
 		Workspaces:   []string{"package/*"},
 	}
-	err := gs.matchWorkspace(workspaceManifest)
-	assert.NoError(t, err)
+	gs.matchWorkspace(workspaceManifest)
 	for _, g := range gs.groups {
 		if g.ManifestFile == "package/file3" {
 			assert.Equal(t, g.LockFiles[0], g1.LockFiles[0])
@@ -224,8 +223,7 @@ func TestAddWorkspaceLockFiles(t *testing.T) {
 	gs.Add(*g1)
 	gs.Add(*g2)
 	gs.Add(*g3)
-	err := gs.AddWorkspaceLockFiles()
-	assert.NoError(t, err)
+	gs.AddWorkspaceLockFiles()
 	for _, g := range gs.groups {
 		assert.Equal(t, len(g.LockFiles), 1)
 		if len(g.LockFiles) == 1 {
