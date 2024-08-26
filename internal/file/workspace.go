@@ -2,8 +2,9 @@ package file
 
 import (
 	"encoding/json"
-	"github.com/bmatcuk/doublestar/v4"
 	"os"
+
+	"github.com/becheran/wildmatch-go"
 )
 
 type WorkspaceManifest struct {
@@ -19,9 +20,8 @@ type NPMPackageJson struct {
 
 func (workspaceManifest *WorkspaceManifest) matchManifest(manifestPath string) bool {
 	for _, workspacePattern := range workspaceManifest.Workspaces {
-		matched, _ := doublestar.Match(workspacePattern, manifestPath)
-		if matched {
-
+		pattern := wildmatch.NewWildMatch(workspacePattern)
+		if pattern.IsMatch(manifestPath) {
 			return true
 		}
 	}
@@ -29,10 +29,10 @@ func (workspaceManifest *WorkspaceManifest) matchManifest(manifestPath string) b
 	return false
 }
 
-func getWorkspaces(packageJson string) ([]string, error) {
+func getWorkspaces(rootManifest string) ([]string, error) {
 	var npmPackageJson NPMPackageJson
 
-	jsonFile, err := os.Open(packageJson)
+	jsonFile, err := os.Open(rootManifest)
 	if err != nil {
 		return nil, err
 	}

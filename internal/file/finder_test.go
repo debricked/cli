@@ -110,7 +110,7 @@ func TestGetGroups(t *testing.T) {
 	path := ""
 
 	excludedFiles := []string{"testdata/go/go.mod", "testdata/misc/requirements.txt", "testdata/misc/Cargo.lock"}
-	const nbrOfGroups = 10
+	const nbrOfGroups = 9
 
 	fileGroups, err := finder.GetGroups(
 		DebrickedOptions{
