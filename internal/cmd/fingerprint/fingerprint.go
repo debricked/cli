@@ -1,6 +1,7 @@
 package fingerprint
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 
@@ -14,6 +15,7 @@ var inclusions []string
 var shouldFingerprintCompressedContent bool
 var outputDir string
 var minFingerprintContentLength int
+var shouldRegenerateFingerprintFile bool
 
 const (
 	ExclusionFlag                   = "exclusion"
@@ -21,6 +23,7 @@ const (
 	FingerprintCompressedContent    = "fingerprint-compressed-content"
 	OutputDirFlag                   = "output-dir"
 	MinFingerprintContentLengthFlag = "min-fingerprint-content-length"
+	RegenerateFingerprintFile       = "regenerate"
 )
 
 func NewFingerprintCmd(fingerprinter fingerprint.IFingerprint) *cobra.Command {
@@ -60,6 +63,7 @@ $ debricked scan . --include '**/node_modules/**'`)
 	cmd.Flags().BoolVar(&shouldFingerprintCompressedContent, FingerprintCompressedContent, false, `Fingerprint the contents of compressed files by unpacking them in memory, Supported files: `+fmt.Sprintf("%v", fingerprint.ZIP_FILE_ENDINGS))
 	cmd.Flags().StringVar(&outputDir, OutputDirFlag, ".", "The directory to write the output file to")
 	cmd.Flags().IntVar(&minFingerprintContentLength, MinFingerprintContentLengthFlag, 45, "Set minimum content length (in bytes) for files to fingerprint. Defaults to 45 bytes.")
+	cmd.Flags().BoolVar(&shouldRegenerateFingerprintFile, RegenerateFingerprintFile, true, `Toggle if generated fingerprint file should be overwritten on subequent scans. Defaults to true`)
 
 	viper.MustBindEnv(ExclusionFlag)
 
@@ -72,7 +76,10 @@ func RunE(f fingerprint.IFingerprint) func(_ *cobra.Command, args []string) erro
 		if len(args) > 0 {
 			path = args[0]
 		}
+		var outputFilePath = filepath.Join(outputDir, fingerprint.OutputFileNameFingerprints)
 		options := fingerprint.DebrickedOptions{
+			OutputPath:                   outputFilePath,
+			Regenerate:                   shouldRegenerateFingerprintFile,
 			Path:                         path,
 			Exclusions:                   exclusions,
 			Inclusions:                   inclusions,
@@ -80,11 +87,20 @@ func RunE(f fingerprint.IFingerprint) func(_ *cobra.Command, args []string) erro
 			MinFingerprintContentLength:  minFingerprintContentLength,
 		}
 		output, err := f.FingerprintFiles(options)
-
 		if err != nil {
+			if errors.Is(err, &fingerprint.FingerprintFileExistsError{}) {
+				fmt.Println(
+					"Fingerprint file exists and command is configured to not overwrite. ",
+					"To generate a new fingerprint file either remove/rename old file or ",
+					"change flag '--regenerate' to 'true'",
+				)
+
+				return nil
+			}
+
 			return err
 		}
-		outputFilePath := filepath.Join(outputDir, fingerprint.OutputFileNameFingerprints)
+
 		err = output.ToFile(outputFilePath)
 		if err != nil {
 			return err
