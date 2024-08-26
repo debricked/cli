@@ -200,8 +200,7 @@ func (finder *Finder) GetGroups(options DebrickedOptions) (Groups, error) {
 			return groups, err
 		}
 	}
-	// Find workspace and add root lock to groups
-
+	groups.AddWorkspaceLockFiles()
 	groups.FilterGroupsByStrictness(options.Strictness)
 
 	return groups, err

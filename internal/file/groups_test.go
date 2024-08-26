@@ -224,7 +224,7 @@ func TestAddWorkspaceLockFiles(t *testing.T) {
 	gs.Add(*g1)
 	gs.Add(*g2)
 	gs.Add(*g3)
-	err := gs.addWorkspaceLockFiles()
+	err := gs.AddWorkspaceLockFiles()
 	assert.NoError(t, err)
 	for _, g := range gs.groups {
 		assert.Equal(t, len(g.LockFiles), 1)

@@ -129,10 +129,10 @@ func (gs *Groups) matchWorkspace(workspaceManifest WorkspaceManifest) error {
 	return nil
 }
 
-func (gs *Groups) addWorkspaceLockFiles() error {
+func (gs *Groups) AddWorkspaceLockFiles() error {
 	for _, group := range gs.groups {
 		workspaces, err := getWorkspaces(group.ManifestFile)
-		if err == nil {
+		if err == nil && group.HasLockFiles() {
 			workspaceManifest := WorkspaceManifest{
 				LockFile:     group.LockFiles[0],
 				RootManifest: group.ManifestFile,

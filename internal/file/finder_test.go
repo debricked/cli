@@ -357,7 +357,7 @@ func TestGetGroupsWithStrictFlag(t *testing.T) {
 			name:                   "StrictnessSetTo1",
 			strictness:             StrictLockAndPairs,
 			testedGroupIndex:       1,
-			expectedNumberOfGroups: 7,
+			expectedNumberOfGroups: 9,
 			expectedManifestFile:   "",
 			expectedLockFiles: []string{
 				"composer.lock", "composer.lock", "go.mod", "Cargo.lock", "requirements.txt.pip.debricked", "requirements-dev.txt.pip.debricked",
@@ -367,7 +367,7 @@ func TestGetGroupsWithStrictFlag(t *testing.T) {
 			name:                   "StrictnessSetTo2",
 			strictness:             StrictPairs,
 			testedGroupIndex:       0,
-			expectedNumberOfGroups: 5,
+			expectedNumberOfGroups: 7,
 			expectedManifestFile:   "composer.json",
 			expectedLockFiles: []string{
 				"composer.lock", "requirements-dev.txt.pip.debricked.lock", "requirements.txt.pip.debricked.lock",
