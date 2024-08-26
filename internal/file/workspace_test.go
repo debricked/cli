@@ -47,8 +47,8 @@ func TestMatchManifest(t *testing.T) {
 func TestGetWorkspaces(t *testing.T) {
 	workspaces, err := getWorkspaces("testdata/workspace/package.json")
 	assert.NoError(t, err)
-	assert.Equal(t, len(workspaces), 1)
-	assert.Equal(t, workspaces[0], "testdata/workspace/packages/*")
+	assert.Equal(t, 2, len(workspaces))
+	assert.Equal(t, "testdata/workspace/packages/*", workspaces[0])
 }
 
 func TestGetWorkspacesNoFile(t *testing.T) {
