@@ -9,7 +9,7 @@ import (
 
 type WorkspaceManifest struct {
 	RootManifest string
-	LockFile     string
+	LockFiles    []string
 	Workspaces   []string
 }
 

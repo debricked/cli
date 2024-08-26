@@ -10,7 +10,7 @@ import (
 func TestMatchManifest(t *testing.T) {
 	wm := WorkspaceManifest{
 		RootManifest: "package.json",
-		LockFile:     "package-lock.json",
+		LockFiles:    []string{"package-lock.json"},
 		Workspaces:   []string{"package/*", "pkg/internal/*", "pack/internal/package.json"},
 	}
 	cases := []struct {

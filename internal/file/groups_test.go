@@ -198,7 +198,7 @@ func TestGroupsMatchWorkspaces(t *testing.T) {
 	gs.Add(*g4)
 
 	workspaceManifest := WorkspaceManifest{
-		LockFile:     "package-lock.json",
+		LockFiles:    []string{"package-lock.json"},
 		RootManifest: "package.json",
 		Workspaces:   []string{"package/*"},
 	}

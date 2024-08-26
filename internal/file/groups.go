@@ -122,7 +122,7 @@ func (gs *Groups) matchWorkspace(workspaceManifest WorkspaceManifest) {
 		if len(g.LockFiles) == 0 && g.ManifestFile != workspaceManifest.RootManifest {
 			match := workspaceManifest.matchManifest(g.ManifestFile)
 			if match {
-				g.LockFiles = []string{workspaceManifest.LockFile}
+				g.LockFiles = workspaceManifest.LockFiles
 			}
 		}
 	}
@@ -133,7 +133,7 @@ func (gs *Groups) AddWorkspaceLockFiles() {
 		workspaces, err := getWorkspaces(group.ManifestFile)
 		if err == nil && group.HasLockFiles() {
 			workspaceManifest := WorkspaceManifest{
-				LockFile:     group.LockFiles[0],
+				LockFiles:    group.LockFiles,
 				RootManifest: group.ManifestFile,
 				Workspaces:   workspaces,
 			}
