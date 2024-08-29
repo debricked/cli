@@ -15,7 +15,7 @@ var errorString = "mock error"
 
 // Test errors in symlink
 func mockSymlink(filename string) (bool, error) {
-	return false, fmt.Errorf(errorString)
+	return false, fmt.Errorf("%s", errorString)
 }
 func TestShouldProcessFile(t *testing.T) {
 	// Create a temporary directory to use for testing

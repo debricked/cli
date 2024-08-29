@@ -18,6 +18,7 @@ require (
 	golang.org/x/tools v0.19.0
 	gopkg.in/yaml.v3 v3.0.1
 	lukechampine.com/blake3 v1.2.1
+	github.com/becheran/wildmatch-go v1.0.0
 )
 
 require (

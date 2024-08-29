@@ -115,3 +115,29 @@ func (gs *Groups) GetFiles() []string {
 
 	return files
 }
+
+func (gs *Groups) matchWorkspace(workspaceManifest WorkspaceManifest) {
+	for _, g := range gs.groups {
+		// If group g is missing lockfile and does not have the same manifest
+		if len(g.LockFiles) == 0 && g.ManifestFile != workspaceManifest.RootManifest {
+			match := workspaceManifest.matchManifest(g.ManifestFile)
+			if match {
+				g.LockFiles = workspaceManifest.LockFiles
+			}
+		}
+	}
+}
+
+func (gs *Groups) AddWorkspaceLockFiles() {
+	for _, group := range gs.groups {
+		workspaces, err := getWorkspaces(group.ManifestFile)
+		if err == nil && group.HasLockFiles() {
+			workspaceManifest := WorkspaceManifest{
+				LockFiles:    group.LockFiles,
+				RootManifest: group.ManifestFile,
+				Workspaces:   workspaces,
+			}
+			gs.matchWorkspace(workspaceManifest)
+		}
+	}
+}

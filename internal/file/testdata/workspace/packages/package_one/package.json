@@ -1,0 +1,15 @@
+{
+  "name": "package_one",
+  "version": "1.0.0",
+  "description": "testing workspaces",
+  "main": "lib/index.js",
+  "keywords": [],
+  "author": "test",
+  "license": "MIT",
+  "dependencies": {
+    "@types/node": "^20.0.0"
+  },
+  "devDependencies": {
+    "typescript": "5.5.4"
+  }
+}

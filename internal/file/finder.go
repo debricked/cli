@@ -194,7 +194,7 @@ func (finder *Finder) GetGroups(options DebrickedOptions) (Groups, error) {
 			return groups, err
 		}
 	}
-
+	groups.AddWorkspaceLockFiles()
 	groups.FilterGroupsByStrictness(options.Strictness)
 
 	return groups, err
