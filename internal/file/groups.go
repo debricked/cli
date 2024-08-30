@@ -130,12 +130,12 @@ func (gs *Groups) matchWorkspace(workspaceManifest WorkspaceManifest) {
 
 func (gs *Groups) AddWorkspaceLockFiles() {
 	for _, group := range gs.groups {
-		workspaces, err := getWorkspaces(group.ManifestFile)
+		workspaces, err := getPackageJSONWorkspaces(group.ManifestFile)
 		if err == nil && group.HasLockFiles() {
 			workspaceManifest := WorkspaceManifest{
-				LockFiles:    group.LockFiles,
-				RootManifest: group.ManifestFile,
-				Workspaces:   workspaces,
+				LockFiles:         group.LockFiles,
+				RootManifest:      group.ManifestFile,
+				WorkspacePatterns: workspaces,
 			}
 			gs.matchWorkspace(workspaceManifest)
 		}
