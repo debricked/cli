@@ -15,6 +15,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '1.20'
+      - failOnStdErr: true
       - name: Pull Supported Formats
         run: |
           cd cmd/debricked
