@@ -1,0 +1,17 @@
+{
+  "name": "package_two",
+  "version": "1.0.0",
+  "description": "test",
+  "main": "lib/main.js",
+  "keywords": [],
+  "author": "test",
+  "license": "MIT",
+  "dependencies": {
+    "package_one": "^1.0.0",
+    "@types/node": "16.11.40",
+    "minimist": "^1.2.5"
+  },
+  "devDependencies": {
+    "typescript": "5.5.4"
+  }
+}

@@ -11,7 +11,12 @@ func TestMatchManifest(t *testing.T) {
 	wm := WorkspaceManifest{
 		RootManifest: "package.json",
 		LockFiles:    []string{"package-lock.json"},
-		Workspaces:   []string{"package/*", "pkg/internal/*", "pack/internal/package.json"},
+		WorkspacePatterns: []string{
+			"package/*",
+			"pkg/internal/*",
+			"pack/internal/package.json",
+			"packages/package_two",
+		},
 	}
 	cases := []struct {
 		manifestFile string
@@ -33,6 +38,14 @@ func TestMatchManifest(t *testing.T) {
 			manifestFile: "pkg/internal/package.json",
 			expected:     true,
 		},
+		{
+			manifestFile: "packages/package_two/package.json",
+			expected:     true,
+		},
+		{
+			manifestFile: "packages/package_two/internal/package.json",
+			expected:     false,
+		},
 	}
 
 	for _, c := range cases {
@@ -44,14 +57,60 @@ func TestMatchManifest(t *testing.T) {
 	}
 }
 
+func TestDeeperMatchManifest(t *testing.T) {
+	wm := WorkspaceManifest{
+		RootManifest: "Src/app/package.json",
+		LockFiles:    []string{"Src/app/package-lock.json"},
+		WorkspacePatterns: []string{
+			"package/*",
+			"pkg/internal/*",
+			"pack/internal/package.json",
+			"packages/package_two",
+		},
+	}
+	cases := []struct {
+		manifestFile string
+		expected     bool
+	}{
+		{
+			manifestFile: "Src/app/package/test/package.json",
+			expected:     true,
+		},
+		{
+			manifestFile: "Src/app/packages/package_two/package.json",
+			expected:     true,
+		},
+		{
+			manifestFile: "Src/app/packages/package_two/internal/package.json",
+			expected:     false,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.manifestFile, func(t *testing.T) {
+			match := (&wm).matchManifest(c.manifestFile)
+			fmt.Println(c.manifestFile)
+			assert.Equal(t, c.expected, match)
+		})
+	}
+
+}
+
 func TestGetWorkspaces(t *testing.T) {
-	workspaces, err := getWorkspaces("testdata/workspace/package.json")
+	workspaces, err := getPackageJSONWorkspaces("testdata/workspace/common/package.json")
 	assert.NoError(t, err)
-	assert.Equal(t, 2, len(workspaces))
-	assert.Equal(t, "testdata/workspace/packages/*", workspaces[0])
+	assert.Equal(t, 1, len(workspaces))
+	assert.Equal(t, "packages/*", workspaces[0])
+}
+
+func TestGetWorkspacesRare(t *testing.T) {
+	workspaces, err := getPackageJSONWorkspaces("testdata/workspace/rare/package.json")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(workspaces))
+	assert.Equal(t, "packages/*", workspaces[0])
 }
 
 func TestGetWorkspacesNoFile(t *testing.T) {
-	_, err := getWorkspaces("testdata/non_existing_folder/package.json")
+	_, err := getPackageJSONWorkspaces("testdata/non_existing_folder/package.json")
 	assert.Error(t, err)
 }

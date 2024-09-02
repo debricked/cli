@@ -6,7 +6,9 @@
     "rimraf": "6.0.1",
     "typescript": "5.5.4"
   },
-  "workspaces": [
-    "testdata/workspace/packages/*", "testdata\\workspace\\packages\\*"
-  ]
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
+  }
 }
