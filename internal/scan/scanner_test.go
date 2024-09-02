@@ -260,7 +260,7 @@ func TestScanEmptyResult(t *testing.T) {
 	addMockedFinishResponse(clientMock, http.StatusNoContent)
 	addMockedStatusResponse(clientMock, http.StatusOK, 50)
 	// Create mocked scan result response, 201 is returned when the queue time are too long
-	addMockedStatusResponse(clientMock, http.StatusCreated, 0)
+	addMockedQueueTooLongStatusResponse(clientMock)
 
 	scanner := makeScanner(clientMock, nil, nil)
 	path := testdataNpm
@@ -297,6 +297,11 @@ func TestScanEmptyResult(t *testing.T) {
 
 	assert.NoError(t, err, "failed to assert that scan ran without errors")
 	assert.True(t, existsMessageInCMDOutput, "failed to assert that scan ran without errors")
+
+	existsMessageInCMDOutputDetails := strings.Contains(
+		string(out),
+		"http://localhost:8888/app/en/repository/13/commit/37")
+	assert.True(t, existsMessageInCMDOutputDetails, "failed to assert that long queue scan contain detailed url")
 }
 
 func TestScanInCiWithPathSet(t *testing.T) {
@@ -785,6 +790,14 @@ func addMockedStatusResponse(clientMock *testdata.DebClientMock, statusCode int,
 	finishMockRes := testdata.MockResponse{
 		StatusCode:   statusCode,
 		ResponseBody: io.NopCloser(strings.NewReader(fmt.Sprintf(`{"progress": %d}`, progress))),
+	}
+	clientMock.AddMockUriResponse("/api/1.0/open/ci/upload/status", finishMockRes)
+}
+
+func addMockedQueueTooLongStatusResponse(clientMock *testdata.DebClientMock) {
+	finishMockRes := testdata.MockResponse{
+		StatusCode:   http.StatusCreated,
+		ResponseBody: io.NopCloser(strings.NewReader(`{"message": "Queue too long","detailsUrl":"http://localhost:8888/app/en/repository/13/commit/37"}`)),
 	}
 	clientMock.AddMockUriResponse("/api/1.0/open/ci/upload/status", finishMockRes)
 }

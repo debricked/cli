@@ -10,6 +10,7 @@ type UploadResult struct {
 	AutomationsAction              string            `json:"automationsAction"`
 	AutomationRules                []automation.Rule `json:"automationRules"`
 	DetailsUrl                     string            `json:"detailsUrl"`
+	LongQueue                      bool
 }
 
 func newUploadResult(status *uploadStatus) *UploadResult {
@@ -19,5 +20,6 @@ func newUploadResult(status *uploadStatus) *UploadResult {
 		status.AutomationsAction,
 		status.AutomationRules,
 		status.DetailsUrl,
+		false,
 	}
 }

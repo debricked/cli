@@ -85,7 +85,7 @@ func TestUploadPollingError(t *testing.T) {
 	result, err := uploader.Upload(uploaderOptions)
 
 	assert.NoError(t, err)
-	assert.Nil(t, result)
+	assert.True(t, result.LongQueue)
 }
 
 type debClientMock struct{}

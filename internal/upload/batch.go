@@ -224,17 +224,22 @@ func (uploadBatch *uploadBatch) wait() (*UploadResult, error) {
 		if err != nil {
 			return nil, err
 		}
+		status, err := newUploadStatus(res)
+		if err != nil {
+			return nil, err
+		}
 		if res.StatusCode == http.StatusCreated {
 			err := bar.Finish()
 			if err != nil {
 				return resultStatus, err
 			}
 
+			resultStatus = &UploadResult{
+				DetailsUrl: status.DetailsUrl,
+				LongQueue:  true,
+			}
+
 			return resultStatus, PollingTerminatedErr
-		}
-		status, err := newUploadStatus(res)
-		if err != nil {
-			return nil, err
 		}
 		err = bar.Set(status.Progress)
 		if err != nil {

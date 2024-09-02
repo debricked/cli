@@ -117,8 +117,9 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 		return dScanner.handleScanError(err, dOptions.PassOnTimeOut)
 	}
 
-	if result == nil {
+	if result.LongQueue {
 		fmt.Println("Progress polling terminated due to long scan times. Please try again later")
+		fmt.Printf("For full details, visit: %s\n\n", color.BlueString(result.DetailsUrl))
 
 		return nil
 	}

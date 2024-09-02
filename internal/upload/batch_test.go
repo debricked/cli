@@ -77,7 +77,7 @@ func TestWaitWithPollingTerminatedError(t *testing.T) {
 
 	uploadResult, err := batch.wait()
 
-	assert.Nil(t, uploadResult)
+	assert.True(t, uploadResult.LongQueue)
 	assert.ErrorIs(t, err, PollingTerminatedErr)
 }
 
