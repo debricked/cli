@@ -133,3 +133,32 @@ func TestIsApplicationNode(t *testing.T) {
 	}
 
 }
+
+func TestRelativeFilename(t *testing.T) {
+	tests := []struct {
+		name string
+		pwd  string
+		in   string
+		want string
+	}{
+		{
+			name: "Test with standard library",
+			pwd:  "testdata/fixture",
+			in:   "testdata/fixture/main.go.Println",
+			want: "main.go.Println",
+		},
+		{
+			name: "Test with non-standard library",
+			pwd:  "testdata/fixture",
+			in:   "github.com/spf13/afero/mem.File.Open",
+			want: "github.com/spf13/afero/mem.File.Open",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, RelativePath(tt.in, tt.pwd))
+		})
+	}
+
+}
