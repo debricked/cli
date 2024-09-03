@@ -9,7 +9,7 @@ jobs:
       inputs:
         artifactsFeeds: <your-private-repository-id>
     - script: |
-        curl -L https://github.com/debricked/cli/releases/download/release-v2/cli_linux_x86_64.tar.gz | tar -xz debricked
+        curl -LsS https://github.com/debricked/cli/releases/download/release-v2/cli_linux_x86_64.tar.gz | tar -xz debricked
         ./debricked scan
       displayName: Debricked scan
       env:
