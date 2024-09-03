@@ -70,7 +70,7 @@ If the given path contains a git repository all flags but "integration" will be 
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(viper.GetString(RepositoryFlag)) > 0 {
-				if strings.ToLower(viper.GetString(RepositoryFlag))[0] < 'm' && !cmd.Flags().Changed(NoFingerprintFlag) {
+				if strings.ToLower(viper.GetString(RepositoryFlag))[0] < 't' && !cmd.Flags().Changed(NoFingerprintFlag) {
 					viper.Set(NoFingerprintFlag, false)
 				} // Temporary addition for rolling release of fingerprinting enabled by default
 			}
