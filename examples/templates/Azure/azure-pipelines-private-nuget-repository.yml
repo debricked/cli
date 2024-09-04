@@ -1,0 +1,14 @@
+jobs:
+- job: debricked_scan
+  displayName: Debricked scan
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+    - task: NuGetAuthenticate@1
+      displayName: NuGet Authentication
+    - script: |
+        curl -LsS https://github.com/debricked/cli/releases/download/release-v2/cli_linux_x86_64.tar.gz | tar -xz debricked
+        ./debricked scan
+      displayName: Debricked scan
+      env:
+        DEBRICKED_TOKEN: $(DEBRICKED_TOKEN)
