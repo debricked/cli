@@ -24,7 +24,7 @@ func NewLoginCmd(authenticator login.IAuthenticator) *cobra.Command {
 
 func RunE(a login.IAuthenticator) func(_ *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, _ []string) error {
-		token, err := a.Authenticate()
+		token, err := login.AuthToken()
 		if err != nil {
 			return err
 		}
