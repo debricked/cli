@@ -24,14 +24,13 @@ func NewLoginCmd(authenticator login.IAuthenticator) *cobra.Command {
 
 func RunE(a login.IAuthenticator) func(_ *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, _ []string) error {
-		token, err := login.AuthToken()
+		_, err := login.AuthToken()
 		if err != nil {
 			return err
 		}
 		fmt.Printf(
-			"%s Successfully authenticated\nToken=%s",
+			"%s Successfully authenticated",
 			color.GreenString("✔"),
-			color.BlueString(token),
 		)
 
 		return nil
