@@ -115,7 +115,7 @@ func TestRunInstallCmdErr(t *testing.T) {
 		{
 			name:  "No internet connection",
 			error: "Unable to load the service index for source https://api.nuget.org/v3/index.json.\nAn error occurred while sending the request. \nThe remote name could not be resolved: 'api.nuget.org'",
-			doc:   "Registry \"https://api.nuget.org/v3/index.json\" is not available at the moment. There might be a trouble with your network connection.",
+			doc:   "Registry \"https://api.nuget.org/v3/index.json\" is not available at the moment. There might be a trouble with your network connection, or this could be an authentication issue if this is a private registry.",
 		},
 	}
 
