@@ -39,21 +39,6 @@ func generateRandomString(length int) string {
 	return string(b)
 }
 
-func createCodeChallenge(codeVerifier string) string {
-	// Create a SHA-256 hash of the code verifier
-	hash := sha256.Sum256([]byte(codeVerifier))
-
-	// Encode the hash to base64
-	encoded := base64.StdEncoding.EncodeToString(hash[:])
-
-	// Make it URL safe
-	encoded = strings.TrimRight(encoded, "=")
-	encoded = strings.ReplaceAll(encoded, "+", "-")
-	encoded = strings.ReplaceAll(encoded, "/", "_")
-
-	return encoded
-}
-
 func (a Authenticator) Authenticate() (*oauth2.Token, error) {
 	// Set up OAuth2 configuration
 	config := &oauth2.Config{
@@ -68,14 +53,13 @@ func (a Authenticator) Authenticate() (*oauth2.Token, error) {
 	}
 
 	// Create a random state
-	state := generateRandomString(8)
-	codeVerifier := generateRandomString(64)
+	state := oauth2.GenerateVerifier()
+	codeVerifier := oauth2.GenerateVerifier()
 
 	// Generate the authorization URL
 	authURL := config.AuthCodeURL(
 		state,
-		oauth2.SetAuthURLParam("code_challenge", createCodeChallenge(codeVerifier)),
-		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
+		oauth2.S256ChallengeOption(codeVerifier),
 	)
 
 	// Start a temporary HTTP server to handle the callback
@@ -115,7 +99,7 @@ func (a Authenticator) Authenticate() (*oauth2.Token, error) {
 		context.Background(),
 		authCode,
 		oauth2.SetAuthURLParam("client_id", a.ClientID),
-		oauth2.SetAuthURLParam("code_verifier", codeVerifier),
+		oauth2.VerifierOption(codeVerifier),
 	)
 	if err != nil {
 		return nil, err
