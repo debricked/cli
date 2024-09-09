@@ -2,13 +2,13 @@ package login
 
 import (
 	"fmt"
-	"github.com/debricked/cli/internal/login"
+	"github.com/debricked/cli/internal/auth"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-func NewLoginCmd(authenticator login.IAuthenticator) *cobra.Command {
+func NewLoginCmd(authenticator auth.IAuthenticator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Authenticate debricked user",
@@ -22,9 +22,9 @@ func NewLoginCmd(authenticator login.IAuthenticator) *cobra.Command {
 	return cmd
 }
 
-func RunE(a login.IAuthenticator) func(_ *cobra.Command, args []string) error {
+func RunE(a auth.IAuthenticator) func(_ *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, _ []string) error {
-		_, err := login.AuthToken()
+		_, err := a.Authenticate()
 		if err != nil {
 			return err
 		}
