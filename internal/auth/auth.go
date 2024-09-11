@@ -2,14 +2,8 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"github.com/debricked/cli/internal/client"
 	"github.com/zalando/go-keyring"
-	"log"
-	"net/http"
-	"os/exec"
-	"runtime"
-
 	"golang.org/x/oauth2"
 )
 
@@ -19,15 +13,21 @@ type IAuthenticator interface {
 	Token() (*oauth2.Token, error)
 }
 
-type Authenticator struct {
-	SecretClient ISecretClient
-	OAuthConfig  *oauth2.Config
-}
-
 type ISecretClient interface {
 	Set(string, string) error
 	Get(string) (string, error)
 	Delete(string) error
+}
+
+type IOAuthConfig interface {
+	AuthCodeURL(string, ...oauth2.AuthCodeOption) string
+	Exchange(context.Context, string, ...oauth2.AuthCodeOption) (*oauth2.Token, error)
+} // Wrapping interface for config to enable mocking
+
+type Authenticator struct {
+	SecretClient  ISecretClient
+	OAuthConfig   IOAuthConfig
+	AuthWebHelper IAuthWebHelper
 }
 
 type DebrickedSecretClient struct {
@@ -61,6 +61,7 @@ func NewDebrickedAuthenticator(client client.IDebClient) Authenticator {
 			RedirectURL: "http://localhost:9096/callback",
 			Scopes:      []string{"select", "profile", "basicRepo"},
 		},
+		AuthWebHelper: NewAuthWebHelper(),
 	}
 }
 
@@ -82,6 +83,7 @@ func (a Authenticator) Token() (*oauth2.Token, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &oauth2.Token{
 		RefreshToken: refreshToken,
 		TokenType:    "jwt",
@@ -89,38 +91,21 @@ func (a Authenticator) Token() (*oauth2.Token, error) {
 	}, nil
 }
 
-func (a Authenticator) callback(state string) string {
-	code := make(chan string)
-	defer close(code)
-	server := &http.Server{Addr: ":9096"} // Start the server in a goroutine
-	go func() {
-		if err := server.ListenAndServe(); err != http.ErrServerClosed {
-			log.Fatalf("HTTP server error: %v", err)
-		}
-	}()
+func (a Authenticator) saveToken(token *oauth2.Token) error {
+	err := a.SecretClient.Set("DebrickedRefreshToken", token.RefreshToken)
+	if err != nil {
+		return err
+	}
+	err = a.SecretClient.Set("DebrickedAccessToken", token.AccessToken)
 
-	defer server.Shutdown(
-		context.Background(),
-	) // Ensure the server is shut down when we're done
-	http.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Query().Get("state") != state {
-			http.Error(w, "Invalid state", http.StatusBadRequest)
-			return
-		}
-
-		code <- r.URL.Query().Get("code")
-		fmt.Fprintf(w, "Authentication successful! You can close this window now.")
-	})
-	authCode := <-code // Wait for the authorization code
-
-	return authCode
+	return err
 }
 
 func (a Authenticator) exchange(authCode, codeVerifier string) (*oauth2.Token, error) {
+
 	return a.OAuthConfig.Exchange(
 		context.Background(),
 		authCode,
-		oauth2.SetAuthURLParam("client_id", a.OAuthConfig.ClientID),
 		oauth2.VerifierOption(codeVerifier),
 	)
 
@@ -129,41 +114,21 @@ func (a Authenticator) exchange(authCode, codeVerifier string) (*oauth2.Token, e
 func (a Authenticator) Authenticate() error {
 	state := oauth2.GenerateVerifier()
 	codeVerifier := oauth2.GenerateVerifier()
-
 	authURL := a.OAuthConfig.AuthCodeURL(
 		state,
 		oauth2.S256ChallengeOption(codeVerifier),
 	)
 
-	err := openBrowser(authURL)
+	err := a.AuthWebHelper.OpenURL(authURL)
 	if err != nil {
-		log.Fatal("Could not open browser:", err)
+		return err
 	}
 
-	authCode := a.callback(state)
+	authCode := a.AuthWebHelper.Callback(state)
 	token, err := a.exchange(authCode, codeVerifier)
 	if err != nil {
 		return err
 	}
 
-	a.SecretClient.Set("DebrickedRefreshToken", token.RefreshToken)
-	a.SecretClient.Set("DebrickedAccessToken", token.AccessToken)
-	return nil
-}
-
-func openBrowser(url string) error {
-	var cmd string
-	var args []string
-
-	switch runtime.GOOS {
-	case "windows":
-		cmd = "cmd"
-		args = []string{"/c", "start"}
-	case "darwin":
-		cmd = "open"
-	default: // "linux", "freebsd", "openbsd", "netbsd"
-		cmd = "xdg-open"
-	}
-	args = append(args, url)
-	return exec.Command(cmd, args...).Start()
+	return a.saveToken(token)
 }

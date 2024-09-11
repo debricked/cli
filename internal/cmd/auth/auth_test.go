@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewFilesCmd(t *testing.T) {
+func TestNewAuthCmd(t *testing.T) {
 	token := "token"
 	deb_client := client.NewDebClient(&token, nil)
 	authenticator := auth.NewDebrickedAuthenticator(deb_client)
