@@ -18,13 +18,12 @@ func NewLoginCmd(authenticator auth.IAuthenticator) *cobra.Command {
 		},
 		RunE: RunE(authenticator),
 	}
-
 	return cmd
 }
 
 func RunE(a auth.IAuthenticator) func(_ *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, _ []string) error {
-		_, err := a.Authenticate()
+		err := a.Authenticate()
 		if err != nil {
 			return err
 		}

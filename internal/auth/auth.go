@@ -20,10 +20,8 @@ type IAuthenticator interface {
 }
 
 type Authenticator struct {
-	ClientID     string
-	Scopes       []string
-	Client       client.IDebClient
 	SecretClient ISecretClient
+	OAuthConfig  *oauth2.Config
 }
 
 type ISecretClient interface {
@@ -50,11 +48,18 @@ func (dsc DebrickedSecretClient) Delete(service string) error {
 
 func NewDebrickedAuthenticator(client client.IDebClient) Authenticator {
 	return Authenticator{
-		ClientID: "01919462-7d6e-78e8-aa24-ba779213c90f",
-		Scopes:   []string{"select", "profile", "basicRepo"},
-		Client:   client,
 		SecretClient: DebrickedSecretClient{
 			User: "DebrickedCLI",
+		},
+		OAuthConfig: &oauth2.Config{
+			ClientID:     "01919462-7d6e-78e8-aa24-ba779213c90f",
+			ClientSecret: "",
+			Endpoint: oauth2.Endpoint{
+				AuthURL:  client.Host() + "/app/oauth/authorize",
+				TokenURL: client.Host() + "/app/oauth/token",
+			},
+			RedirectURL: "http://localhost:9096/callback",
+			Scopes:      []string{"select", "profile", "basicRepo"},
 		},
 	}
 }
@@ -84,49 +89,19 @@ func (a Authenticator) Token() (*oauth2.Token, error) {
 	}, nil
 }
 
-func (a Authenticator) Authenticate() error {
-	// Set up OAuth2 configuration
-	config := &oauth2.Config{
-		ClientID:     a.ClientID,
-		ClientSecret: "",
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  a.Client.Host() + "/app/oauth/authorize",
-			TokenURL: a.Client.Host() + "/app/oauth/token",
-		},
-		RedirectURL: "http://localhost:9096/callback",
-		Scopes:      a.Scopes,
-	}
-
-	// Create a random state
-	state := oauth2.GenerateVerifier()
-	codeVerifier := oauth2.GenerateVerifier()
-
-	// Generate the authorization URL
-	authURL := config.AuthCodeURL(
-		state,
-		oauth2.S256ChallengeOption(codeVerifier),
-	)
-
-	// Start a temporary HTTP server to handle the callback
+func (a Authenticator) callback(state string) string {
 	code := make(chan string)
 	defer close(code)
-	server := &http.Server{Addr: ":9096"}
-	// Start the server in a goroutine
+	server := &http.Server{Addr: ":9096"} // Start the server in a goroutine
 	go func() {
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {
 			log.Fatalf("HTTP server error: %v", err)
 		}
 	}()
 
-	// Ensure the server is shut down when we're done
-	defer server.Shutdown(context.Background())
-
-	// Open the browser for the user to log in
-	err := openBrowser(authURL)
-	if err != nil {
-		log.Fatal("Could not open browser:", err)
-	}
-
+	defer server.Shutdown(
+		context.Background(),
+	) // Ensure the server is shut down when we're done
 	http.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("state") != state {
 			http.Error(w, "Invalid state", http.StatusBadRequest)
@@ -136,19 +111,41 @@ func (a Authenticator) Authenticate() error {
 		code <- r.URL.Query().Get("code")
 		fmt.Fprintf(w, "Authentication successful! You can close this window now.")
 	})
-	// Wait for the authorization code
-	authCode := <-code
+	authCode := <-code // Wait for the authorization code
 
-	// Exchange the authorization code for a token
-	token, err := config.Exchange(
+	return authCode
+}
+
+func (a Authenticator) exchange(authCode, codeVerifier string) (*oauth2.Token, error) {
+	return a.OAuthConfig.Exchange(
 		context.Background(),
 		authCode,
-		oauth2.SetAuthURLParam("client_id", a.ClientID),
+		oauth2.SetAuthURLParam("client_id", a.OAuthConfig.ClientID),
 		oauth2.VerifierOption(codeVerifier),
 	)
+
+}
+
+func (a Authenticator) Authenticate() error {
+	state := oauth2.GenerateVerifier()
+	codeVerifier := oauth2.GenerateVerifier()
+
+	authURL := a.OAuthConfig.AuthCodeURL(
+		state,
+		oauth2.S256ChallengeOption(codeVerifier),
+	)
+
+	err := openBrowser(authURL)
+	if err != nil {
+		log.Fatal("Could not open browser:", err)
+	}
+
+	authCode := a.callback(state)
+	token, err := a.exchange(authCode, codeVerifier)
 	if err != nil {
 		return err
 	}
+
 	a.SecretClient.Set("DebrickedRefreshToken", token.RefreshToken)
 	a.SecretClient.Set("DebrickedAccessToken", token.AccessToken)
 	return nil
