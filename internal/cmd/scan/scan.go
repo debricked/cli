@@ -68,6 +68,9 @@ If the given path contains a git repository all flags but "integration" will be 
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			_ = viper.BindPFlags(cmd.Flags())
 		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return RunE(&scanner)(cmd, args)
+		},
 	}
 	cmd.Flags().StringVarP(&repositoryName, RepositoryFlag, "r", "", "repository name")
 	cmd.Flags().StringVarP(&commitName, CommitFlag, "c", "", "commit hash")
