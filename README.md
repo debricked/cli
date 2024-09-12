@@ -86,6 +86,3 @@ If you would rather use `debricked` in your CI/CD pipelines, check out the [temp
 ## Contributing
 Thank you for your interest in making Debricked CLI even better! Read more about contributing to the
 project [here](CONTRIBUTING.md).
-
-Also, make sure to check out the [Debricked Portal](https://portal.debricked.com/). There, you can share your great ideas with us! 
-
