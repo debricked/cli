@@ -22,7 +22,7 @@ type ISecretClient interface {
 type IOAuthConfig interface {
 	AuthCodeURL(string, ...oauth2.AuthCodeOption) string
 	Exchange(context.Context, string, ...oauth2.AuthCodeOption) (*oauth2.Token, error)
-} // Wrapping interface for config to enable mocking
+} // Wrapping interface for config to simplify mocking
 
 type Authenticator struct {
 	SecretClient  ISecretClient
@@ -70,8 +70,8 @@ func (a Authenticator) Logout() error {
 	if err != nil {
 		return err
 	}
-	err = a.SecretClient.Delete("DebrickedAccessToken")
-	return err
+
+	return a.SecretClient.Delete("DebrickedAccessToken")
 }
 
 func (a Authenticator) Token() (*oauth2.Token, error) {
@@ -96,9 +96,8 @@ func (a Authenticator) saveToken(token *oauth2.Token) error {
 	if err != nil {
 		return err
 	}
-	err = a.SecretClient.Set("DebrickedAccessToken", token.AccessToken)
 
-	return err
+	return a.SecretClient.Set("DebrickedAccessToken", token.AccessToken)
 }
 
 func (a Authenticator) exchange(authCode, codeVerifier string) (*oauth2.Token, error) {

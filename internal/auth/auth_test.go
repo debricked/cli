@@ -71,6 +71,18 @@ func TestMockedLogout(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestMockedLogoutErrorRefresh(t *testing.T) {
+	authenticator := Authenticator{
+		SecretClient: testdata.MockErrorSecretClient{
+			ErrorPattern: "Refresh",
+		},
+		OAuthConfig: nil,
+	}
+	err := authenticator.Logout()
+
+	assert.Error(t, err)
+}
+
 func TestMockedSaveToken(t *testing.T) {
 	authenticator := Authenticator{
 		SecretClient: testdata.MockSecretClient{},
@@ -83,6 +95,22 @@ func TestMockedSaveToken(t *testing.T) {
 	err := authenticator.saveToken(token)
 
 	assert.NoError(t, err)
+}
+
+func TestMockedSaveTokenRefreshError(t *testing.T) {
+	authenticator := Authenticator{
+		SecretClient: testdata.MockErrorSecretClient{
+			ErrorPattern: "Refresh",
+		},
+		OAuthConfig: nil,
+	}
+	token := &oauth2.Token{
+		RefreshToken: "refreshToken",
+		AccessToken:  "accessToken",
+	}
+	err := authenticator.saveToken(token)
+
+	assert.Error(t, err)
 }
 
 func TestMockedToken(t *testing.T) {
@@ -98,6 +126,30 @@ func TestMockedToken(t *testing.T) {
 	assert.Equal(t, token.AccessToken, "token")
 }
 
+func TestMockedTokenRefreshError(t *testing.T) {
+	authenticator := Authenticator{
+		SecretClient: testdata.MockErrorSecretClient{
+			ErrorPattern: "Refresh",
+		},
+		OAuthConfig: nil,
+	}
+	_, err := authenticator.Token()
+
+	assert.Error(t, err)
+}
+
+func TestMockedTokenAccessError(t *testing.T) {
+	authenticator := Authenticator{
+		SecretClient: testdata.MockErrorSecretClient{
+			ErrorPattern: "Access",
+		},
+		OAuthConfig: nil,
+	}
+	_, err := authenticator.Token()
+
+	assert.Error(t, err)
+}
+
 func TestMockedAuthenticate(t *testing.T) {
 	authenticator := Authenticator{
 		SecretClient:  testdata.MockSecretClient{},
@@ -107,4 +159,15 @@ func TestMockedAuthenticate(t *testing.T) {
 	err := authenticator.Authenticate()
 
 	assert.NoError(t, err)
+}
+
+func TestMockedAuthenticateOpenURLError(t *testing.T) {
+	authenticator := Authenticator{
+		SecretClient:  testdata.MockSecretClient{},
+		OAuthConfig:   testdata.MockOAuthConfig{},
+		AuthWebHelper: testdata.MockErrorAuthWebHelper{},
+	}
+	err := authenticator.Authenticate()
+
+	assert.Error(t, err)
 }

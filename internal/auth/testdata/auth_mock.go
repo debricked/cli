@@ -2,9 +2,16 @@ package testdata
 
 import (
 	"context"
+	"strings"
 
 	"golang.org/x/oauth2"
 )
+
+type MockError struct{}
+
+func (me MockError) Error() string {
+	return "MockError!"
+}
 
 type MockSecretClient struct{}
 
@@ -20,10 +27,33 @@ func (msc MockSecretClient) Delete(service string) error {
 	return nil
 }
 
-type MockError struct{}
+type MockErrorSecretClient struct {
+	ErrorPattern string
+}
 
-func (me MockError) Error() string {
-	return "MockError!"
+func (msc MockErrorSecretClient) Set(service, secret string) error {
+	if strings.Contains(service, msc.ErrorPattern) {
+
+		return MockError{}
+	}
+
+	return nil
+}
+
+func (msc MockErrorSecretClient) Get(service string) (string, error) {
+	if strings.Contains(service, msc.ErrorPattern) {
+
+		return "", MockError{}
+	}
+	return "token", nil
+}
+
+func (msc MockErrorSecretClient) Delete(service string) error {
+	if strings.Contains(service, msc.ErrorPattern) {
+
+		return MockError{}
+	}
+	return nil
 }
 
 type MockAuthenticator struct{}
@@ -33,6 +63,8 @@ type ErrorMockAuthenticator struct{}
 type MockOAuthConfig struct{}
 
 type MockAuthWebHelper struct{}
+
+type MockErrorAuthWebHelper struct{}
 
 func (ma MockAuthenticator) Authenticate() error {
 	return nil
@@ -67,6 +99,14 @@ func (mawh MockAuthWebHelper) OpenURL(string) error {
 }
 
 func (mawh MockAuthWebHelper) Callback(string) string {
+	return "callback"
+}
+
+func (mawh MockErrorAuthWebHelper) OpenURL(string) error {
+	return MockError{}
+}
+
+func (mawh MockErrorAuthWebHelper) Callback(string) string {
 	return "callback"
 }
 

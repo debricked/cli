@@ -11,9 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const testState = "test_state"
+
 func TestCallback(t *testing.T) {
 	awh := NewAuthWebHelper()
-	testState := "test_state"
 
 	resultChan := make(chan string)
 	go func() {
@@ -46,7 +47,6 @@ func TestCallback(t *testing.T) {
 
 func TestCallbackInvalidState(t *testing.T) {
 	awh := NewAuthWebHelper()
-	testState := "test_state"
 
 	go func() {
 		awh.Callback(testState)
@@ -71,7 +71,6 @@ func TestCallbackServerError(t *testing.T) {
 	defer server.Shutdown(context.Background())
 
 	awh := AuthWebHelper{}
-	testState := "test_state"
 
 	resultChan := make(chan error)
 	go func() {
