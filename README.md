@@ -64,7 +64,7 @@ curl -LsS https://github.com/debricked/cli/releases/download/release-v2/cli_macO
 ```
 ### Docker
 ```sh
-docker pull debricked/cli:1-resolution-debian
+docker pull debricked/cli:2-resolution-debian
 ```
 ## Scan
 Once you've installed the CLI, you're ready to scan your project. You can scan a local project, or integrate a scanning mechanism in your CI/CD pipeline.
@@ -77,7 +77,7 @@ When the scan is complete, you will see the total number of vulnerabilities foun
 ### Docker
 To make a scan directly through Docker based on your current working directory, you can use the following command:
 ```sh
-docker run -v $(pwd):/root debricked/cli:1-resolution-debian debricked scan -t <access-token>
+docker run -v $(pwd):/root debricked/cli:2-resolution-debian debricked scan -t <access-token>
 ```
 
 ### CI/CD integration
