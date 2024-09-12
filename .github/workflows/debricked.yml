@@ -19,5 +19,8 @@ jobs:
         run: |
           cd cmd/debricked
           go generate -v -x
-      - run: |
-          go run cmd/debricked/main.go scan -t ${{ secrets.DEBRICKED_TOKEN }} -e "pkg/**" -e "test/**" -e "**/testdata/**"
+      - uses: GuillaumeFalourd/assert-command-line-output@v2.3
+        with:
+          command_line: go run cmd/debricked/main.go scan -t ${{ secrets.DEBRICKED_TOKEN }} -e "pkg/**" -e "test/**" -e "**/testdata/**"
+          contains: AUTOMATION RULE
+          expected_result: PASSED
