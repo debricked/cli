@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"runtime"
 	"testing"
 
 	"github.com/debricked/cli/internal/auth/testdata"
@@ -10,12 +11,18 @@ import (
 	"golang.org/x/oauth2"
 )
 
+const windowsOS = "windows"
+const macOS = "darwin"
+
 func TestNewAuthenticator(t *testing.T) {
 	res := NewDebrickedAuthenticator(clientTestdata.NewDebClientMock())
 	assert.NotNil(t, res)
 }
 
 func TestSecretClientSet(t *testing.T) {
+	if runtime.GOOS != windowsOS && runtime.GOOS != macOS {
+		t.Skipf("TestSecretClient is skipped due to env without secret client")
+	}
 	user := "TestDebrickedCLIUserSet"
 	service := "TestDebrickedCLIServiceSet"
 	secret := "TestDebrickedCLISecretSet"
@@ -32,20 +39,9 @@ func TestSecretClientSet(t *testing.T) {
 }
 
 func TestSecretClientGet(t *testing.T) {
-	user := "TestDebrickedCLIUserGet"
-	service := "TestDebrickedCLIServiceGet"
-	secret := "TestDebrickedCLISecretGet"
-	dsc := DebrickedSecretClient{user}
-	err := keyring.Set(service, user, secret)
-	assert.NoError(t, err)
-	savedSecret, err := dsc.Get(service)
-	assert.NoError(t, err)
-	err = keyring.Delete(service, user)
-	assert.NoError(t, err)
-	assert.Equal(t, secret, savedSecret)
-}
-
-func TestSecretClientGetExpired(t *testing.T) {
+	if runtime.GOOS != windowsOS && runtime.GOOS != macOS {
+		t.Skipf("TestSecretClient is skipped due to env without secret client")
+	}
 	user := "TestDebrickedCLIUserGet"
 	service := "TestDebrickedCLIServiceGet"
 	secret := "TestDebrickedCLISecretGet"
@@ -60,6 +56,9 @@ func TestSecretClientGetExpired(t *testing.T) {
 }
 
 func TestSecretClientDelete(t *testing.T) {
+	if runtime.GOOS != windowsOS && runtime.GOOS != macOS {
+		t.Skipf("TestSecretClient is skipped due to env without secret client")
+	}
 	user := "TestDebrickedCLIUserDelete"
 	service := "TestDebrickedCLIServiceDelete"
 	secret := "TestDebrickedCLISecretDelete"
