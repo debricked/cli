@@ -7,13 +7,19 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type MockError struct{}
+type MockError struct {
+	Message string
+}
 
 func (me MockError) Error() string {
-	return "MockError!"
+	return me.Message
 }
 
 type MockSecretClient struct{}
+
+type MockExpiredSecretClient struct{}
+
+type MockInvalidSecretClient struct{}
 
 func (msc MockSecretClient) Set(service, secret string) error {
 	return nil
@@ -27,14 +33,41 @@ func (msc MockSecretClient) Delete(service string) error {
 	return nil
 }
 
+func (msc MockExpiredSecretClient) Set(service, secret string) error {
+	return nil
+}
+
+func (msc MockExpiredSecretClient) Get(service string) (string, error) {
+	return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIwMTkxOTQ2Mi03ZDZlLTc4ZTgtYWEyNC1iYTc3OTIxM2M5MGYiLCJqdGkiOiJlMTdhMmFlYTk0ZjgyNTdjYWU1NWM3ZjRiNTczNTRiMzI2YmNiYTZiZmY3ZGQ0ZWQ2NjU3NDA4MWE4ODFjN2VhMmM3OGU3Y2EzM2UxMjU5MyIsImlhdCI6MTY5NDU5NzkzNy4zNjAwMTUsIm5iZiI6MTY5NDU5NzkzNy4zNjAwMTcsImV4cCI6MTY5NDU5NzkzNy4zNTM3MDMsInN1YiI6ImZpbGlwLmhlZGVuK2FkbWluQGRlYnJpY2tlZC5jb20iLCJzY29wZXMiOlsic2VsZWN0IiwicHJvZmlsZSIsImJhc2ljUmVwbyJdfQ.CMqnQM9QFHTthDMv4K8q6gmkkFmbOIhrmKXwfo7kMWU", nil
+}
+
+func (msc MockExpiredSecretClient) Delete(service string) error {
+	return nil
+}
+
+func (msc MockInvalidSecretClient) Set(service, secret string) error {
+	return nil
+}
+
+func (msc MockInvalidSecretClient) Get(service string) (string, error) {
+	return "eyJhdWQiOiIwMTkxOTQ2Mi03ZDZlLTc4ZTgtYWEyNC1iYTc3OTIxM2M5MGYiLCJqdGkiOiJlMTdhMmFlYTk0ZjgyNTdjYWU1NWM3ZjRiNTczNTRiMzI2YmNiYTZiZmY3ZGQ0ZWQ2NjU3NDA4MWE4ODFjN2VhMmM3OGU3Y2EzM2UxMjU5MyIsImlhdCI6MTY5NDU5NzkzNy4zNjAwMTUsIm5iZiI6MTY5NDU5NzkzNy4zNjAwMTcsImV4cCI6MTY5NDU5NzkzNy4zNTM3MDMsInN1YiI6ImZpbGlwLmhlZGVuK2FkbWluQGRlYnJpY2tlZC5jb20iLCJzY29wZXMiOlsic2VsZWN0IiwicHJvZmlsZSIsImJhc2ljUmVwbyJdfQ", nil
+}
+
+func (msc MockInvalidSecretClient) Delete(service string) error {
+	return nil
+}
+
 type MockErrorSecretClient struct {
 	ErrorPattern string
+	Message      string
 }
 
 func (msc MockErrorSecretClient) Set(service, secret string) error {
 	if strings.Contains(service, msc.ErrorPattern) {
 
-		return MockError{}
+		return MockError{
+			Message: msc.Message,
+		}
 	}
 
 	return nil
@@ -43,7 +76,9 @@ func (msc MockErrorSecretClient) Set(service, secret string) error {
 func (msc MockErrorSecretClient) Get(service string) (string, error) {
 	if strings.Contains(service, msc.ErrorPattern) {
 
-		return "", MockError{}
+		return "", MockError{
+			Message: msc.Message,
+		}
 	}
 	return "token", nil
 }
@@ -51,7 +86,9 @@ func (msc MockErrorSecretClient) Get(service string) (string, error) {
 func (msc MockErrorSecretClient) Delete(service string) error {
 	if strings.Contains(service, msc.ErrorPattern) {
 
-		return MockError{}
+		return MockError{
+			Message: msc.Message,
+		}
 	}
 	return nil
 }
@@ -60,7 +97,11 @@ type MockAuthenticator struct{}
 
 type ErrorMockAuthenticator struct{}
 
-type MockOAuthConfig struct{}
+type MockOAuthConfig struct {
+	MockTokenSource oauth2.TokenSource
+}
+
+type MockOAuthConfigExchangeError struct{}
 
 type MockAuthWebHelper struct{}
 
@@ -83,15 +124,15 @@ func (ma MockAuthenticator) Token() (*oauth2.Token, error) {
 }
 
 func (ma ErrorMockAuthenticator) Authenticate() error {
-	return MockError{}
+	return MockError{""}
 }
 
 func (ma ErrorMockAuthenticator) Logout() error {
-	return MockError{}
+	return MockError{""}
 }
 
 func (ma ErrorMockAuthenticator) Token() (*oauth2.Token, error) {
-	return nil, MockError{}
+	return nil, MockError{""}
 }
 
 func (mawh MockAuthWebHelper) OpenURL(string) error {
@@ -119,4 +160,32 @@ func (moc MockOAuthConfig) Exchange(context.Context, string, ...oauth2.AuthCodeO
 
 func (moc MockOAuthConfig) AuthCodeURL(string, ...oauth2.AuthCodeOption) string {
 	return "localhost"
+}
+
+func (moc MockOAuthConfigExchangeError) Exchange(context.Context, string, ...oauth2.AuthCodeOption) (*oauth2.Token, error) {
+	return nil, MockError{Message: "HTTP Error"}
+}
+
+func (moc MockOAuthConfigExchangeError) AuthCodeURL(string, ...oauth2.AuthCodeOption) string {
+	return "localhost"
+}
+
+func (moc MockOAuthConfigExchangeError) TokenSource(context.Context, *oauth2.Token) oauth2.TokenSource {
+	return nil
+}
+
+type MockTokenSource struct {
+	StaticToken *oauth2.Token
+	Error       error
+}
+
+func (mts MockTokenSource) Token() (*oauth2.Token, error) {
+	if mts.Error != nil {
+		return nil, mts.Error
+	}
+	return mts.StaticToken, nil
+}
+
+func (moc MockOAuthConfig) TokenSource(context.Context, *oauth2.Token) oauth2.TokenSource {
+	return moc.MockTokenSource
 }

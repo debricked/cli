@@ -2,7 +2,9 @@ package auth
 
 import (
 	"context"
+
 	"github.com/debricked/cli/internal/client"
+	"github.com/golang-jwt/jwt"
 	"github.com/zalando/go-keyring"
 	"golang.org/x/oauth2"
 )
@@ -22,6 +24,7 @@ type ISecretClient interface {
 type IOAuthConfig interface {
 	AuthCodeURL(string, ...oauth2.AuthCodeOption) string
 	Exchange(context.Context, string, ...oauth2.AuthCodeOption) (*oauth2.Token, error)
+	TokenSource(context.Context, *oauth2.Token) oauth2.TokenSource
 } // Wrapping interface for config to simplify mocking
 
 type Authenticator struct {
@@ -74,6 +77,12 @@ func (a Authenticator) Logout() error {
 	return a.SecretClient.Delete("DebrickedAccessToken")
 }
 
+func validateJWT(token string) error {
+	claims := jwt.MapClaims{}
+	jwt.ParseWithClaims(token, claims, nil)
+	return claims.Valid()
+}
+
 func (a Authenticator) Token() (*oauth2.Token, error) {
 	refreshToken, err := a.SecretClient.Get("DebrickedRefreshToken")
 	if err != nil {
@@ -83,15 +92,21 @@ func (a Authenticator) Token() (*oauth2.Token, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	jwtErr := validateJWT(accessToken)
+	if jwtErr != nil {
+		if jwtErr.Error() == "Token is expired" {
+			return a.refresh(refreshToken)
+		} else {
+			return nil, jwtErr
+		}
+	}
 	return &oauth2.Token{
 		RefreshToken: refreshToken,
-		TokenType:    "jwt",
 		AccessToken:  accessToken,
 	}, nil
 }
 
-func (a Authenticator) saveToken(token *oauth2.Token) error {
+func (a Authenticator) save(token *oauth2.Token) error {
 	err := a.SecretClient.Set("DebrickedRefreshToken", token.RefreshToken)
 	if err != nil {
 		return err
@@ -100,14 +115,21 @@ func (a Authenticator) saveToken(token *oauth2.Token) error {
 	return a.SecretClient.Set("DebrickedAccessToken", token.AccessToken)
 }
 
-func (a Authenticator) exchange(authCode, codeVerifier string) (*oauth2.Token, error) {
-
-	return a.OAuthConfig.Exchange(
+func (a Authenticator) refresh(refreshToken string) (*oauth2.Token, error) {
+	token := &oauth2.Token{
+		RefreshToken: refreshToken,
+	}
+	tokenSource := a.OAuthConfig.TokenSource(
 		context.Background(),
-		authCode,
-		oauth2.VerifierOption(codeVerifier),
+		token,
 	)
-
+	token, err := tokenSource.Token()
+	if err != nil {
+		return nil, err
+	} else {
+		a.save(token)
+		return token, nil
+	}
 }
 
 func (a Authenticator) Authenticate() error {
@@ -124,10 +146,14 @@ func (a Authenticator) Authenticate() error {
 	}
 
 	authCode := a.AuthWebHelper.Callback(state)
-	token, err := a.exchange(authCode, codeVerifier)
+	token, err := a.OAuthConfig.Exchange(
+		context.Background(),
+		authCode,
+		oauth2.VerifierOption(codeVerifier),
+	)
 	if err != nil {
 		return err
 	}
 
-	return a.saveToken(token)
+	return a.save(token)
 }

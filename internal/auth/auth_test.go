@@ -45,6 +45,20 @@ func TestSecretClientGet(t *testing.T) {
 	assert.Equal(t, secret, savedSecret)
 }
 
+func TestSecretClientGetExpired(t *testing.T) {
+	user := "TestDebrickedCLIUserGet"
+	service := "TestDebrickedCLIServiceGet"
+	secret := "TestDebrickedCLISecretGet"
+	dsc := DebrickedSecretClient{user}
+	err := keyring.Set(service, user, secret)
+	assert.NoError(t, err)
+	savedSecret, err := dsc.Get(service)
+	assert.NoError(t, err)
+	err = keyring.Delete(service, user)
+	assert.NoError(t, err)
+	assert.Equal(t, secret, savedSecret)
+}
+
 func TestSecretClientDelete(t *testing.T) {
 	user := "TestDebrickedCLIUserDelete"
 	service := "TestDebrickedCLIServiceDelete"
@@ -92,7 +106,7 @@ func TestMockedSaveToken(t *testing.T) {
 		RefreshToken: "refreshToken",
 		AccessToken:  "accessToken",
 	}
-	err := authenticator.saveToken(token)
+	err := authenticator.save(token)
 
 	assert.NoError(t, err)
 }
@@ -108,7 +122,7 @@ func TestMockedSaveTokenRefreshError(t *testing.T) {
 		RefreshToken: "refreshToken",
 		AccessToken:  "accessToken",
 	}
-	err := authenticator.saveToken(token)
+	err := authenticator.save(token)
 
 	assert.Error(t, err)
 }
@@ -121,9 +135,26 @@ func TestMockedToken(t *testing.T) {
 	token, err := authenticator.Token()
 
 	assert.NoError(t, err)
-	assert.Equal(t, token.TokenType, "jwt")
 	assert.Equal(t, token.RefreshToken, "token")
 	assert.Equal(t, token.AccessToken, "token")
+}
+
+func TestMockedTokenExpired(t *testing.T) {
+	authenticator := Authenticator{
+		SecretClient: testdata.MockExpiredSecretClient{},
+		OAuthConfig: testdata.MockOAuthConfig{
+			MockTokenSource: testdata.MockTokenSource{
+				StaticToken: &oauth2.Token{
+					RefreshToken: "refreshToken",
+					AccessToken:  "accessToken",
+				},
+				Error: nil,
+			},
+		},
+	}
+	_, err := authenticator.Token()
+
+	assert.NoError(t, err)
 }
 
 func TestMockedTokenRefreshError(t *testing.T) {
@@ -159,6 +190,56 @@ func TestMockedAuthenticate(t *testing.T) {
 	err := authenticator.Authenticate()
 
 	assert.NoError(t, err)
+}
+
+func TestMockedAuthenticateExchangeError(t *testing.T) {
+	authenticator := Authenticator{
+		SecretClient:  testdata.MockSecretClient{},
+		OAuthConfig:   testdata.MockOAuthConfigExchangeError{},
+		AuthWebHelper: testdata.MockAuthWebHelper{},
+	}
+	err := authenticator.Authenticate()
+
+	assert.Error(t, err)
+	assert.Equal(t, "HTTP Error", err.Error())
+}
+
+func TestMockedRefresh(t *testing.T) {
+	authenticator := Authenticator{
+		SecretClient: testdata.MockSecretClient{},
+		OAuthConfig: testdata.MockOAuthConfig{
+			MockTokenSource: testdata.MockTokenSource{
+				StaticToken: &oauth2.Token{
+					RefreshToken: "refreshToken",
+					AccessToken:  "accessToken",
+				},
+				Error: nil,
+			},
+		},
+		AuthWebHelper: testdata.MockAuthWebHelper{},
+	}
+	token, err := authenticator.refresh("refreshToken")
+
+	assert.NoError(t, err)
+	assert.Equal(t, "accessToken", token.AccessToken)
+}
+
+func TestMockedRefreshError(t *testing.T) {
+	authenticator := Authenticator{
+		SecretClient: testdata.MockSecretClient{},
+		OAuthConfig: testdata.MockOAuthConfig{
+			MockTokenSource: testdata.MockTokenSource{
+				StaticToken: nil,
+				Error: testdata.MockError{
+					Message: "testerror",
+				},
+			},
+		},
+		AuthWebHelper: testdata.MockAuthWebHelper{},
+	}
+	_, err := authenticator.refresh("refreshToken")
+
+	assert.Error(t, err)
 }
 
 func TestMockedAuthenticateOpenURLError(t *testing.T) {

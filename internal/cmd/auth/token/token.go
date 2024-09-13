@@ -30,9 +30,7 @@ Format:
 [
   {
     "access_token": <access token>,
-    "token_type": "jwt",
     "refresh_token": <refresh token>,
-    "expiry": <access token expiry date>,
   },
 ]
 `)
