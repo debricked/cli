@@ -3,10 +3,9 @@ package auth
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/browser"
 	"log"
 	"net/http"
-	"os/exec"
-	"runtime"
 	"time"
 )
 
@@ -59,26 +58,6 @@ func (awh AuthWebHelper) Callback(state string) string {
 	return authCode
 }
 
-func (awh AuthWebHelper) openBrowserCmd(runtimeOS, url string) *exec.Cmd {
-	var cmd string
-	var args []string
-	switch runtimeOS {
-	case "windows":
-		cmd = "cmd"
-		url = "\"" + url + "\"" // Windows does not like "&"
-		args = []string{"/c", "start"}
-	case "darwin":
-		cmd = "open"
-	default: // "linux", "freebsd", "openbsd", "netbsd"
-		cmd = "xdg-open"
-	}
-	args = append(args, url)
-
-	return exec.Command(cmd, args...)
-}
-
 func (awh AuthWebHelper) OpenURL(authURL string) error {
-	openCmd := awh.openBrowserCmd(runtime.GOOS, authURL)
-
-	return openCmd.Start()
+	return browser.OpenURL(authURL)
 }

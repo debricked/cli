@@ -4,11 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os/exec"
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/assert"
 )
 
 const testState = "test_state"
@@ -91,33 +88,5 @@ func TestCallbackServerError(t *testing.T) {
 		}
 	case <-time.After(2 * time.Second):
 		t.Fatal("Test timed out")
-	}
-}
-
-func TestOpenBrowserCmd(t *testing.T) {
-	a := NewAuthWebHelper()
-	cases := []struct {
-		runtimeOS   string
-		expectedCmd *exec.Cmd
-	}{
-		{
-			runtimeOS:   "darwin",
-			expectedCmd: exec.Command("open", "url"),
-		},
-		{
-			runtimeOS:   "linux",
-			expectedCmd: exec.Command("xdg-open", "url"),
-		},
-		{
-			runtimeOS:   "windows",
-			expectedCmd: exec.Command("cmd", "/c", "start", "\"url\""),
-		},
-	}
-
-	for _, c := range cases {
-		t.Run(c.runtimeOS, func(t *testing.T) {
-			authCmd := a.openBrowserCmd(c.runtimeOS, "url")
-			assert.Equal(t, c.expectedCmd.Args, authCmd.Args)
-		})
 	}
 }
