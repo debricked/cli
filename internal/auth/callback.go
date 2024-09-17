@@ -65,6 +65,7 @@ func (awh AuthWebHelper) openBrowserCmd(runtimeOS, url string) *exec.Cmd {
 	switch runtimeOS {
 	case "windows":
 		cmd = "cmd"
+		url = "\"" + url + "\"" // Windows does not like "&"
 		args = []string{"/c", "start"}
 	case "darwin":
 		cmd = "open"

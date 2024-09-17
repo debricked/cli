@@ -110,7 +110,7 @@ func TestOpenBrowserCmd(t *testing.T) {
 		},
 		{
 			runtimeOS:   "windows",
-			expectedCmd: exec.Command("cmd", "/c", "start", "url"),
+			expectedCmd: exec.Command("cmd", "/c", "start", "\"url\""),
 		},
 	}
 
