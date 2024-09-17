@@ -45,7 +45,7 @@ RUN echo "deb http://deb.debian.org/debian unstable main" >> /etc/apt/sources.li
 #    echo "Pin: release a=testing" >> /etc/apt/preferences && \
 #    echo "Pin-Priority: -3" >> /etc/apt/preferences
 
-RUN apt -y update && apt -y upgrade && apt -y install curl gnupg unzip gnome-keyring && \
+RUN apt -y update && apt -y upgrade && apt -y install curl gnupg unzip && \
     apt -y clean && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /etc/apt/keyrings
