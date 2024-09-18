@@ -10,6 +10,12 @@ Requirements
 
     Go version 1.20 or higher
 
+To simplify installation and testing during development, follow these steps to install the source code version of the CLI:
+
+1. Add the `$GOBIN` path to your path (this is specific to your environment)
+2. Run `make install`
+3. Success! (the `debricked` binary should now be executable in your shell)
+
 ### If you have questions
 
 - First check and search the current issues and see if they can help answer your questions.
