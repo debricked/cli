@@ -55,6 +55,21 @@ Create Branch:
 
 `$ git checkout -b my-cool-branch`
 
+### Requirements
+Requirements for testing are generally included in the Go installation and the project, but its generally recommended to also install;
+- the language server [`gopls`](https://pkg.go.dev/golang.org/x/tools/gopls)
+- the linters runner [`golangci-lint`](https://github.com/golangci/golangci-lint) (we run it in our CI pipeline so its a requirement for merging), to enable running `make lint`.
+
+### Testing
+All tests and a coverage check is run when calling the command;
+- `make test`
+
+We have a mininum test coverage limit at 95%.
+
+### Linting
+To keep the project tidy we use `golangci-lint`, please run it during development to ensure an accaptable PR;
+- `make lint` 
+
 ## Submitting a Pull Request
 
 ### Tidy it up
