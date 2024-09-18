@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"log"
+
 	"github.com/debricked/cli/internal/auth"
 	"github.com/debricked/cli/internal/cmd/auth/login"
 	"github.com/debricked/cli/internal/cmd/auth/logout"
@@ -12,12 +14,13 @@ import (
 func NewAuthCmd(authenticator auth.IAuthenticator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "auth",
-		Short: "Debricked authentication.",
-		Long:  `Debricked service authentication.`,
+		Short: "Debricked authentication. [beta feature]",
+		Long:  `Debricked service authentication. Currently in beta and will most likely not work as expected`,
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			_ = viper.BindPFlags(cmd.Flags())
 		},
 	}
+	log.Println("Warning: Authentication is beta and may not work as expected.")
 	cmd.AddCommand(login.NewLoginCmd(authenticator))
 	cmd.AddCommand(logout.NewLogoutCmd(authenticator))
 	cmd.AddCommand(token.NewTokenCmd(authenticator))
