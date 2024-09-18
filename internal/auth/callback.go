@@ -3,10 +3,11 @@ package auth
 import (
 	"context"
 	"fmt"
-	"github.com/pkg/browser"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/pkg/browser"
 )
 
 type IAuthWebHelper interface {
@@ -20,6 +21,7 @@ type AuthWebHelper struct {
 
 func NewAuthWebHelper() AuthWebHelper {
 	mux := http.NewServeMux()
+
 	return AuthWebHelper{
 		ServeMux: mux,
 	}
@@ -32,6 +34,7 @@ func (awh AuthWebHelper) Callback(state string) string {
 	awh.ServeMux.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("state") != state {
 			http.Error(w, "Invalid state", http.StatusBadRequest)
+
 			return
 		}
 
@@ -49,10 +52,11 @@ func (awh AuthWebHelper) Callback(state string) string {
 			log.Fatalf("HTTP server error: %v", err)
 		}
 	}()
-
-	defer server.Shutdown(
-		context.Background(),
-	)
+	defer func() {
+		if err := server.Shutdown(context.Background()); err != nil {
+			log.Fatalf("HTTP server shutdown error: %v", err)
+		}
+	}()
 	authCode := <-code // Wait for the authorization code
 
 	return authCode

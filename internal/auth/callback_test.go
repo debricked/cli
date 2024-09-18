@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const testState = "test_state"
@@ -26,8 +28,10 @@ func TestCallback(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to make callback request: %v", err)
 	}
-	defer resp.Body.Close()
-
+	defer func() {
+		err := resp.Body.Close()
+		assert.NoError(t, err)
+	}()
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("Expected status OK, got %v", resp.Status)
 	}
@@ -63,9 +67,15 @@ func TestCallbackInvalidState(t *testing.T) {
 }
 
 func TestCallbackServerError(t *testing.T) {
-	server := &http.Server{Addr: ":9096"}
-	go server.ListenAndServe()
-	defer server.Shutdown(context.Background())
+	server := &http.Server{Addr: ":9096", ReadHeaderTimeout: time.Second}
+	go func() {
+		err := server.ListenAndServe()
+		assert.Error(t, err) // Two servers trying to run on localhost:9096
+	}()
+	defer func() {
+		err := server.Shutdown(context.Background())
+		assert.NoError(t, err)
+	}()
 
 	awh := AuthWebHelper{}
 
@@ -83,9 +93,7 @@ func TestCallbackServerError(t *testing.T) {
 
 	select {
 	case err := <-resultChan:
-		if err == nil {
-			t.Error("Expected an error due to server already running, but got none")
-		}
+		assert.Error(t, err)
 	case <-time.After(2 * time.Second):
 		t.Fatal("Test timed out")
 	}

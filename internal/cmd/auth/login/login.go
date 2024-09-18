@@ -2,6 +2,7 @@ package login
 
 import (
 	"fmt"
+
 	"github.com/debricked/cli/internal/auth"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -18,6 +19,7 @@ func NewLoginCmd(authenticator auth.IAuthenticator) *cobra.Command {
 		},
 		RunE: RunE(authenticator),
 	}
+
 	return cmd
 }
 

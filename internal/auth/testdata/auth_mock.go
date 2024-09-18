@@ -3,7 +3,9 @@ package testdata
 import (
 	"context"
 	"strings"
+	"time"
 
+	"github.com/golang-jwt/jwt"
 	"golang.org/x/oauth2"
 )
 
@@ -26,7 +28,16 @@ func (msc MockSecretClient) Set(service, secret string) error {
 }
 
 func (msc MockSecretClient) Get(service string) (string, error) {
-	return "token", nil
+	var secretKey = []byte("secret-key")
+	token := jwt.NewWithClaims(
+		jwt.SigningMethodHS256,
+		jwt.MapClaims{
+			"username": "mockDebrickedClient",
+			"exp":      time.Now().Add(time.Hour).Unix(),
+		},
+	)
+
+	return token.SignedString(secretKey)
 }
 
 func (msc MockSecretClient) Delete(service string) error {
@@ -38,7 +49,16 @@ func (msc MockExpiredSecretClient) Set(service, secret string) error {
 }
 
 func (msc MockExpiredSecretClient) Get(service string) (string, error) {
-	return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIwMTkxOTQ2Mi03ZDZlLTc4ZTgtYWEyNC1iYTc3OTIxM2M5MGYiLCJqdGkiOiJlMTdhMmFlYTk0ZjgyNTdjYWU1NWM3ZjRiNTczNTRiMzI2YmNiYTZiZmY3ZGQ0ZWQ2NjU3NDA4MWE4ODFjN2VhMmM3OGU3Y2EzM2UxMjU5MyIsImlhdCI6MTY5NDU5NzkzNy4zNjAwMTUsIm5iZiI6MTY5NDU5NzkzNy4zNjAwMTcsImV4cCI6MTY5NDU5NzkzNy4zNTM3MDMsInN1YiI6ImZpbGlwLmhlZGVuK2FkbWluQGRlYnJpY2tlZC5jb20iLCJzY29wZXMiOlsic2VsZWN0IiwicHJvZmlsZSIsImJhc2ljUmVwbyJdfQ.CMqnQM9QFHTthDMv4K8q6gmkkFmbOIhrmKXwfo7kMWU", nil
+	var secretKey = []byte("secret-key")
+	token := jwt.NewWithClaims(
+		jwt.SigningMethodHS256,
+		jwt.MapClaims{
+			"username": "mockDebrickedClient",
+			"exp":      time.Now().Add(-time.Hour).Unix(),
+		},
+	)
+
+	return token.SignedString(secretKey)
 }
 
 func (msc MockExpiredSecretClient) Delete(service string) error {

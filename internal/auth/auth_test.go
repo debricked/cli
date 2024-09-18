@@ -126,16 +126,25 @@ func TestMockedSaveTokenRefreshError(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestMockedTokenErrorSegments(t *testing.T) {
+	authenticator := Authenticator{
+		SecretClient: testdata.MockInvalidSecretClient{},
+		OAuthConfig:  nil,
+	}
+	token, err := authenticator.Token()
+	assert.Error(t, err)
+	assert.ErrorContains(t, err, "token contains an invalid number of segments")
+	assert.Nil(t, token)
+}
+
 func TestMockedToken(t *testing.T) {
 	authenticator := Authenticator{
 		SecretClient: testdata.MockSecretClient{},
 		OAuthConfig:  nil,
 	}
 	token, err := authenticator.Token()
-
 	assert.NoError(t, err)
-	assert.Equal(t, token.RefreshToken, "token")
-	assert.Equal(t, token.AccessToken, "token")
+	assert.NotNil(t, token)
 }
 
 func TestMockedTokenExpired(t *testing.T) {

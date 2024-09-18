@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"strings"
 
 	"github.com/debricked/cli/internal/client"
 	"github.com/golang-jwt/jwt"
@@ -79,7 +80,12 @@ func (a Authenticator) Logout() error {
 
 func validateJWT(token string) error {
 	claims := jwt.MapClaims{}
-	jwt.ParseWithClaims(token, claims, nil)
+	_, err := jwt.ParseWithClaims(token, claims, nil)
+	if err != nil && strings.Compare(err.Error(), "no Keyfunc was provided.") != 0 {
+
+		return err
+	}
+
 	return claims.Valid()
 }
 
@@ -100,6 +106,7 @@ func (a Authenticator) Token() (*oauth2.Token, error) {
 			return nil, jwtErr
 		}
 	}
+
 	return &oauth2.Token{
 		RefreshToken: refreshToken,
 		AccessToken:  accessToken,
@@ -127,8 +134,9 @@ func (a Authenticator) refresh(refreshToken string) (*oauth2.Token, error) {
 	if err != nil {
 		return nil, err
 	} else {
-		a.save(token)
-		return token, nil
+		err = a.save(token)
+
+		return token, err
 	}
 }
 
