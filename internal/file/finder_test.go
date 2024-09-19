@@ -20,6 +20,10 @@ import (
 
 type debClientMock struct{}
 
+func (mock *debClientMock) Host() string {
+	return "debricked.com"
+}
+
 func (mock *debClientMock) Post(_ string, _ string, _ *bytes.Buffer, _ int) (*http.Response, error) {
 	return &http.Response{}, nil
 }

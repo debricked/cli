@@ -22,6 +22,7 @@ type IDebClient interface {
 	Get(uri string, format string) (*http.Response, error)
 	SetAccessToken(accessToken *string)
 	IsEnterpriseCustomer(silent bool) bool
+	Host() string
 }
 
 type DebClient struct {
@@ -43,6 +44,10 @@ func NewDebClient(accessToken *string, httpClient IClient) *DebClient {
 		accessToken: initAccessToken(accessToken),
 		jwtToken:    "",
 	}
+}
+
+func (debClient *DebClient) Host() string {
+	return *debClient.host
 }
 
 func (debClient *DebClient) Post(uri string, contentType string, body *bytes.Buffer, timeout int) (*http.Response, error) {

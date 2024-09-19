@@ -90,6 +90,10 @@ func TestUploadPollingError(t *testing.T) {
 
 type debClientMock struct{}
 
+func (mock *debClientMock) Host() string {
+	return "debricked.com"
+}
+
 func (mock *debClientMock) Post(uri string, _ string, _ *bytes.Buffer, _ int) (*http.Response, error) {
 	res := &http.Response{
 		Status:           "",

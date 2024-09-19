@@ -34,6 +34,10 @@ func NewDebClientMock() *DebClientMock {
 	}
 }
 
+func (mock *DebClientMock) Host() string {
+	return "debricked.com"
+}
+
 func (mock *DebClientMock) Get(uri string, format string) (*http.Response, error) {
 	response, err := mock.popResponse(mock.RemoveQueryParamsFromUri(uri))
 

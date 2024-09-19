@@ -3,6 +3,7 @@ package wire
 import (
 	"fmt"
 
+	"github.com/debricked/cli/internal/auth"
 	"github.com/debricked/cli/internal/callgraph"
 	callgraphStrategy "github.com/debricked/cli/internal/callgraph/strategy"
 	"github.com/debricked/cli/internal/ci"
@@ -91,6 +92,7 @@ func (cc *CliContainer) wire() error {
 
 	cc.licenseReporter = licenseReport.Reporter{DebClient: cc.debClient}
 	cc.vulnerabilityReporter = vulnerabilityReport.Reporter{DebClient: cc.debClient}
+	cc.authenticator = auth.NewDebrickedAuthenticator(cc.debClient)
 
 	return nil
 }
@@ -112,6 +114,7 @@ type CliContainer struct {
 	callgraph             callgraph.IGenerator
 	cgScheduler           callgraph.IScheduler
 	cgStrategyFactory     callgraphStrategy.IFactory
+	authenticator         auth.IAuthenticator
 }
 
 func (cc *CliContainer) DebClient() client.IDebClient {
@@ -144,6 +147,10 @@ func (cc *CliContainer) VulnerabilityReporter() vulnerabilityReport.Reporter {
 
 func (cc *CliContainer) Fingerprinter() fingerprint.IFingerprint {
 	return cc.fingerprinter
+}
+
+func (cc *CliContainer) Authenticator() auth.IAuthenticator {
+	return cc.authenticator
 }
 
 func wireErr(err error) error {

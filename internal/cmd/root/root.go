@@ -1,6 +1,7 @@
 package root
 
 import (
+	"github.com/debricked/cli/internal/cmd/auth"
 	"github.com/debricked/cli/internal/cmd/callgraph"
 	"github.com/debricked/cli/internal/cmd/files"
 	"github.com/debricked/cli/internal/cmd/fingerprint"
@@ -47,6 +48,7 @@ Read more: https://docs.debricked.com/product/administration/generate-access-tok
 	rootCmd.AddCommand(fingerprint.NewFingerprintCmd(container.Fingerprinter()))
 	rootCmd.AddCommand(resolve.NewResolveCmd(container.Resolver()))
 	rootCmd.AddCommand(callgraph.NewCallgraphCmd(container.CallgraphGenerator()))
+	rootCmd.AddCommand(auth.NewAuthCmd(container.Authenticator()))
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 

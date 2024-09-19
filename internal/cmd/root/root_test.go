@@ -11,9 +11,13 @@ import (
 func TestNewRootCmd(t *testing.T) {
 	cmd := NewRootCmd("v0.0.0", wire.GetCliContainer())
 	commands := cmd.Commands()
-	nbrOfCommands := 6
+	nbrOfCommands := 7
 	if len(commands) != nbrOfCommands {
-		t.Errorf("failed to assert that there were %d sub commands connected", nbrOfCommands)
+		t.Errorf(
+			"failed to assert that there were %d sub commands connected (was %d)",
+			nbrOfCommands,
+			len(commands),
+		)
 	}
 
 	flags := cmd.PersistentFlags()
