@@ -23,7 +23,7 @@ FROM cli AS scan
 CMD [ "debricked",  "scan" ]
 
 FROM cli-base AS resolution
-ENV MAVEN_VERSION 3.9.6
+ENV MAVEN_VERSION 3.9.9
 ENV MAVEN_HOME /usr/lib/mvn
 ENV PATH $MAVEN_HOME/bin:$PATH
 RUN wget http://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz && \
@@ -31,7 +31,7 @@ RUN wget http://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/ap
   rm apache-maven-$MAVEN_VERSION-bin.tar.gz && \
   mv apache-maven-$MAVEN_VERSION $MAVEN_HOME
 
-ENV GRADLE_VERSION 8.7
+ENV GRADLE_VERSION 8.10.1
 ENV GRADLE_HOME /usr/lib/gradle
 ENV PATH $GRADLE_HOME/gradle-$GRADLE_VERSION/bin:$PATH
 RUN wget https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip && \
