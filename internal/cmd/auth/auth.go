@@ -19,6 +19,7 @@ func NewAuthCmd(authenticator auth.IAuthenticator) *cobra.Command {
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			_ = viper.BindPFlags(cmd.Flags())
 		},
+		Hidden: true,
 	}
 	log.Println("Warning: Authentication is beta and may not work as expected.")
 	cmd.AddCommand(login.NewLoginCmd(authenticator))
