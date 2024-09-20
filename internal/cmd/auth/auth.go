@@ -1,8 +1,6 @@
 package auth
 
 import (
-	"log"
-
 	"github.com/debricked/cli/internal/auth"
 	"github.com/debricked/cli/internal/cmd/auth/login"
 	"github.com/debricked/cli/internal/cmd/auth/logout"
@@ -21,7 +19,6 @@ func NewAuthCmd(authenticator auth.IAuthenticator) *cobra.Command {
 		},
 		Hidden: true,
 	}
-	log.Println("Warning: Authentication is beta and may not work as expected.")
 	cmd.AddCommand(login.NewLoginCmd(authenticator))
 	cmd.AddCommand(logout.NewLogoutCmd(authenticator))
 	cmd.AddCommand(token.NewTokenCmd(authenticator))
