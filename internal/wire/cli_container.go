@@ -10,6 +10,7 @@ import (
 	"github.com/debricked/cli/internal/client"
 	"github.com/debricked/cli/internal/file"
 	"github.com/debricked/cli/internal/fingerprint"
+	"github.com/debricked/cli/internal/hello"
 	"github.com/debricked/cli/internal/io"
 	licenseReport "github.com/debricked/cli/internal/report/license"
 	vulnerabilityReport "github.com/debricked/cli/internal/report/vulnerability"
@@ -93,6 +94,7 @@ func (cc *CliContainer) wire() error {
 	cc.licenseReporter = licenseReport.Reporter{DebClient: cc.debClient}
 	cc.vulnerabilityReporter = vulnerabilityReport.Reporter{DebClient: cc.debClient}
 	cc.authenticator = auth.NewDebrickedAuthenticator(cc.debClient)
+	cc.greeter = hello.NewDebrickedGreeter()
 
 	return nil
 }
@@ -115,6 +117,7 @@ type CliContainer struct {
 	cgScheduler           callgraph.IScheduler
 	cgStrategyFactory     callgraphStrategy.IFactory
 	authenticator         auth.IAuthenticator
+	greeter               hello.IGreeter
 }
 
 func (cc *CliContainer) DebClient() client.IDebClient {
@@ -151,6 +154,10 @@ func (cc *CliContainer) Fingerprinter() fingerprint.IFingerprint {
 
 func (cc *CliContainer) Authenticator() auth.IAuthenticator {
 	return cc.authenticator
+}
+
+func (cc *CliContainer) Greeter() hello.IGreeter {
+	return cc.greeter
 }
 
 func wireErr(err error) error {
