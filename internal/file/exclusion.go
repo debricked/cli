@@ -21,6 +21,7 @@ var defaultExclusions = DefaultExclusionList{
 		".git",
 		"obj",              // nuget
 		"bower_components", // bower
+		".vscode-test",     // excluding testing framework
 	},
 }
 
