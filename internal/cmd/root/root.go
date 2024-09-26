@@ -42,7 +42,7 @@ Read more: https://docs.debricked.com/product/administration/generate-access-tok
 	var debClient = container.DebClient()
 	debClient.SetAccessToken(&accessToken)
 
-	rootCmd.AddCommand(report.NewReportCmd(container.LicenseReporter(), container.VulnerabilityReporter()))
+	rootCmd.AddCommand(report.NewReportCmd(container.LicenseReporter(), container.VulnerabilityReporter(), container.SBOMReporter()))
 	rootCmd.AddCommand(files.NewFilesCmd(container.Finder()))
 	rootCmd.AddCommand(scan.NewScanCmd(container.Scanner()))
 	rootCmd.AddCommand(fingerprint.NewFingerprintCmd(container.Fingerprinter()))
