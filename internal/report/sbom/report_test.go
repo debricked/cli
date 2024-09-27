@@ -1,19 +1,21 @@
 package sbom
 
 import (
+	"errors"
 	"io"
 	"net/http"
 	"strings"
 	"testing"
 
 	"github.com/debricked/cli/internal/client/testdata"
+	ioTestData "github.com/debricked/cli/internal/io/testdata"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestOrderError(t *testing.T) {
 	debClientMock := testdata.NewDebClientMock()
 	debClientMock.AddMockResponse(testdata.MockResponse{StatusCode: http.StatusOK})
-	reporter := Reporter{DebClient: debClientMock}
+	reporter := Reporter{DebClient: debClientMock, FileWriter: &ioTestData.FileWriterMock{}}
 	args := OrderArgs{CommitID: "", RepositoryID: ""}
 	err := reporter.Order(args)
 	assert.Error(t, err)
@@ -29,7 +31,7 @@ func TestOrder(t *testing.T) {
 		StatusCode:   http.StatusOK,
 		ResponseBody: io.NopCloser(strings.NewReader("{}")),
 	})
-	reporter := Reporter{DebClient: debClientMock}
+	reporter := Reporter{DebClient: debClientMock, FileWriter: &ioTestData.FileWriterMock{}}
 	args := OrderArgs{CommitID: "", RepositoryID: ""}
 	err := reporter.Order(args)
 	assert.NoError(t, err)
@@ -44,7 +46,7 @@ func TestOrderDownloadErr(t *testing.T) {
 	debClientMock.AddMockResponse(testdata.MockResponse{
 		StatusCode: http.StatusForbidden,
 	})
-	reporter := Reporter{DebClient: debClientMock}
+	reporter := Reporter{DebClient: debClientMock, FileWriter: &ioTestData.FileWriterMock{}}
 	args := OrderArgs{CommitID: "", RepositoryID: ""}
 	err := reporter.Order(args)
 	assert.Error(t, err)
@@ -64,7 +66,7 @@ func TestGenerateOK(t *testing.T) {
 		StatusCode:   http.StatusOK,
 		ResponseBody: io.NopCloser(strings.NewReader("{}")),
 	})
-	reporter := Reporter{DebClient: debClientMock}
+	reporter := Reporter{DebClient: debClientMock, FileWriter: &ioTestData.FileWriterMock{}}
 	uuid, err := reporter.generate("", "", "", false, false)
 	assert.NoError(t, err)
 	assert.NotNil(t, uuid)
@@ -76,7 +78,7 @@ func TestGenerateSubscriptionError(t *testing.T) {
 		StatusCode:   http.StatusPaymentRequired,
 		ResponseBody: io.NopCloser(strings.NewReader("{}")),
 	})
-	reporter := Reporter{DebClient: debClientMock}
+	reporter := Reporter{DebClient: debClientMock, FileWriter: &ioTestData.FileWriterMock{}}
 	uuid, err := reporter.generate("", "", "", false, false)
 	assert.Error(t, err)
 	assert.NotNil(t, uuid)
@@ -88,16 +90,25 @@ func TestGenerateError(t *testing.T) {
 		StatusCode:   http.StatusForbidden,
 		ResponseBody: io.NopCloser(strings.NewReader("{}")),
 	})
-	reporter := Reporter{DebClient: debClientMock}
+	reporter := Reporter{DebClient: debClientMock, FileWriter: &ioTestData.FileWriterMock{}}
 	uuid, err := reporter.generate("", "", "", false, false)
 	assert.Error(t, err)
 	assert.NotNil(t, uuid)
 }
 
+func TestGenerateDefaultGetError(t *testing.T) {
+	debClientMock := testdata.NewDebClientMock()
+	debClientMock.AddMockResponse(testdata.MockResponse{Error: errors.New("")})
+	reporter := Reporter{DebClient: debClientMock, FileWriter: &ioTestData.FileWriterMock{}}
+	res, err := reporter.generate("", "", "", false, false)
+	assert.Error(t, err)
+	assert.Equal(t, "", res)
+}
+
 func TestDownloadOK(t *testing.T) {
 	debClientMock := testdata.NewDebClientMock()
 	debClientMock.AddMockResponse(testdata.MockResponse{StatusCode: http.StatusOK})
-	reporter := Reporter{DebClient: debClientMock}
+	reporter := Reporter{DebClient: debClientMock, FileWriter: &ioTestData.FileWriterMock{}}
 	res, err := reporter.download("")
 	assert.NoError(t, err)
 	assert.NotNil(t, res)
@@ -106,25 +117,34 @@ func TestDownloadOK(t *testing.T) {
 func TestDownloadTooLongQueue(t *testing.T) {
 	debClientMock := testdata.NewDebClientMock()
 	debClientMock.AddMockResponse(testdata.MockResponse{StatusCode: http.StatusCreated})
-	reporter := Reporter{DebClient: debClientMock}
+	reporter := Reporter{DebClient: debClientMock, FileWriter: &ioTestData.FileWriterMock{}}
 	res, err := reporter.download("")
 	assert.Error(t, err)
-	assert.NotNil(t, res)
+	assert.Nil(t, res)
 }
 
 func TestDownloadDefaultError(t *testing.T) {
 	debClientMock := testdata.NewDebClientMock()
 	debClientMock.AddMockResponse(testdata.MockResponse{StatusCode: http.StatusForbidden})
-	reporter := Reporter{DebClient: debClientMock}
+	reporter := Reporter{DebClient: debClientMock, FileWriter: &ioTestData.FileWriterMock{}}
 	res, err := reporter.download("")
 	assert.Error(t, err)
-	assert.NotNil(t, res)
+	assert.Nil(t, res)
+}
+
+func TestDownloadDefaultGetError(t *testing.T) {
+	debClientMock := testdata.NewDebClientMock()
+	debClientMock.AddMockResponse(testdata.MockResponse{Error: errors.New("")})
+	reporter := Reporter{DebClient: debClientMock, FileWriter: &ioTestData.FileWriterMock{}}
+	res, err := reporter.download("")
+	assert.Error(t, err)
+	assert.Nil(t, res)
 }
 
 func TestParseURL(t *testing.T) {
 	testURL := "https://debricked.com/app/en/repository/0/commit/1"
 	clientMock := testdata.NewDebClientMock()
-	reporter := Reporter{DebClient: clientMock}
+	reporter := Reporter{DebClient: clientMock, FileWriter: &ioTestData.FileWriterMock{}}
 	repositoryID, commitID, err := reporter.ParseDetailsURL(testURL)
 
 	assert.NoError(t, err)
@@ -135,8 +155,18 @@ func TestParseURL(t *testing.T) {
 func TestParseURLFormatErr(t *testing.T) {
 	testURL := "https://debricked.com/app/en/repository/0"
 	clientMock := testdata.NewDebClientMock()
-	reporter := Reporter{DebClient: clientMock}
+	reporter := Reporter{DebClient: clientMock, FileWriter: &ioTestData.FileWriterMock{}}
 	_, _, err := reporter.ParseDetailsURL(testURL)
 
+	assert.Error(t, err)
+}
+
+func TestWriteSBOM(t *testing.T) {
+	clientMock := testdata.NewDebClientMock()
+	fileWriter := &ioTestData.FileWriterMock{
+		CreateErr: errors.New(""),
+	}
+	reporter := Reporter{DebClient: clientMock, FileWriter: fileWriter}
+	err := reporter.writeSBOM("", "", nil)
 	assert.Error(t, err)
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/debricked/cli/internal/file"
 	"github.com/debricked/cli/internal/fingerprint"
 	"github.com/debricked/cli/internal/git"
+	"github.com/debricked/cli/internal/io"
 	"github.com/debricked/cli/internal/report/sbom"
 	"github.com/debricked/cli/internal/resolution"
 	"github.com/debricked/cli/internal/tui"
@@ -148,7 +149,7 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 }
 
 func (dScanner *DebrickedScanner) scanReportSBOM(detailsURL, branch string) error {
-	reporter := sbom.Reporter{DebClient: *dScanner.client}
+	reporter := sbom.Reporter{DebClient: *dScanner.client, FileWriter: io.FileWriter{}}
 	repositoryID, commitID, err := reporter.ParseDetailsURL(detailsURL)
 	if err != nil {
 

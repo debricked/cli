@@ -11,7 +11,9 @@ import (
 	"time"
 
 	"github.com/debricked/cli/internal/client"
+	internalIO "github.com/debricked/cli/internal/io"
 	"github.com/debricked/cli/internal/report"
+	"github.com/fatih/color"
 )
 
 var (
@@ -48,7 +50,8 @@ type OrderArgs struct {
 }
 
 type Reporter struct {
-	DebClient client.IDebClient
+	DebClient  client.IDebClient
+	FileWriter internalIO.IFileWriter
 }
 
 func (r Reporter) Order(args report.IOrderArgs) error {
@@ -68,14 +71,12 @@ func (r Reporter) Order(args report.IOrderArgs) error {
 	if err != nil {
 		return err
 	}
-	sbomJSON, err := r.download(uuid)
+	sbom, err := r.download(uuid)
 	if err != nil {
 		return err
 	}
 
-	fmt.Print(sbomJSON)
-
-	return nil
+	return r.writeSBOM(orderArgs.RepositoryID, orderArgs.CommitID, sbom)
 
 }
 
@@ -129,29 +130,39 @@ func (r Reporter) generate(commitID, repositoryID, branch string, vulnerabilitie
 	return generateSbomResponse.ReportUUID, nil
 }
 
-func (r Reporter) download(uuid string) (string, error) {
+func (r Reporter) download(uuid string) ([]byte, error) {
 	uri := fmt.Sprintf("/api/1.0/open/sbom/download?reportUuid=%s", uuid)
-	fmt.Println("Trying to download SBOM, will wait if not yet ready (could take up to 1 minute)")
+	fmt.Printf("%s", color.BlueString("Downloading SBOM..."))
 	for { // poll download status until completion
 		res, err := (r.DebClient).Get(uri, "application/json")
 
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		switch statusCode := res.StatusCode; statusCode {
 		case http.StatusOK:
 			data, _ := io.ReadAll(res.Body)
 			defer res.Body.Close()
+			fmt.Printf("%s\n", color.GreenString("✔"))
 
-			return string(data), nil
+			return data, nil
 		case http.StatusCreated:
-			return "", errors.New("polling failed due to too long queue times")
+			return nil, errors.New("polling failed due to too long queue times")
 		case http.StatusAccepted:
-			time.Sleep(3000 * time.Millisecond)
+			time.Sleep(5000 * time.Millisecond)
 		default:
-			return "", fmt.Errorf("download failed with status code %d", res.StatusCode)
+			return nil, fmt.Errorf("download failed with status code %d", res.StatusCode)
 		}
 	}
+}
+
+func (reporter Reporter) writeSBOM(repositoryID, commitID string, sbomBytes []byte) error {
+	file, err := reporter.FileWriter.Create(fmt.Sprintf("%s-%s.sbom.json", repositoryID, commitID))
+	if err != nil {
+		return err
+	}
+
+	return reporter.FileWriter.Write(file, sbomBytes)
 }
 
 func (reporter Reporter) ParseDetailsURL(detailsURL string) (string, string, error) {

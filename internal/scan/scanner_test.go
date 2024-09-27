@@ -828,7 +828,6 @@ func TestScanWithSBOMReport(t *testing.T) {
 		"0 vulnerabilities found\n\n",
 		"For full details, visit:",
 		"Successfully initialized SBOM generation\n",
-		"Trying to download SBOM",
 	}
 	for _, assertion := range outputAssertions {
 		assert.Contains(t, string(output), assertion)
