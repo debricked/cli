@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/debricked/cli/internal/client"
@@ -39,9 +40,11 @@ type generateSbomResponse struct {
 }
 
 type OrderArgs struct {
-	RepositoryID string
-	CommitID     string
-	Token        string
+	RepositoryID    string
+	CommitID        string
+	Branch          string
+	Vulnerabilities bool
+	Licenses        bool
 }
 
 type Reporter struct {
@@ -50,10 +53,18 @@ type Reporter struct {
 
 func (r Reporter) Order(args report.IOrderArgs) error {
 	orderArgs, ok := args.(OrderArgs)
+	var err error
 	if !ok {
 		return ErrHandleArgs
 	}
-	uuid, err := r.generate(orderArgs.CommitID, orderArgs.RepositoryID)
+
+	uuid, err := r.generate(
+		orderArgs.CommitID,
+		orderArgs.RepositoryID,
+		orderArgs.Branch,
+		orderArgs.Vulnerabilities,
+		orderArgs.Licenses,
+	)
 	if err != nil {
 		return err
 	}
@@ -68,17 +79,17 @@ func (r Reporter) Order(args report.IOrderArgs) error {
 
 }
 
-func (r Reporter) generate(commitID, repositoryID string) (string, error) {
+func (r Reporter) generate(commitID, repositoryID, branch string, vulnerabilities, licenses bool) (string, error) {
 	// Tries to start generating an SBOM and returns the UUID for the report
 	body, err := json.Marshal(generateSbom{
 		Format:                "CycloneDX",
 		RepositoryID:          repositoryID,
 		CommitID:              commitID,
 		Email:                 "",
-		Branch:                "master", // Probably current branch or specified
+		Branch:                branch,
 		Locale:                "en",
-		Vulnerabilities:       false,
-		Licenses:              false,
+		Vulnerabilities:       vulnerabilities,
+		Licenses:              licenses,
 		SendEmail:             false,
 		VulnerabilityStatuses: []string{"vulnerable", "unexamined", "paused", "snoozed"},
 	})
@@ -123,6 +134,7 @@ func (r Reporter) download(uuid string) (string, error) {
 	fmt.Println("Trying to download SBOM, will wait if not yet ready (could take up to 1 minute)")
 	for { // poll download status until completion
 		res, err := (r.DebClient).Get(uri, "application/json")
+
 		if err != nil {
 			return "", err
 		}
@@ -140,4 +152,16 @@ func (r Reporter) download(uuid string) (string, error) {
 			return "", fmt.Errorf("download failed with status code %d", res.StatusCode)
 		}
 	}
+}
+
+func (reporter Reporter) ParseDetailsURL(detailsURL string) (string, string, error) {
+	// Parses CommitID and RepositoryID from the details URL which has the format;
+	// https://debricked.com/app/en/repository/<repository_id>/commit/<commit_id>"
+	urlParts := strings.Split(detailsURL, "/")
+	if len(urlParts) != 9 {
+
+		return "", "", fmt.Errorf("URL \"%s\"is of wrong format", detailsURL)
+	}
+
+	return urlParts[6], urlParts[8], nil
 }

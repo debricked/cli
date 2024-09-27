@@ -757,6 +757,84 @@ func TestScanWithCallgraph(t *testing.T) {
 	assert.Contains(t, cwd, path)
 }
 
+func TestScanWithSBOMReport(t *testing.T) {
+	if runtime.GOOS == windowsOS {
+		t.Skipf("TestScan is skipped due to Windows env")
+	}
+	clientMock := testdata.NewDebClientMock()
+	addMockedFormatsResponse(clientMock, "package\\.json")
+	addMockedFileUploadResponse(clientMock)
+	addMockedFinishResponse(clientMock, http.StatusNoContent)
+	addMockedStatusResponse(clientMock, http.StatusOK, 50)
+	addMockedStatusResponseWithURL(clientMock)
+	addMockedSBOMGenerateResponse(clientMock)
+	addMockedSBOMDownloadResponse(clientMock)
+
+	var finder file.IFinder
+	finder, _ = file.NewFinder(clientMock, ioFs.FileSystem{})
+	var uploader upload.IUploader
+	uploader, _ = upload.NewUploader(clientMock)
+	var cis ci.IService = ci.NewService(nil)
+	var debClient client.IDebClient = clientMock
+
+	scanner := NewDebrickedScanner(&debClient, finder, uploader, cis, nil, nil, nil)
+
+	path := testdataNpm
+	repositoryName := path
+	cwd, _ := os.Getwd()
+	// reset working directory that has been manipulated in scanner.Scan
+	defer resetWd(t, cwd)
+	opts := DebrickedOptions{
+		Path:                     path,
+		Exclusions:               nil,
+		RepositoryName:           repositoryName,
+		CommitName:               "commit",
+		Fingerprint:              false,
+		CallGraph:                false,
+		Resolve:                  false,
+		SBOM:                     true,
+		BranchName:               "",
+		CommitAuthor:             "",
+		RepositoryUrl:            "",
+		IntegrationName:          "",
+		CallGraphUploadTimeout:   10 * 60,
+		CallGraphGenerateTimeout: 10 * 60,
+	}
+
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := scanner.Scan(opts)
+
+	_ = w.Close()
+	output, _ := io.ReadAll(r)
+	os.Stdout = rescueStdout
+
+	if err != nil {
+		t.Error("failed to assert that scan ran without errors. Error:", err)
+	}
+
+	outputAssertions := []string{
+		"Working directory: /",
+		"Successfully uploaded",
+		"package.json",
+		"Successfully initialized scan\n",
+		"Scanning...",
+		"0% |",
+		"50% |",
+		"100% |",
+		"32m✔",
+		"0 vulnerabilities found\n\n",
+		"For full details, visit:",
+		"Successfully initialized SBOM generation\n",
+		"Trying to download SBOM",
+	}
+	for _, assertion := range outputAssertions {
+		assert.Contains(t, string(output), assertion)
+	}
+}
+
 func addMockedFormatsResponse(clientMock *testdata.DebClientMock, regex string) {
 	formats := []file.Format{{
 		ManifestFileRegex: "",
@@ -788,8 +866,33 @@ func addMockedFinishResponse(clientMock *testdata.DebClientMock, statusCode int)
 
 func addMockedStatusResponse(clientMock *testdata.DebClientMock, statusCode int, progress int) {
 	finishMockRes := testdata.MockResponse{
-		StatusCode:   statusCode,
-		ResponseBody: io.NopCloser(strings.NewReader(fmt.Sprintf(`{"progress": %d}`, progress))),
+		StatusCode: statusCode,
+		ResponseBody: io.NopCloser(strings.NewReader(
+			fmt.Sprintf(`{"progress": %d}`, progress))),
+	}
+	clientMock.AddMockUriResponse("/api/1.0/open/ci/upload/status", finishMockRes)
+}
+
+func addMockedSBOMGenerateResponse(clientMock *testdata.DebClientMock) {
+	finishMockRes := testdata.MockResponse{
+		StatusCode:   http.StatusOK,
+		ResponseBody: io.NopCloser(strings.NewReader("{}")),
+	}
+	clientMock.AddMockUriResponse("/api/1.0/open/sbom/generate", finishMockRes)
+}
+
+func addMockedSBOMDownloadResponse(clientMock *testdata.DebClientMock) {
+	finishMockRes := testdata.MockResponse{
+		StatusCode:   http.StatusOK,
+		ResponseBody: io.NopCloser(strings.NewReader("{}")),
+	}
+	clientMock.AddMockUriResponse("/api/1.0/open/sbom/download", finishMockRes)
+}
+
+func addMockedStatusResponseWithURL(clientMock *testdata.DebClientMock) {
+	finishMockRes := testdata.MockResponse{
+		StatusCode:   http.StatusOK,
+		ResponseBody: io.NopCloser(strings.NewReader(`{"progress": 100,"detailsUrl":"http://localhost:8888/app/en/repository/13/commit/37"}`)),
 	}
 	clientMock.AddMockUriResponse("/api/1.0/open/ci/upload/status", finishMockRes)
 }

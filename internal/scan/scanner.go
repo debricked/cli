@@ -15,6 +15,7 @@ import (
 	"github.com/debricked/cli/internal/file"
 	"github.com/debricked/cli/internal/fingerprint"
 	"github.com/debricked/cli/internal/git"
+	"github.com/debricked/cli/internal/report/sbom"
 	"github.com/debricked/cli/internal/resolution"
 	"github.com/debricked/cli/internal/tui"
 	"github.com/debricked/cli/internal/upload"
@@ -47,6 +48,7 @@ type DebrickedOptions struct {
 	Resolve                     bool
 	Fingerprint                 bool
 	CallGraph                   bool
+	SBOM                        bool
 	Exclusions                  []string
 	Inclusions                  []string
 	Verbose                     bool
@@ -137,8 +139,29 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 	if failPipeline {
 		return FailPipelineErr
 	}
+	if dOptions.SBOM {
+
+		return dScanner.scanReportSBOM(result.DetailsUrl, dOptions.BranchName)
+	}
 
 	return nil
+}
+
+func (dScanner *DebrickedScanner) scanReportSBOM(detailsURL, branch string) error {
+	reporter := sbom.Reporter{DebClient: *dScanner.client}
+	repositoryID, commitID, err := reporter.ParseDetailsURL(detailsURL)
+	if err != nil {
+
+		return err
+	}
+
+	return reporter.Order(sbom.OrderArgs{
+		RepositoryID:    repositoryID,
+		CommitID:        commitID,
+		Branch:          branch,
+		Vulnerabilities: true,
+		Licenses:        true,
+	})
 }
 
 func (dScanner *DebrickedScanner) scanResolve(options DebrickedOptions) error {

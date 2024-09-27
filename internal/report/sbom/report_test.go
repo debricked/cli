@@ -65,7 +65,7 @@ func TestGenerateOK(t *testing.T) {
 		ResponseBody: io.NopCloser(strings.NewReader("{}")),
 	})
 	reporter := Reporter{DebClient: debClientMock}
-	uuid, err := reporter.generate("", "")
+	uuid, err := reporter.generate("", "", "", false, false)
 	assert.NoError(t, err)
 	assert.NotNil(t, uuid)
 }
@@ -77,7 +77,7 @@ func TestGenerateSubscriptionError(t *testing.T) {
 		ResponseBody: io.NopCloser(strings.NewReader("{}")),
 	})
 	reporter := Reporter{DebClient: debClientMock}
-	uuid, err := reporter.generate("", "")
+	uuid, err := reporter.generate("", "", "", false, false)
 	assert.Error(t, err)
 	assert.NotNil(t, uuid)
 }
@@ -89,7 +89,7 @@ func TestGenerateError(t *testing.T) {
 		ResponseBody: io.NopCloser(strings.NewReader("{}")),
 	})
 	reporter := Reporter{DebClient: debClientMock}
-	uuid, err := reporter.generate("", "")
+	uuid, err := reporter.generate("", "", "", false, false)
 	assert.Error(t, err)
 	assert.NotNil(t, uuid)
 }
@@ -119,4 +119,24 @@ func TestDownloadDefaultError(t *testing.T) {
 	res, err := reporter.download("")
 	assert.Error(t, err)
 	assert.NotNil(t, res)
+}
+
+func TestParseURL(t *testing.T) {
+	testURL := "https://debricked.com/app/en/repository/0/commit/1"
+	clientMock := testdata.NewDebClientMock()
+	reporter := Reporter{DebClient: clientMock}
+	repositoryID, commitID, err := reporter.ParseDetailsURL(testURL)
+
+	assert.NoError(t, err)
+	assert.Equal(t, repositoryID, "0")
+	assert.Equal(t, commitID, "1")
+}
+
+func TestParseURLFormatErr(t *testing.T) {
+	testURL := "https://debricked.com/app/en/repository/0"
+	clientMock := testdata.NewDebClientMock()
+	reporter := Reporter{DebClient: clientMock}
+	_, _, err := reporter.ParseDetailsURL(testURL)
+
+	assert.Error(t, err)
 }
