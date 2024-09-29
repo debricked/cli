@@ -140,15 +140,14 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 	if failPipeline {
 		return FailPipelineErr
 	}
-	if dOptions.SBOM {
-
-		return dScanner.scanReportSBOM(result.DetailsUrl, dOptions.BranchName)
-	}
 
 	return nil
 }
 
-func (dScanner *DebrickedScanner) scanReportSBOM(detailsURL, branch string) error {
+func (dScanner *DebrickedScanner) scanReportSBOM(reportSBOM bool, detailsURL, branch string) error {
+	if !reportSBOM {
+		return nil
+	}
 	reporter := sbom.Reporter{DebClient: *dScanner.client, FileWriter: io.FileWriter{}}
 	repositoryID, commitID, err := reporter.ParseDetailsURL(detailsURL)
 	if err != nil {
@@ -269,6 +268,14 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		DebrickedConfig:        dScanner.getDebrickedConfig(options.Path, options.Exclusions, options.Inclusions),
 	}
 	result, err := (*dScanner.uploader).Upload(uploaderOptions)
+	if err != nil {
+		return nil, err
+	}
+	err = dScanner.scanReportSBOM(
+		options.SBOM,
+		result.DetailsUrl,
+		options.BranchName,
+	)
 	if err != nil {
 		return nil, err
 	}

@@ -29,16 +29,16 @@ type generateSbom struct {
 	Email                 string   `json:"email"`
 	Branch                string   `json:"branch"`
 	Locale                string   `json:"locale"`
-	Licenses              bool     `json:licenses`
+	Licenses              bool     `json:"licenses"`
 	Vulnerabilities       bool     `json:"vulnerabilities"`
-	SendEmail             bool     `json:sendEmail`
-	VulnerabilityStatuses []string `json:vulnerabilityStatuses`
+	SendEmail             bool     `json:"sendEmail"`
+	VulnerabilityStatuses []string `json:"vulnerabilityStatuses"`
 }
 
 type generateSbomResponse struct {
-	Message    string   `json:message`
-	ReportUUID string   `json:reportUuid`
-	Notes      []string `json:notes`
+	Message    string   `json:"message"`
+	ReportUUID string   `json:"reportUuid"`
+	Notes      []string `json:"notes"`
 }
 
 type OrderArgs struct {
