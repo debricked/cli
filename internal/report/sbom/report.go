@@ -61,13 +61,7 @@ func (r Reporter) Order(args report.IOrderArgs) error {
 		return ErrHandleArgs
 	}
 
-	uuid, err := r.generate(
-		orderArgs.CommitID,
-		orderArgs.RepositoryID,
-		orderArgs.Branch,
-		orderArgs.Vulnerabilities,
-		orderArgs.Licenses,
-	)
+	uuid, err := r.generate(orderArgs)
 	if err != nil {
 		return err
 	}
@@ -80,17 +74,17 @@ func (r Reporter) Order(args report.IOrderArgs) error {
 
 }
 
-func (r Reporter) generate(commitID, repositoryID, branch string, vulnerabilities, licenses bool) (string, error) {
+func (r Reporter) generate(orderArgs OrderArgs) (string, error) {
 	// Tries to start generating an SBOM and returns the UUID for the report
 	body, err := json.Marshal(generateSbom{
 		Format:                "CycloneDX",
-		RepositoryID:          repositoryID,
-		CommitID:              commitID,
+		RepositoryID:          orderArgs.RepositoryID,
+		CommitID:              orderArgs.CommitID,
 		Email:                 "",
-		Branch:                branch,
+		Branch:                orderArgs.Branch,
 		Locale:                "en",
-		Vulnerabilities:       vulnerabilities,
-		Licenses:              licenses,
+		Vulnerabilities:       orderArgs.Vulnerabilities,
+		Licenses:              orderArgs.Licenses,
 		SendEmail:             false,
 		VulnerabilityStatuses: []string{"vulnerable", "unexamined", "paused", "snoozed"},
 	})
@@ -116,18 +110,19 @@ func (r Reporter) generate(commitID, repositoryID, branch string, vulnerabilitie
 	} else {
 		fmt.Println("Successfully initialized SBOM generation")
 	}
-	generateSbomResponseJSON, err := io.ReadAll(response.Body)
+
+	return r.parseUUID(response.Body)
+}
+
+func (r Reporter) parseUUID(body io.Reader) (string, error) {
+	generateSbomResponseJSON, err := io.ReadAll(body)
 	if err != nil {
 		return "", err
 	}
 
 	var generateSbomResponse generateSbomResponse
 	err = json.Unmarshal(generateSbomResponseJSON, &generateSbomResponse)
-	if err != nil {
-		return "", err
-	}
-
-	return generateSbomResponse.ReportUUID, nil
+	return generateSbomResponse.ReportUUID, err
 }
 
 func (r Reporter) download(uuid string) ([]byte, error) {

@@ -16,8 +16,7 @@ func TestOrderError(t *testing.T) {
 	debClientMock := testdata.NewDebClientMock()
 	debClientMock.AddMockResponse(testdata.MockResponse{StatusCode: http.StatusOK})
 	reporter := Reporter{DebClient: debClientMock, FileWriter: &ioTestData.FileWriterMock{}}
-	args := OrderArgs{CommitID: "", RepositoryID: ""}
-	err := reporter.Order(args)
+	err := reporter.Order(OrderArgs{CommitID: "", RepositoryID: ""})
 	assert.Error(t, err)
 }
 
@@ -32,8 +31,7 @@ func TestOrder(t *testing.T) {
 		ResponseBody: io.NopCloser(strings.NewReader("{}")),
 	})
 	reporter := Reporter{DebClient: debClientMock, FileWriter: &ioTestData.FileWriterMock{}}
-	args := OrderArgs{CommitID: "", RepositoryID: ""}
-	err := reporter.Order(args)
+	err := reporter.Order(OrderArgs{CommitID: "", RepositoryID: ""})
 	assert.NoError(t, err)
 }
 
@@ -47,8 +45,7 @@ func TestOrderDownloadErr(t *testing.T) {
 		StatusCode: http.StatusForbidden,
 	})
 	reporter := Reporter{DebClient: debClientMock, FileWriter: &ioTestData.FileWriterMock{}}
-	args := OrderArgs{CommitID: "", RepositoryID: ""}
-	err := reporter.Order(args)
+	err := reporter.Order(OrderArgs{CommitID: "", RepositoryID: ""})
 	assert.Error(t, err)
 }
 
@@ -67,7 +64,7 @@ func TestGenerateOK(t *testing.T) {
 		ResponseBody: io.NopCloser(strings.NewReader("{}")),
 	})
 	reporter := Reporter{DebClient: debClientMock, FileWriter: &ioTestData.FileWriterMock{}}
-	uuid, err := reporter.generate("", "", "", false, false)
+	uuid, err := reporter.generate(orderArgs())
 	assert.NoError(t, err)
 	assert.NotNil(t, uuid)
 }
@@ -79,7 +76,7 @@ func TestGenerateSubscriptionError(t *testing.T) {
 		ResponseBody: io.NopCloser(strings.NewReader("{}")),
 	})
 	reporter := Reporter{DebClient: debClientMock, FileWriter: &ioTestData.FileWriterMock{}}
-	uuid, err := reporter.generate("", "", "", false, false)
+	uuid, err := reporter.generate(orderArgs())
 	assert.Error(t, err)
 	assert.NotNil(t, uuid)
 }
@@ -91,7 +88,7 @@ func TestGenerateError(t *testing.T) {
 		ResponseBody: io.NopCloser(strings.NewReader("{}")),
 	})
 	reporter := Reporter{DebClient: debClientMock, FileWriter: &ioTestData.FileWriterMock{}}
-	uuid, err := reporter.generate("", "", "", false, false)
+	uuid, err := reporter.generate(orderArgs())
 	assert.Error(t, err)
 	assert.NotNil(t, uuid)
 }
@@ -100,7 +97,7 @@ func TestGenerateDefaultGetError(t *testing.T) {
 	debClientMock := testdata.NewDebClientMock()
 	debClientMock.AddMockResponse(testdata.MockResponse{Error: errors.New("")})
 	reporter := Reporter{DebClient: debClientMock, FileWriter: &ioTestData.FileWriterMock{}}
-	res, err := reporter.generate("", "", "", false, false)
+	res, err := reporter.generate(orderArgs())
 	assert.Error(t, err)
 	assert.Equal(t, "", res)
 }
@@ -169,4 +166,14 @@ func TestWriteSBOM(t *testing.T) {
 	reporter := Reporter{DebClient: clientMock, FileWriter: fileWriter}
 	err := reporter.writeSBOM("", "", nil)
 	assert.Error(t, err)
+}
+
+func orderArgs() OrderArgs {
+	return OrderArgs{
+		Vulnerabilities: false,
+		Licenses:        false,
+		Branch:          "",
+		CommitID:        "",
+		RepositoryID:    "",
+	}
 }
