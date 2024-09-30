@@ -63,7 +63,7 @@ $ debricked scan . --include '**/node_modules/**'`)
 	cmd.Flags().BoolVar(&shouldFingerprintCompressedContent, FingerprintCompressedContent, false, `Fingerprint the contents of compressed files by unpacking them in memory, Supported files: `+fmt.Sprintf("%v", fingerprint.ZIP_FILE_ENDINGS))
 	cmd.Flags().StringVar(&outputDir, OutputDirFlag, ".", "The directory to write the output file to")
 	cmd.Flags().IntVar(&minFingerprintContentLength, MinFingerprintContentLengthFlag, 45, "Set minimum content length (in bytes) for files to fingerprint. Defaults to 45 bytes.")
-	cmd.Flags().BoolVar(&shouldRegenerateFingerprintFile, RegenerateFingerprintFile, true, `Toggle if generated fingerprint file should be overwritten on subequent scans. Defaults to true`)
+	cmd.Flags().BoolVar(&shouldRegenerateFingerprintFile, RegenerateFingerprintFile, false, `Toggle if generated fingerprint file should be overwritten on subequent scans. Defaults to false`)
 
 	viper.MustBindEnv(ExclusionFlag)
 
