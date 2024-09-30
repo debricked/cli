@@ -34,6 +34,7 @@ var repositoryUrl string
 var verbose bool
 var versionHint bool
 var sbom bool
+var sbomOutput string
 
 const (
 	BranchFlag                      = "branch"
@@ -57,6 +58,7 @@ const (
 	VerboseFlag                     = "verbose"
 	VersionHintFlag                 = "version-hint"
 	SBOMFlag                        = "sbom"
+	SBOMOutputFlag                  = "sbom-output"
 )
 
 var scanCmdError error
@@ -153,6 +155,7 @@ For example, if there is a "go.mod" in the target path, its dependencies are goi
 		}, "\n")
 	cmd.Flags().BoolP(NpmPreferredFlag, "", npmPreferred, npmPreferredDoc)
 	cmd.Flags().BoolVar(&sbom, SBOMFlag, false, `Toggles wether to generate and download an SBOM report after scan completion`)
+	cmd.Flags().StringVar(&sbomOutput, SBOMOutputFlag, "", `Sets output path of downloaded SBOM report (if sbom is toggled)`)
 
 	viper.MustBindEnv(RepositoryFlag)
 	viper.MustBindEnv(CommitFlag)
@@ -163,6 +166,7 @@ For example, if there is a "go.mod" in the target path, its dependencies are goi
 	viper.MustBindEnv(PassOnTimeOut)
 	viper.MustBindEnv(NpmPreferredFlag)
 	viper.MustBindEnv(SBOMFlag)
+	viper.MustBindEnv(SBOMOutputFlag)
 
 	return cmd
 }
@@ -178,6 +182,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			Resolve:                     !viper.GetBool(NoResolveFlag),
 			Fingerprint:                 !viper.GetBool(NoFingerprintFlag),
 			SBOM:                        viper.GetBool(SBOMFlag),
+			SBOMOutput:                  viper.GetString(SBOMOutputFlag),
 			Exclusions:                  viper.GetStringSlice(ExclusionFlag),
 			Verbose:                     viper.GetBool(VerboseFlag),
 			Regenerate:                  viper.GetInt(RegenerateFlag),

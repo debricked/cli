@@ -45,6 +45,7 @@ type OrderArgs struct {
 	RepositoryID    string
 	CommitID        string
 	Branch          string
+	Output          string
 	Vulnerabilities bool
 	Licenses        bool
 }
@@ -70,7 +71,7 @@ func (r Reporter) Order(args report.IOrderArgs) error {
 		return err
 	}
 
-	return r.writeSBOM(orderArgs.RepositoryID, orderArgs.CommitID, sbom)
+	return r.writeSBOM(orderArgs.Output, orderArgs.RepositoryID, orderArgs.CommitID, sbom)
 
 }
 
@@ -122,6 +123,7 @@ func (r Reporter) parseUUID(body io.Reader) (string, error) {
 
 	var generateSbomResponse generateSbomResponse
 	err = json.Unmarshal(generateSbomResponseJSON, &generateSbomResponse)
+
 	return generateSbomResponse.ReportUUID, err
 }
 
@@ -151,8 +153,14 @@ func (r Reporter) download(uuid string) ([]byte, error) {
 	}
 }
 
-func (reporter Reporter) writeSBOM(repositoryID, commitID string, sbomBytes []byte) error {
-	file, err := reporter.FileWriter.Create(fmt.Sprintf("%s-%s.sbom.json", repositoryID, commitID))
+func (reporter Reporter) writeSBOM(output, repositoryID, commitID string, sbomBytes []byte) error {
+	var filename string
+	if output == "" {
+		filename = fmt.Sprintf("%s-%s.sbom.json", repositoryID, commitID)
+	} else {
+		filename = output
+	}
+	file, err := reporter.FileWriter.Create(filename)
 	if err != nil {
 		return err
 	}

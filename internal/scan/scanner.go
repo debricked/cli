@@ -50,6 +50,7 @@ type DebrickedOptions struct {
 	Fingerprint                 bool
 	CallGraph                   bool
 	SBOM                        bool
+	SBOMOutput                  string
 	Exclusions                  []string
 	Inclusions                  []string
 	Verbose                     bool
@@ -144,8 +145,8 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 	return nil
 }
 
-func (dScanner *DebrickedScanner) scanReportSBOM(reportSBOM bool, detailsURL, branch string) error {
-	if !reportSBOM {
+func (dScanner *DebrickedScanner) scanReportSBOM(options DebrickedOptions, detailsURL string) error {
+	if !options.SBOM {
 		return nil
 	}
 	reporter := sbom.Reporter{DebClient: *dScanner.client, FileWriter: io.FileWriter{}}
@@ -158,9 +159,10 @@ func (dScanner *DebrickedScanner) scanReportSBOM(reportSBOM bool, detailsURL, br
 	return reporter.Order(sbom.OrderArgs{
 		RepositoryID:    repositoryID,
 		CommitID:        commitID,
-		Branch:          branch,
+		Branch:          options.BranchName,
 		Vulnerabilities: true,
 		Licenses:        true,
+		Output:          options.SBOMOutput,
 	})
 }
 
@@ -272,9 +274,8 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		return nil, err
 	}
 	err = dScanner.scanReportSBOM(
-		options.SBOM,
+		options,
 		result.DetailsUrl,
-		options.BranchName,
 	)
 	if err != nil {
 		return nil, err

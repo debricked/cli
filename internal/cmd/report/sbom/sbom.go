@@ -15,6 +15,7 @@ var repositoryId string
 var branch string
 var vulnerabilities bool
 var licenses bool
+var output string
 
 const CommitFlag = "commit"
 const RepositorylFlag = "repository"
@@ -22,6 +23,7 @@ const TokenFlag = "token"
 const BranchFlag = "branch"
 const VulnerabilitiesFlag = "vulnerabilities"
 const LicensesFlag = "licenses"
+const OutputFlag = "output"
 
 func NewSBOMCmd(reporter report.IReporter) *cobra.Command {
 	cmd := &cobra.Command{
@@ -54,6 +56,12 @@ This is an enterprise feature. Please visit https://debricked.com/pricing/ for m
 	cmd.Flags().BoolVar(&licenses, LicensesFlag, true, "Toggles SBOM license data inclusion")
 	viper.MustBindEnv(LicensesFlag)
 
+	cmd.Flags().StringVarP(&output, OutputFlag, "o", "", `Sets output path for downloaded SBOM json file.
+
+If no output path is set the file is created in the format <repository_id>-<commit_id>.sbom.json`,
+	)
+	viper.MustBindEnv(OutputFlag)
+
 	return cmd
 }
 
@@ -65,6 +73,7 @@ func RunE(r report.IReporter) func(_ *cobra.Command, args []string) error {
 			Branch:          viper.GetString(BranchFlag),
 			Vulnerabilities: viper.GetBool(VulnerabilitiesFlag),
 			Licenses:        viper.GetBool(LicensesFlag),
+			Output:          viper.GetString(OutputFlag),
 		}
 
 		if err := r.Order(orderArgs); err != nil {
