@@ -50,13 +50,13 @@ This is an enterprise feature. Please visit https://debricked.com/pricing/ for m
 	cmd.Flags().StringVarP(&branch, BranchFlag, "b", "", "The branch that you want an SBOM report for")
 	viper.MustBindEnv(BranchFlag)
 
-	cmd.Flags().BoolVar(&vulnerabilities, VulnerabilitiesFlag, true, "Toggles SBOM vulnerability data inclusion")
+	cmd.Flags().BoolVar(&vulnerabilities, VulnerabilitiesFlag, true, "Toggle SBOM vulnerability data inclusion")
 	viper.MustBindEnv(VulnerabilitiesFlag)
 
-	cmd.Flags().BoolVar(&licenses, LicensesFlag, true, "Toggles SBOM license data inclusion")
+	cmd.Flags().BoolVar(&licenses, LicensesFlag, true, "Toggle SBOM license data inclusion")
 	viper.MustBindEnv(LicensesFlag)
 
-	cmd.Flags().StringVarP(&output, OutputFlag, "o", "", `Sets output path for downloaded SBOM json file.
+	cmd.Flags().StringVarP(&output, OutputFlag, "o", "", `Set output path for downloaded SBOM json file.
 
 If no output path is set the file is created in the format <repository_id>-<commit_id>.sbom.json`,
 	)

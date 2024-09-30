@@ -119,7 +119,7 @@ Examples:
 $ debricked scan . --include '**/node_modules/**'`)
 	regenerateDoc := strings.Join(
 		[]string{
-			"Toggles regeneration of already existing lock files between 3 modes:\n",
+			"Toggle regeneration of already existing lock files between 3 modes:\n",
 			"Force Regeneration Level | Meaning",
 			"------------------------ | -------",
 			"0 (default)              | No regeneration",
@@ -130,7 +130,7 @@ $ debricked scan . --include '**/node_modules/**'`)
 	cmd.Flags().IntVar(&regenerate, RegenerateFlag, 0, regenerateDoc)
 	versionHintDoc := strings.Join(
 		[]string{
-			"Toggles version hinting, i.e using manifest versions to help manifestless resolution.\n",
+			"Toggle version hinting, i.e using manifest versions to help manifestless resolution.\n",
 			"\nExample:\n$ debricked scan . --version-hint=false",
 		}, "\n")
 	cmd.Flags().BoolVar(&versionHint, VersionHintFlag, true, versionHintDoc)
@@ -143,7 +143,7 @@ $ debricked scan . --include '**/node_modules/**'`)
 	cmd.Flags().BoolVarP(&passOnDowntime, PassOnTimeOut, "p", false, "pass scan if there is a service access timeout")
 	cmd.Flags().BoolVar(&noResolve, NoResolveFlag, false, `disables resolution of manifest files that lack lock files. Resolving manifest files enables more accurate dependency scanning since the whole dependency tree will be analysed.
 For example, if there is a "go.mod" in the target path, its dependencies are going to get resolved onto a lock file, and latter scanned.`)
-	cmd.Flags().BoolVar(&noFingerprint, NoFingerprintFlag, false, "toggles fingerprinting for undeclared component identification. Can be run as a standalone command [fingerprint] with more granular options.")
+	cmd.Flags().BoolVar(&noFingerprint, NoFingerprintFlag, false, "Toggle fingerprinting for undeclared component identification. Can be run as a standalone command [fingerprint] with more granular options.")
 	cmd.Flags().BoolVar(&callgraph, CallGraphFlag, false, `Enables call graph generation during scan.`)
 	cmd.Flags().IntVar(&callgraphUploadTimeout, CallGraphUploadTimeoutFlag, 10*60, "Set a timeout (in seconds) on call graph upload.")
 	cmd.Flags().IntVar(&callgraphGenerateTimeout, CallGraphGenerateTimeoutFlag, 60*60, "Set a timeout (in seconds) on call graph generation.")
@@ -154,8 +154,8 @@ For example, if there is a "go.mod" in the target path, its dependencies are goi
 			"Example: debricked resolve --prefer-npm",
 		}, "\n")
 	cmd.Flags().BoolP(NpmPreferredFlag, "", npmPreferred, npmPreferredDoc)
-	cmd.Flags().BoolVar(&sbom, SBOMFlag, false, `Toggles wether to generate and download an SBOM report after scan completion`)
-	cmd.Flags().StringVar(&sbomOutput, SBOMOutputFlag, "", `Sets output path of downloaded SBOM report (if sbom is toggled)`)
+	cmd.Flags().BoolVar(&sbom, SBOMFlag, false, `Toggle generating and downloading SBOM report after scan completion`)
+	cmd.Flags().StringVar(&sbomOutput, SBOMOutputFlag, "", `Set output path of downloaded SBOM report (if sbom is toggled)`)
 
 	viper.MustBindEnv(RepositoryFlag)
 	viper.MustBindEnv(CommitFlag)
