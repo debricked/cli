@@ -49,7 +49,7 @@ type DebrickedOptions struct {
 	Resolve                     bool
 	Fingerprint                 bool
 	CallGraph                   bool
-	SBOM                        bool
+	SBOM                        string
 	SBOMOutput                  string
 	Exclusions                  []string
 	Inclusions                  []string
@@ -146,7 +146,7 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 }
 
 func (dScanner *DebrickedScanner) scanReportSBOM(options DebrickedOptions, detailsURL string) error {
-	if !options.SBOM {
+	if options.SBOM == "" {
 		return nil
 	}
 	reporter := sbom.Reporter{DebClient: *dScanner.client, FileWriter: io.FileWriter{}}
@@ -157,6 +157,7 @@ func (dScanner *DebrickedScanner) scanReportSBOM(options DebrickedOptions, detai
 	}
 
 	return reporter.Order(sbom.OrderArgs{
+		Format:          options.SBOM,
 		RepositoryID:    repositoryID,
 		CommitID:        commitID,
 		Branch:          options.BranchName,

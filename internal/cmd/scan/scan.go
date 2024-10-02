@@ -33,7 +33,7 @@ var repositoryName string
 var repositoryUrl string
 var verbose bool
 var versionHint bool
-var sbom bool
+var sbom string
 var sbomOutput string
 
 const (
@@ -154,7 +154,10 @@ For example, if there is a "go.mod" in the target path, its dependencies are goi
 			"Example: debricked resolve --prefer-npm",
 		}, "\n")
 	cmd.Flags().BoolP(NpmPreferredFlag, "", npmPreferred, npmPreferredDoc)
-	cmd.Flags().BoolVar(&sbom, SBOMFlag, false, `Toggle generating and downloading SBOM report after scan completion`)
+	cmd.Flags().StringVar(&sbom, SBOMFlag, "", `Toggle generating and downloading SBOM report after scan completion of specified format.
+Supported formats are: 'CycloneDX', 'SPDX'
+Leaving the field empty results in no SBOM generation.`,
+	)
 	cmd.Flags().StringVar(&sbomOutput, SBOMOutputFlag, "", `Set output path of downloaded SBOM report (if sbom is toggled)`)
 
 	viper.MustBindEnv(RepositoryFlag)
@@ -181,7 +184,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			Path:                        path,
 			Resolve:                     !viper.GetBool(NoResolveFlag),
 			Fingerprint:                 !viper.GetBool(NoFingerprintFlag),
-			SBOM:                        viper.GetBool(SBOMFlag),
+			SBOM:                        viper.GetString(SBOMFlag),
 			SBOMOutput:                  viper.GetString(SBOMOutputFlag),
 			Exclusions:                  viper.GetStringSlice(ExclusionFlag),
 			Verbose:                     viper.GetBool(VerboseFlag),

@@ -46,6 +46,7 @@ type OrderArgs struct {
 	CommitID        string
 	Branch          string
 	Output          string
+	Format          string
 	Vulnerabilities bool
 	Licenses        bool
 }
@@ -78,7 +79,7 @@ func (r Reporter) Order(args report.IOrderArgs) error {
 func (r Reporter) generate(orderArgs OrderArgs) (string, error) {
 	// Tries to start generating an SBOM and returns the UUID for the report
 	body, err := json.Marshal(generateSbom{
-		Format:                "CycloneDX",
+		Format:                orderArgs.Format,
 		RepositoryID:          orderArgs.RepositoryID,
 		CommitID:              orderArgs.CommitID,
 		Email:                 "",

@@ -13,6 +13,7 @@ import (
 var commitId string
 var repositoryId string
 var branch string
+var format string
 var vulnerabilities bool
 var licenses bool
 var output string
@@ -24,6 +25,7 @@ const BranchFlag = "branch"
 const VulnerabilitiesFlag = "vulnerabilities"
 const LicensesFlag = "licenses"
 const OutputFlag = "output"
+const FormatFlag = "format"
 
 func NewSBOMCmd(reporter report.IReporter) *cobra.Command {
 	cmd := &cobra.Command{
@@ -50,6 +52,12 @@ This is an enterprise feature. Please visit https://debricked.com/pricing/ for m
 	cmd.Flags().StringVarP(&branch, BranchFlag, "b", "", "The branch that you want an SBOM report for")
 	viper.MustBindEnv(BranchFlag)
 
+	cmd.Flags().StringVarP(&format, FormatFlag, "f", "", `The format that you want the SBOM report in.
+
+Supported options are: 'CycloneDX', 'SPDX'`,
+	)
+	viper.MustBindEnv(FormatFlag)
+
 	cmd.Flags().BoolVar(&vulnerabilities, VulnerabilitiesFlag, true, "Toggle SBOM vulnerability data inclusion")
 	viper.MustBindEnv(VulnerabilitiesFlag)
 
@@ -74,6 +82,7 @@ func RunE(r report.IReporter) func(_ *cobra.Command, args []string) error {
 			Vulnerabilities: viper.GetBool(VulnerabilitiesFlag),
 			Licenses:        viper.GetBool(LicensesFlag),
 			Output:          viper.GetString(OutputFlag),
+			Format:          viper.GetString(FormatFlag),
 		}
 
 		if err := r.Order(orderArgs); err != nil {

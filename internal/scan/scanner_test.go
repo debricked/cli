@@ -88,7 +88,7 @@ func TestScan(t *testing.T) {
 		RepositoryName:           repositoryName,
 		CommitName:               "commit",
 		Fingerprint:              false,
-		SBOM:                     false,
+		SBOM:                     "",
 		BranchName:               "",
 		CommitAuthor:             "",
 		RepositoryUrl:            "",
@@ -152,7 +152,7 @@ func TestScanWithJsonPath(t *testing.T) {
 		Exclusions:               nil,
 		RepositoryName:           repositoryName,
 		CommitName:               "commit",
-		SBOM:                     false,
+		SBOM:                     "",
 		BranchName:               "",
 		CommitAuthor:             "",
 		RepositoryUrl:            "",
@@ -794,7 +794,7 @@ func TestScanWithSBOMReport(t *testing.T) {
 		Fingerprint:              false,
 		CallGraph:                false,
 		Resolve:                  false,
-		SBOM:                     true,
+		SBOM:                     "CycloneDX",
 		BranchName:               "",
 		CommitAuthor:             "",
 		RepositoryUrl:            "",
@@ -835,6 +835,7 @@ func TestScanWithSBOMReport(t *testing.T) {
 		assert.Contains(t, string(output), assertion)
 	}
 	err = os.Remove("13-37.sbom.json") // Remove created "SBOM"
+	assert.NoError(t, err)
 
 }
 
