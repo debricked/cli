@@ -20,7 +20,7 @@ func NewReportCmd(
 		Use:   "report",
 		Short: "Generate reports",
 		Long: `Generate reports.
-This is a premium feature. Please visit https://debricked.com/pricing/ for more info.`,
+Premium is required for license and vulnerability reports. Enterprise is required for SBOM reports. Please visit https://debricked.com/pricing/ for more info.`,
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			_ = viper.BindPFlags(cmd.Flags())
 		},

@@ -18,7 +18,7 @@ import (
 
 var (
 	ErrHandleArgs   = errors.New("failed to handle args")
-	ErrSubscription = errors.New("premium feature. Please visit https://debricked.com/pricing/ for more info")
+	ErrSubscription = errors.New("enterprise feature. Please visit https://debricked.com/pricing/ for more info")
 )
 
 type generateSbom struct {
