@@ -15,6 +15,8 @@ import (
 	"github.com/debricked/cli/internal/file"
 	"github.com/debricked/cli/internal/fingerprint"
 	"github.com/debricked/cli/internal/git"
+	"github.com/debricked/cli/internal/io"
+	"github.com/debricked/cli/internal/report/sbom"
 	"github.com/debricked/cli/internal/resolution"
 	"github.com/debricked/cli/internal/tui"
 	"github.com/debricked/cli/internal/upload"
@@ -47,6 +49,8 @@ type DebrickedOptions struct {
 	Resolve                     bool
 	Fingerprint                 bool
 	CallGraph                   bool
+	SBOM                        string
+	SBOMOutput                  string
 	Exclusions                  []string
 	Inclusions                  []string
 	Verbose                     bool
@@ -139,6 +143,28 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 	}
 
 	return nil
+}
+
+func (dScanner *DebrickedScanner) scanReportSBOM(options DebrickedOptions, detailsURL string) error {
+	if options.SBOM == "" {
+		return nil
+	}
+	reporter := sbom.Reporter{DebClient: *dScanner.client, FileWriter: io.FileWriter{}}
+	repositoryID, commitID, err := reporter.ParseDetailsURL(detailsURL)
+	if err != nil {
+
+		return err
+	}
+
+	return reporter.Order(sbom.OrderArgs{
+		Format:          options.SBOM,
+		RepositoryID:    repositoryID,
+		CommitID:        commitID,
+		Branch:          options.BranchName,
+		Vulnerabilities: true,
+		Licenses:        true,
+		Output:          options.SBOMOutput,
+	})
 }
 
 func (dScanner *DebrickedScanner) scanResolve(options DebrickedOptions) error {
@@ -245,6 +271,13 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		DebrickedConfig:        dScanner.getDebrickedConfig(options.Path, options.Exclusions, options.Inclusions),
 	}
 	result, err := (*dScanner.uploader).Upload(uploaderOptions)
+	if err != nil {
+		return nil, err
+	}
+	err = dScanner.scanReportSBOM(
+		options,
+		result.DetailsUrl,
+	)
 	if err != nil {
 		return nil, err
 	}
