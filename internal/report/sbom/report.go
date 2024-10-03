@@ -72,7 +72,7 @@ func (r Reporter) Order(args report.IOrderArgs) error {
 		return err
 	}
 
-	return r.writeSBOM(orderArgs.Output, orderArgs.RepositoryID, orderArgs.CommitID, sbom)
+	return r.writeSBOM(orderArgs, sbom)
 
 }
 
@@ -154,12 +154,18 @@ func (r Reporter) download(uuid string) ([]byte, error) {
 	}
 }
 
-func (reporter Reporter) writeSBOM(output, repositoryID, commitID string, sbomBytes []byte) error {
+func (reporter Reporter) writeSBOM(orderArgs OrderArgs, sbomBytes []byte) error {
 	var filename string
-	if output == "" {
-		filename = fmt.Sprintf("%s-%s.sbom.json", repositoryID, commitID)
+	if orderArgs.Output == "" {
+		fileEnding := fileEnding(orderArgs.Format)
+		filename = fmt.Sprintf(
+			"%s-%s%s",
+			orderArgs.RepositoryID,
+			orderArgs.CommitID,
+			fileEnding,
+		)
 	} else {
-		filename = output
+		filename = orderArgs.Output
 	}
 	file, err := reporter.FileWriter.Create(filename)
 	if err != nil {
@@ -167,6 +173,17 @@ func (reporter Reporter) writeSBOM(output, repositoryID, commitID string, sbomBy
 	}
 
 	return reporter.FileWriter.Write(file, sbomBytes)
+}
+
+func fileEnding(format string) string {
+	switch format := format; format {
+	case "CycloneDX":
+		return ".cdx.json"
+	case "SPDX":
+		return ".spdx.json"
+	default:
+		return ".sbom.json"
+	}
 }
 
 func (reporter Reporter) ParseDetailsURL(detailsURL string) (string, string, error) {

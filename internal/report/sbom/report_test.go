@@ -164,7 +164,7 @@ func TestWriteSBOM(t *testing.T) {
 		CreateErr: errors.New(""),
 	}
 	reporter := Reporter{DebClient: clientMock, FileWriter: fileWriter}
-	err := reporter.writeSBOM("", "", "", nil)
+	err := reporter.writeSBOM(orderArgs(), nil)
 	assert.Error(t, err)
 }
 

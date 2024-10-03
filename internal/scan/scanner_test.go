@@ -834,7 +834,7 @@ func TestScanWithSBOMReport(t *testing.T) {
 	for _, assertion := range outputAssertions {
 		assert.Contains(t, string(output), assertion)
 	}
-	err = os.Remove("13-37.sbom.json") // Remove created "SBOM"
+	err = os.Remove("13-37.cdx.json") // Remove created "SBOM"
 	assert.NoError(t, err)
 
 }
