@@ -73,7 +73,7 @@ func DefaultExclusionsFingerprint() []string {
 	for _, excluded_extension := range defaultFingerprintExclusions.Extensions {
 		default_exclusions = append(default_exclusions, "**/*"+excluded_extension)
 	}
-	for _, excluded_ending := range defaultFingerprintExclusions.Extensions {
+	for _, excluded_ending := range defaultFingerprintExclusions.Endings {
 		default_exclusions = append(default_exclusions, "**/*"+excluded_ending)
 	}
 
