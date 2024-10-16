@@ -35,6 +35,7 @@ var verbose bool
 var versionHint bool
 var sbom string
 var sbomOutput string
+var experimental bool
 
 const (
 	BranchFlag                      = "branch"
@@ -59,6 +60,7 @@ const (
 	VersionHintFlag                 = "version-hint"
 	SBOMFlag                        = "sbom"
 	SBOMOutputFlag                  = "sbom-output"
+	ExperimentalFlag                = "experimental-value"
 )
 
 var scanCmdError error
@@ -76,6 +78,7 @@ If the given path contains a git repository all flags but "integration" will be 
 			return RunE(&scanner)(cmd, args)
 		},
 	}
+
 	cmd.Flags().StringVarP(&repositoryName, RepositoryFlag, "r", "", "repository name")
 	cmd.Flags().StringVarP(&commitName, CommitFlag, "c", "", "commit hash")
 	cmd.Flags().StringVarP(&branchName, BranchFlag, "b", "", "branch name")
@@ -134,6 +137,12 @@ $ debricked scan . --include '**/node_modules/**'`)
 			"\nExample:\n$ debricked scan . --version-hint=false",
 		}, "\n")
 	cmd.Flags().BoolVar(&versionHint, VersionHintFlag, true, versionHintDoc)
+	experimentalFlagDoc := strings.Join(
+		[]string{
+			"This flag allows inclusion of repository matches",
+			"\nExample:\n$ debricked scan . --experimental-flag=false",
+		}, "\n")
+	cmd.Flags().BoolVar(&experimental, ExperimentalFlag, false, experimentalFlagDoc)
 	verboseDoc := strings.Join(
 		[]string{
 			"This flag allows you to reduce error output for resolution.",
@@ -203,7 +212,9 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			CallGraphUploadTimeout:      viper.GetInt(CallGraphUploadTimeoutFlag),
 			CallGraphGenerateTimeout:    viper.GetInt(CallGraphGenerateTimeoutFlag),
 			MinFingerprintContentLength: viper.GetInt(MinFingerprintContentLengthFlag),
+			ExperimentalFlag:            viper.GetBool(ExperimentalFlag),
 		}
+		//fmt.print("The Experimental flag value is "+options);
 		if s != nil {
 			scanCmdError = (*s).Scan(options)
 		} else {
