@@ -60,7 +60,7 @@ const (
 	VersionHintFlag                 = "version-hint"
 	SBOMFlag                        = "sbom"
 	SBOMOutputFlag                  = "sbom-output"
-	ExperimentalFlag                = "experimental-value"
+	ExperimentalFlag                = "experimental"
 )
 
 var scanCmdError error
@@ -140,7 +140,7 @@ $ debricked scan . --include '**/node_modules/**'`)
 	experimentalFlagDoc := strings.Join(
 		[]string{
 			"This flag allows inclusion of repository matches",
-			"\nExample:\n$ debricked scan . --experimental-flag=false",
+			"\nExample:\n$ debricked scan . --experimental=false",
 		}, "\n")
 	cmd.Flags().BoolVar(&experimental, ExperimentalFlag, false, experimentalFlagDoc)
 	verboseDoc := strings.Join(
@@ -180,6 +180,12 @@ Leaving the field empty results in no SBOM generation.`,
 	viper.MustBindEnv(SBOMFlag)
 	viper.MustBindEnv(SBOMOutputFlag)
 
+	// Hide experimental flag
+	err := cmd.Flags().MarkHidden(ExperimentalFlag)
+	if err != nil { // This should not be reachable
+		fmt.Println("Trying to hide non-existing flag")
+	}
+
 	return cmd
 }
 
@@ -212,7 +218,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			CallGraphUploadTimeout:      viper.GetInt(CallGraphUploadTimeoutFlag),
 			CallGraphGenerateTimeout:    viper.GetInt(CallGraphGenerateTimeoutFlag),
 			MinFingerprintContentLength: viper.GetInt(MinFingerprintContentLengthFlag),
-			ExperimentalFlag:            viper.GetBool(ExperimentalFlag),
+			Experimental:                viper.GetBool(ExperimentalFlag),
 		}
 		if s != nil {
 			scanCmdError = (*s).Scan(options)
