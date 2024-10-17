@@ -214,7 +214,6 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			MinFingerprintContentLength: viper.GetInt(MinFingerprintContentLengthFlag),
 			ExperimentalFlag:            viper.GetBool(ExperimentalFlag),
 		}
-		//fmt.print("The Experimental flag value is "+options);
 		if s != nil {
 			scanCmdError = (*s).Scan(options)
 		} else {
