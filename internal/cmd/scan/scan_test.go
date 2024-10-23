@@ -40,6 +40,7 @@ func TestNewScanCmd(t *testing.T) {
 		CommitAuthorFlag,
 		RepositoryUrlFlag,
 		IntegrationFlag,
+		TagCommitAsReleaseFlag,
 	}
 	viperKeys := viper.AllKeys()
 	for _, flagKey := range flagKeys {

@@ -33,29 +33,32 @@ var (
 const callgraphName = "debricked-call-graph"
 
 type uploadBatch struct {
-	client           *client.IDebClient
-	fileGroups       file.Groups
-	gitMetaObject    *git.MetaObject
-	integrationName  string
-	ciUploadId       int
-	callGraphTimeout int
-	versionHint      bool
-	debrickedConfig  *DebrickedConfig // JSON Config
+	client             *client.IDebClient
+	fileGroups         file.Groups
+	gitMetaObject      *git.MetaObject
+	integrationName    string
+	ciUploadId         int
+	callGraphTimeout   int
+	versionHint        bool
+	debrickedConfig    *DebrickedConfig // JSON Config
+	tagCommitAsRelease bool
 }
 
 func newUploadBatch(
 	client *client.IDebClient, fileGroups file.Groups, gitMetaObject *git.MetaObject,
 	integrationName string, callGraphTimeout int, versionHint bool, debrickedConfig *DebrickedConfig,
+	tagCommitAsRelease bool,
 ) *uploadBatch {
 	return &uploadBatch{
-		client:           client,
-		fileGroups:       fileGroups,
-		gitMetaObject:    gitMetaObject,
-		integrationName:  integrationName,
-		ciUploadId:       0,
-		callGraphTimeout: callGraphTimeout,
-		versionHint:      versionHint,
-		debrickedConfig:  debrickedConfig,
+		client:             client,
+		fileGroups:         fileGroups,
+		gitMetaObject:      gitMetaObject,
+		integrationName:    integrationName,
+		ciUploadId:         0,
+		callGraphTimeout:   callGraphTimeout,
+		versionHint:        versionHint,
+		debrickedConfig:    debrickedConfig,
+		tagCommitAsRelease: tagCommitAsRelease,
 	}
 }
 
@@ -183,6 +186,7 @@ func (uploadBatch *uploadBatch) initAnalysis() error {
 		VersionHint:          uploadBatch.versionHint,
 		DebrickedConfig:      uploadBatch.debrickedConfig,
 		DebrickedIntegration: "cli",
+		TagCommitAsRelease:   uploadBatch.tagCommitAsRelease,
 	})
 
 	if err != nil {
@@ -327,6 +331,7 @@ type uploadFinish struct {
 	DebrickedIntegration string           `json:"debrickedIntegration"`
 	VersionHint          bool             `json:"versionHint"`
 	DebrickedConfig      *DebrickedConfig `json:"debrickedConfig"`
+	TagCommitAsRelease   bool             `json:"isRelease"`
 }
 
 func getRelativeFilePath(filePath string) string {

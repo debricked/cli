@@ -68,6 +68,7 @@ type DebrickedOptions struct {
 	CallGraphUploadTimeout      int
 	CallGraphGenerateTimeout    int
 	MinFingerprintContentLength int
+	TagCommitAsRelease          bool
 }
 
 func NewDebrickedScanner(
@@ -269,6 +270,7 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		CallGraphUploadTimeout: options.CallGraphUploadTimeout,
 		VersionHint:            options.VersionHint,
 		DebrickedConfig:        dScanner.getDebrickedConfig(options.Path, options.Exclusions, options.Inclusions),
+		TagCommitAsRelease:     options.TagCommitAsRelease,
 	}
 	result, err := (*dScanner.uploader).Upload(uploaderOptions)
 	if err != nil {

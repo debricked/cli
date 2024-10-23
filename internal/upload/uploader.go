@@ -17,6 +17,7 @@ type DebrickedOptions struct {
 	CallGraphUploadTimeout int
 	VersionHint            bool
 	DebrickedConfig        *DebrickedConfig
+	TagCommitAsRelease     bool
 }
 
 type IUploader interface {
@@ -45,6 +46,7 @@ func (uploader *Uploader) Upload(o IOptions) (*UploadResult, error) {
 		dOptions.CallGraphUploadTimeout,
 		dOptions.VersionHint,
 		dOptions.DebrickedConfig,
+		dOptions.TagCommitAsRelease,
 	)
 
 	err := batch.upload()

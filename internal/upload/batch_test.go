@@ -38,7 +38,7 @@ func TestUploadWithBadFiles(t *testing.T) {
 	clientMock.AddMockResponse(mockRes)
 	clientMock.AddMockResponse(mockRes)
 	c = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{})
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{}, false)
 	var buf bytes.Buffer
 	log.SetOutput(&buf)
 	err = batch.upload()
@@ -50,7 +50,7 @@ func TestUploadWithBadFiles(t *testing.T) {
 }
 
 func TestInitAnalysisWithoutAnyFiles(t *testing.T) {
-	batch := newUploadBatch(nil, file.Groups{}, nil, "CLI", 10*60, true, &DebrickedConfig{})
+	batch := newUploadBatch(nil, file.Groups{}, nil, "CLI", 10*60, true, &DebrickedConfig{}, false)
 	err := batch.initAnalysis()
 
 	assert.ErrorContains(t, err, "failed to find dependency files")
@@ -73,7 +73,7 @@ func TestWaitWithPollingTerminatedError(t *testing.T) {
 	}
 	clientMock.AddMockResponse(mockRes)
 	c = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{})
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{}, false)
 
 	uploadResult, err := batch.wait()
 
@@ -98,7 +98,7 @@ func TestInitUploadBadFile(t *testing.T) {
 	clientMock.AddMockResponse(mockRes)
 
 	var c client.IDebClient = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{})
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{}, false)
 
 	files, err := batch.initUpload()
 
@@ -120,7 +120,7 @@ func TestInitUploadFingerprintsFree(t *testing.T) {
 	clientMock := testdata.NewDebClientMock()
 	clientMock.SetEnterpriseCustomer(false)
 	var c client.IDebClient = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{})
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{}, false)
 
 	files, err := batch.initUpload()
 
@@ -145,7 +145,7 @@ func TestInitUpload(t *testing.T) {
 	clientMock.AddMockResponse(mockRes)
 
 	var c client.IDebClient = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{})
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{}, true)
 
 	files, err := batch.initUpload()
 
