@@ -31,7 +31,7 @@ func RunE(a auth.IAuthenticator) func(_ *cobra.Command, args []string) error {
 			return err
 		}
 		fmt.Printf(
-			"%s Successfully authenticated",
+			"%s Successfully authenticated\n",
 			color.GreenString("✔"),
 		)
 
