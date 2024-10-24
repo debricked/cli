@@ -3,7 +3,9 @@ package scan
 import (
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/debricked/cli/internal/file"
@@ -35,6 +37,7 @@ var verbose bool
 var versionHint bool
 var sbom string
 var sbomOutput string
+var tagCommitAsRelease bool
 
 const (
 	BranchFlag                      = "branch"
@@ -59,6 +62,8 @@ const (
 	VersionHintFlag                 = "version-hint"
 	SBOMFlag                        = "sbom"
 	SBOMOutputFlag                  = "sbom-output"
+	TagCommitAsReleaseFlag          = "tag-commit-as-release"
+	TagCommitAsReleaseEnv           = "TAG_COMMIT_AS_RELEASE"
 )
 
 var scanCmdError error
@@ -159,6 +164,12 @@ Supported formats are: 'CycloneDX', 'SPDX'
 Leaving the field empty results in no SBOM generation.`,
 	)
 	cmd.Flags().StringVar(&sbomOutput, SBOMOutputFlag, "", `Set output path of downloaded SBOM report (if sbom is toggled)`)
+	cmd.Flags().BoolVar(
+		&tagCommitAsRelease,
+		TagCommitAsReleaseFlag,
+		false,
+		"Set to true to tag commit as a release. This will store the scan data indefinitely. Enterprise is required for this flag. Please visit https://debricked.com/pricing/ for more info. Can be overridden by "+TagCommitAsReleaseEnv+" environment variable.",
+	)
 
 	viper.MustBindEnv(RepositoryFlag)
 	viper.MustBindEnv(CommitFlag)
@@ -170,6 +181,7 @@ Leaving the field empty results in no SBOM generation.`,
 	viper.MustBindEnv(NpmPreferredFlag)
 	viper.MustBindEnv(SBOMFlag)
 	viper.MustBindEnv(SBOMOutputFlag)
+	viper.MustBindEnv(TagCommitAsReleaseFlag)
 
 	return cmd
 }
@@ -180,6 +192,20 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 		if len(args) > 0 {
 			path = args[0]
 		}
+
+		tagCommitAsRelease := false
+		tagCommitAsReleaseEnv := os.Getenv(TagCommitAsReleaseEnv)
+		if tagCommitAsReleaseEnv != "" {
+			var err error
+			tagCommitAsRelease, err = strconv.ParseBool(tagCommitAsReleaseEnv)
+
+			if err != nil {
+				return errors.Join(errors.New("failed to convert "+TagCommitAsReleaseEnv+" to boolean"), err)
+			}
+		} else {
+			tagCommitAsRelease = viper.GetBool(TagCommitAsReleaseFlag)
+		}
+
 		options := scan.DebrickedOptions{
 			Path:                        path,
 			Resolve:                     !viper.GetBool(NoResolveFlag),
@@ -203,6 +229,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			CallGraphUploadTimeout:      viper.GetInt(CallGraphUploadTimeoutFlag),
 			CallGraphGenerateTimeout:    viper.GetInt(CallGraphGenerateTimeoutFlag),
 			MinFingerprintContentLength: viper.GetInt(MinFingerprintContentLengthFlag),
+			TagCommitAsRelease:          tagCommitAsRelease,
 		}
 		if s != nil {
 			scanCmdError = (*s).Scan(options)

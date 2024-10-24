@@ -40,7 +40,7 @@ func TestUpload(t *testing.T) {
 	g := file.NewGroup("testdata/yarn/package.json", nil, []string{"testdata/yarn/yarn.lock"})
 	groups := file.Groups{}
 	groups.Add(*g)
-	uploaderOptions := DebrickedOptions{FileGroups: groups, GitMetaObject: *metaObject, IntegrationsName: "CLI", CallGraphUploadTimeout: 10 * 60}
+	uploaderOptions := DebrickedOptions{FileGroups: groups, GitMetaObject: *metaObject, IntegrationsName: "CLI", CallGraphUploadTimeout: 10 * 60, TagCommitAsRelease: true}
 	result, err := uploader.Upload(uploaderOptions)
 
 	assert.NoError(t, err)
