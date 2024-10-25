@@ -63,7 +63,7 @@ func NewDebrickedAuthenticator(client client.IDebClient) Authenticator {
 				TokenURL: client.Host() + "/app/oauth/token",
 			},
 			RedirectURL: "http://localhost:9096/callback",
-			Scopes:      []string{"select", "profile", "basicRepo"},
+			Scopes:      []string{"select", "profile", "basicRepo", "fullApi"},
 		},
 		AuthWebHelper: NewAuthWebHelper(),
 	}
