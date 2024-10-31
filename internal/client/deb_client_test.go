@@ -33,9 +33,6 @@ func TestNewDebClientWithNilToken(t *testing.T) {
 	if *debClient.host != DefaultDebrickedUri {
 		t.Error("failed to assert that host was set properly")
 	}
-	if debClient.accessToken == nil {
-		t.Error("failed to assert that access token was set properly")
-	}
 }
 
 const debrickedTknEnvVar = "DEBRICKED_TOKEN"
@@ -93,6 +90,16 @@ func TestClientUnauthorized(t *testing.T) {
 	if !strings.Contains(err.Error(), "Unauthorized. Specify access token") {
 		t.Error("Failed to assert unauthorized error message")
 	}
+}
+
+func TestHost(t *testing.T) {
+	debClient := NewDebClient(&tkn, nil)
+	assert.Equal(t, *debClient.host, debClient.Host())
+}
+
+func TestAuthenticator(t *testing.T) {
+	debClient := NewDebClient(&tkn, nil)
+	assert.NotNil(t, debClient.Authenticator())
 }
 
 func TestGet(t *testing.T) {
@@ -172,7 +179,7 @@ func TestPostWithTimeout(t *testing.T) {
 	}
 }
 
-func TestAuthenticate(t *testing.T) {
+func TestAuthenticateExplicitToken(t *testing.T) {
 	tkn = "0501ac404fd1823d0d4c047f957637a912d3b94713ee32a6"
 	jwtTkn := "jwt-tkn"
 	clientMock := testdataClient.NewMock()
@@ -188,6 +195,15 @@ func TestAuthenticate(t *testing.T) {
 	}
 	if !strings.EqualFold(jwtTkn, client.jwtToken) {
 		t.Errorf("failed to assert that the jwt token was properly set to %s. Got %s", jwtTkn, client.jwtToken)
+	}
+}
+
+func TestAuthenticateCachedToken(t *testing.T) {
+	clientMock := testdataClient.NewMock()
+	client = NewDebClient(nil, clientMock)
+	err := client.authenticate()
+	if err != nil {
+		t.Fatal("failed to assert that no error occurred")
 	}
 }
 

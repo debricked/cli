@@ -5,15 +5,12 @@ import (
 
 	"github.com/debricked/cli/internal/auth"
 	"github.com/debricked/cli/internal/auth/testdata"
-	"github.com/debricked/cli/internal/client"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewTokenCmd(t *testing.T) {
-	token := "token"
-	deb_client := client.NewDebClient(&token, nil)
-	authenticator := auth.NewDebrickedAuthenticator(deb_client)
+	authenticator := auth.NewDebrickedAuthenticator("")
 	cmd := NewTokenCmd(authenticator)
 	commands := cmd.Commands()
 	nbrOfCommands := 0
@@ -50,6 +47,16 @@ func TestPreRun(t *testing.T) {
 
 func TestRunE(t *testing.T) {
 	a := testdata.MockAuthenticator{}
+	runE := RunE(a)
+
+	err := runE(nil, []string{})
+
+	assert.NoError(t, err)
+}
+
+func TestRunEJSONFlag(t *testing.T) {
+	a := testdata.MockAuthenticator{}
+	jsonFormat = true
 	runE := RunE(a)
 
 	err := runE(nil, []string{})

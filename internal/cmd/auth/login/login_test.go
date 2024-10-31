@@ -5,14 +5,11 @@ import (
 
 	"github.com/debricked/cli/internal/auth"
 	"github.com/debricked/cli/internal/auth/testdata"
-	"github.com/debricked/cli/internal/client"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewLoginCmd(t *testing.T) {
-	token := "token"
-	deb_client := client.NewDebClient(&token, nil)
-	authenticator := auth.NewDebrickedAuthenticator(deb_client)
+	authenticator := auth.NewDebrickedAuthenticator("")
 	cmd := NewLoginCmd(authenticator)
 	commands := cmd.Commands()
 	nbrOfCommands := 0

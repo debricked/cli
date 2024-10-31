@@ -4,7 +4,6 @@ import (
 	"context"
 	"strings"
 
-	"github.com/debricked/cli/internal/client"
 	"github.com/golang-jwt/jwt"
 	"github.com/zalando/go-keyring"
 	"golang.org/x/oauth2"
@@ -50,7 +49,7 @@ func (dsc DebrickedSecretClient) Delete(service string) error {
 	return keyring.Delete(service, dsc.User)
 }
 
-func NewDebrickedAuthenticator(client client.IDebClient) Authenticator {
+func NewDebrickedAuthenticator(host string) Authenticator {
 	return Authenticator{
 		SecretClient: DebrickedSecretClient{
 			User: "DebrickedCLI",
@@ -59,8 +58,8 @@ func NewDebrickedAuthenticator(client client.IDebClient) Authenticator {
 			ClientID:     "01919462-7d6e-78e8-aa24-ba779213c90f",
 			ClientSecret: "",
 			Endpoint: oauth2.Endpoint{
-				AuthURL:  client.Host() + "/app/oauth/authorize",
-				TokenURL: client.Host() + "/app/oauth/token",
+				AuthURL:  host + "/app/oauth/authorize",
+				TokenURL: host + "/app/oauth/token",
 			},
 			RedirectURL: "http://localhost:9096/callback",
 			Scopes:      []string{"select", "profile", "basicRepo", "fullApi"},

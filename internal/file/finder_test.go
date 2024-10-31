@@ -13,6 +13,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/debricked/cli/internal/auth"
 	"github.com/debricked/cli/internal/client/testdata"
 	ioFs "github.com/debricked/cli/internal/io"
 	"github.com/stretchr/testify/assert"
@@ -66,6 +67,10 @@ func (mock *debClientMock) ConfigureClientSettings(retry bool, timeout int) {}
 
 func (mock *debClientMock) IsEnterpriseCustomer(silent bool) bool {
 	return true
+}
+
+func (mock *debClientMock) Authenticator() auth.IAuthenticator {
+	return nil
 }
 
 var finder *Finder
