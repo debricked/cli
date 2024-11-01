@@ -81,13 +81,12 @@ func initAccessToken(accessToken *string) *string {
 		accessToken = new(string)
 	}
 	if len(*accessToken) == 0 {
-		*accessToken = os.Getenv("DEBRICKED_TOKEN")
+		ok := false
+		*accessToken, ok = os.LookupEnv("DEBRICKED_TOKEN")
+		if !ok {
+			accessToken = nil
+		}
 	}
-
-	if len(*accessToken) == 0 {
-		return nil
-	}
-
 	return accessToken
 }
 

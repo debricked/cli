@@ -39,17 +39,22 @@ const debrickedTknEnvVar = "DEBRICKED_TOKEN"
 
 func TestNewDebClientWithTokenEnvVariable(t *testing.T) {
 	envVarTkn := "env-tkn"
-	oldEnvValue := os.Getenv(debrickedTknEnvVar)
+	oldEnvValue, ok := os.LookupEnv(debrickedTknEnvVar)
 	err := os.Setenv(debrickedTknEnvVar, "env-tkn")
 	if err != nil {
 		t.Fatalf("failed to set env var %s", debrickedTknEnvVar)
 	}
-	defer func(key, value string) {
-		err := os.Setenv(key, value)
+	defer func(key, value string, ok bool) {
+		var err error = nil
+		if ok {
+			err = os.Setenv(key, value)
+		} else {
+			err = os.Unsetenv(key)
+		}
 		if err != nil {
 			t.Fatalf("failed to reset env var %s", debrickedTknEnvVar)
 		}
-	}(debrickedTknEnvVar, oldEnvValue)
+	}(debrickedTknEnvVar, oldEnvValue, ok)
 
 	accessToken := ""
 	debClient := NewDebClient(&accessToken, nil)
