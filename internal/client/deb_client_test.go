@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	testdataAuth "github.com/debricked/cli/internal/auth/testdata"
 	testdataClient "github.com/debricked/cli/internal/client/testdata/client"
 	"github.com/stretchr/testify/assert"
 )
@@ -206,6 +207,13 @@ func TestAuthenticateExplicitToken(t *testing.T) {
 func TestAuthenticateCachedToken(t *testing.T) {
 	clientMock := testdataClient.NewMock()
 	client = NewDebClient(nil, clientMock)
+	client = &DebClient{
+		host:          nil,
+		accessToken:   nil,
+		httpClient:    clientMock,
+		jwtToken:      "",
+		authenticator: testdataAuth.MockAuthenticator{},
+	}
 	err := client.authenticate()
 	if err != nil {
 		t.Fatal("failed to assert that no error occurred")
