@@ -117,9 +117,10 @@ type errorMessage struct {
 }
 
 func (debClient *DebClient) authenticate() error {
-
-	if debClient.accessToken != nil {
-		return debClient.authenticateExplicitToken()
+	if debClient.accessToken != nil { // To avoid segfault
+		if len(*debClient.accessToken) != 0 {
+			return debClient.authenticateExplicitToken()
+		}
 	}
 
 	return debClient.authenticateCachedToken()

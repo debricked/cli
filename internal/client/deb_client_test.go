@@ -36,37 +36,6 @@ func TestNewDebClientWithNilToken(t *testing.T) {
 	}
 }
 
-const debrickedTknEnvVar = "DEBRICKED_TOKEN"
-
-func TestNewDebClientWithTokenEnvVariable(t *testing.T) {
-	envVarTkn := "env-tkn"
-	oldEnvValue, ok := os.LookupEnv(debrickedTknEnvVar)
-	err := os.Setenv(debrickedTknEnvVar, "env-tkn")
-	if err != nil {
-		t.Fatalf("failed to set env var %s", debrickedTknEnvVar)
-	}
-	defer func(key, value string, ok bool) {
-		var err error = nil
-		if ok {
-			err = os.Setenv(key, value)
-		} else {
-			err = os.Unsetenv(key)
-		}
-		if err != nil {
-			t.Fatalf("failed to reset env var %s", debrickedTknEnvVar)
-		}
-	}(debrickedTknEnvVar, oldEnvValue, ok)
-
-	accessToken := ""
-	debClient := NewDebClient(&accessToken, nil)
-	if *debClient.host != DefaultDebrickedUri {
-		t.Error("failed to assert that host was set properly")
-	}
-	if *debClient.accessToken != envVarTkn {
-		t.Errorf("failed to assert that access token was set to %s. Got %s", envVarTkn, *debClient.accessToken)
-	}
-}
-
 func TestNewDebClientWithWithURI(t *testing.T) {
 	accessToken := ""
 	os.Setenv("DEBRICKED_URI", "https://subdomain.debricked.com")
@@ -215,24 +184,7 @@ func TestAuthenticateCachedToken(t *testing.T) {
 		authenticator: testdataAuth.MockAuthenticator{},
 	}
 
-	oldEnvValue, ok := os.LookupEnv(debrickedTknEnvVar)
-	err := os.Unsetenv(debrickedTknEnvVar)
-	if err != nil {
-		t.Fatalf("failed to set env var %s", debrickedTknEnvVar)
-	}
-	defer func(key, value string, ok bool) {
-		var err error = nil
-		if ok {
-			err = os.Setenv(key, value)
-		} else {
-			err = os.Unsetenv(key)
-		}
-		if err != nil {
-			t.Fatalf("failed to reset env var %s", debrickedTknEnvVar)
-		}
-	}(debrickedTknEnvVar, oldEnvValue, ok)
-
-	err = client.authenticate()
+	err := client.authenticate()
 	if err != nil {
 		t.Fatal("failed to assert that no error occurred")
 	}

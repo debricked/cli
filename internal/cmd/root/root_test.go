@@ -21,7 +21,7 @@ func TestNewRootCmd(t *testing.T) {
 	}
 
 	flags := cmd.PersistentFlags()
-	flag := flags.Lookup(AccessTokenFlag)
+	flag := flags.Lookup(OldAccessTokenFlag)
 	assert.NotNil(t, flag)
 	assert.Equal(t, "t", flag.Shorthand)
 
@@ -34,7 +34,7 @@ func TestNewRootCmd(t *testing.T) {
 			break
 		}
 	}
-	assert.Truef(t, match, "failed to assert that flag was present: "+AccessTokenFlag)
+	assert.Truef(t, match, "failed to assert that flag was present: "+OldAccessTokenFlag)
 	assert.Len(t, viperKeys, 22)
 }
 

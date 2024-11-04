@@ -41,13 +41,13 @@ func NewDebClient(accessToken *string, httpClient IClient) *DebClient {
 	if len(host) == 0 {
 		host = DefaultDebrickedUri
 	}
-	authenticator := auth.NewDebrickedAuthenticator(host)
+
 	return &DebClient{
 		host:          &host,
 		httpClient:    httpClient,
-		accessToken:   initAccessToken(accessToken),
+		accessToken:   accessToken,
 		jwtToken:      "",
-		authenticator: authenticator,
+		authenticator: auth.NewDebrickedAuthenticator(host),
 	}
 }
 
@@ -68,25 +68,11 @@ func (debClient *DebClient) Get(uri string, format string) (*http.Response, erro
 }
 
 func (debClient *DebClient) SetAccessToken(accessToken *string) {
-	debClient.accessToken = initAccessToken(accessToken)
+	debClient.accessToken = accessToken
 }
 
 func (debClient *DebClient) Authenticator() auth.IAuthenticator {
 	return debClient.authenticator
-}
-
-func initAccessToken(accessToken *string) *string {
-	if accessToken == nil {
-		accessToken = new(string)
-	}
-	if len(*accessToken) == 0 {
-		ok := false
-		*accessToken, ok = os.LookupEnv("DEBRICKED_TOKEN")
-		if !ok {
-			accessToken = nil
-		}
-	}
-	return accessToken
 }
 
 type BillingPlan struct {
