@@ -42,7 +42,6 @@ func NewDebClient(accessToken *string, httpClient IClient) *DebClient {
 		host = DefaultDebrickedUri
 	}
 	authenticator := auth.NewDebrickedAuthenticator(host)
-
 	return &DebClient{
 		host:          &host,
 		httpClient:    httpClient,

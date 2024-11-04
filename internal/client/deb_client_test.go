@@ -214,7 +214,25 @@ func TestAuthenticateCachedToken(t *testing.T) {
 		jwtToken:      "",
 		authenticator: testdataAuth.MockAuthenticator{},
 	}
-	err := client.authenticate()
+
+	oldEnvValue, ok := os.LookupEnv(debrickedTknEnvVar)
+	err := os.Unsetenv(debrickedTknEnvVar)
+	if err != nil {
+		t.Fatalf("failed to set env var %s", debrickedTknEnvVar)
+	}
+	defer func(key, value string, ok bool) {
+		var err error = nil
+		if ok {
+			err = os.Setenv(key, value)
+		} else {
+			err = os.Unsetenv(key)
+		}
+		if err != nil {
+			t.Fatalf("failed to reset env var %s", debrickedTknEnvVar)
+		}
+	}(debrickedTknEnvVar, oldEnvValue, ok)
+
+	err = client.authenticate()
 	if err != nil {
 		t.Fatal("failed to assert that no error occurred")
 	}
