@@ -27,7 +27,7 @@ jobs:
         id: next-latest-tag
         run: |
           CURRENT_TAG=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name')
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $CURRENT_TAG^)
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $CURRENT_TAG^ --exclude release*)
           echo "next_latest_tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
 
       - uses: actions/checkout@v4
