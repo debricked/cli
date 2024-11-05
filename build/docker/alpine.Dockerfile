@@ -40,7 +40,7 @@ RUN wget https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zi
 
 # g++ needed to compile python packages with C dependencies (numpy, scipy, etc.)
 RUN apk --no-cache --update add \
-  openjdk21-jre \
+  openjdk21-jdk \
   python3 \
   py3-scipy \
   py3-pip \

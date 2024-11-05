@@ -98,7 +98,7 @@ RUN apt -y update && apt -y upgrade && apt -y install \
     python3.12\
     python3.12-venv \
     golang-$GOLANG_VERSION \
-    openjdk-21-jre && \
+    openjdk-21-jdk && \
     apt -y clean && rm -rf /var/lib/apt/lists/* && \
     # Symlink go binary to bin directory which is in path
     ln -s /usr/lib/go-$GOLANG_VERSION/bin/go /usr/bin/go
