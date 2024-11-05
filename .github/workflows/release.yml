@@ -23,14 +23,14 @@ jobs:
         id: calc-checksum
         run: |
           TAG=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name')
-          curl -LJO https://github.com/${{ github.repository }}/releases/download/${TAG}/soot-wrapper-rev-hash.txt
+          curl -LJO https://github.com/${{ github.repository }}/releases/download/${TAG}/soot-wrapper-rev-hash-${{ matrix.java-version }}.txt
 
           echo "release_tag=$TAG" >> $GITHUB_OUTPUT
           echo "hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-          if [ ! -f soot-wrapper-rev-hash.txt ]; then
-            touch soot-wrapper-rev-hash.txt
+          if [ ! -f soot-wrapper-rev-hash-${{ matrix.java-version }}.txt ]; then
+            touch soot-wrapper-rev-hash-${{ matrix.java-version }}.txt
           fi
-          echo "prev_hash=$(cat soot-wrapper-rev-hash.txt)" >> $GITHUB_OUTPUT
+          echo "prev_hash=$(cat soot-wrapper-rev-hash-${{ matrix.java-version }}.txt)" >> $GITHUB_OUTPUT
 
       - name: Pull JAR from previous release if already built
         if: steps.calc-checksum.outputs.hash == steps.calc-checksum.outputs.prev_hash
@@ -62,14 +62,14 @@ jobs:
       - name: Store soot-wrapper revision hash
         if: steps.calc-checksum.outputs.hash != steps.calc-checksum.outputs.prev_hash
         run: |
-          echo ${{ steps.calc-checksum.outputs.hash }} > soot-wrapper-rev-hash.txt
+          echo ${{ steps.calc-checksum.outputs.hash }} > soot-wrapper-rev-hash-${{ matrix.java-version }}.txt
 
       - name: Upload file containing soot-wrapper revision hash
         if: steps.calc-checksum.outputs.hash != steps.calc-checksum.outputs.prev_hash
         uses: actions/upload-artifact@v4
         with:
-          name: soot-wrapper-rev-hash.txt
-          path: soot-wrapper-rev-hash.txt
+          name: soot-wrapper-rev-hash-${{ matrix.java-version }}.txt
+          path: soot-wrapper-rev-hash-${{ matrix.java-version }}.txt
           overwrite: 'true'
 
       - name: Upload the archive
@@ -124,7 +124,9 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           files: |
-            soot-wrapper-rev-hash.txt/soot-wrapper-rev-hash.txt
+            soot-wrapper-rev-hash-11.txt/soot-wrapper-rev-hash-11.txt
+            soot-wrapper-rev-hash-17.txt/soot-wrapper-rev-hash-17.txt
+            soot-wrapper-rev-hash-21.txt/soot-wrapper-rev-hash-21.txt
             soot-wrapper-11.zip/soot-wrapper-11.zip
             soot-wrapper-17.zip/soot-wrapper-17.zip
             soot-wrapper-21.zip/soot-wrapper-21.zip
