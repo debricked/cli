@@ -8,7 +8,7 @@ import (
 	golangfinder "github.com/debricked/cli/internal/callgraph/finder/golangfinder"
 	"github.com/debricked/cli/internal/callgraph/finder/javafinder"
 	"github.com/debricked/cli/internal/callgraph/language/golang"
-	java "github.com/debricked/cli/internal/callgraph/language/java11"
+	"github.com/debricked/cli/internal/callgraph/language/java"
 )
 
 type IFactory interface {

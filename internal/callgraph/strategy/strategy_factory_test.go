@@ -5,7 +5,7 @@ import (
 
 	"github.com/debricked/cli/internal/callgraph/config"
 	"github.com/debricked/cli/internal/callgraph/finder/javafinder"
-	java "github.com/debricked/cli/internal/callgraph/language/java11"
+	"github.com/debricked/cli/internal/callgraph/language/java"
 	"github.com/stretchr/testify/assert"
 )
 
