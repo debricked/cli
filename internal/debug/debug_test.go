@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPrint(t *testing.T) {
+func TestLog(t *testing.T) {
 	rescueStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
@@ -21,4 +21,18 @@ func TestPrint(t *testing.T) {
 
 	assert.Contains(t, string(output), "DEBUG: ")
 	assert.Contains(t, string(output), "hello\n")
+}
+
+func TestLogDebugDisabled(t *testing.T) {
+	rescueStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	Log("hello", false)
+
+	_ = w.Close()
+	output, _ := io.ReadAll(r)
+	os.Stderr = rescueStderr
+
+	assert.Empty(t, string(output))
 }
