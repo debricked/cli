@@ -98,6 +98,7 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 			s.config,
 			s.ctx,
 			io.FileSystem{},
+			SootHandler{},
 		),
 		)
 	}

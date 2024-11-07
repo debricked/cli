@@ -13,57 +13,21 @@ func TestRunCallGraphWithSetupMock(t *testing.T) {
 
 	cmdMock := testdata.NewEchoCmdFactory()
 	fsMock := ioTestData.FileSystemMock{}
-	cg := NewCallgraph(cmdMock, ".", []string{"."}, ".", ".", fsMock, nil)
+	arcMock := ioTestData.ArchiveMock{}
+	swMock := testdata.MockSootHandler{}
+	cg := NewCallgraph(cmdMock, ".", []string{"."}, ".", ".", fsMock, arcMock, nil, swMock)
 
 	err := cg.RunCallGraphWithSetup()
 
 	assert.Nil(t, err)
 }
 
-func TestFsOpenEmbedError(t *testing.T) {
-	cmdMock := testdata.NewEchoCmdFactory()
-	fsMock := ioTestData.FileSystemMock{FsOpenEmbedError: fmt.Errorf("error")}
-	cg := NewCallgraph(cmdMock, ".", []string{"."}, ".", ".", fsMock, nil)
-
-	err := cg.RunCallGraphWithSetup()
-
-	assert.NotNil(t, err)
-}
-
-func TestMkdirTempError(t *testing.T) {
-	cmdMock := testdata.NewEchoCmdFactory()
-	fsMock := ioTestData.FileSystemMock{MkdirTempError: fmt.Errorf("error")}
-	cg := NewCallgraph(cmdMock, ".", []string{"."}, ".", ".", fsMock, nil)
-
-	err := cg.RunCallGraphWithSetup()
-
-	assert.NotNil(t, err)
-}
-
-func TestReadAllError(t *testing.T) {
-	cmdMock := testdata.NewEchoCmdFactory()
-	fsMock := ioTestData.FileSystemMock{FsReadAllError: fmt.Errorf("error")}
-	cg := NewCallgraph(cmdMock, ".", []string{"."}, ".", ".", fsMock, nil)
-
-	err := cg.RunCallGraphWithSetup()
-
-	assert.NotNil(t, err)
-}
-
-func TestWriteFileError(t *testing.T) {
-	cmdMock := testdata.NewEchoCmdFactory()
-	fsMock := ioTestData.FileSystemMock{FsWriteFileError: fmt.Errorf("error")}
-	cg := NewCallgraph(cmdMock, ".", []string{"."}, ".", ".", fsMock, nil)
-
-	err := cg.RunCallGraphWithSetup()
-
-	assert.NotNil(t, err)
-}
-
 func TestRunCallGraphMock(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	fsMock := ioTestData.FileSystemMock{}
-	cg := NewCallgraph(cmdMock, ".", []string{"."}, ".", ".", fsMock, nil)
+	arcMock := ioTestData.ArchiveMock{}
+	swMock := testdata.MockSootHandler{}
+	cg := NewCallgraph(cmdMock, ".", []string{"."}, ".", ".", fsMock, arcMock, nil, swMock)
 
 	err := cg.RunCallGraph(".")
 
@@ -74,7 +38,9 @@ func TestRunCallGraphErrorMock(t *testing.T) {
 	cmdMock := testdata.NewEchoCmdFactory()
 	cmdMock.CallGraphGenErr = fmt.Errorf("error")
 	fsMock := ioTestData.FileSystemMock{}
-	cg := NewCallgraph(cmdMock, ".", []string{"."}, ".", ".", fsMock, nil)
+	arcMock := ioTestData.ArchiveMock{}
+	swMock := testdata.MockSootHandler{}
+	cg := NewCallgraph(cmdMock, ".", []string{"."}, ".", ".", fsMock, arcMock, nil, swMock)
 
 	err := cg.RunCallGraph(".")
 

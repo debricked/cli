@@ -22,21 +22,33 @@ const (
 
 type Job struct {
 	job.BaseJob
-	cmdFactory ICmdFactory
-	config     conf.IConfig
-	archive    io.IArchive
-	ctx        cgexec.IContext
-	fs         ioFs.IFileSystem
+	cmdFactory  ICmdFactory
+	config      conf.IConfig
+	archive     io.IArchive
+	ctx         cgexec.IContext
+	fs          ioFs.IFileSystem
+	sootHandler ISootHandler
 }
 
-func NewJob(dir string, files []string, cmdFactory ICmdFactory, writer ioFs.IFileWriter, archive io.IArchive, config conf.IConfig, ctx cgexec.IContext, fs ioFs.IFileSystem) *Job {
+func NewJob(
+	dir string,
+	files []string,
+	cmdFactory ICmdFactory,
+	writer ioFs.IFileWriter,
+	archive io.IArchive,
+	config conf.IConfig,
+	ctx cgexec.IContext,
+	fs ioFs.IFileSystem,
+	sootHandler ISootHandler,
+) *Job {
 	return &Job{
-		BaseJob:    job.NewBaseJob(dir, files),
-		cmdFactory: cmdFactory,
-		config:     config,
-		archive:    archive,
-		ctx:        ctx,
-		fs:         fs,
+		BaseJob:     job.NewBaseJob(dir, files),
+		cmdFactory:  cmdFactory,
+		config:      config,
+		archive:     archive,
+		ctx:         ctx,
+		fs:          fs,
+		sootHandler: sootHandler,
 	}
 }
 
@@ -78,7 +90,9 @@ func (j *Job) Run() {
 		targetDir,
 		outputName,
 		j.fs,
+		j.archive,
 		j.ctx,
+		j.sootHandler,
 	)
 	j.SendStatus("generating call graph")
 	j.runCallGraph(&callgraph)

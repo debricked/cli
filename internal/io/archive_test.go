@@ -119,6 +119,19 @@ func TestWriteToWriterError(t *testing.T) {
 	assert.Equal(t, err.Error(), "error")
 }
 
+func TestUnzipFileError(t *testing.T) {
+	fsMock := ioTestData.FileSystemMock{}
+	zipMock := ioTestData.ZipMock{OpenReaderError: fmt.Errorf("error")}
+	a := Archive{
+		workingDirectory: "nonexisting",
+		fs:               fsMock,
+		zip:              zipMock,
+	}
+	err := a.UnzipFile("test_source_path", "test_target_path")
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "error")
+}
+
 func TestB64(t *testing.T) {
 	fsMock := ioTestData.FileSystemMock{}
 	a := Archive{

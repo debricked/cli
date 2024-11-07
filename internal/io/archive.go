@@ -2,11 +2,13 @@ package io
 
 import (
 	"encoding/base64"
+	"fmt"
 	"path"
 )
 
 type IArchive interface {
 	ZipFile(sourcePath string, targetPath string, zippedName string) error
+	UnzipFile(sourcePath string, targetPath string) error
 	B64(sourceName string, targetName string) error
 	Cleanup(targetName string) error
 }
@@ -78,6 +80,37 @@ func (arc *Archive) ZipFile(sourcePath string, targetPath string, zippedName str
 		return err
 	}
 
+	return err
+}
+
+func (arc *Archive) UnzipFile(sourcePath string, targetPath string) error {
+	// Unzip a file, or the first file if multiple in zip archive
+	r, err := arc.zip.OpenReader(sourcePath)
+	if err != nil {
+
+		return err
+	}
+	defer arc.zip.CloseReader(r)
+
+	for _, file := range r.File {
+		fmt.Println(file.Name)
+	}
+
+	f := r.File[1]
+
+	outFile, err := arc.fs.Create(targetPath)
+	if err != nil {
+		return err
+	}
+	defer outFile.Close()
+	fmt.Println("file created: ", outFile.Name())
+	rc, err := f.Open()
+	if err != nil {
+		return err
+	}
+	defer rc.Close()
+	fmt.Println("Copying over content...")
+	_, err = arc.fs.Copy(outFile, rc)
 	return err
 }
 

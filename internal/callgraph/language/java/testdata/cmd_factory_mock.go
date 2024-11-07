@@ -4,6 +4,7 @@ import (
 	"os/exec"
 
 	"github.com/debricked/cli/internal/callgraph/cgexec"
+	ioFs "github.com/debricked/cli/internal/io"
 )
 
 type CmdFactoryMock struct {
@@ -13,6 +14,8 @@ type CmdFactoryMock struct {
 	CallGraphGenErr  error
 	BuildMavenName   string
 	BuildMavenErr    error
+	JavaVersionName  string
+	JavaVersionErr   error
 }
 
 func NewEchoCmdFactory() CmdFactoryMock {
@@ -20,6 +23,7 @@ func NewEchoCmdFactory() CmdFactoryMock {
 		MvnCopyDepName:   "echo",
 		CallGraphGenName: "echo",
 		BuildMavenName:   "echo",
+		JavaVersionName:  "echo",
 	}
 }
 
@@ -33,4 +37,14 @@ func (f CmdFactoryMock) MakeCallGraphGenerationCmd(_ string, _ string, _ []strin
 
 func (f CmdFactoryMock) MakeBuildMavenCmd(workingDirectory string, ctx cgexec.IContext) (*exec.Cmd, error) {
 	return exec.Command(f.BuildMavenName, "BuildMaven"), f.BuildMavenErr
+}
+
+func (f CmdFactoryMock) MakeJavaVersionCmd(workingDirectory string, ctx cgexec.IContext) (*exec.Cmd, error) {
+	return exec.Command(f.JavaVersionName, "JavaVersion"), f.JavaVersionErr
+}
+
+type MockSootHandler struct{}
+
+func (_ MockSootHandler) GetSootWrapper(version string, fs ioFs.IFileSystem, arc ioFs.IArchive) (string, error) {
+	return "", nil
 }

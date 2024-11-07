@@ -10,6 +10,7 @@ type ICmdFactory interface {
 	MakeMvnCopyDependenciesCmd(workingDirectory string, targetDir string, ctx cgexec.IContext) (*exec.Cmd, error)
 	MakeCallGraphGenerationCmd(callgraphJarPath string, workingDirectory string, targetClasses []string, dependencyClasses string, outputName string, ctx cgexec.IContext) (*exec.Cmd, error)
 	MakeBuildMavenCmd(workingDirectory string, ctx cgexec.IContext) (*exec.Cmd, error)
+	MakeJavaVersionCmd(workingDirectory string, ctx cgexec.IContext) (*exec.Cmd, error)
 }
 
 type CmdFactory struct{}
@@ -67,6 +68,16 @@ func (_ CmdFactory) MakeBuildMavenCmd(workingDirectory string, ctx cgexec.IConte
 		"-q",
 		"-DskipTests",
 		"-e",
+	}
+
+	return cgexec.MakeCommand(workingDirectory, path, args, ctx), err
+}
+
+func (_ CmdFactory) MakeJavaVersionCmd(workingDirectory string, ctx cgexec.IContext) (*exec.Cmd, error) {
+	path, err := exec.LookPath("java")
+	args := []string{
+		"java",
+		"--version",
 	}
 
 	return cgexec.MakeCommand(workingDirectory, path, args, ctx), err
