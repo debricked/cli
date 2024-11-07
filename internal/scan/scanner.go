@@ -98,18 +98,18 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 	if !ok {
 		return BadOptsErr
 	}
-	debug.Print("Options initialized, finding CI service...", dOptions.Debug)
+	debug.Log("Options initialized, finding CI service...", dOptions.Debug)
 
 	e, _ := dScanner.ciService.Find()
 
-	debug.Print("Mapping environment variables...", dOptions.Debug)
+	debug.Log("Mapping environment variables...", dOptions.Debug)
 	MapEnvToOptions(&dOptions, e)
 
 	if err := SetWorkingDirectory(&dOptions); err != nil {
 		return err
 	}
 
-	debug.Print("Setting up git objects...", dOptions.Debug)
+	debug.Log("Setting up git objects...", dOptions.Debug)
 	gitMetaObject, err := git.NewMetaObject(
 		dOptions.Path,
 		dOptions.RepositoryName,
@@ -122,7 +122,7 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 		return err
 	}
 
-	debug.Print("Running scan with initialized scanner...", dOptions.Debug)
+	debug.Log("Running scan with initialized scanner...", dOptions.Debug)
 	result, err := dScanner.scan(dOptions, *gitMetaObject)
 	if err != nil {
 		return dScanner.handleScanError(err, dOptions.PassOnTimeOut)
@@ -222,20 +222,20 @@ func (dScanner *DebrickedScanner) scanFingerprint(options DebrickedOptions) erro
 
 func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject git.MetaObject) (*upload.UploadResult, error) {
 
-	debug.Print("Running scanResolve...", options.Debug)
+	debug.Log("Running scanResolve...", options.Debug)
 	err := dScanner.scanResolve(options)
 	if err != nil {
 		return nil, err
 	}
 
-	debug.Print("Running scanFingerprint...", options.Debug)
+	debug.Log("Running scanFingerprint...", options.Debug)
 	err = dScanner.scanFingerprint(options)
 	if err != nil {
 		return nil, err
 	}
 
 	if options.CallGraph {
-		debug.Print("Running scanFingerprint...", options.Debug)
+		debug.Log("Running scanFingerprint...", options.Debug)
 		configs := []config.IConfig{
 			config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven"),
 			config.NewConfig("golang", []string{}, map[string]string{"pm": "go"}, true, "go"),
@@ -259,7 +259,7 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		}
 	}
 
-	debug.Print("Matching groups...", options.Debug)
+	debug.Log("Matching groups...", options.Debug)
 	fileGroups, err := dScanner.finder.GetGroups(
 		file.DebrickedOptions{
 			RootPath:     options.Path,
@@ -273,7 +273,7 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		return nil, err
 	}
 
-	debug.Print("Starting upload...", options.Debug)
+	debug.Log("Starting upload...", options.Debug)
 	uploaderOptions := upload.DebrickedOptions{
 		FileGroups:             fileGroups,
 		GitMetaObject:          gitMetaObject,

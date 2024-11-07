@@ -13,11 +13,12 @@ func TestPrint(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	Print("hello", true)
+	Log("hello", true)
 
 	_ = w.Close()
 	output, _ := io.ReadAll(r)
 	os.Stderr = rescueStderr
 
-	assert.Equal(t, "DEBUG: hello\n", string(output))
+	assert.Contains(t, string(output), "DEBUG: ")
+	assert.Contains(t, string(output), "hello\n")
 }

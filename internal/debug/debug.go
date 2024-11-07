@@ -1,16 +1,15 @@
 package debug
 
 import (
-	"fmt"
+	"log"
 	"os"
-	"strings"
 
 	"github.com/fatih/color"
 )
 
-func Print(message string, debug bool) {
+func Log(message string, debug bool) {
 	if debug {
-		debugMessage := strings.Join([]string{"DEBUG: ", message, "\n"}, "")
-		fmt.Fprint(os.Stderr, color.BlueString(debugMessage))
+		DebugLogger := log.New(os.Stderr, "DEBUG: ", log.Ldate|log.Ltime)
+		DebugLogger.Println(color.BlueString(message))
 	}
 }
