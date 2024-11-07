@@ -21,6 +21,7 @@ var callgraphGenerateTimeout int
 var callgraphUploadTimeout int
 var commitAuthor string
 var commitName string
+var debug bool
 var exclusions = file.Exclusions()
 var inclusions = file.Exclusions()
 var integrationName string
@@ -46,6 +47,7 @@ const (
 	CallGraphUploadTimeoutFlag      = "callgraph-upload-timeout"
 	CommitFlag                      = "commit"
 	CommitAuthorFlag                = "author"
+	DebugFlag                       = "debug"
 	ExclusionFlag                   = "exclusion"
 	IntegrationFlag                 = "integration"
 	InclusionFlag                   = "inclusion"
@@ -145,6 +147,7 @@ $ debricked scan . --include '**/node_modules/**'`)
 			"\nExample:\n$ debricked resolve --verbose=false",
 		}, "\n")
 	cmd.Flags().BoolVar(&verbose, VerboseFlag, true, verboseDoc)
+	cmd.Flags().BoolVar(&debug, DebugFlag, false, "write all debug output to stderr")
 	cmd.Flags().BoolVarP(&passOnDowntime, PassOnTimeOut, "p", false, "pass scan if there is a service access timeout")
 	cmd.Flags().BoolVar(&noResolve, NoResolveFlag, false, `disables resolution of manifest files that lack lock files. Resolving manifest files enables more accurate dependency scanning since the whole dependency tree will be analysed.
 For example, if there is a "go.mod" in the target path, its dependencies are going to get resolved onto a lock file, and latter scanned.`)
@@ -188,6 +191,8 @@ Leaving the field empty results in no SBOM generation.`,
 
 func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		fmt.Println("Scanner started...")
+
 		path := ""
 		if len(args) > 0 {
 			path = args[0]
@@ -214,6 +219,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			SBOMOutput:                  viper.GetString(SBOMOutputFlag),
 			Exclusions:                  viper.GetStringSlice(ExclusionFlag),
 			Verbose:                     viper.GetBool(VerboseFlag),
+			Debug:                       viper.GetBool(DebugFlag),
 			Regenerate:                  viper.GetInt(RegenerateFlag),
 			VersionHint:                 viper.GetBool(VersionHintFlag),
 			RepositoryName:              viper.GetString(RepositoryFlag),
