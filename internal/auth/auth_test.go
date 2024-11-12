@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/debricked/cli/internal/auth/testdata"
-	clientTestdata "github.com/debricked/cli/internal/client/testdata"
 	"github.com/stretchr/testify/assert"
 	"github.com/zalando/go-keyring"
 	"golang.org/x/oauth2"
@@ -15,7 +14,7 @@ const windowsOS = "windows"
 const macOS = "darwin"
 
 func TestNewAuthenticator(t *testing.T) {
-	res := NewDebrickedAuthenticator(clientTestdata.NewDebClientMock())
+	res := NewDebrickedAuthenticator("")
 	assert.NotNil(t, res)
 }
 

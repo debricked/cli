@@ -15,7 +15,8 @@ import (
 
 var accessToken string
 
-const AccessTokenFlag = "access-token"
+const AccessTokenFlag = "token"
+const OldAccessTokenFlag = "access-token"
 
 func NewRootCmd(version string, container *wire.CliContainer) *cobra.Command {
 	rootCmd := &cobra.Command{
@@ -29,12 +30,14 @@ Complete documentation is available at https://docs.debricked.com/tools-and-inte
 		Version: version,
 	}
 	viper.SetEnvPrefix("DEBRICKED")
+	viper.AutomaticEnv()
 	viper.MustBindEnv(AccessTokenFlag)
+
 	rootCmd.PersistentFlags().StringVarP(
 		&accessToken,
-		AccessTokenFlag,
+		OldAccessTokenFlag,
 		"t",
-		"",
+		viper.GetString(AccessTokenFlag),
 		`Debricked access token. 
 Read more: https://docs.debricked.com/product/administration/generate-access-token`,
 	)

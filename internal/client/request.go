@@ -117,6 +117,25 @@ type errorMessage struct {
 }
 
 func (debClient *DebClient) authenticate() error {
+	if debClient.accessToken != nil { // To avoid segfault
+		if len(*debClient.accessToken) != 0 {
+			return debClient.authenticateExplicitToken()
+		}
+	}
+
+	return debClient.authenticateCachedToken()
+}
+
+func (debClient *DebClient) authenticateCachedToken() error {
+	token, err := debClient.authenticator.Token()
+	if err == nil {
+		debClient.jwtToken = token.AccessToken
+	}
+
+	return err
+}
+
+func (debClient *DebClient) authenticateExplicitToken() error {
 	uri := "/api/login_refresh"
 
 	data := map[string]string{"refresh_token": *debClient.accessToken}

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/debricked/cli/internal/auth"
 	"github.com/debricked/cli/internal/client"
 	"github.com/debricked/cli/internal/client/testdata"
 	"github.com/debricked/cli/internal/file"
@@ -158,4 +159,8 @@ func (mock *debClientMock) SetAccessToken(_ *string) {}
 
 func (mock *debClientMock) IsEnterpriseCustomer(silent bool) bool {
 	return true
+}
+
+func (mock *debClientMock) Authenticator() auth.IAuthenticator {
+	return nil
 }

@@ -94,7 +94,7 @@ func (cc *CliContainer) wire() error {
 	cc.licenseReporter = licenseReport.Reporter{DebClient: cc.debClient}
 	cc.vulnerabilityReporter = vulnerabilityReport.Reporter{DebClient: cc.debClient}
 	cc.sbomReporter = sbomReport.Reporter{DebClient: cc.debClient, FileWriter: io.FileWriter{}}
-	cc.authenticator = auth.NewDebrickedAuthenticator(cc.debClient)
+	cc.authenticator = cc.debClient.Authenticator()
 
 	return nil
 }

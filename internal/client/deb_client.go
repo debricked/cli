@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/debricked/cli/internal/auth"
+
 	"github.com/fatih/color"
 )
 
@@ -23,13 +25,15 @@ type IDebClient interface {
 	SetAccessToken(accessToken *string)
 	IsEnterpriseCustomer(silent bool) bool
 	Host() string
+	Authenticator() auth.IAuthenticator
 }
 
 type DebClient struct {
-	host        *string
-	httpClient  IClient
-	accessToken *string
-	jwtToken    string
+	host          *string
+	httpClient    IClient
+	accessToken   *string
+	jwtToken      string
+	authenticator auth.IAuthenticator
 }
 
 func NewDebClient(accessToken *string, httpClient IClient) *DebClient {
@@ -39,10 +43,11 @@ func NewDebClient(accessToken *string, httpClient IClient) *DebClient {
 	}
 
 	return &DebClient{
-		host:        &host,
-		httpClient:  httpClient,
-		accessToken: initAccessToken(accessToken),
-		jwtToken:    "",
+		host:          &host,
+		httpClient:    httpClient,
+		accessToken:   accessToken,
+		jwtToken:      "",
+		authenticator: auth.NewDebrickedAuthenticator(host),
 	}
 }
 
@@ -63,18 +68,11 @@ func (debClient *DebClient) Get(uri string, format string) (*http.Response, erro
 }
 
 func (debClient *DebClient) SetAccessToken(accessToken *string) {
-	debClient.accessToken = initAccessToken(accessToken)
+	debClient.accessToken = accessToken
 }
 
-func initAccessToken(accessToken *string) *string {
-	if accessToken == nil {
-		accessToken = new(string)
-	}
-	if len(*accessToken) == 0 {
-		*accessToken = os.Getenv("DEBRICKED_TOKEN")
-	}
-
-	return accessToken
+func (debClient *DebClient) Authenticator() auth.IAuthenticator {
+	return debClient.authenticator
 }
 
 type BillingPlan struct {
