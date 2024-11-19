@@ -17,10 +17,10 @@ func NewReportCmd(
 	sbomReporter sbomReport.Reporter,
 ) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "report",
-		Short: "Generate reports",
-		Long: `Generate reports.
-Premium is required for license and vulnerability reports. Enterprise is required for SBOM reports. Please visit https://debricked.com/pricing/ for more info.`,
+		Use:   "export",
+		Short: "Generate exports for vulnerabilities, licenses, and SBOM.",
+		Long: `Generate exports.
+Premium is required for license and vulnerability exports. Enterprise is required for SBOM exports. Please visit https://debricked.com/pricing/ for more info.`,
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			_ = viper.BindPFlags(cmd.Flags())
 		},
