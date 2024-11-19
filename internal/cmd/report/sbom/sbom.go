@@ -30,8 +30,8 @@ const FormatFlag = "format"
 func NewSBOMCmd(reporter report.IReporter) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sbom",
-		Short: "Generate SBOM report",
-		Long: `Generate SBOM report for chosen commit and repository. 
+		Short: "Generate SBOM export",
+		Long: `Generate SBOM export for chosen commit and repository. 
 For an example of the SBOM format see https://github.com/debricked/blog-snippets/blob/main/example-sbom-report/SBOM_2022-12-14.json.
 
 This is an enterprise feature. Please visit https://debricked.com/pricing/ for more info.`,
@@ -41,18 +41,18 @@ This is an enterprise feature. Please visit https://debricked.com/pricing/ for m
 		RunE: RunE(reporter),
 	}
 
-	cmd.Flags().StringVarP(&commitId, CommitFlag, "c", "", "The commit that you want an SBOM report for")
+	cmd.Flags().StringVarP(&commitId, CommitFlag, "c", "", "The commit that you want an SBOM export for")
 	_ = cmd.MarkFlagRequired(CommitFlag)
 	viper.MustBindEnv(CommitFlag)
 
-	cmd.Flags().StringVarP(&repositoryId, RepositorylFlag, "r", "", "The repository that you want an SBOM report for")
+	cmd.Flags().StringVarP(&repositoryId, RepositorylFlag, "r", "", "The repository that you want an SBOM export for")
 	_ = cmd.MarkFlagRequired(RepositorylFlag)
 	viper.MustBindEnv(RepositorylFlag)
 
-	cmd.Flags().StringVarP(&branch, BranchFlag, "b", "", "The branch that you want an SBOM report for")
+	cmd.Flags().StringVarP(&branch, BranchFlag, "b", "", "The branch that you want an SBOM export for")
 	viper.MustBindEnv(BranchFlag)
 
-	cmd.Flags().StringVarP(&format, FormatFlag, "f", "", `The format that you want the SBOM report in.
+	cmd.Flags().StringVarP(&format, FormatFlag, "f", "", `The format that you want the SBOM export in.
 
 Supported options are: 'CycloneDX', 'SPDX'`,
 	)
