@@ -79,6 +79,7 @@ func (cg *Callgraph) javaVersion(path string) (string, error) {
 	if len(match) > 1 {
 		return match[1], nil
 	}
+
 	return "", err
 }
 

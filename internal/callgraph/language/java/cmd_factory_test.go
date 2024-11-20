@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const jarPath = "jarpath"
+
 func TestMakeMvnCopyDependenciesCmd(t *testing.T) {
 	targetDir := "target"
 	ctx, _ := ctxTestdata.NewContextMock()
@@ -21,7 +23,6 @@ func TestMakeMvnCopyDependenciesCmd(t *testing.T) {
 }
 
 func TestMakeCallGraphGenerationCmd(t *testing.T) {
-	jarPath := "jarpath"
 	targetClasses := []string{"targetclasses"}
 	dependencyClasses := "dependencypath"
 	outputName := ".outputName"
@@ -40,7 +41,6 @@ func TestMakeCallGraphGenerationCmd(t *testing.T) {
 }
 
 func TestMakeBuildMavenCmd(t *testing.T) {
-	jarPath := "jarpath"
 	ctx, _ := ctxTestdata.NewContextMock()
 	cmd, err := CmdFactory{}.MakeBuildMavenCmd(jarPath, ctx)
 
@@ -54,7 +54,6 @@ func TestMakeBuildMavenCmd(t *testing.T) {
 }
 
 func TestMakeJavaVersionCmd(t *testing.T) {
-	jarPath := "jarpath"
 	ctx, _ := ctxTestdata.NewContextMock()
 	cmd, err := CmdFactory{}.MakeJavaVersionCmd(jarPath, ctx)
 

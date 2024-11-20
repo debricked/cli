@@ -52,13 +52,15 @@ func downloadSootWrapper(arc ioFs.IArchive, fs ioFs.IFileSystem, path string, ve
 
 		return err
 	}
+
 	zipPath := dir + "/soot_wrapper.zip"
 	zipFile, err := fs.Create(zipPath)
-	defer zipFile.Close()
 	if err != nil {
 
 		return err
 	}
+	defer zipFile.Close()
+
 	err = downloadCompressedSootWrapper(fs, zipFile, version)
 	if err != nil {
 
@@ -78,6 +80,7 @@ func downloadCompressedSootWrapper(fs ioFs.IFileSystem, zipFile *os.File, versio
 	client := http.Client{
 		CheckRedirect: func(r *http.Request, via []*http.Request) error {
 			r.URL.Opaque = r.URL.Path
+
 			return nil
 		},
 	}
@@ -89,8 +92,8 @@ func downloadCompressedSootWrapper(fs ioFs.IFileSystem, zipFile *os.File, versio
 	defer resp.Body.Close()
 
 	_, err = fs.Copy(zipFile, resp.Body)
-	return err
 
+	return err
 }
 
 func (sh SootHandler) GetSootWrapper(version string, fs ioFs.IFileSystem, arc ioFs.IArchive) (string, error) {
@@ -110,6 +113,7 @@ func (sh SootHandler) GetSootWrapper(version string, fs ioFs.IFileSystem, arc io
 	}
 	path, err := filepath.Abs(path.Join(debrickedDir, "soot-wrapper.jar"))
 	if err != nil {
+
 		return "", err
 	}
 	if _, err := fs.Stat(path); fs.IsNotExist(err) {
@@ -121,6 +125,7 @@ func (sh SootHandler) GetSootWrapper(version string, fs ioFs.IFileSystem, arc io
 		} else {
 			version = "11"
 		} // Handling correct jar to install
+
 		return path, downloadSootWrapper(arc, fs, path, version)
 	}
 

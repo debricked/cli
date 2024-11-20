@@ -208,7 +208,7 @@ func TestUnzipFileCreateError(t *testing.T) {
 	reader := zip.Reader{
 		File: []*zip.File{nil, nil},
 	}
-	readCloser := zip.ReadCloser{Reader: reader}
+	readCloser := zip.ReadCloser{Reader: reader} //nolint
 	fsMock := ioTestData.FileSystemMock{CreateError: fmt.Errorf("%s", t.Name())}
 	zipMock := ioTestData.ZipMock{ReaderCloser: &readCloser}
 	a := Archive{
@@ -225,7 +225,7 @@ func TestUnzipFileOpenError(t *testing.T) {
 	reader := zip.Reader{
 		File: []*zip.File{nil, nil},
 	}
-	readCloser := zip.ReadCloser{Reader: reader}
+	readCloser := zip.ReadCloser{Reader: reader} //nolint
 	fsMock := ioTestData.FileSystemMock{}
 	zipMock := ioTestData.ZipMock{ReaderCloser: &readCloser, OpenError: fmt.Errorf("%s", t.Name())}
 	a := Archive{
@@ -242,7 +242,7 @@ func TestUnzipFileCopyError(t *testing.T) {
 	r, err := zipStruct.OpenReader("testdata/text.zip")
 	r.File = append(r.File, r.File[0]) // Hack solution (:
 	assert.NoError(t, err)
-	defer zipStruct.CloseReader(r)
+	defer zipStruct.CloseReader(r) //nolint
 
 	fsMock := ioTestData.FileSystemMock{CopyError: fmt.Errorf("%s", t.Name())}
 	zipMock := ioTestData.ZipMock{ReaderCloser: r}

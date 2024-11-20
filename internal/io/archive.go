@@ -2,7 +2,6 @@ package io
 
 import (
 	"encoding/base64"
-	"fmt"
 	"path"
 )
 
@@ -87,23 +86,23 @@ func (arc *Archive) UnzipFile(sourcePath string, targetPath string) error {
 
 		return err
 	}
-	defer arc.zip.CloseReader(r)
+	defer arc.zip.CloseReader(r) //nolint
 
 	f := r.File[1] //TODO: Change to first file and error-check for multiple once sootwrapper builds only one
-	fmt.Println("94")
 	outFile, err := arc.fs.Create(targetPath)
 	if err != nil {
 		return err
 	}
-	defer outFile.Close()
+	defer outFile.Close() //nolint
 
 	rc, err := arc.zip.Open(f)
 	if err != nil {
 		return err
 	}
-	defer arc.zip.Close(rc)
+	defer arc.zip.Close(rc) //nolint
 
 	_, err = arc.fs.Copy(outFile, rc)
+
 	return err
 }
 

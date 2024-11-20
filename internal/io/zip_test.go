@@ -12,7 +12,7 @@ const fileNameZip = "debricked-test.zip"
 
 func TestNewWriter(t *testing.T) {
 	testFile, err := filesystem.Create(fileNameZip)
-	defer deleteFile(t, testFile)
+	defer deleteFile(t, testFile) //nolint
 	assert.NoError(t, err)
 
 	writer := zipStruct.NewWriter(testFile)
@@ -26,7 +26,7 @@ func TestFileInfoHeader(t *testing.T) {
 	assert.NoError(t, err)
 
 	writer := zipStruct.NewWriter(testFile)
-	defer zipStruct.CloseWriter(writer)
+	defer zipStruct.CloseWriter(writer) //nolint
 
 	info, _ := filesystem.StatFile(testFile)
 	_, err = zipStruct.FileInfoHeader(info)
@@ -36,11 +36,11 @@ func TestFileInfoHeader(t *testing.T) {
 
 func TestCreateHeader(t *testing.T) {
 	testFile, err := filesystem.Create(fileNameZip)
-	defer deleteFile(t, testFile)
+	defer deleteFile(t, testFile) //nolint
 	assert.NoError(t, err)
 
 	writer := zipStruct.NewWriter(testFile)
-	defer zipStruct.CloseWriter(writer)
+	defer zipStruct.CloseWriter(writer) //nolint
 
 	info, _ := filesystem.StatFile(testFile)
 	header, _ := zipStruct.FileInfoHeader(info)
@@ -57,7 +57,7 @@ func TestDeflate(t *testing.T) {
 func TestOpenZip(t *testing.T) {
 	r, err := zipStruct.OpenReader("testdata/text.zip")
 	assert.NoError(t, err)
-	defer zipStruct.CloseReader(r)
+	defer zipStruct.CloseReader(r) //nolint
 
 	assert.NotNil(t, r, "reader not opened properly")
 	_, err = zipStruct.Open(r.File[0])
@@ -67,7 +67,7 @@ func TestOpenZip(t *testing.T) {
 func TestCloseZip(t *testing.T) {
 	r, err := zipStruct.OpenReader("testdata/text.zip")
 	assert.NoError(t, err)
-	defer zipStruct.CloseReader(r)
+	defer zipStruct.CloseReader(r) //nolint
 
 	assert.NotNil(t, r, "reader not opened properly")
 	rc, err := zipStruct.Open(r.File[0])
