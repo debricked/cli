@@ -186,11 +186,16 @@ func TestCopy(t *testing.T) {
 	assert.NoError(t, err)
 	source, err := filesystem.Open(fn_source)
 	assert.NoError(t, err)
+
 	_, err = filesystem.Copy(target, source)
 	assert.NoError(t, err)
+
+	// Remove generated testfiles
+	filesystem.CloseFile(source)
 	filesystem.RemoveAll(fn_source)
 	_, err = filesystem.Stat(fn_source)
 	assert.Error(t, err)
+	filesystem.CloseFile(target)
 	filesystem.RemoveAll(fn_target)
 	_, err = filesystem.Stat(fn_target)
 	assert.Error(t, err)
