@@ -21,6 +21,7 @@ var callgraphGenerateTimeout int
 var callgraphUploadTimeout int
 var commitAuthor string
 var commitName string
+var generateCommitNameBool bool
 var debug bool
 var exclusions = file.Exclusions()
 var inclusions = file.Exclusions()
@@ -68,6 +69,7 @@ const (
 	TagCommitAsReleaseFlag          = "tag-commit-as-release"
 	TagCommitAsReleaseEnv           = "TAG_COMMIT_AS_RELEASE"
 	ExperimentalFlag                = "experimental"
+	GenerateCommitName              = "generate-commit-name"
 )
 
 var scanCmdError error
@@ -88,6 +90,7 @@ If the given path contains a git repository all flags but "integration" will be 
 
 	cmd.Flags().StringVarP(&repositoryName, RepositoryFlag, "r", "", "repository name")
 	cmd.Flags().StringVarP(&commitName, CommitFlag, "c", "", "commit hash")
+	cmd.Flags().BoolVar(&generateCommitNameBool, GenerateCommitName, false, "auto-generate a commit name if flag is set")
 	cmd.Flags().StringVarP(&branchName, BranchFlag, "b", "", "branch name")
 	cmd.Flags().StringVarP(&commitAuthor, CommitAuthorFlag, "a", "", "commit author")
 	cmd.Flags().StringVarP(&repositoryUrl, RepositoryUrlFlag, "u", "", "repository URL")
@@ -239,6 +242,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			VersionHint:                 viper.GetBool(VersionHintFlag),
 			RepositoryName:              viper.GetString(RepositoryFlag),
 			CommitName:                  viper.GetString(CommitFlag),
+			GenerateCommitName:          viper.GetBool(GenerateCommitName),
 			BranchName:                  viper.GetString(BranchFlag),
 			CommitAuthor:                viper.GetString(CommitAuthorFlag),
 			RepositoryUrl:               viper.GetString(RepositoryUrlFlag),
