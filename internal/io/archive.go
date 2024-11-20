@@ -2,6 +2,7 @@ package io
 
 import (
 	"encoding/base64"
+	"fmt"
 	"path"
 )
 
@@ -48,7 +49,7 @@ func (arc *Archive) ZipFile(sourcePath string, targetPath string, zippedName str
 	}
 	defer fs.CloseFile(zipFile)
 	zipWriter := zip.NewWriter(zipFile)
-	defer zip.CloseWriter(zipWriter)
+	defer zip.CloseWriter(zipWriter) //nolint
 
 	info, err := fs.StatFile(zipFile)
 	if err != nil {
@@ -88,7 +89,11 @@ func (arc *Archive) UnzipFile(sourcePath string, targetPath string) error {
 	}
 	defer arc.zip.CloseReader(r) //nolint
 
-	f := r.File[1] //TODO: Change to first file and error-check for multiple once sootwrapper builds only one
+	if len(r.File) != 1 {
+		return fmt.Errorf("cannot unzip archive which does not contain exactly one file")
+	}
+
+	f := r.File[0]
 	outFile, err := arc.fs.Create(targetPath)
 	if err != nil {
 		return err
