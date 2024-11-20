@@ -42,16 +42,14 @@ func (arc *Archive) ZipFile(sourcePath string, targetPath string, zippedName str
 
 		return err
 	}
-
 	zipFile, err := fs.Create(targetPath)
 	if err != nil {
 
 		return err
 	}
 	defer fs.CloseFile(zipFile)
-
 	zipWriter := zip.NewWriter(zipFile)
-	defer zip.Close(zipWriter)
+	defer zip.CloseWriter(zipWriter)
 
 	info, err := fs.StatFile(zipFile)
 	if err != nil {
@@ -84,7 +82,6 @@ func (arc *Archive) ZipFile(sourcePath string, targetPath string, zippedName str
 }
 
 func (arc *Archive) UnzipFile(sourcePath string, targetPath string) error {
-	// Unzip a file, or the first file if multiple in zip archive
 	r, err := arc.zip.OpenReader(sourcePath)
 	if err != nil {
 
@@ -92,24 +89,20 @@ func (arc *Archive) UnzipFile(sourcePath string, targetPath string) error {
 	}
 	defer arc.zip.CloseReader(r)
 
-	for _, file := range r.File {
-		fmt.Println(file.Name)
-	}
-
-	f := r.File[1]
-
+	f := r.File[1] //TODO: Change to first file and error-check for multiple once sootwrapper builds only one
+	fmt.Println("94")
 	outFile, err := arc.fs.Create(targetPath)
 	if err != nil {
 		return err
 	}
 	defer outFile.Close()
-	fmt.Println("file created: ", outFile.Name())
-	rc, err := f.Open()
+
+	rc, err := arc.zip.Open(f)
 	if err != nil {
 		return err
 	}
-	defer rc.Close()
-	fmt.Println("Copying over content...")
+	defer arc.zip.Close(rc)
+
 	_, err = arc.fs.Copy(outFile, rc)
 	return err
 }

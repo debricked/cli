@@ -52,3 +52,15 @@ func TestMakeBuildMavenCmd(t *testing.T) {
 	assert.Contains(t, args, "-q")
 	assert.Contains(t, args, "-DskipTests")
 }
+
+func TestMakeJavaVersionCmd(t *testing.T) {
+	jarPath := "jarpath"
+	ctx, _ := ctxTestdata.NewContextMock()
+	cmd, err := CmdFactory{}.MakeJavaVersionCmd(jarPath, ctx)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, cmd)
+	args := cmd.Args
+	assert.Contains(t, args, "java")
+	assert.Contains(t, args, "--version")
+}

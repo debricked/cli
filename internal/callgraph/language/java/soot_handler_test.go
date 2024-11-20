@@ -1,6 +1,7 @@
 package java
 
 import (
+	"fmt"
 	"testing"
 
 	ioFs "github.com/debricked/cli/internal/io"
@@ -18,13 +19,68 @@ func TestInitializeSootWrapper(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestInitializeSootWrapperOpenEmbedError(t *testing.T) {
+	errString := "fs open embed error"
+	fsMock := ioTestData.FileSystemMock{FsOpenEmbedError: fmt.Errorf(errString)}
+	tempDir, err := fsMock.MkdirTemp(".tmp")
+	assert.NoError(t, err)
+	_, err = initializeSootWrapper(fsMock, tempDir)
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), errString)
+}
+
+func TestInitializeSootWrapperFsReadAllError(t *testing.T) {
+	errString := "fs read all error"
+	fsMock := ioTestData.FileSystemMock{FsReadAllError: fmt.Errorf(errString)}
+	tempDir, err := fsMock.MkdirTemp(".tmp")
+	assert.NoError(t, err)
+	_, err = initializeSootWrapper(fsMock, tempDir)
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), errString)
+}
+
+func TestInitializeSootWrapperFsWriteFileError(t *testing.T) {
+	errString := "fs write file error"
+	fsMock := ioTestData.FileSystemMock{FsWriteFileError: fmt.Errorf(errString)}
+	tempDir, err := fsMock.MkdirTemp(".tmp")
+	assert.NoError(t, err)
+	_, err = initializeSootWrapper(fsMock, tempDir)
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), errString)
+}
+
 func TestDownloadSootWrapper(t *testing.T) {
-	fs := ioFs.FileSystem{}
-	dir, _ := fs.MkdirTemp(".test_tmp")
-	zip := ioFs.Zip{}
-	arc := ioFs.NewArchiveWithStructs(dir, fs, zip)
-	err := downloadSootWrapper(arc, fs, "soot-wrapper.jar", "11")
+	fsMock := ioTestData.FileSystemMock{}
+	arcMock := ioTestData.ArchiveMock{}
+	err := downloadSootWrapper(arcMock, fsMock, "soot-wrapper.jar", "11")
 	assert.NoError(t, err, "expected no error for downloading soot-wrapper jar")
+}
+
+func TestDownloadSootWrapperMkdirTempError(t *testing.T) {
+	errString := "mkdir temp error"
+	fsMock := ioTestData.FileSystemMock{MkdirTempError: fmt.Errorf(errString)}
+	arcMock := ioTestData.ArchiveMock{}
+	err := downloadSootWrapper(arcMock, fsMock, "soot-wrapper.jar", "11")
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), errString)
+}
+
+func TestDownloadSootWrapperCreateError(t *testing.T) {
+	errString := "create error"
+	fsMock := ioTestData.FileSystemMock{CreateError: fmt.Errorf(errString)}
+	arcMock := ioTestData.ArchiveMock{}
+	err := downloadSootWrapper(arcMock, fsMock, "soot-wrapper.jar", "11")
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), errString)
+}
+
+func TestDownloadSootWrapperUnzipError(t *testing.T) {
+	errString := "create error"
+	fsMock := ioTestData.FileSystemMock{}
+	arcMock := ioTestData.ArchiveMock{UnzipFileError: fmt.Errorf(errString)}
+	err := downloadSootWrapper(arcMock, fsMock, "soot-wrapper.jar", "11")
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), errString)
 }
 
 func TestDownloadCompressedSootWrapper(t *testing.T) {
@@ -69,6 +125,11 @@ func TestGetSootWrapper(t *testing.T) {
 			version:     "21",
 			expectError: false,
 		},
+		{
+			name:        "Version not int",
+			version:     "akjwdm",
+			expectError: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -84,4 +145,30 @@ func TestGetSootWrapper(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetSootWrapperDownload(t *testing.T) {
+	fsMock := ioTestData.FileSystemMock{StatError: fmt.Errorf(""), IsNotExistBool: true}
+	arcMock := ioTestData.ArchiveMock{}
+	sootHandler := SootHandler{}
+	_, err := sootHandler.GetSootWrapper("17", fsMock, arcMock)
+	assert.NoError(t, err)
+}
+
+func TestGetSootWrapperInitialize(t *testing.T) {
+	fsMock := ioTestData.FileSystemMock{StatError: fmt.Errorf(""), IsNotExistBool: true}
+	arcMock := ioTestData.ArchiveMock{}
+	sootHandler := SootHandler{}
+	_, err := sootHandler.GetSootWrapper("23", fsMock, arcMock)
+	assert.NoError(t, err)
+}
+
+func TestGetSootWrapperMkdirError(t *testing.T) {
+	errString := "mkdir error"
+	fsMock := ioTestData.FileSystemMock{MkdirError: fmt.Errorf(errString), StatError: fmt.Errorf(""), IsNotExistBool: true}
+	arcMock := ioTestData.ArchiveMock{}
+	sootHandler := SootHandler{}
+	_, err := sootHandler.GetSootWrapper("11", fsMock, arcMock)
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), errString)
 }

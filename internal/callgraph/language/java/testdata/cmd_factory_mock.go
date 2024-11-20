@@ -43,8 +43,10 @@ func (f CmdFactoryMock) MakeJavaVersionCmd(workingDirectory string, ctx cgexec.I
 	return exec.Command(f.JavaVersionName, "JavaVersion"), f.JavaVersionErr
 }
 
-type MockSootHandler struct{}
+type MockSootHandler struct {
+	GetSootWrapperError error
+}
 
-func (_ MockSootHandler) GetSootWrapper(version string, fs ioFs.IFileSystem, arc ioFs.IArchive) (string, error) {
-	return "", nil
+func (msh MockSootHandler) GetSootWrapper(version string, fs ioFs.IFileSystem, arc ioFs.IArchive) (string, error) {
+	return "", msh.GetSootWrapperError
 }

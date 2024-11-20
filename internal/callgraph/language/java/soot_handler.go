@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	ioFs "github.com/debricked/cli/internal/io"
@@ -53,13 +54,11 @@ func downloadSootWrapper(arc ioFs.IArchive, fs ioFs.IFileSystem, path string, ve
 	}
 	zipPath := dir + "/soot_wrapper.zip"
 	zipFile, err := fs.Create(zipPath)
-	fmt.Println("created zip file...")
 	defer zipFile.Close()
 	if err != nil {
 
 		return err
 	}
-	fmt.Println("downloading compressed content...")
 	err = downloadCompressedSootWrapper(fs, zipFile, version)
 	if err != nil {
 
@@ -94,11 +93,14 @@ func downloadCompressedSootWrapper(fs ioFs.IFileSystem, zipFile *os.File, versio
 
 }
 
-func (_ SootHandler) GetSootWrapper(version string, fs ioFs.IFileSystem, arc ioFs.IArchive) (string, error) {
-	if version != "11" && version != "17" && version != "21" {
+func (sh SootHandler) GetSootWrapper(version string, fs ioFs.IFileSystem, arc ioFs.IArchive) (string, error) {
+	versionInt, err := strconv.Atoi(version)
+	if err != nil {
+		return "", fmt.Errorf("error when trying to convert java version string to int")
+	}
+	if versionInt < 11 {
 		return "", fmt.Errorf("lowest supported version for running callgraph generation is 11")
 	}
-	fmt.Println("java version: ", version)
 	debrickedDir := ".debricked"
 	if _, err := fs.Stat(debrickedDir); fs.IsNotExist(err) {
 		err := fs.Mkdir(debrickedDir, 0755)
@@ -106,17 +108,19 @@ func (_ SootHandler) GetSootWrapper(version string, fs ioFs.IFileSystem, arc ioF
 			return "", err
 		}
 	}
-	fmt.Println("created .debricked directory...")
 	path, err := filepath.Abs(path.Join(debrickedDir, "soot-wrapper.jar"))
 	if err != nil {
 		return "", err
 	}
 	if _, err := fs.Stat(path); fs.IsNotExist(err) {
-		fmt.Println("jar does not exist, downloading...")
-		// Initialize or download if file does not already exists
-		if version == "21" {
+		if versionInt >= 21 {
 			return initializeSootWrapper(fs, debrickedDir)
 		}
+		if versionInt >= 17 {
+			version = "17"
+		} else {
+			version = "11"
+		} // Handling correct jar to install
 		return path, downloadSootWrapper(arc, fs, path, version)
 	}
 

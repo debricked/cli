@@ -12,22 +12,24 @@ type IZip interface {
 	FileInfoHeader(fileInfo fs.FileInfo) (*zip.FileHeader, error)
 	GetDeflate() uint16
 	CreateHeader(writer *zip.Writer, header *zip.FileHeader) (io.Writer, error)
-	Close(writer *zip.Writer) error
+	CloseWriter(writer *zip.Writer) error
+	Open(file *zip.File) (io.ReadCloser, error)
+	Close(io.ReadCloser) error
 	OpenReader(source string) (*zip.ReadCloser, error)
 	CloseReader(reader *zip.ReadCloser) error
 }
 
 type Zip struct{}
 
-func (_ Zip) NewWriter(file *os.File) *zip.Writer {
+func (z Zip) NewWriter(file *os.File) *zip.Writer {
 	return zip.NewWriter(file)
 }
 
-func (_ Zip) FileInfoHeader(fileInfo fs.FileInfo) (*zip.FileHeader, error) {
+func (z Zip) FileInfoHeader(fileInfo fs.FileInfo) (*zip.FileHeader, error) {
 	return zip.FileInfoHeader(fileInfo)
 }
 
-func (_ Zip) GetDeflate() uint16 {
+func (z Zip) GetDeflate() uint16 {
 	return zip.Deflate
 }
 
@@ -35,8 +37,16 @@ func (z Zip) CreateHeader(writer *zip.Writer, header *zip.FileHeader) (io.Writer
 	return writer.CreateHeader(header)
 }
 
-func (z Zip) Close(writer *zip.Writer) error {
+func (z Zip) CloseWriter(writer *zip.Writer) error {
 	return writer.Close()
+}
+
+func (z Zip) Open(file *zip.File) (io.ReadCloser, error) {
+	return file.Open()
+}
+
+func (z Zip) Close(rc io.ReadCloser) error {
+	return rc.Close()
 }
 
 func (z Zip) OpenReader(source string) (*zip.ReadCloser, error) {

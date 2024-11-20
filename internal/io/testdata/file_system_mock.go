@@ -68,7 +68,7 @@ func (fsm FileSystemMock) MkdirTemp(pattern string) (string, error) {
 }
 
 func (fsm FileSystemMock) Mkdir(name string, perm fs.FileMode) error {
-	return fsm.FsWriteFileError
+	return fsm.MkdirError
 }
 
 func (fsm FileSystemMock) RemoveAll(path string) {

@@ -1,6 +1,7 @@
 package io
 
 import (
+	"archive/zip"
 	"fmt"
 	"testing"
 
@@ -188,4 +189,70 @@ func TestCleanup(t *testing.T) {
 
 	err := a.Cleanup("testdir")
 	assert.Nil(t, err)
+}
+
+func TestUnzipFileReadFileError(t *testing.T) {
+	fsMock := ioTestData.FileSystemMock{}
+	zipMock := ioTestData.ZipMock{OpenReaderError: fmt.Errorf("%s", t.Name())}
+	a := Archive{
+		workingDirectory: ".",
+		fs:               fsMock,
+		zip:              zipMock,
+	}
+	err := a.UnzipFile("", "")
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), t.Name())
+}
+
+func TestUnzipFileCreateError(t *testing.T) {
+	reader := zip.Reader{
+		File: []*zip.File{nil, nil},
+	}
+	readCloser := zip.ReadCloser{Reader: reader}
+	fsMock := ioTestData.FileSystemMock{CreateError: fmt.Errorf("%s", t.Name())}
+	zipMock := ioTestData.ZipMock{ReaderCloser: &readCloser}
+	a := Archive{
+		workingDirectory: ".",
+		fs:               fsMock,
+		zip:              zipMock,
+	}
+	err := a.UnzipFile("", "")
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), t.Name())
+}
+
+func TestUnzipFileOpenError(t *testing.T) {
+	reader := zip.Reader{
+		File: []*zip.File{nil, nil},
+	}
+	readCloser := zip.ReadCloser{Reader: reader}
+	fsMock := ioTestData.FileSystemMock{}
+	zipMock := ioTestData.ZipMock{ReaderCloser: &readCloser, OpenError: fmt.Errorf("%s", t.Name())}
+	a := Archive{
+		workingDirectory: ".",
+		fs:               fsMock,
+		zip:              zipMock,
+	}
+	err := a.UnzipFile("", "")
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), t.Name())
+}
+
+func TestUnzipFileCopyError(t *testing.T) {
+	r, err := zipStruct.OpenReader("testdata/text.zip")
+	r.File = append(r.File, r.File[0]) // Hack solution (:
+	assert.NoError(t, err)
+	defer zipStruct.CloseReader(r)
+
+	fsMock := ioTestData.FileSystemMock{CopyError: fmt.Errorf("%s", t.Name())}
+	zipMock := ioTestData.ZipMock{ReaderCloser: r}
+	a := Archive{
+		workingDirectory: ".",
+		fs:               fsMock,
+		zip:              zipMock,
+	}
+	fmt.Println(t.Name())
+	err = a.UnzipFile("", "")
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), t.Name())
 }
