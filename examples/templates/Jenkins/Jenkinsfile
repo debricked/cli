@@ -9,7 +9,19 @@ pipeline {
         stage('Debricked Scan') {
             steps {
                 script {
-                    sh 'curl -LsS https://github.com/debricked/cli/releases/download/release-v2/cli_linux_x86_64.tar.gz | tar -xz debricked'
+                    // Inspiration taken from https://github.com/trustin/os-maven-plugin/blob/master/src/main/java/kr/motd/maven/os/Detector.java
+                    def osName = System.getProperty("os.name").toLowerCase(Locale.US).replaceAll("[^a-z0-9]+", "")
+                    if (osName.startsWith("linux")) { osName = "linux" }
+                    else if (osName.startsWith("mac") || osName.startsWith("osx")) { osName = "macOS" }
+                    else if (osName.startsWith("windows")) { osName = "windows" }
+                    
+                    def osArch = System.getProperty("os.arch").toLowerCase(Locale.US).replaceAll("[^a-z0-9]+", "")
+                    if (osArch.matches("(x8664|amd64|ia32e|em64t|x64)")) { osArch = "x86_64" }
+                    else if (osArch.matches("(x8632|x86|i[3-6]86|ia32|x32)")) { osArch = "i386" }
+                    else if (osArch.matches("(aarch_64)")) { osArch = "arm64" }
+                    
+                    println("OS detected: " + osName + " and architecture " + osArch)
+                    sh 'curl -LsS https://github.com/debricked/cli/releases/download/release-v2/cli_' + osName + '_' + osArch + '.tar.gz | tar -xz debricked'
                     sh './debricked scan'
                 }
             }
