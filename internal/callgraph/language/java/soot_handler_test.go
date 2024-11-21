@@ -10,11 +10,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var sootHandler = SootHandler{}
+
 func TestInitializeSootWrapper(t *testing.T) {
 	fsMock := ioTestData.FileSystemMock{}
 	tempDir, err := fsMock.MkdirTemp(".tmp")
 	assert.NoError(t, err)
-	path, err := initializeSootWrapper(fsMock, tempDir)
+	path, err := sootHandler.initializeSootWrapper(fsMock, tempDir)
 	assert.NotNil(t, path)
 	assert.NoError(t, err)
 }
@@ -24,7 +26,7 @@ func TestInitializeSootWrapperOpenEmbedError(t *testing.T) {
 	fsMock := ioTestData.FileSystemMock{FsOpenEmbedError: fmt.Errorf(errString)} //nolint
 	tempDir, err := fsMock.MkdirTemp(".tmp")
 	assert.NoError(t, err)
-	_, err = initializeSootWrapper(fsMock, tempDir)
+	_, err = sootHandler.initializeSootWrapper(fsMock, tempDir)
 	assert.Error(t, err)
 	assert.Equal(t, err.Error(), errString)
 }
@@ -34,7 +36,7 @@ func TestInitializeSootWrapperFsReadAllError(t *testing.T) {
 	fsMock := ioTestData.FileSystemMock{FsReadAllError: fmt.Errorf(errString)} //nolint
 	tempDir, err := fsMock.MkdirTemp(".tmp")
 	assert.NoError(t, err)
-	_, err = initializeSootWrapper(fsMock, tempDir)
+	_, err = sootHandler.initializeSootWrapper(fsMock, tempDir)
 	assert.Error(t, err)
 	assert.Equal(t, err.Error(), errString)
 }
@@ -44,7 +46,7 @@ func TestInitializeSootWrapperFsWriteFileError(t *testing.T) {
 	fsMock := ioTestData.FileSystemMock{FsWriteFileError: fmt.Errorf(errString)} //nolint
 	tempDir, err := fsMock.MkdirTemp(".tmp")
 	assert.NoError(t, err)
-	_, err = initializeSootWrapper(fsMock, tempDir)
+	_, err = sootHandler.initializeSootWrapper(fsMock, tempDir)
 	assert.Error(t, err)
 	assert.Equal(t, err.Error(), errString)
 }
@@ -52,7 +54,7 @@ func TestInitializeSootWrapperFsWriteFileError(t *testing.T) {
 func TestDownloadSootWrapper(t *testing.T) {
 	fsMock := ioTestData.FileSystemMock{}
 	arcMock := ioTestData.ArchiveMock{}
-	err := downloadSootWrapper(arcMock, fsMock, "soot-wrapper.jar", "11")
+	err := sootHandler.downloadSootWrapper(arcMock, fsMock, "soot-wrapper.jar", "11")
 	assert.NoError(t, err, "expected no error for downloading soot-wrapper jar")
 }
 
@@ -60,7 +62,7 @@ func TestDownloadSootWrapperMkdirTempError(t *testing.T) {
 	errString := "mkdir temp error"
 	fsMock := ioTestData.FileSystemMock{MkdirTempError: fmt.Errorf(errString)} //nolint
 	arcMock := ioTestData.ArchiveMock{}
-	err := downloadSootWrapper(arcMock, fsMock, "soot-wrapper.jar", "11")
+	err := sootHandler.downloadSootWrapper(arcMock, fsMock, "soot-wrapper.jar", "11")
 	assert.Error(t, err)
 	assert.Equal(t, err.Error(), errString)
 }
@@ -69,7 +71,7 @@ func TestDownloadSootWrapperCreateError(t *testing.T) {
 	errString := "create error"
 	fsMock := ioTestData.FileSystemMock{CreateError: fmt.Errorf(errString)} //nolint
 	arcMock := ioTestData.ArchiveMock{}
-	err := downloadSootWrapper(arcMock, fsMock, "soot-wrapper.jar", "11")
+	err := sootHandler.downloadSootWrapper(arcMock, fsMock, "soot-wrapper.jar", "11")
 	assert.Error(t, err)
 	assert.Equal(t, err.Error(), errString)
 }
@@ -78,7 +80,7 @@ func TestDownloadSootWrapperUnzipError(t *testing.T) {
 	errString := "create error"
 	fsMock := ioTestData.FileSystemMock{}
 	arcMock := ioTestData.ArchiveMock{UnzipFileError: fmt.Errorf(errString)} //nolint
-	err := downloadSootWrapper(arcMock, fsMock, "soot-wrapper.jar", "11")
+	err := sootHandler.downloadSootWrapper(arcMock, fsMock, "soot-wrapper.jar", "11")
 	assert.Error(t, err)
 	assert.Equal(t, err.Error(), errString)
 }
@@ -92,14 +94,13 @@ func TestDownloadCompressedSootWrapper(t *testing.T) {
 	assert.NoError(t, err, "trying to create file")
 	defer file.Close()
 
-	err = downloadCompressedSootWrapper(fs, file, "11")
+	err = sootHandler.downloadCompressedSootWrapper(fs, file, "11")
 	assert.NoError(t, err, "expected no error for downloading soot-wrapper")
 }
 
 func TestGetSootWrapper(t *testing.T) {
 	fs := ioTestData.FileSystemMock{}
 	arc := ioTestData.ArchiveMock{}
-	sootHandler := SootHandler{}
 	tests := []struct {
 		name        string
 		version     string

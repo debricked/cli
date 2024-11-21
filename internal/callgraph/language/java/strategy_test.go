@@ -25,7 +25,7 @@ func TestNewStrategy(t *testing.T) {
 	s = NewStrategy(nil, []string{"file-1", "file-2"}, []string{}, []string{}, nil, nil)
 	assert.NotNil(t, s)
 
-	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "maven")
+	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "maven", "v2.0.0")
 	finder := testdata.NewEmptyFinderMock()
 	testFiles := []string{"file-1"}
 	finder.FindRootsNames = testFiles
@@ -42,7 +42,7 @@ func TestInvokeNoFiles(t *testing.T) {
 }
 
 func TestInvokeOneFile(t *testing.T) {
-	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "maven")
+	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "maven", "v2.0.0")
 	finder := testdata.NewEmptyFinderMock()
 	testFiles := []string{"file-1"}
 	finder.FindRootsNames = testFiles
@@ -53,7 +53,7 @@ func TestInvokeOneFile(t *testing.T) {
 }
 
 func TestInvokeManyFiles(t *testing.T) {
-	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "maven")
+	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, true, "maven", "v2.0.0")
 	finder := testdata.NewEmptyFinderMock()
 	testFiles := []string{"file-1", "file-2"}
 	finder.FindRootsNames = testFiles
@@ -64,7 +64,7 @@ func TestInvokeManyFiles(t *testing.T) {
 }
 
 func TestInvokeManyFilesWCorrectFilters(t *testing.T) {
-	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, false, "maven")
+	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, false, "maven", "v2.0.0")
 	finder := testdata.NewEmptyFinderMock()
 	testFiles := []string{"file-1", "file-2", "file-3"}
 	finder.FindRootsNames = []string{"file-3/pom.xml"}
@@ -83,7 +83,7 @@ func TestInvokeManyFilesWCorrectFilters(t *testing.T) {
 }
 
 func TestBuildProjectsError(t *testing.T) {
-	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, false, "maven")
+	conf := config.NewConfig("java", []string{"arg1"}, map[string]string{"kwarg": "val"}, false, "maven", "v2.0.0")
 	finder := testdata.NewEmptyFinderMock()
 	testFiles := []string{"file-1", "file-2", "file-3"}
 	finder.FindRootsNames = []string{"file-3/pom.xml"}

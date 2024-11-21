@@ -16,14 +16,14 @@ func TestNewStrategyFactory(t *testing.T) {
 
 func TestMakeErr(t *testing.T) {
 	f := NewStrategyFactory()
-	conf := config.NewConfig("test", nil, nil, true, "")
+	conf := config.NewConfig("test", nil, nil, true, "", "")
 	s, err := f.Make(conf, nil, nil, nil, nil)
 	assert.Nil(t, s)
 	assert.ErrorContains(t, err, "failed to make strategy from test")
 }
 
 func TestMake(t *testing.T) {
-	conf := config.NewConfig(java.Name, nil, nil, true, "")
+	conf := config.NewConfig(java.Name, nil, nil, true, "", "")
 	cases := map[string]IStrategy{
 		java.Name: java.NewStrategy(conf, []string{}, []string{}, []string{}, javafinder.JavaFinder{}, nil),
 	}

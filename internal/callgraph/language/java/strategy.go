@@ -98,7 +98,7 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 			s.config,
 			s.ctx,
 			io.FileSystem{},
-			SootHandler{},
+			SootHandler{s.config.Version()},
 		),
 		)
 	}
@@ -106,7 +106,14 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	return jobs, nil
 }
 
-func NewStrategy(config conf.IConfig, paths []string, exclusions []string, inclusions []string, finder finder.IFinder, ctx cgexec.IContext) Strategy {
+func NewStrategy(
+	config conf.IConfig,
+	paths []string,
+	exclusions []string,
+	inclusions []string,
+	finder finder.IFinder,
+	ctx cgexec.IContext,
+) Strategy {
 	return Strategy{config, CmdFactory{}, paths, exclusions, inclusions, finder, ctx}
 }
 

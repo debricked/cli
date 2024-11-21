@@ -55,7 +55,7 @@ func TestRunMakeMavenCopyDependenciesCmdErr(t *testing.T) {
 	fs := io.FileSystem{}
 	shMock := testdata.MockSootHandler{}
 
-	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven")
+	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven", "")
 	ctx, _ := ctxTestdata.NewContextMock()
 	j := NewJob(dir, files, cmdFactoryMock, fileWriterMock, archiveMock, config, ctx, fs, shMock)
 
@@ -69,7 +69,7 @@ func TestRunMakeMavenCopyDependenciesCmdErr(t *testing.T) {
 func TestRun(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven")
+	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven", "")
 	ctx, _ := ctxTestdata.NewContextMock()
 
 	fsMock := ioTestData.FileSystemMock{}
@@ -91,7 +91,7 @@ func TestRun(t *testing.T) {
 func TestRunCallgraphMock(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven")
+	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven", "")
 	ctx, _ := ctxTestdata.NewContextMock()
 	callgraphMock := testdata.CallgraphMock{}
 
@@ -111,7 +111,7 @@ func TestRunCallgraphMock(t *testing.T) {
 func TestRunCallgraphMockError(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven")
+	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven", "")
 	ctx, _ := ctxTestdata.NewContextMock()
 	callgraphMock := testdata.CallgraphMock{RunCallGraphWithSetupError: fmt.Errorf("error")}
 
@@ -131,7 +131,7 @@ func TestRunCallgraphMockError(t *testing.T) {
 func TestRunPostProcessMock(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven")
+	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven", "")
 	ctx, _ := ctxTestdata.NewContextMock()
 
 	fsMock := ioTestData.FileSystemMock{}
@@ -151,7 +151,7 @@ func TestRunPostProcessMock(t *testing.T) {
 func TestRunPostProcessZipFileError(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven")
+	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven", "")
 	ctx, _ := ctxTestdata.NewContextMock()
 	archiveMock := ioTestData.ArchiveMock{ZipFileError: fmt.Errorf("error")}
 	fs := io.FileSystem{}
@@ -167,7 +167,7 @@ func TestRunPostProcessZipFileError(t *testing.T) {
 func TestRunPostProcessB64Error(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven")
+	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven", "")
 	ctx, _ := ctxTestdata.NewContextMock()
 	fs := io.FileSystem{}
 
@@ -184,7 +184,7 @@ func TestRunPostProcessB64Error(t *testing.T) {
 func TestRunPostProcessCleanupError(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven")
+	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven", "")
 	ctx, _ := ctxTestdata.NewContextMock()
 	fs := io.FileSystem{}
 	shMock := testdata.MockSootHandler{}
@@ -201,7 +201,7 @@ func TestRunPostProcessCleanupError(t *testing.T) {
 func TestRunPostProcessCleanupNoFileExistError(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven")
+	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven", "")
 	ctx, _ := ctxTestdata.NewContextMock()
 	fs := io.FileSystem{}
 
@@ -220,7 +220,7 @@ func TestRunPostProcessCleanupNoFileExistError(t *testing.T) {
 func TestRunPostProcessFromRoot(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
-	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven")
+	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven", "")
 	ctx, _ := ctxTestdata.NewContextMock()
 	fs := io.FileSystem{}
 
@@ -242,7 +242,7 @@ func TestRunWithErrorsIsNotExistFalse(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 
-	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven")
+	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven", "")
 	ctx, _ := ctxTestdata.NewContextMock()
 
 	fs := ioTestData.FileSystemMock{}
@@ -267,7 +267,7 @@ func TestRunWithErrorsIsNotExistTrue(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
 
-	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven")
+	config := conf.NewConfig("java", nil, map[string]string{"pm": maven}, true, "maven", "")
 	ctx, _ := ctxTestdata.NewContextMock()
 
 	fs := ioTestData.FileSystemMock{}

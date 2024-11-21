@@ -21,7 +21,13 @@ func NewStrategyFactory() Factory {
 	return Factory{}
 }
 
-func (sf Factory) Make(config conf.IConfig, paths []string, exclusions []string, inclusions []string, ctx cgexec.IContext) (IStrategy, error) {
+func (sf Factory) Make(
+	config conf.IConfig,
+	paths []string,
+	exclusions []string,
+	inclusions []string,
+	ctx cgexec.IContext,
+) (IStrategy, error) {
 	name := config.Language()
 	switch name {
 	case java.Name:

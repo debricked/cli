@@ -17,12 +17,12 @@ type ISootHandler interface {
 	GetSootWrapper(version string, fs ioFs.IFileSystem, arc ioFs.IArchive) (string, error)
 }
 
-type SootHandler struct{}
+type SootHandler struct{ cliVersion string }
 
 //go:embed embedded/SootWrapper.jar
 var jarCallGraph embed.FS
 
-func initializeSootWrapper(fs ioFs.IFileSystem, tempDir string) (string, error) {
+func (sh SootHandler) initializeSootWrapper(fs ioFs.IFileSystem, tempDir string) (string, error) {
 	jarFile, err := fs.FsOpenEmbed(jarCallGraph, "embedded/SootWrapper.jar")
 	if err != nil {
 		return "", err
@@ -46,7 +46,7 @@ func initializeSootWrapper(fs ioFs.IFileSystem, tempDir string) (string, error) 
 	return tempJarFile, nil
 }
 
-func downloadSootWrapper(arc ioFs.IArchive, fs ioFs.IFileSystem, path string, version string) error {
+func (sh SootHandler) downloadSootWrapper(arc ioFs.IArchive, fs ioFs.IFileSystem, path string, version string) error {
 	dir, err := fs.MkdirTemp(".tmp")
 	if err != nil {
 
@@ -61,7 +61,7 @@ func downloadSootWrapper(arc ioFs.IArchive, fs ioFs.IFileSystem, path string, ve
 	}
 	defer zipFile.Close()
 
-	err = downloadCompressedSootWrapper(fs, zipFile, version)
+	err = sh.downloadCompressedSootWrapper(fs, zipFile, version)
 	if err != nil {
 
 		return err
@@ -70,9 +70,11 @@ func downloadSootWrapper(arc ioFs.IArchive, fs ioFs.IFileSystem, path string, ve
 	return arc.UnzipFile(zipPath, path)
 }
 
-func downloadCompressedSootWrapper(fs ioFs.IFileSystem, zipFile *os.File, version string) error {
+func (sh SootHandler) downloadCompressedSootWrapper(fs ioFs.IFileSystem, zipFile *os.File, version string) error {
 	fullURLFile := strings.Join([]string{
-		"https://github.com/debricked/cli/releases/download/v2.2.0/soot-wrapper-",
+		"https://github.com/debricked/cli/releases/download/",
+		sh.cliVersion,
+		"/soot-wrapper-",
 		version,
 		".zip",
 	}, "")
@@ -118,7 +120,7 @@ func (sh SootHandler) GetSootWrapper(version string, fs ioFs.IFileSystem, arc io
 	}
 	if _, err := fs.Stat(path); fs.IsNotExist(err) {
 		if versionInt >= 21 {
-			return initializeSootWrapper(fs, debrickedDir)
+			return sh.initializeSootWrapper(fs, debrickedDir)
 		}
 		if versionInt >= 17 {
 			version = "17"
@@ -126,7 +128,7 @@ func (sh SootHandler) GetSootWrapper(version string, fs ioFs.IFileSystem, arc io
 			version = "11"
 		} // Handling correct jar to install
 
-		return path, downloadSootWrapper(arc, fs, path, version)
+		return path, sh.downloadSootWrapper(arc, fs, path, version)
 	}
 
 	return path, nil
