@@ -105,13 +105,13 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 
 	e, _ := dScanner.ciService.Find()
 
-	if dOptions.GenerateCommitName {
-		debug.Log("Overwriting commit name with generated name", dOptions.Debug)
-		dOptions.CommitName = GenerateCommitNameTimestamp()
-	}
-
 	debug.Log("Mapping environment variables...", dOptions.Debug)
 	MapEnvToOptions(&dOptions, e)
+
+	if dOptions.GenerateCommitName && dOptions.CommitName == "" {
+		debug.Log("No commit name set, generating commit name", dOptions.Debug)
+		dOptions.CommitName = GenerateCommitNameTimestamp()
+	}
 
 	if err := SetWorkingDirectory(&dOptions); err != nil {
 		return err

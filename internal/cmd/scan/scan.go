@@ -90,7 +90,7 @@ If the given path contains a git repository all flags but "integration" will be 
 
 	cmd.Flags().StringVarP(&repositoryName, RepositoryFlag, "r", "", "repository name")
 	cmd.Flags().StringVarP(&commitName, CommitFlag, "c", "", "commit hash")
-	cmd.Flags().BoolVar(&generateCommitNameBool, GenerateCommitName, false, "auto-generate a commit name if flag is set")
+	cmd.Flags().BoolVar(&generateCommitNameBool, GenerateCommitName, false, "auto-generate a commit name if no commit hash is found (in -c or env)")
 	cmd.Flags().StringVarP(&branchName, BranchFlag, "b", "", "branch name")
 	cmd.Flags().StringVarP(&commitAuthor, CommitAuthorFlag, "a", "", "commit author")
 	cmd.Flags().StringVarP(&repositoryUrl, RepositoryUrlFlag, "u", "", "repository URL")
