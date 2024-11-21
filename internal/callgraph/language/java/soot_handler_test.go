@@ -173,3 +173,58 @@ func TestGetSootWrapperMkdirError(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, err.Error(), errString)
 }
+
+func TestGetSootHandlerJavaVersion(t *testing.T) {
+	sootHandler := SootHandler{}
+	tests := []struct {
+		name            string
+		version         int
+		expectedVersion string
+		expectError     bool
+	}{
+		{
+			name:            "Unsupported version",
+			version:         8,
+			expectedVersion: "",
+			expectError:     true,
+		},
+		{
+			name:            "Version 11",
+			version:         11,
+			expectedVersion: "11",
+			expectError:     false,
+		},
+		{
+			name:            "Version 17",
+			version:         17,
+			expectedVersion: "17",
+			expectError:     false,
+		},
+		{
+			name:            "Version 21",
+			version:         21,
+			expectedVersion: "21",
+			expectError:     false,
+		},
+		{
+			name:            "Version not int",
+			version:         12,
+			expectedVersion: "11",
+			expectError:     false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := sootHandler.getSootHandlerJavaVersion(tt.version)
+
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Empty(t, result)
+			} else {
+				assert.NoError(t, err)
+				assert.NotEmpty(t, result)
+			}
+		})
+	}
+}

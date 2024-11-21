@@ -92,7 +92,8 @@ jobs:
           distribution: 'temurin'
 
       - name: Install Debricked CLI
-        run: go install -ldflags "-X main.version=${GITHUB_REF#refs/heads/}" ./cmd/debricked
+        run: |
+          go install -ldflags "-X main.version=${{ secrets.DEBRICKED_VERSION }}" ./cmd/debricked
 
       - name: Callgraph E2E
         run: ./scripts/test_e2e_callgraph_java_version.sh ${{matrix.java}}

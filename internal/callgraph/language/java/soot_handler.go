@@ -78,6 +78,7 @@ func (sh SootHandler) downloadCompressedSootWrapper(fs ioFs.IFileSystem, zipFile
 		version,
 		".zip",
 	}, "")
+	fmt.Println("URL=", fullURLFile)
 
 	client := http.Client{
 		CheckRedirect: func(r *http.Request, via []*http.Request) error {
@@ -101,10 +102,11 @@ func (sh SootHandler) downloadCompressedSootWrapper(fs ioFs.IFileSystem, zipFile
 func (sh SootHandler) GetSootWrapper(version string, fs ioFs.IFileSystem, arc ioFs.IArchive) (string, error) {
 	versionInt, err := strconv.Atoi(version)
 	if err != nil {
-		return "", fmt.Errorf("error when trying to convert java version string to int")
+		return "", fmt.Errorf("could not convert version to int")
 	}
-	if versionInt < 11 {
-		return "", fmt.Errorf("lowest supported version for running callgraph generation is 11")
+	version, err = sh.getSootHandlerJavaVersion(versionInt)
+	if err != nil {
+		return "", err
 	}
 	debrickedDir := ".debricked"
 	if _, err := fs.Stat(debrickedDir); fs.IsNotExist(err) {
@@ -119,17 +121,24 @@ func (sh SootHandler) GetSootWrapper(version string, fs ioFs.IFileSystem, arc io
 		return "", err
 	}
 	if _, err := fs.Stat(path); fs.IsNotExist(err) {
-		if versionInt >= 21 {
+		if version == "21" {
 			return sh.initializeSootWrapper(fs, debrickedDir)
 		}
-		if versionInt >= 17 {
-			version = "17"
-		} else {
-			version = "11"
-		} // Handling correct jar to install
 
 		return path, sh.downloadSootWrapper(arc, fs, path, version)
 	}
 
 	return path, nil
+}
+
+func (sh SootHandler) getSootHandlerJavaVersion(version int) (string, error) {
+	if version >= 21 {
+		return "21", nil
+	} else if version >= 17 {
+		return "17", nil
+	} else if version >= 11 {
+		return "11", nil
+	} else {
+		return "", fmt.Errorf("lowest supported version for running callgraph generation is 11")
+	}
 }

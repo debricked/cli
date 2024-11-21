@@ -127,7 +127,7 @@ func RunE(callgraph callgraph.IGenerator) func(_ *cobra.Command, args []string) 
 		}
 
 		configs := []conf.IConfig{}
-		version := viper.GetString("version")
+		version := viper.GetString("cliVersion")
 
 		for _, language := range languages {
 			configs = append(configs, conf.NewConfig(language, args, map[string]string{}, !buildDisabled, languageMap[language], version))
