@@ -14,12 +14,14 @@ pipeline {
                     if (osName.startsWith("linux")) { osName = "linux" }
                     else if (osName.startsWith("mac") || osName.startsWith("osx")) { osName = "macOS" }
                     else if (osName.startsWith("windows")) { osName = "windows" }
-                    
+                    else { osName = "linux" } // Default to linux
+
                     def osArch = System.getProperty("os.arch").toLowerCase(Locale.US).replaceAll("[^a-z0-9]+", "")
                     if (osArch.matches("(x8664|amd64|ia32e|em64t|x64)")) { osArch = "x86_64" }
                     else if (osArch.matches("(x8632|x86|i[3-6]86|ia32|x32)")) { osArch = "i386" }
                     else if (osArch.matches("(aarch_64)")) { osArch = "arm64" }
-                    
+                    else { osArch = "x86_64" } // Default to x86 64-bit
+
                     println("OS detected: " + osName + " and architecture " + osArch)
                     sh 'curl -LsS https://github.com/debricked/cli/releases/download/release-v2/cli_' + osName + '_' + osArch + '.tar.gz | tar -xz debricked'
                     sh './debricked scan'
