@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/debricked/cli/internal/callgraph"
 	"github.com/debricked/cli/internal/callgraph/config"
@@ -60,6 +61,7 @@ type DebrickedOptions struct {
 	VersionHint                 bool
 	RepositoryName              string
 	CommitName                  string
+	GenerateCommitName          bool
 	BranchName                  string
 	CommitAuthor                string
 	RepositoryUrl               string
@@ -105,6 +107,7 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 
 	debug.Log("Mapping environment variables...", dOptions.Debug)
 	MapEnvToOptions(&dOptions, e)
+	UpdatedEmptyCommitName(&dOptions)
 
 	if err := SetWorkingDirectory(&dOptions); err != nil {
 		return err
@@ -330,6 +333,17 @@ func SetWorkingDirectory(d *DebrickedOptions) error {
 	fmt.Printf("Working directory: %s\n", absPath)
 
 	return nil
+}
+
+func UpdatedEmptyCommitName(o *DebrickedOptions) {
+	if o.GenerateCommitName && o.CommitName == "" {
+		debug.Log("No commit name set, generating commit name", o.Debug)
+		o.CommitName = GenerateCommitNameTimestamp()
+	}
+}
+
+func GenerateCommitNameTimestamp() string {
+	return fmt.Sprintf("generated-%d", time.Now().Unix())
 }
 
 func MapEnvToOptions(o *DebrickedOptions, env env.Env) {

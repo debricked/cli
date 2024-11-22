@@ -519,6 +519,40 @@ var cases = []struct {
 	},
 }
 
+func TestUpdateEmptyCommitName(t *testing.T) {
+	opts := DebrickedOptions{
+		CommitName:         "",
+		GenerateCommitName: true,
+	}
+
+	UpdatedEmptyCommitName(&opts)
+	assert.Contains(t, opts.CommitName, "generated-")
+}
+
+func TestUpdateEmptyCommitNameNotEmpty(t *testing.T) {
+	opts := DebrickedOptions{
+		CommitName:         "test",
+		GenerateCommitName: true,
+	}
+
+	UpdatedEmptyCommitName(&opts)
+	assert.Equal(t, opts.CommitName, "test")
+}
+
+func TestUpdateEmptyCommitNameNoGenerateCommitNameSet(t *testing.T) {
+	opts := DebrickedOptions{
+		CommitName: "",
+	}
+
+	UpdatedEmptyCommitName(&opts)
+	assert.Empty(t, opts.CommitName)
+}
+
+func TestGenerateCommitName(t *testing.T) {
+	res := GenerateCommitNameTimestamp()
+	assert.Contains(t, res, "generated-")
+}
+
 func TestMapEnvToOptions(t *testing.T) {
 
 	for _, co := range cases {
@@ -714,6 +748,39 @@ func TestScanWithFingerprintNoEnterprise(t *testing.T) {
 	}
 	err := scanner.Scan(opts)
 	assert.NoError(t, err)
+	cwd, _ = os.Getwd()
+	assert.Contains(t, cwd, path)
+}
+
+func TestScanWithGeneratedCommitName(t *testing.T) {
+	clientMock := testdata.NewDebClientMock()
+	addMockedFormatsResponse(clientMock, "package\\.json")
+	addMockedFileUploadResponse(clientMock)
+	addMockedFinishResponse(clientMock, http.StatusNoContent)
+	addMockedStatusResponse(clientMock, http.StatusOK, 100)
+
+	scanner := makeScanner(clientMock, nil, nil)
+
+	cwd, _ := os.Getwd()
+	defer resetWd(t, cwd)
+
+	path := testdataNpm
+	repositoryName := path
+	opts := DebrickedOptions{
+		Path:               path,
+		Resolve:            false,
+		Fingerprint:        false,
+		CallGraph:          false,
+		Exclusions:         nil,
+		Inclusions:         nil,
+		RepositoryName:     repositoryName,
+		GenerateCommitName: true,
+		BranchName:         "",
+		RepositoryUrl:      "",
+		IntegrationName:    "",
+	}
+	err := scanner.Scan(opts)
+	assert.Nil(t, err)
 	cwd, _ = os.Getwd()
 	assert.Contains(t, cwd, path)
 }
