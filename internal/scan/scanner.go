@@ -107,11 +107,7 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 
 	debug.Log("Mapping environment variables...", dOptions.Debug)
 	MapEnvToOptions(&dOptions, e)
-
-	if dOptions.GenerateCommitName && dOptions.CommitName == "" {
-		debug.Log("No commit name set, generating commit name", dOptions.Debug)
-		dOptions.CommitName = GenerateCommitNameTimestamp()
-	}
+	UpdatedEmptyCommitName(&dOptions)
 
 	if err := SetWorkingDirectory(&dOptions); err != nil {
 		return err
@@ -337,6 +333,13 @@ func SetWorkingDirectory(d *DebrickedOptions) error {
 	fmt.Printf("Working directory: %s\n", absPath)
 
 	return nil
+}
+
+func UpdatedEmptyCommitName(o *DebrickedOptions) {
+	if o.GenerateCommitName && o.CommitName == "" {
+		debug.Log("No commit name set, generating commit name", o.Debug)
+		o.CommitName = GenerateCommitNameTimestamp()
+	}
 }
 
 func GenerateCommitNameTimestamp() string {

@@ -519,6 +519,35 @@ var cases = []struct {
 	},
 }
 
+func TestUpdateEmptyCommitName(t *testing.T) {
+	opts := DebrickedOptions{
+		CommitName:         "",
+		GenerateCommitName: true,
+	}
+
+	UpdatedEmptyCommitName(&opts)
+	assert.Contains(t, opts.CommitName, "generated-")
+}
+
+func TestUpdateEmptyCommitNameNotEmpty(t *testing.T) {
+	opts := DebrickedOptions{
+		CommitName:         "test",
+		GenerateCommitName: true,
+	}
+
+	UpdatedEmptyCommitName(&opts)
+	assert.Equal(t, opts.CommitName, "test")
+}
+
+func TestUpdateEmptyCommitNameNoGenerateCommitNameSet(t *testing.T) {
+	opts := DebrickedOptions{
+		CommitName: "",
+	}
+
+	UpdatedEmptyCommitName(&opts)
+	assert.Empty(t, opts.CommitName)
+}
+
 func TestGenerateCommitName(t *testing.T) {
 	res := GenerateCommitNameTimestamp()
 	assert.Contains(t, res, "generated-")
