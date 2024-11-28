@@ -1,6 +1,6 @@
 .PHONY: install
 install:
-	bash scripts/install.sh
+	sh scripts/install.sh
 
 .PHONY: lint
 lint:
