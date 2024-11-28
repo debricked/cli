@@ -1,13 +1,12 @@
 FROM golang:1.22-alpine AS dev
 WORKDIR /cli
-RUN apk update \
-  && apk --no-cache --update add git build-base
+RUN apk --no-cache --update add git build-base
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 COPY . .
 RUN mkdir -p internal/file/embedded && \
     wget -O internal/file/embedded/supported_formats.json https://debricked.com/api/1.0/open/files/supported-formats
-RUN go build -o debricked ./cmd/debricked
+RUN apk add --no-cache make curl && make install && apk del make curl
 CMD [ "debricked" ]
 
 FROM alpine:latest AS cli-base
