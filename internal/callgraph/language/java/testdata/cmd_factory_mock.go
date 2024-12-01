@@ -40,7 +40,10 @@ func (f CmdFactoryMock) MakeBuildMavenCmd(workingDirectory string, ctx cgexec.IC
 }
 
 func (f CmdFactoryMock) MakeJavaVersionCmd(workingDirectory string, ctx cgexec.IContext) (*exec.Cmd, error) {
-	return exec.Command(f.JavaVersionName, "JavaVersion"), f.JavaVersionErr
+	return exec.Command(
+		f.JavaVersionName,
+		"\"openjdk 23.0.1 2024-10-15\nOpenJDK Runtime Environment Homebrew (build 23.0.1)\nOpenJDK 64-Bit Server VM Homebrew (build 23.0.1, mixed mode, sharing)\"",
+	), f.JavaVersionErr
 }
 
 type MockSootHandler struct {

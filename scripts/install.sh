@@ -7,7 +7,7 @@ if ! command -v git >/dev/null 2>&1
 then
     echo -e "Failed to find git, thus also the version. Version will be set to v0.0.0"
 fi
-set -e
+set +e
 version=${DEBRICKED_VERSION:-$(git symbolic-ref -q --short HEAD || git describe --tags --exact-match)}
 set -e
 ldFlags="-X main.version=${version}"

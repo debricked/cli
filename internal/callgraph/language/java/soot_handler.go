@@ -78,7 +78,6 @@ func (sh SootHandler) downloadCompressedSootWrapper(fs ioFs.IFileSystem, zipFile
 		version,
 		".zip",
 	}, "")
-	fmt.Println("URL=", fullURLFile)
 
 	client := http.Client{
 		CheckRedirect: func(r *http.Request, via []*http.Request) error {

@@ -1,6 +1,7 @@
 package java
 
 import (
+	"fmt"
 	"regexp"
 
 	"github.com/debricked/cli/internal/callgraph/cgexec"
@@ -74,13 +75,16 @@ func (cg *Callgraph) javaVersion(path string) (string, error) {
 
 	cmd := cgexec.NewCommand(osCmd)
 	err = cgexec.RunCommand(*cmd, cg.ctx)
+	if err != nil {
+		return "", err
+	}
 	javaVersionRegex := regexp.MustCompile(`\b(\d+)\.\d+\.\d+\b`)
 	match := javaVersionRegex.FindStringSubmatch(cmd.GetStdOut().String())
 	if len(match) > 1 {
 		return match[1], nil
+	} else {
+		return "", fmt.Errorf("no version found in 'java --version' output, are you using a non-numeric version?")
 	}
-
-	return "", err
 }
 
 func (cg *Callgraph) RunCallGraph(callgraphJarPath string) error {
