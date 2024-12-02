@@ -165,3 +165,38 @@ func TestWriteFile(t *testing.T) {
 	assert.Nil(t, err)
 
 }
+
+func TestMkdir(t *testing.T) {
+	fn := fileNameFS + t.Name()
+	err := filesystem.Mkdir(fn, 0755)
+	assert.NoError(t, err)
+	_, err = filesystem.Stat(fn)
+	assert.NoError(t, err)
+	filesystem.RemoveAll(fn)
+	_, err = filesystem.Stat(fn)
+	assert.Error(t, err)
+}
+
+func TestCopy(t *testing.T) {
+	fn_source := fileNameFS + t.Name() + "source"
+	fn_target := fileNameFS + t.Name() + "target"
+	err := filesystem.FsWriteFile(fn_source, []byte{}, 0600)
+	assert.NoError(t, err)
+	target, err := filesystem.Create(fn_target)
+	assert.NoError(t, err)
+	source, err := filesystem.Open(fn_source)
+	assert.NoError(t, err)
+
+	_, err = filesystem.Copy(target, source)
+	assert.NoError(t, err)
+
+	// Remove generated testfiles
+	filesystem.CloseFile(source)
+	filesystem.RemoveAll(fn_source)
+	_, err = filesystem.Stat(fn_source)
+	assert.Error(t, err)
+	filesystem.CloseFile(target)
+	filesystem.RemoveAll(fn_target)
+	_, err = filesystem.Stat(fn_target)
+	assert.Error(t, err)
+}

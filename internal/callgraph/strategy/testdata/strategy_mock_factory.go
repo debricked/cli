@@ -13,7 +13,13 @@ func NewStrategyFactoryMock() FactoryMock {
 	return FactoryMock{}
 }
 
-func (sf FactoryMock) Make(config config.IConfig, paths []string, exclusions []string, inclusions []string, ctx cgexec.IContext) (strategy.IStrategy, error) {
+func (sf FactoryMock) Make(
+	config config.IConfig,
+	paths []string,
+	exclusions []string,
+	inclusions []string,
+	ctx cgexec.IContext,
+) (strategy.IStrategy, error) {
 	return NewStrategyMock(config, paths, testdata.FinderMock{}, ctx), nil
 }
 
@@ -23,6 +29,12 @@ func NewStrategyFactoryErrorMock() FactoryErrorMock {
 	return FactoryErrorMock{}
 }
 
-func (sf FactoryErrorMock) Make(config config.IConfig, paths []string, exclusions []string, inclusions []string, ctx cgexec.IContext) (strategy.IStrategy, error) {
+func (sf FactoryErrorMock) Make(
+	config config.IConfig,
+	paths []string,
+	exclusions []string,
+	inclusions []string,
+	ctx cgexec.IContext,
+) (strategy.IStrategy, error) {
 	return NewStrategyErrorMock(config, paths, testdata.FinderMock{}, ctx), nil
 }

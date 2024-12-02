@@ -8,7 +8,7 @@ import (
 	golangfinder "github.com/debricked/cli/internal/callgraph/finder/golangfinder"
 	"github.com/debricked/cli/internal/callgraph/finder/javafinder"
 	"github.com/debricked/cli/internal/callgraph/language/golang"
-	java "github.com/debricked/cli/internal/callgraph/language/java11"
+	"github.com/debricked/cli/internal/callgraph/language/java"
 )
 
 type IFactory interface {
@@ -21,7 +21,13 @@ func NewStrategyFactory() Factory {
 	return Factory{}
 }
 
-func (sf Factory) Make(config conf.IConfig, paths []string, exclusions []string, inclusions []string, ctx cgexec.IContext) (IStrategy, error) {
+func (sf Factory) Make(
+	config conf.IConfig,
+	paths []string,
+	exclusions []string,
+	inclusions []string,
+	ctx cgexec.IContext,
+) (IStrategy, error) {
 	name := config.Language()
 	switch name {
 	case java.Name:

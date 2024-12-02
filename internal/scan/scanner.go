@@ -74,6 +74,7 @@ type DebrickedOptions struct {
 	MinFingerprintContentLength int
 	TagCommitAsRelease          bool
 	Experimental                bool
+	Version                     string
 }
 
 func NewDebrickedScanner(
@@ -241,8 +242,8 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 	if options.CallGraph {
 		debug.Log("Running scanFingerprint...", options.Debug)
 		configs := []config.IConfig{
-			config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven"),
-			config.NewConfig("golang", []string{}, map[string]string{"pm": "go"}, true, "go"),
+			config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven", options.Version),
+			config.NewConfig("golang", []string{}, map[string]string{"pm": "go"}, true, "go", options.Version),
 		}
 		timeout := options.CallGraphGenerateTimeout
 		path := options.Path

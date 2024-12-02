@@ -47,7 +47,7 @@ func TestRun(t *testing.T) {
 		}
 	}()
 
-	config := conf.NewConfig("golang", nil, nil, true, "go")
+	config := conf.NewConfig("golang", nil, nil, true, "go", "")
 	ctx, _ := ctxTestdata.NewContextMock()
 
 	rootFileDir := filepath.Dir("testdata/fixture/app.go")
@@ -65,7 +65,7 @@ func TestRun(t *testing.T) {
 
 func TestRunCallgraphMockError(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
-	config := conf.NewConfig("golang", nil, nil, true, "go")
+	config := conf.NewConfig("golang", nil, nil, true, "go", "")
 	ctx, _ := ctxTestdata.NewContextMock()
 	callgraphMock := testdata.CallgraphMock{RunCallGraphError: fmt.Errorf("error")}
 
@@ -83,7 +83,7 @@ func TestRunCallgraphMockError(t *testing.T) {
 
 func TestRunPostProcessZipFileError(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
-	config := conf.NewConfig("golang", nil, nil, true, "go")
+	config := conf.NewConfig("golang", nil, nil, true, "go", "")
 	ctx, _ := ctxTestdata.NewContextMock()
 	archiveMock := ioTestData.ArchiveMock{ZipFileError: fmt.Errorf("error")}
 	fs := io.FileSystem{}
@@ -98,7 +98,7 @@ func TestRunPostProcessZipFileError(t *testing.T) {
 
 func TestRunPostProcessB64Error(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
-	config := conf.NewConfig("golang", nil, nil, true, "go")
+	config := conf.NewConfig("golang", nil, nil, true, "go", "")
 	ctx, _ := ctxTestdata.NewContextMock()
 	fs := io.FileSystem{}
 
@@ -114,7 +114,7 @@ func TestRunPostProcessB64Error(t *testing.T) {
 
 func TestRunPostProcessCleanupError(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
-	config := conf.NewConfig("golang", nil, nil, true, "go")
+	config := conf.NewConfig("golang", nil, nil, true, "go", "")
 	ctx, _ := ctxTestdata.NewContextMock()
 	fs := io.FileSystem{}
 
@@ -130,7 +130,7 @@ func TestRunPostProcessCleanupError(t *testing.T) {
 
 func TestRunPostProcessCleanupNoFileExistError(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
-	config := conf.NewConfig("golang", nil, nil, true, "go")
+	config := conf.NewConfig("golang", nil, nil, true, "go", "")
 	ctx, _ := ctxTestdata.NewContextMock()
 	fs := io.FileSystem{}
 
@@ -148,7 +148,7 @@ func TestRunPostProcessCleanupNoFileExistError(t *testing.T) {
 
 func TestRunWithErrorsIsNotExistFalse(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
-	config := conf.NewConfig("golang", nil, nil, true, "go")
+	config := conf.NewConfig("golang", nil, nil, true, "go", "")
 	ctx, _ := ctxTestdata.NewContextMock()
 
 	fs := ioTestData.FileSystemMock{}
@@ -170,7 +170,7 @@ func TestRunWithErrorsIsNotExistFalse(t *testing.T) {
 
 func TestRunWithErrorsIsNotExistTrue(t *testing.T) {
 	fileWriterMock := &ioTestData.FileWriterMock{}
-	config := conf.NewConfig("golang", nil, nil, true, "go")
+	config := conf.NewConfig("golang", nil, nil, true, "go", "")
 	ctx, _ := ctxTestdata.NewContextMock()
 
 	fs := ioTestData.FileSystemMock{}

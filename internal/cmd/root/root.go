@@ -29,6 +29,7 @@ Complete documentation is available at https://docs.debricked.com/tools-and-inte
 		},
 		Version: version,
 	}
+	viper.Set("cliVersion", version)
 	viper.SetEnvPrefix("DEBRICKED")
 	viper.AutomaticEnv()
 	viper.MustBindEnv(AccessTokenFlag)
