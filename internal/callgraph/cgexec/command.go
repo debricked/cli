@@ -109,7 +109,13 @@ func RunCommand(cmd ICommand, ctx IContext) error {
 	go func() {
 		err := cmd.Wait()
 		if err != nil {
-			err = fmt.Errorf("Command '%s' executed in folder '%s' gave the following error: \n%s\n%s", args, cmd.GetDir(), cmd.GetStdOut().String(), cmd.GetStdErr().String())
+			err = fmt.Errorf(
+				"Command '%s' executed in folder '%s' gave the following error: \n%s\n%s",
+				args,
+				cmd.GetDir(),
+				cmd.GetStdOut().String(),
+				cmd.GetStdErr().String(),
+			)
 		}
 
 		done <- err

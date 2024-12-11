@@ -1,6 +1,6 @@
 package language
 
-import java "github.com/debricked/cli/internal/callgraph/language/java11"
+import "github.com/debricked/cli/internal/callgraph/language/java"
 
 type ILanguage interface {
 	Name() string

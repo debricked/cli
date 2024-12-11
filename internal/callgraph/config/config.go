@@ -6,6 +6,7 @@ type IConfig interface {
 	Kwargs() map[string]string
 	Build() bool
 	PackageManager() string
+	Version() string
 }
 
 type Config struct {
@@ -14,15 +15,24 @@ type Config struct {
 	kwargs         map[string]string
 	build          bool
 	packageManager string
+	version        string
 }
 
-func NewConfig(language string, args []string, kwargs map[string]string, build bool, packageManager string) Config {
+func NewConfig(
+	language string,
+	args []string,
+	kwargs map[string]string,
+	build bool,
+	packageManager string,
+	version string,
+) Config {
 	return Config{
 		language,
 		args,
 		kwargs,
 		build,
 		packageManager,
+		version,
 	}
 }
 
@@ -44,4 +54,8 @@ func (c Config) Build() bool {
 
 func (c Config) PackageManager() string {
 	return c.packageManager
+}
+
+func (c Config) Version() string {
+	return c.version
 }
