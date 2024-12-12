@@ -50,22 +50,22 @@ RUN apt -y update && apt -y upgrade && apt -y install curl gnupg unzip && \
 
 RUN mkdir -p /etc/apt/keyrings
 
-ENV MAVEN_VERSION 3.9.9
-ENV MAVEN_HOME /usr/lib/mvn
-ENV PATH $MAVEN_HOME/bin:$PATH
+ENV MAVEN_VERSION="3.9.9"
+ENV MAVEN_HOME="/usr/lib/mvn"
+ENV PATH="$MAVEN_HOME/bin:$PATH"
 RUN curl -fsSLO http://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz && \
     tar -zxvf apache-maven-$MAVEN_VERSION-bin.tar.gz && \
     rm apache-maven-$MAVEN_VERSION-bin.tar.gz && \
     mv apache-maven-$MAVEN_VERSION $MAVEN_HOME
 
-ENV GRADLE_VERSION 8.10.1
-ENV GRADLE_HOME /usr/lib/gradle
-ENV PATH $GRADLE_HOME/gradle-$GRADLE_VERSION/bin:$PATH
+ENV GRADLE_VERSION="8.10.1"
+ENV GRADLE_HOME="/usr/lib/gradle"
+ENV PATH="$GRADLE_HOME/gradle-$GRADLE_VERSION/bin:$PATH"
 RUN curl -fsSLO https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip && \
     unzip gradle-$GRADLE_VERSION-bin.zip -d $GRADLE_HOME && \
     rm gradle-$GRADLE_VERSION-bin.zip
 
-ENV NODE_MAJOR 20
+ENV NODE_MAJOR="20"
 RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
 RUN echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
 RUN apt -y update && apt -y upgrade && apt -y install nodejs && \
@@ -79,9 +79,9 @@ RUN npm -v && yarn -v && bower -v
 # https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install
 # https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian
 # Package manager installs are only supported on the x64 architecture. Other architectures, such as Arm, must install .NET by some other means such as with Snap, an installer script, or through a manual binary installation.
-ENV DOTNET_ROOT /usr/lib/dotnet
-ENV DOTNET_MAJOR 8.0
-ENV PATH $DOTNET_ROOT:$PATH
+ENV DOTNET_ROOT="/usr/lib/dotnet"
+ENV DOTNET_MAJOR="8.0"
+ENV PATH="$DOTNET_ROOT:$PATH"
 RUN apt -y update && apt -y install libicu72 && \
     apt -y clean && rm -rf /var/lib/apt/lists/*
 RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh \
@@ -90,7 +90,7 @@ RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh \
     && rm ./dotnet-install.sh \
     && dotnet help
 
-ENV GOLANG_VERSION 1.22
+ENV GOLANG_VERSION="1.22"
 RUN apt -y update && apt -y upgrade && apt -y install \
     python-is-python3 \
     ca-certificates && \
