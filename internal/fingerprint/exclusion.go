@@ -28,6 +28,7 @@ var defaultFingerprintExclusions = DefaultFingerprintExclusionList{
 		".git",
 		"obj",
 		"bower_components",
+		".m2", // Default Maven directory for settings.xml and dependencies
 	},
 	Files: []string{
 		"gradlew", "gradlew.bat", "mvnw", "mvnw.cmd", "gradle-wrapper.jar", "maven-wrapper.jar",
