@@ -85,7 +85,7 @@ jobs:
         if: needs.calculate-checksum.outputs.hash != needs.calculate-checksum.outputs.prev_hash
         run: |
           cd java/common/
-          mvn clean package -X -DskipTests
+          mvn clean package -X -DskipTests -Pjava${{ matrix.java-version }}
 
       - name: Create archive with generated JARs
         if: needs.calculate-checksum.outputs.hash != needs.calculate-checksum.outputs.prev_hash
