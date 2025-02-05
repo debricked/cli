@@ -129,7 +129,7 @@ $ debricked scan . `+exampleFlags)
 		inclusions,
 		`Forces inclusion of specified terms, see exclusion flag for more information on supported terms.
 Examples: 
-$ debricked scan . --include '**/node_modules/**'`)
+$ debricked scan . --inclusion '**/node_modules/**'`)
 	regenerateDoc := strings.Join(
 		[]string{
 			"Toggle regeneration of already existing lock files between 3 modes:\n",
