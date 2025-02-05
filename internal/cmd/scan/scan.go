@@ -236,6 +236,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			SBOM:                        viper.GetString(SBOMFlag),
 			SBOMOutput:                  viper.GetString(SBOMOutputFlag),
 			Exclusions:                  viper.GetStringSlice(ExclusionFlag),
+			Inclusions:                  viper.GetStringSlice(InclusionFlag),
 			Verbose:                     viper.GetBool(VerboseFlag),
 			Debug:                       viper.GetBool(DebugFlag),
 			Regenerate:                  viper.GetInt(RegenerateFlag),
