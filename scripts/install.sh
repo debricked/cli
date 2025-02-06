@@ -11,7 +11,6 @@ set +e
 version=${DEBRICKED_VERSION:-$(git symbolic-ref -q --short HEAD || git describe --tags --exact-match)}
 set -e
 ldFlags="-X main.version=${version}"
-export CGO_ENABLED=0
 go install -ldflags "${ldFlags}" ./cmd/debricked
 go generate -v -x ./cmd/debricked
 go build -ldflags "${ldFlags}" ./cmd/debricked
