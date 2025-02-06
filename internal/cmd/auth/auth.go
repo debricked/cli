@@ -17,7 +17,6 @@ func NewAuthCmd(authenticator auth.IAuthenticator) *cobra.Command {
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			_ = viper.BindPFlags(cmd.Flags())
 		},
-		Hidden: true,
 	}
 	cmd.AddCommand(login.NewLoginCmd(authenticator))
 	cmd.AddCommand(logout.NewLogoutCmd(authenticator))
