@@ -25,7 +25,6 @@ func NewLoginCmd(authenticator auth.IAuthenticator) *cobra.Command {
 
 func RunE(a auth.IAuthenticator) func(_ *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, _ []string) error {
-		fmt.Println("Warning: auth is beta and may not work as expected.")
 		err := a.Authenticate()
 		if err != nil {
 			return err
