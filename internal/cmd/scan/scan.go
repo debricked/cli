@@ -24,7 +24,7 @@ var commitName string
 var generateCommitName bool
 var debug bool
 var exclusions = file.Exclusions()
-var inclusions = file.Exclusions()
+var inclusions []string
 var integrationName string
 var jsonFilePath string
 var minFingerprintContentLength int
