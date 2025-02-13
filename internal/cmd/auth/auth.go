@@ -13,7 +13,7 @@ func NewAuthCmd(authenticator auth.IAuthenticator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "auth",
 		Short: "Debricked authentication.",
-		Long:  `Debricked service authentication. Currently in beta and will most likely not work as expected`,
+		Long:  `Debricked service authentication.`,
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			_ = viper.BindPFlags(cmd.Flags())
 		},
