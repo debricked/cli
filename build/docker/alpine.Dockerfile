@@ -1,4 +1,4 @@
-FROM golang:1.22-alpine AS dev
+FROM golang:1.23-alpine AS dev
 WORKDIR /cli
 RUN apk --no-cache --update add git build-base
 COPY go.mod go.sum ./
@@ -49,7 +49,7 @@ RUN apk --no-cache --update add \
   g++ \
   curl
 
-RUN apk --no-cache --update add dotnet8-sdk go~=1.22 --repository=https://dl-cdn.alpinelinux.org/alpine/v3.20/community
+RUN apk --no-cache --update add dotnet8-sdk go~=1.23 --repository=https://dl-cdn.alpinelinux.org/alpine/v3.20/community
 
 RUN dotnet --version && npm -v && yarn -v
 
