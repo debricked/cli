@@ -108,4 +108,6 @@ project [here](CONTRIBUTING.md).
 
 4. When satisfied, press `Publish release`.
 
+5. Artifacts should be automatically built in the [Release workflow](https://github.com/debricked/cli/actions/workflows/release.yml), please monitor it to make sure that the release are done correctly. Also make sure that the [Docker workflow](https://github.com/debricked/cli/actions/workflows/docker.yml) is triggered and successful for the given tag.
+
 
