@@ -86,3 +86,26 @@ If you would rather use `debricked` in your CI/CD pipelines, check out the [temp
 ## Contributing
 Thank you for your interest in making Debricked CLI even better! Read more about contributing to the
 project [here](CONTRIBUTING.md).
+
+## Releasing
+1. Go to the [releases page](https://github.com/debricked/cli/releases), press [Draft a new release](https://github.com/debricked/cli/releases/new).
+
+2. Create a new tag. We loosely use semantic versioning for our versions.
+- Major releases should only be used for major breaking changes.
+- Minor releases should be used for minor breaking changes and new major features.
+- Patch releases should be used for smaller improvements, bug fixes etc. No breaking changes are allowed in these.
+
+2a. IF you released a major version. The following needs to be done:
+- For a major, a upgrade document needs to be provided like we did for the [2.0 release](https://github.com/debricked/cli/blob/main/UPGRADE-2.0.md).
+- Our GitHub actions need to be updated accordingly. Like was done [in this commit](https://github.com/debricked/actions/commit/659ae7accc12313772fbfbd1b1fccec31772ce41) for the v1 -> v2 upgrade.
+- Users need to be informed that a new major version is available and that they should upgrade.
+- [All integration templates](https://github.com/debricked/cli/tree/main/examples/templates) needs to be updated to use the new major version.
+- Our documentation needs to be updated to use the new major version.
+
+3. After having created a new tag in the New release dialogue. Press `Generate release notes` to get some sane default notes. Adjust if necessary. It will look something like this:
+
+![image](https://github.com/user-attachments/assets/7e1511ea-efad-49d4-a4eb-8ee762dcd1b2)
+
+4. When satisfied, press `Publish release`.
+
+
