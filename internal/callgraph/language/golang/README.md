@@ -19,4 +19,4 @@ debricked scan .
 The callgraph generation depends only on internal functionality in the Go standard library, for more information about this and the implementation see: 
 https://cs.opensource.google/go/x/tools/+/refs/tags/v0.19.0:cmd/callgraph/main.go
 
-As always, callgraph cannot be expected to include all possible calls in your program and not all included calls are guaranteed to be reachable.
+As is ususal with callgraph generation, the resulting callgraph cannot be expected to include all possible calls in your program and not all included calls are guaranteed to be reachable/correct.
