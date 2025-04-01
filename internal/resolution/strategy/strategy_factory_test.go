@@ -10,6 +10,7 @@ import (
 	"github.com/debricked/cli/internal/resolution/pm/maven"
 	"github.com/debricked/cli/internal/resolution/pm/nuget"
 	"github.com/debricked/cli/internal/resolution/pm/pip"
+	"github.com/debricked/cli/internal/resolution/pm/sbt"
 	"github.com/debricked/cli/internal/resolution/pm/testdata"
 	"github.com/debricked/cli/internal/resolution/pm/yarn"
 	"github.com/stretchr/testify/assert"
@@ -37,6 +38,7 @@ func TestMake(t *testing.T) {
 		yarn.Name:     yarn.NewStrategy(nil),
 		nuget.Name:    nuget.NewStrategy(nil),
 		composer.Name: composer.NewStrategy(nil),
+		sbt.Name:      sbt.NewStrategy(nil),
 	}
 	f := NewStrategyFactory()
 	var batch file.IBatch
