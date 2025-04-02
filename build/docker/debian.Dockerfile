@@ -111,6 +111,18 @@ RUN apt update -y && \
     sh -c 'echo "deb https://packages.sury.org/php/ bookworm main" > /etc/apt/sources.list.d/php.list' && \
     apt -y clean && rm -rf /var/lib/apt/lists/*
 
+# Add SBT, used for Scala resolution
+ENV SBT_VERSION="1.10.11"
+ENV SBT_HOME="/usr/lib/sbt"
+ENV PATH="$SBT_HOME/bin:$PATH"
+RUN curl -fsSLO https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz && \
+    mkdir -p $SBT_HOME && \
+    tar -zxvf sbt-${SBT_VERSION}.tgz -C $SBT_HOME --strip-components=1 && \
+    rm sbt-${SBT_VERSION}.tgz && \
+    ln -s $SBT_HOME/bin/sbt /usr/bin/sbt \
+
+RUN sbt --version
+
 RUN apt -y update && apt -y install \
     php8.3 \
     php8.3-curl \
