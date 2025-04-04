@@ -1,6 +1,7 @@
 package sbt
 
 import (
+	"fmt"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -77,6 +78,40 @@ func (j *Job) Run() {
 
 		j.handleError(cmdErr)
 	}
+
+	status = "locating generated POM file"
+	j.SendStatus(status)
+
+	pomFile, err := FindPomFile(workingDirectory)
+	if err != nil || pomFile == "" {
+		errorMsg := "No pom file found in target directory"
+		if err != nil {
+			errorMsg = err.Error()
+		}
+
+		cmdErr := util.NewPMJobError(errorMsg)
+		cmdErr.SetStatus(status)
+
+		j.handleError(cmdErr)
+
+		return
+	}
+
+	status = "converting POM file to pom.xml"
+	j.SendStatus(status)
+
+	pomXml, err := RenamePomToXml(pomFile, workingDirectory)
+	if err != nil {
+		cmdErr := util.NewPMJobError(err.Error())
+		cmdErr.SetStatus(status)
+
+		j.handleError(cmdErr)
+
+		return
+	}
+
+	status = fmt.Sprintf("processing dependencies with Maven resolver using %s", pomXml)
+	j.SendStatus(status)
 }
 
 func (j *Job) handleError(cmdError job.IError) {

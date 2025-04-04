@@ -81,7 +81,13 @@ func TestRunCmdOutputErr(t *testing.T) {
 
 	j.Run()
 
-	jobTestdata.AssertPathErr(t, j.Errors())
+	error := j.Errors()
+	assert.True(t, error.HasError())
+	
+	allErrors := error.GetAll()
+	assert.Len(t, allErrors,2)
+	assert.Contains(t, allErrors[0].Error(), "executable file not found")
+	assert.Contains(t, allErrors[0].Documentation(), "SBT wasn't found")
 }
 
 func TestRunCmdOutputErrNoOutput(t *testing.T) {
@@ -92,7 +98,7 @@ func TestRunCmdOutputErrNoOutput(t *testing.T) {
 	j.Run()
 
 	errs := j.Errors().GetAll()
-	assert.Len(t, errs, 1)
+	assert.Len(t, errs, 2)
 	err := errs[0]
 
 	assert.Contains(t, err.Error(), "unknown command")
@@ -105,10 +111,10 @@ func TestRun(t *testing.T) {
 
 	j.Run()
 	errs := j.Errors().GetAll()
-	assert.Len(t, errs, 0)
-	assert.Equal(t, 0, len(errs))
+	assert.Len(t, errs, 1)
+	assert.Equal(t, 1, len(errs))
 
-	assert.False(t, j.Errors().HasError())
+	assert.True(t, j.Errors().HasError())
 }
 
 func TestRunWithBuildServiceError(t *testing.T) {

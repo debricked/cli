@@ -119,7 +119,7 @@ RUN curl -fsSLO https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt
     mkdir -p $SBT_HOME && \
     tar -zxvf sbt-${SBT_VERSION}.tgz -C $SBT_HOME --strip-components=1 && \
     rm sbt-${SBT_VERSION}.tgz && \
-    ln -s $SBT_HOME/bin/sbt /usr/bin/sbt \
+    ln -s $SBT_HOME/bin/sbt /usr/bin/sbt
 
 RUN sbt --version
 

@@ -213,6 +213,14 @@ func (finder *Finder) GetSupportedFormats() ([]*CompiledFormat, error) {
 		return nil, err
 	}
 
+	sbtEntry := &Format{
+		ManifestFileRegex: "^build\\.sbt$",
+		DocumentationUrl:  "https://docs.debricked.com/overview/language-support/scala-sbt",
+		LockFileRegexes:   []string{""},
+	}
+
+	formats = append(formats, sbtEntry)
+
 	var compiledDependencyFileFormats []*CompiledFormat
 	for _, format := range formats {
 		compiledDependencyFileFormat, err := NewCompiledFormat(format)
