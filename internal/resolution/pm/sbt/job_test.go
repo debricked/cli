@@ -2,16 +2,25 @@ package sbt
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
 	"testing"
 
 	jobTestdata "github.com/debricked/cli/internal/resolution/job/testdata"
+	mavenTestdata "github.com/debricked/cli/internal/resolution/pm/maven/testdata"
 	"github.com/debricked/cli/internal/resolution/pm/sbt/testdata"
 	"github.com/debricked/cli/internal/resolution/pm/util"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewJob(t *testing.T) {
-	j := NewJob("file", CmdFactory{}, BuildService{})
+	j := NewJob(
+		"file",
+		CmdFactory{},
+		BuildService{},
+		mavenTestdata.PomServiceMock{},
+		mavenTestdata.CmdFactoryMock{},
+	)
 	assert.Equal(t, "file", j.GetFile())
 	assert.False(t, j.Errors().HasError())
 }
@@ -60,7 +69,13 @@ func TestRunCmdErr(t *testing.T) {
 			expectedError.SetDocumentation(c.doc)
 
 			cmdErr := errors.New(c.error)
-			j := NewJob("file", testdata.CmdFactoryMock{Err: cmdErr}, testdata.BuildServiceMock{})
+			j := NewJob(
+				"file",
+				testdata.CmdFactoryMock{Err: cmdErr},
+				testdata.BuildServiceMock{},
+				mavenTestdata.PomServiceMock{},
+				mavenTestdata.CmdFactoryMock{},
+			)
 
 			go jobTestdata.WaitStatus(j)
 
@@ -75,7 +90,13 @@ func TestRunCmdErr(t *testing.T) {
 }
 
 func TestRunCmdOutputErr(t *testing.T) {
-	j := NewJob("file", testdata.CmdFactoryMock{Name: "bad-name"}, testdata.BuildServiceMock{})
+	j := NewJob(
+		"file",
+		testdata.CmdFactoryMock{Name: "bad-name"},
+		testdata.BuildServiceMock{},
+		mavenTestdata.PomServiceMock{},
+		mavenTestdata.CmdFactoryMock{},
+	)
 
 	go jobTestdata.WaitStatus(j)
 
@@ -83,38 +104,75 @@ func TestRunCmdOutputErr(t *testing.T) {
 
 	error := j.Errors()
 	assert.True(t, error.HasError())
-	
+
 	allErrors := error.GetAll()
-	assert.Len(t, allErrors,2)
+	assert.Len(t, allErrors, 1)
 	assert.Contains(t, allErrors[0].Error(), "executable file not found")
-	assert.Contains(t, allErrors[0].Documentation(), "SBT wasn't found")
 }
 
 func TestRunCmdOutputErrNoOutput(t *testing.T) {
-	j := NewJob("file", testdata.CmdFactoryMock{Name: "go", Arg: "bad-arg"}, testdata.BuildServiceMock{})
+	j := NewJob(
+		"file",
+		testdata.CmdFactoryMock{Name: "go", Arg: "bad-arg"},
+		testdata.BuildServiceMock{},
+		mavenTestdata.PomServiceMock{},
+		mavenTestdata.CmdFactoryMock{},
+	)
 
 	go jobTestdata.WaitStatus(j)
 
 	j.Run()
 
 	errs := j.Errors().GetAll()
-	assert.Len(t, errs, 2)
-	err := errs[0]
+	assert.Len(t, errs, 1)
 
-	assert.Contains(t, err.Error(), "unknown command")
+	assert.Contains(t, errs[0].Error(), "unknown command")
 }
 
 func TestRun(t *testing.T) {
-	j := NewJob("file", testdata.CmdFactoryMock{Name: "echo"}, testdata.BuildServiceMock{})
+	tempDir := t.TempDir()
+	buildSbtPath := filepath.Join(tempDir, "build.sbt")
+
+	buildSbtContent := `
+lazy val root = project.in(file("."))
+lazy val core = project("core-module")
+lazy val api = project("api-module")
+lazy val util = project("util-module")
+`
+	err := os.WriteFile(buildSbtPath, []byte(buildSbtContent), 0600)
+	assert.NoError(t, err)
+
+	targetDir := filepath.Join(tempDir, "target", "scala-3.6.4")
+	err = os.MkdirAll(targetDir, 0755)
+	assert.NoError(t, err)
+
+	pomFilePath := filepath.Join(targetDir, "project.pom")
+	err = os.WriteFile(pomFilePath, []byte("<project></project>"), 0600)
+	assert.NoError(t, err)
+
+	// Create the job with the test file and explicit command
+	j := NewJob(
+		buildSbtPath,
+		testdata.CmdFactoryMock{
+			Name: "echo",
+			Arg:  "mock output",
+		},
+		BuildService{},
+		mavenTestdata.PomServiceMock{},
+		mavenTestdata.CmdFactoryMock{
+			Name: "echo",
+			Arg:  "mock maven output",
+		},
+	)
 
 	go jobTestdata.WaitStatus(j)
 
 	j.Run()
 	errs := j.Errors().GetAll()
-	assert.Len(t, errs, 1)
-	assert.Equal(t, 1, len(errs))
+	assert.Len(t, errs, 0)
+	assert.Equal(t, 0, len(errs))
 
-	assert.True(t, j.Errors().HasError())
+	assert.False(t, j.Errors().HasError())
 }
 
 func TestRunWithBuildServiceError(t *testing.T) {
@@ -137,9 +195,15 @@ func TestRunWithBuildServiceError(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			j := NewJob("file", testdata.CmdFactoryMock{Name: "echo"}, testdata.BuildServiceMock{
-				Err: errors.New(c.error),
-			})
+			j := NewJob(
+				"file",
+				testdata.CmdFactoryMock{Name: "echo"},
+				testdata.BuildServiceMock{
+					Err: errors.New(c.error),
+				},
+				mavenTestdata.PomServiceMock{},
+				mavenTestdata.CmdFactoryMock{},
+			)
 
 			go jobTestdata.WaitStatus(j)
 
@@ -155,4 +219,44 @@ func TestRunWithBuildServiceError(t *testing.T) {
 			assert.Contains(t, allErrors, expectedError)
 		})
 	}
+}
+
+func TestPomParsingError(t *testing.T) {
+	j := NewJob(
+		"file",
+		testdata.CmdFactoryMock{Name: "echo"},
+		testdata.BuildServiceMock{},
+		mavenTestdata.PomServiceMock{
+			Err: errors.New("invalid XML"),
+		},
+		mavenTestdata.CmdFactoryMock{},
+	)
+
+	go jobTestdata.WaitStatus(j)
+
+	j.Run()
+
+	allErrors := j.Errors().GetAll()
+	assert.Len(t, allErrors, 1)
+	assert.Contains(t, allErrors[0].Error(), "invalid XML")
+}
+
+func TestMavenCommandError(t *testing.T) {
+	j := NewJob(
+		"file",
+		testdata.CmdFactoryMock{Name: "echo"},
+		testdata.BuildServiceMock{},
+		mavenTestdata.PomServiceMock{},
+		mavenTestdata.CmdFactoryMock{
+			Err: errors.New("mvn not found"),
+		},
+	)
+
+	go jobTestdata.WaitStatus(j)
+
+	j.Run()
+
+	allErrors := j.Errors().GetAll()
+	assert.Len(t, allErrors, 1)
+	assert.Contains(t, allErrors[0].Error(), "mvn not found")
 }

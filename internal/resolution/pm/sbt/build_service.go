@@ -8,6 +8,8 @@ import (
 
 type IBuildService interface {
 	ParseBuildModules(path string) ([]string, error)
+	FindPomFile(dir string) (string, error)
+	RenamePomToXml(pomFile, destDir string) (string, error)
 }
 
 type BuildService struct{}
@@ -31,7 +33,7 @@ func (b BuildService) ParseBuildModules(path string) ([]string, error) {
 	return modules, nil
 }
 
-func FindPomFile(dir string) (string, error) {
+func (b BuildService) FindPomFile(dir string) (string, error) {
 	targetDir := filepath.Join(dir, "target")
 
 	scalaVersionDirs, err := filepath.Glob(filepath.Join(targetDir, "scala-*"))
@@ -49,7 +51,7 @@ func FindPomFile(dir string) (string, error) {
 	return "", nil
 }
 
-func RenamePomToXml(pomFile, destDir string) (string, error) {
+func (b BuildService) RenamePomToXml(pomFile, destDir string) (string, error) {
 	content, err := os.ReadFile(pomFile)
 	if err != nil {
 		return "", err

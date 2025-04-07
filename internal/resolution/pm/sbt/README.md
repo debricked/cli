@@ -18,7 +18,9 @@ This approach allows SBT projects to leverage the existing Maven resolution logi
 
 ## Private Dependencies
 
-Similar to Maven projects, SBT projects might use dependencies from repositories other than the default ones. The SBT `makePom` command will include these repository configurations in the generated POM file, and then the Maven resolution process will handle them as described in the Maven README.
+Similar to Maven projects, SBT projects might use dependencies from repositories other than the default ones. The
+SBT `makePom` command will include these repository configurations in the generated POM file, and then the Maven
+resolution process will handle them as described in the Maven README.
 
 ## Troubleshooting
 
@@ -46,6 +48,7 @@ debricked resolve /path/to/scala/project
 ```
 
 This will:
+
 1. Find all `build.sbt` files in the specified path
 2. Generate a POM file for each one
 3. Resolve dependencies using the Maven resolver

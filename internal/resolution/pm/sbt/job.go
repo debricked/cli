@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/debricked/cli/internal/resolution/job"
+	"github.com/debricked/cli/internal/resolution/pm/maven"
 	"github.com/debricked/cli/internal/resolution/pm/util"
 )
 
@@ -20,28 +21,54 @@ const (
 
 type Job struct {
 	job.BaseJob
-	cmdFactory   ICmdFactory
-	buildService IBuildService
+	cmdFactory      ICmdFactory
+	buildService    IBuildService
+	mavenPomService maven.IPomService
+	mavenCmdFactory maven.ICmdFactory
 }
 
-func NewJob(file string, cmdFactory ICmdFactory, buildService IBuildService) *Job {
+func NewJob(file string, cmdFactory ICmdFactory, buildService IBuildService, mavenPomService maven.IPomService, mavenCmdFactory maven.ICmdFactory) *Job {
 	return &Job{
-		BaseJob:      job.NewBaseJob(file),
-		cmdFactory:   cmdFactory,
-		buildService: buildService,
+		BaseJob:         job.NewBaseJob(file),
+		cmdFactory:      cmdFactory,
+		buildService:    buildService,
+		mavenPomService: mavenPomService,
+		mavenCmdFactory: mavenCmdFactory,
 	}
 }
 
 func (j *Job) Run() {
+	if err := j.parseBuildFile(); err != nil {
+		return
+	}
+
+	if err := j.generatePomFile(); err != nil {
+		return
+	}
+
+	pomFile, err := j.locatePomFile()
+	if err != nil {
+		return
+	}
+
+	pomXml, err := j.convertToPomXml(pomFile)
+	if err != nil {
+		return
+	}
+
+	if err := j.parseAndProcessWithMaven(pomXml); err != nil {
+		return
+	}
+}
+
+func (j *Job) parseBuildFile() error {
 	status := "parsing SBT build file"
 	j.SendStatus(status)
 
 	file := j.GetFile()
 	_, err := j.buildService.ParseBuildModules(file)
-
 	if err != nil {
 		doc := err.Error()
-
 		if doc == "EOF" {
 			doc = "This file doesn't contain valid SBT build content"
 		}
@@ -49,21 +76,25 @@ func (j *Job) Run() {
 		parsingError := util.NewPMJobError(err.Error())
 		parsingError.SetStatus(status)
 		parsingError.SetDocumentation(doc)
-
 		j.Errors().Critical(parsingError)
 
-		return
+		return err
 	}
 
+	return nil
+}
+
+func (j *Job) generatePomFile() error {
+	file := j.GetFile()
 	workingDirectory := filepath.Dir(filepath.Clean(file))
 	cmd, err := j.cmdFactory.MakePomCmd(workingDirectory)
 	if err != nil {
 		j.handleError(util.NewPMJobError(err.Error()))
 
-		return
+		return err
 	}
 
-	status = "generating Maven POM file"
+	status := "generating Maven POM file"
 	j.SendStatus(status)
 
 	output, err := cmd.CombinedOutput()
@@ -75,14 +106,21 @@ func (j *Job) Run() {
 
 		cmdErr := util.NewPMJobError(errContent)
 		cmdErr.SetStatus(status)
-
 		j.handleError(cmdErr)
+
+		return err
 	}
 
-	status = "locating generated POM file"
+	return nil
+}
+
+func (j *Job) locatePomFile() (string, error) {
+	file := j.GetFile()
+	workingDirectory := filepath.Dir(filepath.Clean(file))
+	status := "locating generated POM file"
 	j.SendStatus(status)
 
-	pomFile, err := FindPomFile(workingDirectory)
+	pomFile, err := j.buildService.FindPomFile(workingDirectory)
 	if err != nil || pomFile == "" {
 		errorMsg := "No pom file found in target directory"
 		if err != nil {
@@ -91,27 +129,100 @@ func (j *Job) Run() {
 
 		cmdErr := util.NewPMJobError(errorMsg)
 		cmdErr.SetStatus(status)
-
 		j.handleError(cmdErr)
 
-		return
+		return "", err
 	}
 
-	status = "converting POM file to pom.xml"
+	return pomFile, nil
+}
+
+func (j *Job) convertToPomXml(pomFile string) (string, error) {
+	file := j.GetFile()
+	workingDirectory := filepath.Dir(filepath.Clean(file))
+	status := "converting POM file to pom.xml"
 	j.SendStatus(status)
 
-	pomXml, err := RenamePomToXml(pomFile, workingDirectory)
+	pomXml, err := j.buildService.RenamePomToXml(pomFile, workingDirectory)
 	if err != nil {
 		cmdErr := util.NewPMJobError(err.Error())
 		cmdErr.SetStatus(status)
-
 		j.handleError(cmdErr)
 
-		return
+		return "", err
+	}
+
+	return pomXml, nil
+}
+
+func (j *Job) parseAndProcessWithMaven(pomXml string) error {
+	status := "parsing Maven POM file"
+	j.SendStatus(status)
+
+	if err := j.parseMavenPom(pomXml); err != nil {
+		return err
+	}
+
+	file := j.GetFile()
+	workingDirectory := filepath.Dir(filepath.Clean(file))
+	if err := j.createMavenDependencyGraph(workingDirectory, pomXml); err != nil {
+		return err
 	}
 
 	status = fmt.Sprintf("processing dependencies with Maven resolver using %s", pomXml)
 	j.SendStatus(status)
+
+	return nil
+}
+
+func (j *Job) parseMavenPom(pomXml string) error {
+	status := "parsing Maven POM file"
+	j.SendStatus(status)
+
+	_, err := j.mavenPomService.ParsePomModules(pomXml)
+	if err != nil {
+		doc := err.Error()
+		if doc == "EOF" {
+			doc = "This file doesn't contain valid XML"
+		}
+
+		parsingError := util.NewPMJobError(err.Error())
+		parsingError.SetStatus(status)
+		parsingError.SetDocumentation(doc)
+		j.Errors().Critical(parsingError)
+
+		return err
+	}
+
+	return nil
+}
+
+func (j *Job) createMavenDependencyGraph(workingDirectory string, pomXml string) error {
+	status := "creating Maven dependency graph"
+	j.SendStatus(status)
+
+	cmd, err := j.mavenCmdFactory.MakeDependencyTreeCmd(workingDirectory)
+	if err != nil {
+		j.handleError(util.NewPMJobError(err.Error()))
+
+		return err
+	}
+
+	output, err := cmd.Output()
+	if err != nil {
+		errContent := err.Error()
+		if output != nil {
+			errContent = string(output)
+		}
+
+		cmdErr := util.NewPMJobError(errContent)
+		cmdErr.SetStatus(status)
+		j.handleError(cmdErr)
+
+		return err
+	}
+
+	return nil
 }
 
 func (j *Job) handleError(cmdError job.IError) {

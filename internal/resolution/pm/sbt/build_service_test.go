@@ -74,7 +74,8 @@ func TestFindPomFile(t *testing.T) {
 		t.Fatalf("Failed to create pom file: %v", err)
 	}
 
-	foundPom, err := FindPomFile(tempDir)
+	b := BuildService{}
+	foundPom, err := b.FindPomFile(tempDir)
 
 	assert.Nil(t, err)
 	assert.Equal(t, pomPath, foundPom)
@@ -87,7 +88,8 @@ func TestFindPomFileNoTarget(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	foundPom, err := FindPomFile(tempDir)
+	b := BuildService{}
+	foundPom, err := b.FindPomFile(tempDir)
 
 	assert.Nil(t, err)
 	assert.Empty(t, foundPom)
@@ -107,7 +109,8 @@ func TestRenamePomToXml(t *testing.T) {
 		t.Fatalf("Failed to create pom file: %v", err)
 	}
 
-	xmlPath, err := RenamePomToXml(pomPath, tempDir)
+	b := BuildService{}
+	xmlPath, err := b.RenamePomToXml(pomPath, tempDir)
 
 	assert.Nil(t, err)
 	assert.Equal(t, filepath.Join(tempDir, "pom.xml"), xmlPath)
