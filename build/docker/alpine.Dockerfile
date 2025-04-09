@@ -37,6 +37,16 @@ RUN wget https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zi
   unzip gradle-$GRADLE_VERSION-bin.zip -d $GRADLE_HOME && \
   rm gradle-$GRADLE_VERSION-bin.zip
 
+# Add SBT, used for Scala resolution
+ENV SBT_VERSION="1.10.11"
+ENV SBT_HOME="/usr/lib/sbt"
+ENV PATH="$SBT_HOME/bin:$PATH"
+RUN wget https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz && \
+  mkdir -p $SBT_HOME && \
+  tar -zxvf sbt-${SBT_VERSION}.tgz -C $SBT_HOME --strip-components=1 && \
+  rm sbt-${SBT_VERSION}.tgz && \
+  ln -s $SBT_HOME/bin/sbt /usr/bin/sbt
+
 # g++ needed to compile python packages with C dependencies (numpy, scipy, etc.)
 RUN apk --no-cache --update add \
   openjdk21-jdk \
@@ -47,7 +57,8 @@ RUN apk --no-cache --update add \
   npm \
   yarn \
   g++ \
-  curl
+  curl \
+  bash
 
 RUN apk --no-cache --update add dotnet8-sdk go~=1.23 --repository=https://dl-cdn.alpinelinux.org/alpine/v3.20/community
 
@@ -68,7 +79,7 @@ RUN apk add --no-cache --virtual build-dependencies curl && \
     curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
     && apk del build-dependencies
 
-RUN php -v && composer --version
+RUN php -v && composer --version && sbt --version
 
 CMD [ "debricked",  "scan" ]
 
