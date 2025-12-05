@@ -60,7 +60,7 @@ RUN apk --no-cache --update add \
   curl \
   bash
 
-RUN apk --no-cache --update add dotnet8-sdk go~=1.23 --repository=https://dl-cdn.alpinelinux.org/alpine/v3.20/community
+RUN apk --no-cache --update add dotnet8-sdk go~=1.22 --repository=https://dl-cdn.alpinelinux.org/alpine/v3.20/community
 
 RUN dotnet --version && npm -v && yarn -v
 
