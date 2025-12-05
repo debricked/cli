@@ -90,18 +90,13 @@ RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh \
     && rm ./dotnet-install.sh \
     && dotnet help
 
-ENV GOLANG_VERSION="1.21"
 RUN apt -y update && apt -y upgrade && apt -y install \
-    ca-certificates && \
-    apt -y install -t unstable \
-    python3.12\
-    python3.12-venv \
-    golang-$GOLANG_VERSION \
-    openjdk-21-jdk && \
-    apt -y clean && rm -rf /var/lib/apt/lists/* && \
-    # Symlink go binary to bin directory which is in path
-    ln -s /usr/lib/go-$GOLANG_VERSION/bin/go /usr/bin/go && \
-    ln -s /usr/bin/python3.12 /usr/bin/python
+    ca-certificates \
+    python3 \
+    python3-venv \
+    golang \
+    openjdk-17-jdk && \
+    apt -y clean && rm -rf /var/lib/apt/lists/*
 
 RUN dotnet --version
 
