@@ -127,7 +127,7 @@ RUN apt -y update && apt -y install \
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
 
-RUN ln -sf /usr/bin/python3.12 /usr/bin/python3 && php -v && composer --version && python3 --version
+RUN php -v && composer --version && python3 --version
 
 CMD [ "debricked",  "scan" ]
 
