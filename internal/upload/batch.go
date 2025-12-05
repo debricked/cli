@@ -322,7 +322,7 @@ type purlConfig struct {
 }
 
 type DebrickedConfig struct {
-	Overrides []purlConfig  `json:"override" yaml:"overrides"`
+	Overrides []purlConfig  `json:"override,omitempty" yaml:"overrides"`
 	Ignore    *IgnoreConfig `json:"ignore,omitempty" yaml:"ignore,omitempty"`
 }
 

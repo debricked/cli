@@ -259,3 +259,54 @@ func TestMarshalJSONDebrickedConfig(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, []byte(expectedJSON), config)
 }
+
+func TestMarshalJSONDebrickedConfigIgnoreOnly(t *testing.T) {
+	config, err := json.Marshal(DebrickedConfig{
+		Ignore: &IgnoreConfig{
+			Packages: []IgnorePackage{
+				{PURL: "pkg:npm/verdaccio", Version: "3.7.0"},
+				{PURL: "pkg:npm/chart.js"},
+			},
+		},
+	})
+	expectedJSON := "{\"ignore\":{\"packages\":[{\"pURL\":\"pkg:npm/verdaccio\",\"version\":\"3.7.0\"},{\"pURL\":\"pkg:npm/chart.js\"}]}}"
+	assert.Nil(t, err)
+	assert.Equal(t, []byte(expectedJSON), config)
+}
+
+func TestMarshalJSONDebrickedConfigBoth(t *testing.T) {
+	config, err := json.Marshal(DebrickedConfig{
+		Overrides: []purlConfig{
+			{
+				PackageURL:  "pkg:npm/lodash",
+				Version:     boolOrString{Version: "1.0.0", HasVersion: true},
+				FileRegexes: []string{".*/lodash/.*"},
+			},
+		},
+		Ignore: &IgnoreConfig{
+			Packages: []IgnorePackage{
+				{PURL: "pkg:npm/chart.js"},
+			},
+		},
+	})
+	expectedJSON := "{\"override\":[{\"pURL\":\"pkg:npm/lodash\",\"version\":\"1.0.0\",\"fileRegexes\":[\".*/lodash/.*\"]}],\"ignore\":{\"packages\":[{\"pURL\":\"pkg:npm/chart.js\"}]}}"
+	assert.Nil(t, err)
+	assert.Equal(t, []byte(expectedJSON), config)
+}
+
+func TestGetDebrickedConfigSingularOverride(t *testing.T) {
+	config := GetDebrickedConfig(filepath.Join("testdata", "debricked-config-singular-override.yaml"))
+	configJSON, err := json.Marshal(config)
+	assert.Nil(t, err)
+	expectedJSON, err := json.Marshal(DebrickedConfig{
+		Overrides: []purlConfig{
+			{
+				PackageURL:  "pkg:npm/lodash",
+				Version:     boolOrString{Version: "1.0.0", HasVersion: true},
+				FileRegexes: []string{".*/lodash/.*"},
+			},
+		},
+	})
+	assert.Nil(t, err)
+	assert.JSONEq(t, string(configJSON), string(expectedJSON))
+}
