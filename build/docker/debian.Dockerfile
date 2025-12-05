@@ -90,13 +90,18 @@ RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh \
     && rm ./dotnet-install.sh \
     && dotnet help
 
+ENV GOLANG_VERSION="1.23"
 RUN apt -y update && apt -y upgrade && apt -y install \
-    ca-certificates \
-    python3 \
-    python3-venv \
-    golang \
-    openjdk-17-jdk && \
-    apt -y clean && rm -rf /var/lib/apt/lists/*
+    ca-certificates && \
+    apt -y install -t unstable \
+    python3.12\
+    python3.12-venv \
+    golang-$GOLANG_VERSION \
+    openjdk-21-jdk && \
+    apt -y clean && rm -rf /var/lib/apt/lists/* && \
+    # Symlink go binary to bin directory which is in path
+    ln -s /usr/lib/go-$GOLANG_VERSION/bin/go /usr/bin/go && \
+    ln -s /usr/bin/python3.12 /usr/bin/python
 
 RUN dotnet --version
 
@@ -127,7 +132,7 @@ RUN apt -y update && apt -y install \
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
 
-RUN php -v && composer --version && python3 --version
+RUN ln -sf /usr/bin/python3.12 /usr/bin/python3 && php -v && composer --version && python3 --version
 
 CMD [ "debricked",  "scan" ]
 
