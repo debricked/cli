@@ -1,4 +1,4 @@
-FROM golang:1.23-bookworm AS dev
+FROM golang:1.24-bookworm AS dev
 WORKDIR /cli
 
 ARG DEBIAN_FRONTEND=noninteractive
