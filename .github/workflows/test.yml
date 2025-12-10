@@ -25,8 +25,21 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.23'
-      - name: Install Composer
-        uses: php-actions/composer@v6
+
+      - name: Install PHP and Composer
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            sudo apt-get update
+            sudo apt-get install -y php php-curl php-mbstring php-xml
+            curl -sS https://getcomposer.org/installer | php
+            sudo mv composer.phar /usr/local/bin/composer
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            brew install composer
+          elif [ "$RUNNER_OS" == "Windows" ]; then
+            choco install composer -y
+          fi
+          composer --version
+        shell: bash
 
       - name: Install Bower
         run: |
