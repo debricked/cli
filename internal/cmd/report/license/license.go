@@ -48,7 +48,7 @@ func RunE(r report.IReporter) func(_ *cobra.Command, args []string) error {
 		}
 
 		if err := r.Order(orderArgs); err != nil {
-			return fmt.Errorf("%s %s\n", color.RedString("⨯"), err.Error())
+			return fmt.Errorf("%s\n", color.RedString("⨯")+" "+err.Error())
 		}
 
 		fmt.Printf("%s Successfully ordered license export\n", color.GreenString("✔"))
