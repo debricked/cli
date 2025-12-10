@@ -9,7 +9,7 @@ RUN mkdir -p internal/file/embedded && \
 RUN apk add --no-cache make curl && make install && apk del make curl
 CMD [ "debricked" ]
 
-FROM alpine:latest AS cli-base
+FROM alpine:3.21 AS cli-base
 ENV DEBRICKED_TOKEN=""
 RUN apk add --no-cache git
 WORKDIR /root/
