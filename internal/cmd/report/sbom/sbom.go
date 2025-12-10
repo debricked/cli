@@ -86,7 +86,7 @@ func RunE(r report.IReporter) func(_ *cobra.Command, args []string) error {
 		}
 
 		if err := r.Order(orderArgs); err != nil {
-			return fmt.Errorf("%s", color.RedString("⨯")+" "+err.Error())
+			return fmt.Errorf("%s %s", color.RedString("⨯"), err.Error())
 		}
 
 		return nil

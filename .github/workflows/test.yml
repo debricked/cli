@@ -11,7 +11,7 @@ jobs:
     name: CLI
     strategy:
       matrix:
-        os: [ 'ubuntu-latest', 'windows-latest', 'macos-latest' ]
+        os: [ 'ubuntu-latest', 'windows-latest', 'macos-13' ]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set git to use LF
@@ -24,22 +24,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
-
-      - name: Install PHP and Composer
-        run: |
-          if [ "$RUNNER_OS" == "Linux" ]; then
-            sudo apt-get update
-            sudo apt-get install -y php php-curl php-mbstring php-xml
-            curl -sS https://getcomposer.org/installer | php
-            sudo mv composer.phar /usr/local/bin/composer
-          elif [ "$RUNNER_OS" == "macOS" ]; then
-            brew install composer
-          elif [ "$RUNNER_OS" == "Windows" ]; then
-            choco install composer -y
-          fi
-          composer --version
-        shell: bash
+          go-version: '1.20'
 
       - name: Install Bower
         run: |
@@ -90,7 +75,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: '1.20'
 
       - name: Pull Supported Formats
         run: |
@@ -152,7 +137,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: '1.20'
       - name: Pull Supported Formats
         run: |
           cd cmd/debricked
@@ -160,4 +145,4 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v4
         with:
-          version: v1.62
+          version: v1.52

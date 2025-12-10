@@ -270,7 +270,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 
 			return scanCmdError
 		} else if scanCmdError != nil {
-			return fmt.Errorf("%s\n", color.RedString("⨯")+" "+scanCmdError.Error())
+			return fmt.Errorf("%s %s\n", color.RedString("⨯"), scanCmdError.Error())
 		}
 
 		return scanCmdError

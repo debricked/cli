@@ -447,20 +447,19 @@ func inMemFingerprintZipContent(filename string, exclusions []string, inclusions
 
 		_, err = io.Copy(hasher, rc) // #nosec
 		if err != nil {
+			rc.Close()
+
+			return nil, err
+		}
+
+		fingerprints = append(fingerprints, FileFingerprint{
+			path:          longFileName,
+			contentLength: int64(f.UncompressedSize64),
+			fingerprint:   hasher.Sum(nil),
+		})
+
 		rc.Close()
-
-		return nil, err
 	}
-
-	// #nosec G115 - UncompressedSize64 is always positive and within int64 range for valid zip files
-	fingerprints = append(fingerprints, FileFingerprint{
-		path:          longFileName,
-		contentLength: int64(f.UncompressedSize64),
-		fingerprint:   hasher.Sum(nil),
-	})
-
-	rc.Close()
-}
 
 	return fingerprints, nil
 }
