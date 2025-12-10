@@ -1,4 +1,4 @@
-FROM golang:1.24-bookworm AS dev
+FROM golang:1.23-bookworm AS dev
 WORKDIR /cli
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -90,7 +90,7 @@ RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh \
     && rm ./dotnet-install.sh \
     && dotnet help
 
-ENV GOLANG_VERSION="1.24"
+ENV GOLANG_VERSION="1.23"
 RUN apt -y update && apt -y upgrade && apt -y install \
     ca-certificates && \
     apt -y install -t unstable \

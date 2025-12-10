@@ -1,4 +1,4 @@
-FROM golang:1.22-alpine AS dev
+FROM golang:1.23-alpine AS dev
 WORKDIR /cli
 RUN apk --no-cache --update add git build-base
 COPY go.mod go.sum ./
@@ -9,7 +9,7 @@ RUN mkdir -p internal/file/embedded && \
 RUN apk add --no-cache make curl && make install && apk del make curl
 CMD [ "debricked" ]
 
-FROM alpine:latest AS cli-base
+FROM alpine:3.21 AS cli-base
 ENV DEBRICKED_TOKEN=""
 RUN apk add --no-cache git
 WORKDIR /root/
@@ -60,7 +60,7 @@ RUN apk --no-cache --update add \
   curl \
   bash
 
-RUN apk --no-cache --update add dotnet8-sdk go~=1.22 --repository=https://dl-cdn.alpinelinux.org/alpine/v3.20/community
+RUN apk --no-cache --update add dotnet8-sdk go~=1.23 --repository=https://dl-cdn.alpinelinux.org/alpine/v3.21/community
 
 RUN dotnet --version && npm -v && yarn -v
 
