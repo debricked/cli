@@ -1,0 +1,15 @@
+overrides:
+  - pURL: "pkg:npm/lodash"
+    version: "1.0.0" # optional: if left out, we will decide version
+    fileRegexes: 
+      - ".*/lodash/.*" # PCRE2 
+  - pURL: "pkg:maven/org.openjfx/javafx-base"
+    fileRegexes: 
+      - "subpath/org.openjfx/.*"
+ignore:
+  packages:
+    - pURL: "pkg:npm/verdaccio"
+      version: "3.7.0"
+    - pURL: "pkg:npm/chart.js"
+    - pURL: "pkg:nuget/simpleinjector"
+      version: "4.7.1"

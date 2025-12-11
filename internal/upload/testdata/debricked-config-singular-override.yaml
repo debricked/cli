@@ -1,0 +1,5 @@
+override:
+  - pURL: "pkg:npm/lodash"
+    version: "1.0.0"
+    fileRegexes: 
+      - ".*/lodash/.*"

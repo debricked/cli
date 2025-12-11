@@ -322,7 +322,18 @@ type purlConfig struct {
 }
 
 type DebrickedConfig struct {
-	Overrides []purlConfig `json:"overrides" yaml:"overrides"`
+	Overrides []purlConfig  `json:"override,omitempty" yaml:"overrides"`
+	Ignore    *IgnoreConfig `json:"ignore,omitempty" yaml:"ignore,omitempty"`
+}
+
+// IgnoreConfig matches the structure of the 'ignore' section in YAML
+type IgnoreConfig struct {
+	Packages []IgnorePackage `json:"packages" yaml:"packages"`
+}
+
+type IgnorePackage struct {
+	PURL    string `json:"pURL" yaml:"pURL"`
+	Version string `json:"version,omitempty" yaml:"version,omitempty"`
 }
 
 type uploadFinish struct {
@@ -361,29 +372,25 @@ type DebrickedConfigYAML struct {
 	Overrides []pURLConfigYAML `yaml:"overrides"`
 }
 
-func GetDebrickedConfig(path string) *DebrickedConfig {
+// extractIgnore unmarshals the ignore section from raw config
+func extractIgnore(raw map[string]interface{}) *IgnoreConfig {
+	if rawIgnore, ok := raw["ignore"]; ok {
+		ignoreYaml, err := yaml.Marshal(rawIgnore)
+		if err == nil {
+			var ignoreObj IgnoreConfig
+			if yaml.Unmarshal(ignoreYaml, &ignoreObj) == nil {
+				return &ignoreObj
+			}
+		}
+	}
+
+	return nil
+}
+
+// convertOverrides converts YAML overrides to purlConfig slice
+func convertOverrides(yamlOverrides []pURLConfigYAML) []purlConfig {
 	var overrides []purlConfig
-	var yamlConfig DebrickedConfigYAML
-	yamlFile, err := os.ReadFile(path)
-	if err != nil {
-		fmt.Printf(
-			"%s Failed to read debricked config file on path \"%s\"",
-			color.YellowString("⚠️"),
-			path,
-		)
-
-		return nil
-	}
-	err = yaml.Unmarshal(yamlFile, &yamlConfig)
-	if err != nil {
-		fmt.Printf("%s Failed to unmarshal debricked config: \"%s\"\n",
-			color.YellowString("⚠️"),
-			color.RedString(err.Error()),
-		)
-
-		return nil
-	}
-	for _, entry := range yamlConfig.Overrides {
+	for _, entry := range yamlOverrides {
 		var version string
 		var exist bool
 		pURL := entry.PackageURL
@@ -398,7 +405,68 @@ func GetDebrickedConfig(path string) *DebrickedConfig {
 		overrides = append(overrides, purlConfig{PackageURL: pURL, Version: boolOrString{Version: version, HasVersion: exist}, FileRegexes: fileRegexes})
 	}
 
+	return overrides
+}
+
+func GetDebrickedConfig(path string) *DebrickedConfig {
+	var yamlConfig DebrickedConfigYAML
+	yamlFile, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Printf(
+			"%s Failed to read debricked config file on path \"%s\"",
+			color.YellowString("⚠️"),
+			path,
+		)
+
+		return nil
+	}
+
+	// Unmarshal into map to support any key for overrides and ignore
+	var raw map[string]interface{}
+	err = yaml.Unmarshal(yamlFile, &raw)
+	if err != nil {
+		fmt.Printf("%s Failed to unmarshal debricked config: \"%s\"\n",
+			color.YellowString("⚠️"),
+			color.RedString(err.Error()),
+		)
+
+		return nil
+	}
+
+	// Accept any key for overrides, normalize to 'overrides'
+	for k, v := range raw {
+		lower := strings.ToLower(k)
+		if lower == "overrides" || lower == "override" {
+			raw["overrides"] = v
+		}
+	}
+
+	// Marshal back to YAML and unmarshal into struct
+	fixedYaml, err := yaml.Marshal(raw)
+	if err != nil {
+		fmt.Printf("%s Failed to re-marshal config: \"%s\"\n",
+			color.YellowString("⚠️"),
+			color.RedString(err.Error()),
+		)
+
+		return nil
+	}
+
+	err = yaml.Unmarshal(fixedYaml, &yamlConfig)
+	if err != nil {
+		fmt.Printf("%s Failed to unmarshal debricked config: \"%s\"\n",
+			color.YellowString("⚠️"),
+			color.RedString(err.Error()),
+		)
+
+		return nil
+	}
+
+	ignore := extractIgnore(raw)
+	overrides := convertOverrides(yamlConfig.Overrides)
+
 	return &DebrickedConfig{
 		Overrides: overrides,
+		Ignore:    ignore,
 	}
 }
