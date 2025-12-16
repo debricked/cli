@@ -73,7 +73,7 @@ func (rc RuleCard) addTriggers(t *table.Table) {
 		var listBuffer bytes.Buffer
 
 		title := fmt.Sprintf("%s:\n", color.BlueString(dep.name))
-		underlining := fmt.Sprintf(strings.Repeat("-", len(title)+1) + "\n")
+		underlining := strings.Repeat("-", len(title)+1) + "\n"
 		listBuffer.Write([]byte(title))
 		listBuffer.Write([]byte(underlining))
 

@@ -23,7 +23,7 @@ func (jobsErrList CallgraphJobsErrorList) Render() error {
 	var listBuffer bytes.Buffer
 
 	formattedTitle := fmt.Sprintf("%s\n", color.BlueString(title))
-	underlining := fmt.Sprintf(strings.Repeat("-", len(title)+1) + "\n")
+	underlining := strings.Repeat("-", len(title)+1) + "\n"
 	listBuffer.Write([]byte(formattedTitle))
 	listBuffer.Write([]byte(underlining))
 
