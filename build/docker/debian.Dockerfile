@@ -1,4 +1,4 @@
-FROM golang:1.23.4-bookworm AS dev
+FROM golang:1.23-bookworm AS dev
 WORKDIR /cli
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -90,23 +90,18 @@ RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh \
     && rm ./dotnet-install.sh \
     && dotnet help
 
-ENV GOLANG_VERSION="1.23.4"
-ENV GOPATH="/usr/lib/go"
-ENV PATH="$GOPATH/bin:$PATH"
+ENV GOLANG_VERSION="1.23"
 RUN apt -y update && apt -y upgrade && apt -y install \
-    ca-certificates \
-    wget && \
+    ca-certificates && \
     apt -y install -t unstable \
-    python3.13 \
-    python3.13-venv \
+    python3.12\
+    python3.12-venv \
+    golang-$GOLANG_VERSION \
     openjdk-21-jdk && \
     apt -y clean && rm -rf /var/lib/apt/lists/* && \
-    # Install Go manually from official source
-    wget https://go.dev/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go${GOLANG_VERSION}.linux-amd64.tar.gz && \
-    rm go${GOLANG_VERSION}.linux-amd64.tar.gz && \
-    ln -s /usr/local/go/bin/go /usr/bin/go && \
-    ln -s /usr/bin/python3.13 /usr/bin/python
+    # Symlink go binary to bin directory which is in path
+    ln -s /usr/lib/go-$GOLANG_VERSION/bin/go /usr/bin/go && \
+    ln -s /usr/bin/python3.12 /usr/bin/python
 
 RUN dotnet --version
 
@@ -137,7 +132,7 @@ RUN apt -y update && apt -y install \
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
 
-RUN ln -sf /usr/bin/python3.13 /usr/bin/python3 && php -v && composer --version && python3 --version
+RUN ln -sf /usr/bin/python3.12 /usr/bin/python3 && php -v && composer --version && python3 --version
 
 CMD [ "debricked",  "scan" ]
 
