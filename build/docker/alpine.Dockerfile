@@ -9,7 +9,7 @@ RUN mkdir -p internal/file/embedded && \
 RUN apk add --no-cache make curl && make install && apk del make curl
 CMD [ "debricked" ]
 
-FROM alpine:3.21 AS cli-base
+FROM alpine:latest AS cli-base
 ENV DEBRICKED_TOKEN=""
 RUN apk add --no-cache git
 WORKDIR /root/
@@ -22,6 +22,11 @@ FROM cli AS scan
 CMD [ "debricked",  "scan" ]
 
 FROM cli-base AS resolution
+
+# Copy Go from the dev stage to avoid Alpine package conflicts with dotnet8-sdk
+COPY --from=dev /usr/local/go /usr/local/go
+ENV PATH="/usr/local/go/bin:$PATH"
+
 ENV MAVEN_VERSION="3.9.9"
 ENV MAVEN_HOME="/usr/lib/mvn"
 ENV PATH="$MAVEN_HOME/bin:$PATH"
@@ -60,9 +65,9 @@ RUN apk --no-cache --update add \
   curl \
   bash
 
-RUN apk --no-cache --update add dotnet8-sdk go~=1.23 --repository=https://dl-cdn.alpinelinux.org/alpine/v3.21/community
+RUN apk --no-cache --update add dotnet8-sdk --repository=https://dl-cdn.alpinelinux.org/alpine/v3.20/community
 
-RUN dotnet --version && npm -v && yarn -v
+RUN dotnet --version && npm -v && yarn -v && go version
 
 RUN npm install --global bower && bower -v
 

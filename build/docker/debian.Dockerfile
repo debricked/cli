@@ -1,4 +1,4 @@
-FROM golang:1.23.4-bookworm AS dev
+FROM golang:1.23-bookworm AS dev
 WORKDIR /cli
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -33,10 +33,15 @@ FROM cli-base AS resolution
 
 ARG DEBIAN_FRONTEND=noninteractive
 
+# Copy Go from the dev stage to avoid Debian package issues
+COPY --from=dev /usr/local/go /usr/local/go
+ENV PATH="/usr/local/go/bin:$PATH"
+
 RUN echo "deb http://deb.debian.org/debian unstable main" >> /etc/apt/sources.list && \
     echo "Package: *" >> /etc/apt/preferences && \
     echo "Pin: release a=unstable" >> /etc/apt/preferences && \
-    echo "Pin-Priority: -2" >> /etc/apt/preferences
+    echo "Pin-Priority: -2" >> /etc/apt/preferences && \
+    apt -y update
 
 # Uncomment below if testing packages are needed
 #RUN echo "deb http://deb.debian.org/debian testing-updates main" >> /etc/apt/sources.list && \
@@ -90,25 +95,15 @@ RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh \
     && rm ./dotnet-install.sh \
     && dotnet help
 
-ENV GOLANG_VERSION="1.23.4"
-ENV GOPATH="/usr/lib/go"
-ENV PATH="$GOPATH/bin:$PATH"
-RUN apt -y update && apt -y upgrade && apt -y install \
-    ca-certificates \
-    wget && \
+RUN apt -y update && apt -y upgrade && apt -y install ca-certificates && \
     apt -y install -t unstable \
     python3.13 \
     python3.13-venv \
     openjdk-21-jdk && \
     apt -y clean && rm -rf /var/lib/apt/lists/* && \
-    # Install Go manually from official source
-    wget https://go.dev/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go${GOLANG_VERSION}.linux-amd64.tar.gz && \
-    rm go${GOLANG_VERSION}.linux-amd64.tar.gz && \
-    ln -s /usr/local/go/bin/go /usr/bin/go && \
     ln -s /usr/bin/python3.13 /usr/bin/python
 
-RUN dotnet --version
+RUN dotnet --version && go version
 
 RUN apt update -y && \
     apt install -t unstable lsb-release apt-transport-https ca-certificates software-properties-common -y && \
