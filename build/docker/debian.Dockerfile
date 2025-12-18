@@ -40,7 +40,8 @@ ENV PATH="/usr/local/go/bin:$PATH"
 RUN echo "deb http://deb.debian.org/debian unstable main" >> /etc/apt/sources.list && \
     echo "Package: *" >> /etc/apt/preferences && \
     echo "Pin: release a=unstable" >> /etc/apt/preferences && \
-    echo "Pin-Priority: -2" >> /etc/apt/preferences
+    echo "Pin-Priority: -2" >> /etc/apt/preferences && \
+    apt -y update
 
 # Uncomment below if testing packages are needed
 #RUN echo "deb http://deb.debian.org/debian testing-updates main" >> /etc/apt/sources.list && \
@@ -94,7 +95,7 @@ RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh \
     && rm ./dotnet-install.sh \
     && dotnet help
 
-RUN apt -y update && apt -y upgrade && apt -y install ca-certificates && \
+RUN apt -y upgrade && apt -y install ca-certificates && \
     apt -y install -t unstable \
     python3.12 \
     python3.12-venv \
