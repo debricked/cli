@@ -33,6 +33,10 @@ FROM cli-base AS resolution
 
 ARG DEBIAN_FRONTEND=noninteractive
 
+# Copy Go from the dev stage to avoid Debian package issues
+COPY --from=dev /usr/local/go /usr/local/go
+ENV PATH="/usr/local/go/bin:$PATH"
+
 RUN echo "deb http://deb.debian.org/debian unstable main" >> /etc/apt/sources.list && \
     echo "Package: *" >> /etc/apt/preferences && \
     echo "Pin: release a=unstable" >> /etc/apt/preferences && \
@@ -90,20 +94,17 @@ RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh \
     && rm ./dotnet-install.sh \
     && dotnet help
 
-ENV GOLANG_VERSION="1.23"
 RUN apt -y update && apt -y upgrade && apt -y install \
     ca-certificates && \
     apt -y install -t unstable \
-    python3.12\
+    python3.12 \
     python3.12-venv \
-    golang-$GOLANG_VERSION \
     openjdk-21-jdk && \
     apt -y clean && rm -rf /var/lib/apt/lists/* && \
-    # Symlink go binary to bin directory which is in path
-    ln -s /usr/lib/go-$GOLANG_VERSION/bin/go /usr/bin/go && \
+    # Symlink python binary
     ln -s /usr/bin/python3.12 /usr/bin/python
 
-RUN dotnet --version
+RUN dotnet --version && go version
 
 RUN apt update -y && \
     apt install -t unstable lsb-release apt-transport-https ca-certificates software-properties-common -y && \
