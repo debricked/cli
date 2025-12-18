@@ -57,17 +57,17 @@ RUN apk --no-cache --update add \
   openjdk21-jdk \
   python3 \
   py3-scipy \
+  py3-pip \
+  nodejs \
+  npm \
+  yarn \
+  g++ \
   curl \
   bash
 
 RUN apk --no-cache --update add dotnet8-sdk --repository=https://dl-cdn.alpinelinux.org/alpine/v3.20/community
 
 RUN dotnet --version && npm -v && yarn -v && go version
-  bash
-
-RUN apk --no-cache --update add dotnet8-sdk go~=1.23 --repository=https://dl-cdn.alpinelinux.org/alpine/v3.20/community
-
-RUN dotnet --version && npm -v && yarn -v
 
 RUN npm install --global bower && bower -v
 
