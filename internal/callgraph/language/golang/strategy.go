@@ -74,7 +74,7 @@ func NewStrategy(config conf.IConfig, paths []string, exclusions []string, inclu
 }
 
 func strategyWarning(errMsg string) {
-	err := fmt.Errorf(errMsg)
+	err := fmt.Errorf("%s", errMsg)
 	warningColor := color.New(color.FgYellow, color.Bold).SprintFunc()
 	defaultOutputWriter := log.Writer()
 	log.Println(warningColor("Warning: ") + err.Error())
