@@ -95,7 +95,7 @@ RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh \
     && rm ./dotnet-install.sh \
     && dotnet help
 
-RUN apt -y upgrade && apt -y install ca-certificates && \
+RUN apt -y update && apt -y upgrade && apt -y install ca-certificates && \
     apt -y install -t unstable \
     python3.13 \
     python3.13-venv \
