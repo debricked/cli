@@ -142,6 +142,9 @@ jobs:
         run: |
           cd cmd/debricked
           go generate -v -x
+      - name: Download modules
+        run: |
+          go mod download
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v4
         with:
