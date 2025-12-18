@@ -94,14 +94,15 @@ RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh \
     && rm ./dotnet-install.sh \
     && dotnet help
 
-RUN apt -y update && apt -y upgrade && apt -y install \
-    ca-certificates \
-    python3 \
-    python3-venv \
-    openjdk-21-jre-headless && \
-    apt -y clean && rm -rf /var/lib/apt/lists/*
+RUN apt -y update && apt -y upgrade && apt -y install ca-certificates && \
+    apt -y install -t unstable \
+    python3.12 \
+    python3.12-venv \
+    openjdk-21-jdk && \
+    apt -y clean && rm -rf /var/lib/apt/lists/* && \
+    ln -s /usr/bin/python3.12 /usr/bin/python
 
-RUN dotnet --version && go version && python3 --version
+RUN dotnet --version && go version
 
 RUN apt update -y && \
     apt install -t unstable lsb-release apt-transport-https ca-certificates software-properties-common -y && \
