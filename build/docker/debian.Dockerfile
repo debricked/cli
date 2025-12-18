@@ -97,11 +97,11 @@ RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh \
 
 RUN apt -y upgrade && apt -y install ca-certificates && \
     apt -y install -t unstable \
-    python3.12 \
-    python3.12-venv \
+    python3.13 \
+    python3.13-venv \
     openjdk-21-jdk && \
     apt -y clean && rm -rf /var/lib/apt/lists/* && \
-    ln -s /usr/bin/python3.12 /usr/bin/python
+    ln -s /usr/bin/python3.13 /usr/bin/python
 
 RUN dotnet --version && go version
 
@@ -132,7 +132,7 @@ RUN apt -y update && apt -y install \
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
 
-RUN ln -sf /usr/bin/python3.12 /usr/bin/python3 && php -v && composer --version && python3 --version
+RUN ln -sf /usr/bin/python3.13 /usr/bin/python3 && php -v && composer --version && python3 --version
 
 CMD [ "debricked",  "scan" ]
 
