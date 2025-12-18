@@ -22,6 +22,11 @@ FROM cli AS scan
 CMD [ "debricked",  "scan" ]
 
 FROM cli-base AS resolution
+
+# Copy Go from the dev stage to avoid Alpine package conflicts with dotnet8-sdk
+COPY --from=dev /usr/local/go /usr/local/go
+ENV PATH="/usr/local/go/bin:$PATH"
+
 ENV MAVEN_VERSION="3.9.9"
 ENV MAVEN_HOME="/usr/lib/mvn"
 ENV PATH="$MAVEN_HOME/bin:$PATH"
@@ -52,12 +57,12 @@ RUN apk --no-cache --update add \
   openjdk21-jdk \
   python3 \
   py3-scipy \
-  py3-pip \
-  nodejs \
-  npm \
-  yarn \
-  g++ \
   curl \
+  bash
+
+RUN apk --no-cache --update add dotnet8-sdk --repository=https://dl-cdn.alpinelinux.org/alpine/v3.20/community
+
+RUN dotnet --version && npm -v && yarn -v && go version
   bash
 
 RUN apk --no-cache --update add dotnet8-sdk go~=1.23 --repository=https://dl-cdn.alpinelinux.org/alpine/v3.20/community
