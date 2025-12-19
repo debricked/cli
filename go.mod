@@ -5,7 +5,6 @@ go 1.23
 toolchain go1.24.3
 
 require (
-	github.com/becheran/wildmatch-go v1.0.0
 	github.com/bmatcuk/doublestar/v4 v4.6.0
 	github.com/chelnak/ysmrr v0.2.1
 	github.com/fatih/color v1.16.0
