@@ -43,7 +43,7 @@ func NewCallgraphCmd(generator cg.IGenerator) *cobra.Command {
 Build: Build the project and resolve dependencies. In this step, all necessary .class files are created.
 Callgraph: Generate the static call graph using debricked Reachability Analysis.
 
-The full documentation is available here https://portal.debricked.com/debricked-cli-63/debricked-cli-documentation-298
+The full documentation is available here https://docs.debricked.com/tools-and-integrations/cli/debricked-cli
 
 Example:
 $ debricked callgraph 
@@ -78,8 +78,8 @@ $ debricked callgraph . `+exampleFlags)
 Examples: 
 $ debricked scan . --include '**/node_modules/**'`)
 	cmd.Flags().BoolVar(&buildDisabled, NoBuildFlag, false, `Do not automatically build all source code in the project to enable call graph generation.
-This option requires a pre-built project. For more detailed documentation on the callgraph generation, visit our portal:
-https://portal.debricked.com/debricked-cli-63/debricked-cli-documentation-298?tid=298&fid=63#callgraph`)
+This option requires a pre-built project. For more detailed documentation on the callgraph generation, visit:
+https://docs.debricked.com/tools-and-integrations/cli/debricked-cli#callgraph`)
 	cmd.Flags().IntVar(&generateTimeout, GenerateTimeoutFlag, 60*60, "Timeout (in seconds) on call graph generation.")
 	cmd.Flags().StringVarP(&languages, LanguagesFlag, "l", strings.Join(supportedLanguages, ","), "Colon separated list of languages to create a call graph for.")
 
@@ -127,9 +127,10 @@ func RunE(callgraph callgraph.IGenerator) func(_ *cobra.Command, args []string) 
 		}
 
 		configs := []conf.IConfig{}
+		version := viper.GetString("cliVersion")
 
 		for _, language := range languages {
-			configs = append(configs, conf.NewConfig(language, args, map[string]string{}, !buildDisabled, languageMap[language]))
+			configs = append(configs, conf.NewConfig(language, args, map[string]string{}, !buildDisabled, languageMap[language], version))
 		}
 
 		options := cg.DebrickedOptions{

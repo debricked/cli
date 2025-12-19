@@ -3,6 +3,7 @@ package wire
 import (
 	"fmt"
 
+	"github.com/debricked/cli/internal/auth"
 	"github.com/debricked/cli/internal/callgraph"
 	callgraphStrategy "github.com/debricked/cli/internal/callgraph/strategy"
 	"github.com/debricked/cli/internal/ci"
@@ -11,6 +12,7 @@ import (
 	"github.com/debricked/cli/internal/fingerprint"
 	"github.com/debricked/cli/internal/io"
 	licenseReport "github.com/debricked/cli/internal/report/license"
+	sbomReport "github.com/debricked/cli/internal/report/sbom"
 	vulnerabilityReport "github.com/debricked/cli/internal/report/vulnerability"
 	"github.com/debricked/cli/internal/resolution"
 	resolutionFile "github.com/debricked/cli/internal/resolution/file"
@@ -91,6 +93,8 @@ func (cc *CliContainer) wire() error {
 
 	cc.licenseReporter = licenseReport.Reporter{DebClient: cc.debClient}
 	cc.vulnerabilityReporter = vulnerabilityReport.Reporter{DebClient: cc.debClient}
+	cc.sbomReporter = sbomReport.Reporter{DebClient: cc.debClient, FileWriter: io.FileWriter{}}
+	cc.authenticator = cc.debClient.Authenticator()
 
 	return nil
 }
@@ -109,9 +113,11 @@ type CliContainer struct {
 	batchFactory          resolutionFile.IBatchFactory
 	licenseReporter       licenseReport.Reporter
 	vulnerabilityReporter vulnerabilityReport.Reporter
+	sbomReporter          sbomReport.Reporter
 	callgraph             callgraph.IGenerator
 	cgScheduler           callgraph.IScheduler
 	cgStrategyFactory     callgraphStrategy.IFactory
+	authenticator         auth.IAuthenticator
 }
 
 func (cc *CliContainer) DebClient() client.IDebClient {
@@ -142,8 +148,16 @@ func (cc *CliContainer) VulnerabilityReporter() vulnerabilityReport.Reporter {
 	return cc.vulnerabilityReporter
 }
 
+func (cc *CliContainer) SBOMReporter() sbomReport.Reporter {
+	return cc.sbomReporter
+}
+
 func (cc *CliContainer) Fingerprinter() fingerprint.IFingerprint {
 	return cc.fingerprinter
+}
+
+func (cc *CliContainer) Authenticator() auth.IAuthenticator {
+	return cc.authenticator
 }
 
 func wireErr(err error) error {

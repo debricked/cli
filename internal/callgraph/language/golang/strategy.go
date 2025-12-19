@@ -32,7 +32,6 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	}
 
 	for _, path := range s.paths {
-
 		files, err := s.finder.FindFiles([]string{path}, s.exclusions, s.inclusions)
 		if err != nil {
 			strategyWarning("Error while finding files: " + err.Error())
@@ -52,10 +51,8 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 		}
 
 		for _, rootFilePath := range roots {
-
 			rootFileDir := filepath.Dir(rootFilePath)
 			rootFile := filepath.Base(rootFilePath)
-
 			jobs = append(jobs, NewJob(
 				rootFileDir,
 				rootFile,
@@ -77,7 +74,7 @@ func NewStrategy(config conf.IConfig, paths []string, exclusions []string, inclu
 }
 
 func strategyWarning(errMsg string) {
-	err := fmt.Errorf(errMsg)
+	err := fmt.Errorf("%s", errMsg)
 	warningColor := color.New(color.FgYellow, color.Bold).SprintFunc()
 	defaultOutputWriter := log.Writer()
 	log.Println(warningColor("Warning: ") + err.Error())

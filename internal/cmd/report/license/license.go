@@ -21,17 +21,17 @@ const (
 func NewLicenseCmd(reporter report.IReporter) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "license",
-		Short: "Generate license report",
-		Long: `Generate license report from a commit hash. 
+		Short: "Generate license export",
+		Long: `Generate license export from a commit hash. 
 This is a premium feature. Please visit https://debricked.com/pricing/ for more info.
-The finished report will be sent to the specified email address.`,
+The finished export will be sent to the specified email address.`,
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			_ = viper.BindPFlags(cmd.Flags())
 		},
 		RunE: RunE(reporter),
 	}
 
-	cmd.Flags().StringVarP(&email, EmailFlag, "e", "", "The email address that the report will be sent to")
+	cmd.Flags().StringVarP(&email, EmailFlag, "e", "", "The email address that the export will be sent to")
 	viper.MustBindEnv(EmailFlag)
 
 	cmd.Flags().StringVarP(&commitHash, CommitFlag, "c", "", "commit hash")
@@ -51,7 +51,7 @@ func RunE(r report.IReporter) func(_ *cobra.Command, args []string) error {
 			return fmt.Errorf("%s %s\n", color.RedString("⨯"), err.Error())
 		}
 
-		fmt.Printf("%s Successfully ordered license report\n", color.GreenString("✔"))
+		fmt.Printf("%s Successfully ordered license export\n", color.GreenString("✔"))
 
 		return nil
 	}

@@ -11,7 +11,7 @@ jobs:
     name: CLI
     strategy:
       matrix:
-        os: [ 'ubuntu-latest', 'windows-latest', 'macos-12' ]
+        os: [ 'ubuntu-latest', 'windows-latest', 'macos-13' ]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set git to use LF
@@ -24,7 +24,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.20'
+          go-version: '1.23.0'
 
       - name: Install Bower
         run: |
@@ -75,7 +75,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.20'
+          go-version: '1.23.0'
 
       - name: Pull Supported Formats
         run: |
@@ -92,7 +92,8 @@ jobs:
           distribution: 'temurin'
 
       - name: Install Debricked CLI
-        run: go install -ldflags "-X main.version=${GITHUB_REF#refs/heads/}" ./cmd/debricked
+        run: |
+          go install -ldflags "-X main.version=${{ secrets.DEBRICKED_VERSION }}" ./cmd/debricked
 
       - name: Callgraph E2E
         run: ./scripts/test_e2e_callgraph_java_version.sh ${{matrix.java}}
@@ -136,7 +137,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.20'
+          go-version: '1.23.0'
       - name: Pull Supported Formats
         run: |
           cd cmd/debricked
@@ -144,4 +145,4 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v4
         with:
-          version: v1.52
+          version: v1.62

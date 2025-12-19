@@ -28,6 +28,8 @@ var defaultFingerprintExclusions = DefaultFingerprintExclusionList{
 		".git",
 		"obj",
 		"bower_components",
+		".m2",                 // Default Maven directory for settings.xml and dependencies
+		".debrickedTmpFolder", // temporary debricked data
 	},
 	Files: []string{
 		"gradlew", "gradlew.bat", "mvnw", "mvnw.cmd", "gradle-wrapper.jar", "maven-wrapper.jar",
@@ -73,7 +75,7 @@ func DefaultExclusionsFingerprint() []string {
 	for _, excluded_extension := range defaultFingerprintExclusions.Extensions {
 		default_exclusions = append(default_exclusions, "**/*"+excluded_extension)
 	}
-	for _, excluded_ending := range defaultFingerprintExclusions.Extensions {
+	for _, excluded_ending := range defaultFingerprintExclusions.Endings {
 		default_exclusions = append(default_exclusions, "**/*"+excluded_ending)
 	}
 

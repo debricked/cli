@@ -1,6 +1,7 @@
 package file
 
 import (
+	"fmt"
 	"path/filepath"
 )
 
@@ -79,6 +80,13 @@ func (gs *Groups) FilterGroupsByStrictness(strictness int) {
 		}
 	}
 
+	if len(groups) == 0 && len(gs.groups) > 0 {
+		fmt.Println("The following files and directories were filtered out by strictness flag, resulting in no file matches.")
+		for _, group := range gs.groups {
+			fmt.Println(group.GetAllFiles())
+		}
+	}
+
 	gs.groups = groups
 }
 
@@ -106,4 +114,30 @@ func (gs *Groups) GetFiles() []string {
 	}
 
 	return files
+}
+
+func (gs *Groups) matchWorkspace(workspaceManifest WorkspaceManifest) {
+	for _, g := range gs.groups {
+		// If group g is missing lockfile and does not have the same manifest
+		if len(g.LockFiles) == 0 && g.ManifestFile != workspaceManifest.RootManifest {
+			match := workspaceManifest.matchManifest(g.ManifestFile)
+			if match {
+				g.LockFiles = workspaceManifest.LockFiles
+			}
+		}
+	}
+}
+
+func (gs *Groups) AddWorkspaceLockFiles() {
+	for _, group := range gs.groups {
+		workspaces, err := getPackageJSONWorkspaces(group.ManifestFile)
+		if err == nil && group.HasLockFiles() {
+			workspaceManifest := WorkspaceManifest{
+				LockFiles:         group.LockFiles,
+				RootManifest:      group.ManifestFile,
+				WorkspacePatterns: workspaces,
+			}
+			gs.matchWorkspace(workspaceManifest)
+		}
+	}
 }

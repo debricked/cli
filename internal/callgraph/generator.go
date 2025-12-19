@@ -16,6 +16,7 @@ type DebrickedOptions struct {
 	Inclusions []string
 	Configs    []config.IConfig
 	Timeout    int
+	Version    string
 }
 
 type IGenerator interface {

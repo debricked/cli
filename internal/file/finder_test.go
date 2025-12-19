@@ -3,20 +3,27 @@ package file
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"path"
 	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
 
+	"github.com/debricked/cli/internal/auth"
 	"github.com/debricked/cli/internal/client/testdata"
 	ioFs "github.com/debricked/cli/internal/io"
 	"github.com/stretchr/testify/assert"
 )
 
 type debClientMock struct{}
+
+func (mock *debClientMock) Host() string {
+	return "debricked.com"
+}
 
 func (mock *debClientMock) Post(_ string, _ string, _ *bytes.Buffer, _ int) (*http.Response, error) {
 	return &http.Response{}, nil
@@ -60,6 +67,10 @@ func (mock *debClientMock) ConfigureClientSettings(retry bool, timeout int) {}
 
 func (mock *debClientMock) IsEnterpriseCustomer(silent bool) bool {
 	return true
+}
+
+func (mock *debClientMock) Authenticator() auth.IAuthenticator {
+	return nil
 }
 
 var finder *Finder
@@ -108,7 +119,7 @@ func TestGetGroups(t *testing.T) {
 	path := ""
 
 	excludedFiles := []string{"testdata/go/go.mod", "testdata/misc/requirements.txt", "testdata/misc/Cargo.lock"}
-	const nbrOfGroups = 6
+	const nbrOfGroups = 12
 
 	fileGroups, err := finder.GetGroups(
 		DebrickedOptions{
@@ -183,6 +194,86 @@ func TestGetGroupsPIP(t *testing.T) {
 		assert.Truef(t, found == expected, "Lock files do not match! Found: %s | Expected: %s", found, expected)
 	}
 
+}
+
+func CaptureStdout(function func(options DebrickedOptions) (Groups, error), options DebrickedOptions) string {
+	oldStdout := os.Stdout
+	read, write, _ := os.Pipe()
+	os.Stdout = write
+
+	_, err := function(options)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+
+		return ""
+	}
+
+	write.Close()
+	os.Stdout = oldStdout
+	var buf bytes.Buffer
+	_, err = io.Copy(&buf, read)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+
+		return ""
+	}
+
+	return buf.String()
+}
+
+func TestGetGroupsAllExcluded(t *testing.T) {
+	setUp(true)
+
+	options := DebrickedOptions{
+		RootPath:     "testdata/misc",
+		Exclusions:   []string{"**/**"},
+		Inclusions:   []string{"**/**.zip"},
+		LockFileOnly: false,
+		Strictness:   StrictAll,
+	}
+	actualOutput := CaptureStdout(finder.GetGroups, options)
+
+	expectedStart := "The following files were excluded, resulting in no dependency files found."
+	if !strings.Contains(actualOutput, expectedStart) {
+		t.Errorf("Expected %q but got %q", expectedStart, actualOutput)
+	}
+	expectedEnd := "Change the inclusion and exclusion options if a file or directory was missed."
+	if !strings.Contains(actualOutput, expectedEnd) {
+		t.Errorf("Expected %q but got %q", expectedEnd, actualOutput)
+	}
+	expectedCompressionWarning := "Compressed file found, but contained files cannot be scanned. Decompress to scan content."
+	if !strings.Contains(actualOutput, expectedCompressionWarning) {
+		t.Errorf("Expected %q but got %q", expectedCompressionWarning, actualOutput)
+	}
+	expectedExcludedDependencyFile := "requirements.txt"
+	if !strings.Contains(actualOutput, expectedExcludedDependencyFile) {
+		t.Errorf("Expected %q but got %q", expectedExcludedDependencyFile, actualOutput)
+	}
+	expectedSkippedCompressedFile := "zipped.zip"
+	if !strings.Contains(actualOutput, expectedSkippedCompressedFile) {
+		t.Errorf("Expected %q but got %q", expectedExcludedDependencyFile, actualOutput)
+	}
+}
+
+func TestGetGroupsAllExcludedByStrictness(t *testing.T) {
+	setUp(true)
+
+	options := DebrickedOptions{
+		RootPath:     "testdata/misc",
+		Exclusions:   []string{"**/composer.**"}, //the only manifest+lock pair in testdata/misc
+		Inclusions:   []string{},
+		LockFileOnly: false,
+		Strictness:   StrictPairs,
+	}
+	actualOutput := CaptureStdout(finder.GetGroups, options)
+
+	// Define the expected output
+	expectedStart := "The following files and directories were filtered out by strictness flag, resulting in no file matches."
+
+	// Compare the actual output to the expected output
+	if !strings.Contains(actualOutput, expectedStart) {
+		t.Errorf("Expected %q but got %q", expectedStart, actualOutput)
+	}
 }
 
 func TestGetGroupsWithOnlyLockFiles(t *testing.T) {
@@ -299,7 +390,7 @@ func TestGetGroupsWithStrictFlag(t *testing.T) {
 			fileGroups, err := finder.GetGroups(
 				DebrickedOptions{
 					RootPath:     filePath,
-					Exclusions:   []string{"**/node_modules/**"},
+					Exclusions:   []string{"**/node_modules/**", "**/workspace/**"},
 					Inclusions:   []string{},
 					LockFileOnly: false,
 					Strictness:   c.strictness,

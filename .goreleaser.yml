@@ -1,4 +1,7 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 # Documentation at https://goreleaser.com
+version: 2
+
 before:
   hooks:
     - go mod tidy
@@ -13,7 +16,7 @@ builds:
       - windows
       - darwin
     ldflags:
-      - -X main.version={{.Version}}
+      - -s -w -X main.version={{.Version}}
 
 archives:
     - name_template: >-
@@ -27,7 +30,7 @@ archives:
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  version_template: "{{ incpatch .Version }}-next"
 changelog:
   sort: asc
 
@@ -44,3 +47,22 @@ nfpms:
       - deb
       - rpm
       - apk
+
+upx:
+  - # Whether to enable it or not.
+    #
+    # Templates: allowed.
+    enabled: true
+
+    # Filter by GOOS.
+    goos: [ linux, windows ]
+
+    # Compress argument.
+    # Valid options are from '1' (faster) to '9' (better), and 'best'.
+    compress: '6'
+
+    # Whether to try LZMA (slower).
+    lzma: false
+
+    # Whether to try all methods and filters (slow).
+    brute: false

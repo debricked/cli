@@ -1,0 +1,7 @@
+ignore:
+  packages:
+    - pURL: "pkg:npm/verdaccio"
+      version: "3.7.0"
+    - pURL: "pkg:npm/chart.js"
+    - pURL: "pkg:nuget/simpleinjector"
+      version: "4.7.1"

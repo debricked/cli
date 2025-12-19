@@ -48,14 +48,14 @@ Check out the [releases](https://github.com/debricked/cli/releases/tag/release-v
 Below follow some common ways to install the CLI.
 ### Linux
 ```sh
-curl -L https://github.com/debricked/cli/releases/download/release-v2/cli_linux_x86_64.tar.gz | tar -xz debricked
+curl -LsS https://github.com/debricked/cli/releases/download/release-v2/cli_linux_x86_64.tar.gz | tar -xz debricked
 ```
 ```sh
 ./debricked
 ```
 ### Mac
 ```sh
-curl -L https://github.com/debricked/cli/releases/download/release-v2/cli_macOS_arm64.tar.gz | tar -xz debricked
+curl -LsS https://github.com/debricked/cli/releases/download/release-v2/cli_macOS_arm64.tar.gz | tar -xz debricked
 ```
 ```sh
 ./debricked
@@ -93,7 +93,7 @@ It is therefore important that the package managers are installed, with the righ
 When the resolution is complete, you will see the list of files that were resolved. If the resolution were to fail, descriptive error messages from the respective package manager 
 will be shown in the output.
 
-For more information on how resolution works, check out https://portal.debricked.com/debricked-cli-63/high-performance-scan-faster-more-accurate-and-more-secure-dependency-scanning-293.
+For more information on how resolution works, check out https://docs.debricked.com/tools-and-integrations/cli/debricked-cli/high-performance-scans.
 
 #### Private Registries
 If a dependency is hosted on a private registry some configuration may be needed, depending on package manager. For more details see package manager specific resolution README files in the specific [package manager folder](https://github.com/debricked/cli/tree/main/internal/resolution/pm) or search the documentation of your package manager of choice.

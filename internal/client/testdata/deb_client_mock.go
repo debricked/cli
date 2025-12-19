@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/debricked/cli/internal/auth"
+	authTestdata "github.com/debricked/cli/internal/auth/testdata"
 	"github.com/debricked/cli/internal/client"
 )
 
@@ -32,6 +34,10 @@ func NewDebClientMock() *DebClientMock {
 		serviceUp:        true,
 		isEnterprise:     false,
 	}
+}
+
+func (mock *DebClientMock) Host() string {
+	return "debricked.com"
 }
 
 func (mock *DebClientMock) Get(uri string, format string) (*http.Response, error) {
@@ -141,4 +147,11 @@ func (mock *DebClientMock) SetEnterpriseCustomer(isEnterprise bool) {
 func (mock *DebClientMock) IsEnterpriseCustomer(silent bool) bool {
 
 	return mock.isEnterprise
+}
+
+func (mock *DebClientMock) Authenticator() auth.IAuthenticator {
+	return auth.Authenticator{
+		SecretClient: authTestdata.MockInvalidSecretClient{},
+		OAuthConfig:  nil,
+	}
 }

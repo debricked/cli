@@ -2,11 +2,13 @@ package io
 
 import (
 	"encoding/base64"
+	"fmt"
 	"path"
 )
 
 type IArchive interface {
 	ZipFile(sourcePath string, targetPath string, zippedName string) error
+	UnzipFile(sourcePath string, targetPath string) error
 	B64(sourceName string, targetName string) error
 	Cleanup(targetName string) error
 }
@@ -40,16 +42,14 @@ func (arc *Archive) ZipFile(sourcePath string, targetPath string, zippedName str
 
 		return err
 	}
-
 	zipFile, err := fs.Create(targetPath)
 	if err != nil {
 
 		return err
 	}
 	defer fs.CloseFile(zipFile)
-
 	zipWriter := zip.NewWriter(zipFile)
-	defer zip.Close(zipWriter)
+	defer zip.CloseWriter(zipWriter) //nolint
 
 	info, err := fs.StatFile(zipFile)
 	if err != nil {
@@ -77,6 +77,36 @@ func (arc *Archive) ZipFile(sourcePath string, targetPath string, zippedName str
 
 		return err
 	}
+
+	return err
+}
+
+func (arc *Archive) UnzipFile(sourcePath string, targetPath string) error {
+	r, err := arc.zip.OpenReader(sourcePath)
+	if err != nil {
+
+		return err
+	}
+	defer arc.zip.CloseReader(r) //nolint
+
+	if len(r.File) != 1 {
+		return fmt.Errorf("cannot unzip archive which does not contain exactly one file")
+	}
+
+	f := r.File[0]
+	outFile, err := arc.fs.Create(targetPath)
+	if err != nil {
+		return err
+	}
+	defer outFile.Close() //nolint
+
+	rc, err := arc.zip.Open(f)
+	if err != nil {
+		return err
+	}
+	defer arc.zip.Close(rc) //nolint
+
+	_, err = arc.fs.Copy(outFile, rc)
 
 	return err
 }

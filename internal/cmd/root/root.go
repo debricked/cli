@@ -1,6 +1,7 @@
 package root
 
 import (
+	"github.com/debricked/cli/internal/cmd/auth"
 	"github.com/debricked/cli/internal/cmd/callgraph"
 	"github.com/debricked/cli/internal/cmd/files"
 	"github.com/debricked/cli/internal/cmd/fingerprint"
@@ -14,39 +15,44 @@ import (
 
 var accessToken string
 
-const AccessTokenFlag = "access-token"
+const AccessTokenFlag = "token"
+const OldAccessTokenFlag = "access-token"
 
 func NewRootCmd(version string, container *wire.CliContainer) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "debricked",
 		Short: "Debricked CLI - Keep track of your dependencies!",
 		Long: `A fast and flexible software composition analysis CLI tool, given to you by Debricked.
-Complete documentation is available at https://portal.debricked.com/debricked-cli-63/debricked-cli-documentation-298`,
+Complete documentation is available at https://docs.debricked.com/tools-and-integrations/cli/debricked-cli`,
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			_ = viper.BindPFlags(cmd.PersistentFlags())
 		},
 		Version: version,
 	}
+	viper.Set("cliVersion", version)
 	viper.SetEnvPrefix("DEBRICKED")
+	viper.AutomaticEnv()
 	viper.MustBindEnv(AccessTokenFlag)
+
 	rootCmd.PersistentFlags().StringVarP(
 		&accessToken,
-		AccessTokenFlag,
+		OldAccessTokenFlag,
 		"t",
-		"",
+		viper.GetString(AccessTokenFlag),
 		`Debricked access token. 
-Read more: https://portal.debricked.com/administration-47/how-do-i-generate-an-access-token-130`,
+Read more: https://docs.debricked.com/product/administration/generate-access-token`,
 	)
 
 	var debClient = container.DebClient()
 	debClient.SetAccessToken(&accessToken)
 
-	rootCmd.AddCommand(report.NewReportCmd(container.LicenseReporter(), container.VulnerabilityReporter()))
+	rootCmd.AddCommand(report.NewReportCmd(container.LicenseReporter(), container.VulnerabilityReporter(), container.SBOMReporter()))
 	rootCmd.AddCommand(files.NewFilesCmd(container.Finder()))
 	rootCmd.AddCommand(scan.NewScanCmd(container.Scanner()))
 	rootCmd.AddCommand(fingerprint.NewFingerprintCmd(container.Fingerprinter()))
 	rootCmd.AddCommand(resolve.NewResolveCmd(container.Resolver()))
 	rootCmd.AddCommand(callgraph.NewCallgraphCmd(container.CallgraphGenerator()))
+	rootCmd.AddCommand(auth.NewAuthCmd(container.Authenticator()))
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 

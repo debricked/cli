@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/debricked/cli/internal/auth"
 	"github.com/debricked/cli/internal/client"
 	"github.com/debricked/cli/internal/client/testdata"
 	"github.com/debricked/cli/internal/file"
@@ -40,7 +41,7 @@ func TestUpload(t *testing.T) {
 	g := file.NewGroup("testdata/yarn/package.json", nil, []string{"testdata/yarn/yarn.lock"})
 	groups := file.Groups{}
 	groups.Add(*g)
-	uploaderOptions := DebrickedOptions{FileGroups: groups, GitMetaObject: *metaObject, IntegrationsName: "CLI", CallGraphUploadTimeout: 10 * 60}
+	uploaderOptions := DebrickedOptions{FileGroups: groups, GitMetaObject: *metaObject, IntegrationsName: "CLI", CallGraphUploadTimeout: 10 * 60, TagCommitAsRelease: true}
 	result, err := uploader.Upload(uploaderOptions)
 
 	assert.NoError(t, err)
@@ -85,10 +86,14 @@ func TestUploadPollingError(t *testing.T) {
 	result, err := uploader.Upload(uploaderOptions)
 
 	assert.NoError(t, err)
-	assert.Nil(t, result)
+	assert.True(t, result.LongQueue)
 }
 
 type debClientMock struct{}
+
+func (mock *debClientMock) Host() string {
+	return "debricked.com"
+}
 
 func (mock *debClientMock) Post(uri string, _ string, _ *bytes.Buffer, _ int) (*http.Response, error) {
 	res := &http.Response{
@@ -154,4 +159,8 @@ func (mock *debClientMock) SetAccessToken(_ *string) {}
 
 func (mock *debClientMock) IsEnterpriseCustomer(silent bool) bool {
 	return true
+}
+
+func (mock *debClientMock) Authenticator() auth.IAuthenticator {
+	return nil
 }

@@ -184,3 +184,58 @@ func TestMatchGroupsExpected(t *testing.T) {
 
 	assert.Equal(t, len(testData), len(groups.groups))
 }
+
+func TestGroupsMatchWorkspaces(t *testing.T) {
+	g1 := NewGroup("package.json", nil, []string{"package-lock.json"})
+	g2 := NewGroup("", nil, []string{"lockfile2"})
+	g3 := NewGroup("package/file3", nil, []string{})
+	g4 := NewGroup("pack/file3", nil, []string{})
+
+	gs := Groups{}
+	gs.Add(*g1)
+	gs.Add(*g2)
+	gs.Add(*g3)
+	gs.Add(*g4)
+
+	workspaceManifest := WorkspaceManifest{
+		LockFiles:         []string{"package-lock.json"},
+		RootManifest:      "package.json",
+		WorkspacePatterns: []string{"package/*", "package\\*"},
+	}
+	gs.matchWorkspace(workspaceManifest)
+	for _, g := range gs.groups {
+		if g.ManifestFile == "package/file3" {
+			if g.HasLockFiles() {
+				assert.Equal(t, g.LockFiles[0], g1.LockFiles[0])
+			} else {
+				assert.True(t, false)
+			}
+		}
+		if g.ManifestFile == "pack/file3" {
+			assert.Equal(t, len(g3.LockFiles), 0)
+		}
+	}
+
+}
+
+func TestAddWorkspaceLockFiles(t *testing.T) {
+	g1 := NewGroup(
+		"testdata/workspace/common/package.json",
+		nil,
+		[]string{"testdata/workspace/common/package-lock.json"},
+	)
+	g2 := NewGroup("testdata/workspace/common/packages/package_one/package.json", nil, []string{})
+	g3 := NewGroup("testdata/workspace/common/packages/package_two/package.json", nil, []string{})
+
+	gs := Groups{}
+	gs.Add(*g1)
+	gs.Add(*g2)
+	gs.Add(*g3)
+	gs.AddWorkspaceLockFiles()
+	for _, g := range gs.groups {
+		assert.Equal(t, 1, len(g.LockFiles))
+		if len(g.LockFiles) == 1 {
+			assert.Equal(t, g.LockFiles[0], g1.LockFiles[0])
+		}
+	}
+}

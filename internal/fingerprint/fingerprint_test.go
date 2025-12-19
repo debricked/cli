@@ -15,7 +15,7 @@ var errorString = "mock error"
 
 // Test errors in symlink
 func mockSymlink(filename string) (bool, error) {
-	return false, fmt.Errorf(errorString)
+	return false, fmt.Errorf("%s", errorString)
 }
 func TestShouldProcessFile(t *testing.T) {
 	// Create a temporary directory to use for testing
@@ -181,6 +181,25 @@ func TestFingerprintFiles(t *testing.T) {
 	assert.NotNil(t, fingerprints)
 	assert.NotEmpty(t, fingerprints)
 
+}
+
+func TestFingerprintFilesAlreadyExists(t *testing.T) {
+	temp, _ := os.CreateTemp("testdata/fingerprinter", "temp-fingerprint-*.txt")
+	fingerprinter := NewFingerprinter()
+	_, err := fingerprinter.FingerprintFiles(
+		DebrickedOptions{
+			OutputPath:                   temp.Name(),
+			Path:                         "testdata/fingerprinter",
+			Exclusions:                   []string{},
+			Inclusions:                   []string{},
+			FingerprintCompressedContent: false,
+			MinFingerprintContentLength:  0,
+			Regenerate:                   false,
+		},
+	)
+	os.Remove(temp.Name())
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Fingerprint file already exists")
 }
 
 func TestFingerprintFilesBackslash(t *testing.T) {

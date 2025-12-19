@@ -14,10 +14,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.20'
+          go-version: '1.23.0'
       - name: Pull Supported Formats
         run: |
           cd cmd/debricked
           go generate -v -x
-      - run: |
-          go run cmd/debricked/main.go scan -t ${{ secrets.DEBRICKED_TOKEN }} -e "pkg/**" -e "test/**" -e "**/testdata/**"
+      - uses: GuillaumeFalourd/assert-command-line-output@v2.3
+        with:
+          command_line: go run cmd/debricked/main.go scan -t ${{ secrets.DEBRICKED_TOKEN }} -e "pkg/**" -e "test/**" -e "**/testdata/**"
+          contains: AUTOMATION RULE
+          expected_result: PASSED

@@ -30,7 +30,7 @@ func TestGenerate(t *testing.T) {
 	)
 
 	configs := []config.IConfig{
-		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven"),
+		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven", ""),
 	}
 	ctx, _ := ctxTestdata.NewContextMock()
 	err := g.Generate(
@@ -51,7 +51,7 @@ func TestGenerateWithTimer(t *testing.T) {
 	)
 
 	configs := []config.IConfig{
-		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven"),
+		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven", ""),
 	}
 	err := g.GenerateWithTimer(
 		DebrickedOptions{
@@ -73,7 +73,7 @@ func TestGenerateInvokeError(t *testing.T) {
 	)
 
 	configs := []config.IConfig{
-		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven"),
+		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven", ""),
 	}
 	ctx, _ := ctxTestdata.NewContextMock()
 	err := g.Generate(
@@ -94,7 +94,7 @@ func TestGenerateScheduleError(t *testing.T) {
 	)
 
 	configs := []config.IConfig{
-		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven"),
+		config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven", ""),
 	}
 	ctx, _ := ctxTestdata.NewContextMock()
 	err := g.Generate(

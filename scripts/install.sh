@@ -1,10 +1,16 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
+
+set -e
+
 # test if git is installed
-if ! command -v git &> /dev/null
+if ! command -v git >/dev/null 2>&1
 then
     echo -e "Failed to find git, thus also the version. Version will be set to v0.0.0"
 fi
-version=$(git symbolic-ref -q --short HEAD || git describe --tags --exact-match)
+set +e
+version=${DEBRICKED_VERSION:-$(git symbolic-ref -q --short HEAD || git describe --tags --exact-match)}
+set -e
 ldFlags="-X main.version=${version}"
 go install -ldflags "${ldFlags}" ./cmd/debricked
 go generate -v -x ./cmd/debricked
+go build -ldflags "${ldFlags}" ./cmd/debricked

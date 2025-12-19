@@ -40,4 +40,6 @@ func assertCliContainer(t *testing.T, cc *CliContainer) {
 	assert.NotNil(t, cc.LicenseReporter())
 	assert.NotNil(t, cc.VulnerabilityReporter())
 	assert.NotNil(t, cc.Fingerprinter())
+	assert.NotNil(t, cc.Authenticator())
+	assert.NotNil(t, cc.SBOMReporter())
 }

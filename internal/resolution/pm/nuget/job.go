@@ -207,6 +207,7 @@ func (j *Job) getNoInternetErrorDocumentation(matches [][]string) string {
 			"Registry",
 			"\"" + registry + "\"",
 			"is not available at the moment.",
-			"There might be a trouble with your network connection.",
+			"There might be a trouble with your network connection,",
+			"or this could be an authentication issue if this is a private registry.",
 		}, " ")
 }

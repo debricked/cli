@@ -59,6 +59,7 @@ func TestExclusionsWithEmptyTokenEnvVariable(t *testing.T) {
 		"**/.git/**",
 		"**/obj/**",
 		"**/bower_components/**",
+		"**/.vscode-test/**",
 	}
 	defaultExclusions := Exclusions()
 	assert.Equal(t, gt, defaultExclusions)

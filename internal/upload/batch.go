@@ -33,29 +33,34 @@ var (
 const callgraphName = "debricked-call-graph"
 
 type uploadBatch struct {
-	client           *client.IDebClient
-	fileGroups       file.Groups
-	gitMetaObject    *git.MetaObject
-	integrationName  string
-	ciUploadId       int
-	callGraphTimeout int
-	versionHint      bool
-	debrickedConfig  *DebrickedConfig // JSON Config
+	client             *client.IDebClient
+	fileGroups         file.Groups
+	gitMetaObject      *git.MetaObject
+	integrationName    string
+	ciUploadId         int
+	callGraphTimeout   int
+	versionHint        bool
+	debrickedConfig    *DebrickedConfig // JSON Config
+	tagCommitAsRelease bool
+	experimental       bool
 }
 
 func newUploadBatch(
 	client *client.IDebClient, fileGroups file.Groups, gitMetaObject *git.MetaObject,
-	integrationName string, callGraphTimeout int, versionHint bool, debrickedConfig *DebrickedConfig,
+	integrationName string, callGraphTimeout int, versionHint bool,
+	debrickedConfig *DebrickedConfig, tagCommitAsRelease bool, experimental bool,
 ) *uploadBatch {
 	return &uploadBatch{
-		client:           client,
-		fileGroups:       fileGroups,
-		gitMetaObject:    gitMetaObject,
-		integrationName:  integrationName,
-		ciUploadId:       0,
-		callGraphTimeout: callGraphTimeout,
-		versionHint:      versionHint,
-		debrickedConfig:  debrickedConfig,
+		client:             client,
+		fileGroups:         fileGroups,
+		gitMetaObject:      gitMetaObject,
+		integrationName:    integrationName,
+		ciUploadId:         0,
+		callGraphTimeout:   callGraphTimeout,
+		versionHint:        versionHint,
+		debrickedConfig:    debrickedConfig,
+		tagCommitAsRelease: tagCommitAsRelease,
+		experimental:       experimental,
 	}
 }
 
@@ -183,6 +188,8 @@ func (uploadBatch *uploadBatch) initAnalysis() error {
 		VersionHint:          uploadBatch.versionHint,
 		DebrickedConfig:      uploadBatch.debrickedConfig,
 		DebrickedIntegration: "cli",
+		TagCommitAsRelease:   uploadBatch.tagCommitAsRelease,
+		Experimental:         uploadBatch.experimental,
 	})
 
 	if err != nil {
@@ -224,17 +231,22 @@ func (uploadBatch *uploadBatch) wait() (*UploadResult, error) {
 		if err != nil {
 			return nil, err
 		}
+		status, err := newUploadStatus(res)
+		if err != nil {
+			return nil, err
+		}
 		if res.StatusCode == http.StatusCreated {
 			err := bar.Finish()
 			if err != nil {
 				return resultStatus, err
 			}
 
+			resultStatus = &UploadResult{
+				DetailsUrl: status.DetailsUrl,
+				LongQueue:  true,
+			}
+
 			return resultStatus, PollingTerminatedErr
-		}
-		status, err := newUploadStatus(res)
-		if err != nil {
-			return nil, err
 		}
 		err = bar.Set(status.Progress)
 		if err != nil {
@@ -310,7 +322,18 @@ type purlConfig struct {
 }
 
 type DebrickedConfig struct {
-	Overrides []purlConfig `json:"overrides" yaml:"overrides"`
+	Overrides []purlConfig  `json:"override,omitempty" yaml:"overrides"`
+	Ignore    *IgnoreConfig `json:"ignore,omitempty" yaml:"ignore,omitempty"`
+}
+
+// IgnoreConfig matches the structure of the 'ignore' section in YAML
+type IgnoreConfig struct {
+	Packages []IgnorePackage `json:"packages" yaml:"packages"`
+}
+
+type IgnorePackage struct {
+	PURL    string `json:"pURL" yaml:"pURL"`
+	Version string `json:"version,omitempty" yaml:"version,omitempty"`
 }
 
 type uploadFinish struct {
@@ -322,6 +345,8 @@ type uploadFinish struct {
 	DebrickedIntegration string           `json:"debrickedIntegration"`
 	VersionHint          bool             `json:"versionHint"`
 	DebrickedConfig      *DebrickedConfig `json:"debrickedConfig"`
+	TagCommitAsRelease   bool             `json:"isRelease"`
+	Experimental         bool             `json:"experimental"`
 }
 
 func getRelativeFilePath(filePath string) string {
@@ -347,29 +372,25 @@ type DebrickedConfigYAML struct {
 	Overrides []pURLConfigYAML `yaml:"overrides"`
 }
 
-func GetDebrickedConfig(path string) *DebrickedConfig {
+// extractIgnore unmarshals the ignore section from raw config
+func extractIgnore(raw map[string]interface{}) *IgnoreConfig {
+	if rawIgnore, ok := raw["ignore"]; ok {
+		ignoreYaml, err := yaml.Marshal(rawIgnore)
+		if err == nil {
+			var ignoreObj IgnoreConfig
+			if yaml.Unmarshal(ignoreYaml, &ignoreObj) == nil {
+				return &ignoreObj
+			}
+		}
+	}
+
+	return nil
+}
+
+// convertOverrides converts YAML overrides to purlConfig slice
+func convertOverrides(yamlOverrides []pURLConfigYAML) []purlConfig {
 	var overrides []purlConfig
-	var yamlConfig DebrickedConfigYAML
-	yamlFile, err := os.ReadFile(path)
-	if err != nil {
-		fmt.Printf(
-			"%s Failed to read debricked config file on path \"%s\"",
-			color.YellowString("⚠️"),
-			path,
-		)
-
-		return nil
-	}
-	err = yaml.Unmarshal(yamlFile, &yamlConfig)
-	if err != nil {
-		fmt.Printf("%s Failed to unmarshal debricked config: \"%s\"\n",
-			color.YellowString("⚠️"),
-			color.RedString(err.Error()),
-		)
-
-		return nil
-	}
-	for _, entry := range yamlConfig.Overrides {
+	for _, entry := range yamlOverrides {
 		var version string
 		var exist bool
 		pURL := entry.PackageURL
@@ -384,7 +405,68 @@ func GetDebrickedConfig(path string) *DebrickedConfig {
 		overrides = append(overrides, purlConfig{PackageURL: pURL, Version: boolOrString{Version: version, HasVersion: exist}, FileRegexes: fileRegexes})
 	}
 
+	return overrides
+}
+
+func GetDebrickedConfig(path string) *DebrickedConfig {
+	var yamlConfig DebrickedConfigYAML
+	yamlFile, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Printf(
+			"%s Failed to read debricked config file on path \"%s\"",
+			color.YellowString("⚠️"),
+			path,
+		)
+
+		return nil
+	}
+
+	// Unmarshal into map to support any key for overrides and ignore
+	var raw map[string]interface{}
+	err = yaml.Unmarshal(yamlFile, &raw)
+	if err != nil {
+		fmt.Printf("%s Failed to unmarshal debricked config: \"%s\"\n",
+			color.YellowString("⚠️"),
+			color.RedString(err.Error()),
+		)
+
+		return nil
+	}
+
+	// Accept any key for overrides, normalize to 'overrides'
+	for k, v := range raw {
+		lower := strings.ToLower(k)
+		if lower == "overrides" || lower == "override" {
+			raw["overrides"] = v
+		}
+	}
+
+	// Marshal back to YAML and unmarshal into struct
+	fixedYaml, err := yaml.Marshal(raw)
+	if err != nil {
+		fmt.Printf("%s Failed to re-marshal config: \"%s\"\n",
+			color.YellowString("⚠️"),
+			color.RedString(err.Error()),
+		)
+
+		return nil
+	}
+
+	err = yaml.Unmarshal(fixedYaml, &yamlConfig)
+	if err != nil {
+		fmt.Printf("%s Failed to unmarshal debricked config: \"%s\"\n",
+			color.YellowString("⚠️"),
+			color.RedString(err.Error()),
+		)
+
+		return nil
+	}
+
+	ignore := extractIgnore(raw)
+	overrides := convertOverrides(yamlConfig.Overrides)
+
 	return &DebrickedConfig{
 		Overrides: overrides,
+		Ignore:    ignore,
 	}
 }

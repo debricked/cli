@@ -88,6 +88,7 @@ func TestScan(t *testing.T) {
 		RepositoryName:           repositoryName,
 		CommitName:               "commit",
 		Fingerprint:              false,
+		SBOM:                     "",
 		BranchName:               "",
 		CommitAuthor:             "",
 		RepositoryUrl:            "",
@@ -151,6 +152,7 @@ func TestScanWithJsonPath(t *testing.T) {
 		Exclusions:               nil,
 		RepositoryName:           repositoryName,
 		CommitName:               "commit",
+		SBOM:                     "",
 		BranchName:               "",
 		CommitAuthor:             "",
 		RepositoryUrl:            "",
@@ -260,7 +262,7 @@ func TestScanEmptyResult(t *testing.T) {
 	addMockedFinishResponse(clientMock, http.StatusNoContent)
 	addMockedStatusResponse(clientMock, http.StatusOK, 50)
 	// Create mocked scan result response, 201 is returned when the queue time are too long
-	addMockedStatusResponse(clientMock, http.StatusCreated, 0)
+	addMockedQueueTooLongStatusResponse(clientMock)
 
 	scanner := makeScanner(clientMock, nil, nil)
 	path := testdataNpm
@@ -297,6 +299,11 @@ func TestScanEmptyResult(t *testing.T) {
 
 	assert.NoError(t, err, "failed to assert that scan ran without errors")
 	assert.True(t, existsMessageInCMDOutput, "failed to assert that scan ran without errors")
+
+	existsMessageInCMDOutputDetails := strings.Contains(
+		string(out),
+		"http://localhost:8888/app/en/repository/13/commit/37")
+	assert.True(t, existsMessageInCMDOutputDetails, "failed to assert that long queue scan contain detailed url")
 }
 
 func TestScanInCiWithPathSet(t *testing.T) {
@@ -512,6 +519,40 @@ var cases = []struct {
 	},
 }
 
+func TestUpdateEmptyCommitName(t *testing.T) {
+	opts := DebrickedOptions{
+		CommitName:         "",
+		GenerateCommitName: true,
+	}
+
+	UpdatedEmptyCommitName(&opts)
+	assert.Contains(t, opts.CommitName, "generated-")
+}
+
+func TestUpdateEmptyCommitNameNotEmpty(t *testing.T) {
+	opts := DebrickedOptions{
+		CommitName:         "test",
+		GenerateCommitName: true,
+	}
+
+	UpdatedEmptyCommitName(&opts)
+	assert.Equal(t, opts.CommitName, "test")
+}
+
+func TestUpdateEmptyCommitNameNoGenerateCommitNameSet(t *testing.T) {
+	opts := DebrickedOptions{
+		CommitName: "",
+	}
+
+	UpdatedEmptyCommitName(&opts)
+	assert.Empty(t, opts.CommitName)
+}
+
+func TestGenerateCommitName(t *testing.T) {
+	res := GenerateCommitNameTimestamp()
+	assert.Contains(t, res, "generated-")
+}
+
 func TestMapEnvToOptions(t *testing.T) {
 
 	for _, co := range cases {
@@ -711,6 +752,39 @@ func TestScanWithFingerprintNoEnterprise(t *testing.T) {
 	assert.Contains(t, cwd, path)
 }
 
+func TestScanWithGeneratedCommitName(t *testing.T) {
+	clientMock := testdata.NewDebClientMock()
+	addMockedFormatsResponse(clientMock, "package\\.json")
+	addMockedFileUploadResponse(clientMock)
+	addMockedFinishResponse(clientMock, http.StatusNoContent)
+	addMockedStatusResponse(clientMock, http.StatusOK, 100)
+
+	scanner := makeScanner(clientMock, nil, nil)
+
+	cwd, _ := os.Getwd()
+	defer resetWd(t, cwd)
+
+	path := testdataNpm
+	repositoryName := path
+	opts := DebrickedOptions{
+		Path:               path,
+		Resolve:            false,
+		Fingerprint:        false,
+		CallGraph:          false,
+		Exclusions:         nil,
+		Inclusions:         nil,
+		RepositoryName:     repositoryName,
+		GenerateCommitName: true,
+		BranchName:         "",
+		RepositoryUrl:      "",
+		IntegrationName:    "",
+	}
+	err := scanner.Scan(opts)
+	assert.Nil(t, err)
+	cwd, _ = os.Getwd()
+	assert.Contains(t, cwd, path)
+}
+
 func TestScanWithCallgraph(t *testing.T) {
 	if runtime.GOOS == windowsOS {
 		t.Skipf("TestScan is skipped due to Windows env")
@@ -752,6 +826,86 @@ func TestScanWithCallgraph(t *testing.T) {
 	assert.Contains(t, cwd, path)
 }
 
+func TestScanWithSBOMReport(t *testing.T) {
+	if runtime.GOOS == windowsOS {
+		t.Skipf("TestScan is skipped due to Windows env")
+	}
+	clientMock := testdata.NewDebClientMock()
+	addMockedFormatsResponse(clientMock, "package\\.json")
+	addMockedFileUploadResponse(clientMock)
+	addMockedFinishResponse(clientMock, http.StatusNoContent)
+	addMockedStatusResponse(clientMock, http.StatusOK, 50)
+	addMockedStatusResponseWithURL(clientMock)
+	addMockedSBOMGenerateResponse(clientMock)
+	addMockedSBOMDownloadResponse(clientMock)
+
+	var finder file.IFinder
+	finder, _ = file.NewFinder(clientMock, ioFs.FileSystem{})
+	var uploader upload.IUploader
+	uploader, _ = upload.NewUploader(clientMock)
+	var cis ci.IService = ci.NewService(nil)
+	var debClient client.IDebClient = clientMock
+
+	scanner := NewDebrickedScanner(&debClient, finder, uploader, cis, nil, nil, nil)
+
+	path := testdataNpm
+	repositoryName := path
+	cwd, _ := os.Getwd()
+	// reset working directory that has been manipulated in scanner.Scan
+	defer resetWd(t, cwd)
+	opts := DebrickedOptions{
+		Path:                     path,
+		Exclusions:               nil,
+		RepositoryName:           repositoryName,
+		CommitName:               "commit",
+		Fingerprint:              false,
+		CallGraph:                false,
+		Resolve:                  false,
+		SBOM:                     "CycloneDX",
+		BranchName:               "",
+		CommitAuthor:             "",
+		RepositoryUrl:            "",
+		IntegrationName:          "",
+		CallGraphUploadTimeout:   10 * 60,
+		CallGraphGenerateTimeout: 10 * 60,
+	}
+
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := scanner.Scan(opts)
+
+	_ = w.Close()
+	output, _ := io.ReadAll(r)
+	os.Stdout = rescueStdout
+
+	if err != nil {
+		t.Error("failed to assert that scan ran without errors. Error:", err)
+	}
+
+	outputAssertions := []string{
+		"Working directory: /",
+		"Successfully uploaded",
+		"package.json",
+		"Successfully initialized scan\n",
+		"Scanning...",
+		"0% |",
+		"50% |",
+		"100% |",
+		"32m✔",
+		"0 vulnerabilities found\n\n",
+		"For full details, visit:",
+		"Successfully initialized SBOM generation\n",
+	}
+	for _, assertion := range outputAssertions {
+		assert.Contains(t, string(output), assertion)
+	}
+	err = os.Remove("13-37.cdx.json") // Remove created "SBOM"
+	assert.NoError(t, err)
+
+}
+
 func addMockedFormatsResponse(clientMock *testdata.DebClientMock, regex string) {
 	formats := []file.Format{{
 		ManifestFileRegex: "",
@@ -783,8 +937,41 @@ func addMockedFinishResponse(clientMock *testdata.DebClientMock, statusCode int)
 
 func addMockedStatusResponse(clientMock *testdata.DebClientMock, statusCode int, progress int) {
 	finishMockRes := testdata.MockResponse{
-		StatusCode:   statusCode,
-		ResponseBody: io.NopCloser(strings.NewReader(fmt.Sprintf(`{"progress": %d}`, progress))),
+		StatusCode: statusCode,
+		ResponseBody: io.NopCloser(strings.NewReader(
+			fmt.Sprintf(`{"progress": %d}`, progress))),
+	}
+	clientMock.AddMockUriResponse("/api/1.0/open/ci/upload/status", finishMockRes)
+}
+
+func addMockedSBOMGenerateResponse(clientMock *testdata.DebClientMock) {
+	finishMockRes := testdata.MockResponse{
+		StatusCode:   http.StatusOK,
+		ResponseBody: io.NopCloser(strings.NewReader("{}")),
+	}
+	clientMock.AddMockUriResponse("/api/1.0/open/sbom/generate", finishMockRes)
+}
+
+func addMockedSBOMDownloadResponse(clientMock *testdata.DebClientMock) {
+	finishMockRes := testdata.MockResponse{
+		StatusCode:   http.StatusOK,
+		ResponseBody: io.NopCloser(strings.NewReader("{}")),
+	}
+	clientMock.AddMockUriResponse("/api/1.0/open/sbom/download", finishMockRes)
+}
+
+func addMockedStatusResponseWithURL(clientMock *testdata.DebClientMock) {
+	finishMockRes := testdata.MockResponse{
+		StatusCode:   http.StatusOK,
+		ResponseBody: io.NopCloser(strings.NewReader(`{"progress": 100,"detailsUrl":"http://localhost:8888/app/en/repository/13/commit/37"}`)),
+	}
+	clientMock.AddMockUriResponse("/api/1.0/open/ci/upload/status", finishMockRes)
+}
+
+func addMockedQueueTooLongStatusResponse(clientMock *testdata.DebClientMock) {
+	finishMockRes := testdata.MockResponse{
+		StatusCode:   http.StatusCreated,
+		ResponseBody: io.NopCloser(strings.NewReader(`{"message": "Queue too long","detailsUrl":"http://localhost:8888/app/en/repository/13/commit/37"}`)),
 	}
 	clientMock.AddMockUriResponse("/api/1.0/open/ci/upload/status", finishMockRes)
 }

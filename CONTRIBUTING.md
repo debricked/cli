@@ -10,6 +10,12 @@ Requirements
 
     Go version 1.20 or higher
 
+To simplify installation and testing during development, follow these steps to install the source code version of the CLI:
+
+1. Add the `$GOBIN` path to your path (this is specific to your environment)
+2. Run `make install`
+3. Success! (the `debricked` binary should now be executable in your shell)
+
 ### If you have questions
 
 - First check and search the current issues and see if they can help answer your questions.
@@ -48,6 +54,21 @@ When you start implementing your changes make sure that you create a new branch 
 Create Branch:
 
 `$ git checkout -b my-cool-branch`
+
+### Requirements
+Requirements for testing are generally included in the Go installation and the project, but its generally recommended to also install;
+- the language server [`gopls`](https://pkg.go.dev/golang.org/x/tools/gopls)
+- the linters runner [`golangci-lint`](https://github.com/golangci/golangci-lint) (we run it in our CI pipeline so its a requirement for merging), to enable running `make lint`.
+
+### Testing
+All tests and a coverage check is run when calling the command;
+- `make test`
+
+We have a mininum test coverage limit at 95%.
+
+### Linting
+To keep the project tidy we use `golangci-lint`, please run it during development to ensure an accaptable PR;
+- `make lint` 
 
 ## Submitting a Pull Request
 

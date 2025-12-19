@@ -6,15 +6,19 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/debricked/cli/internal/callgraph"
 	"github.com/debricked/cli/internal/callgraph/config"
 	"github.com/debricked/cli/internal/ci"
 	"github.com/debricked/cli/internal/ci/env"
 	"github.com/debricked/cli/internal/client"
+	"github.com/debricked/cli/internal/debug"
 	"github.com/debricked/cli/internal/file"
 	"github.com/debricked/cli/internal/fingerprint"
 	"github.com/debricked/cli/internal/git"
+	"github.com/debricked/cli/internal/io"
+	"github.com/debricked/cli/internal/report/sbom"
 	"github.com/debricked/cli/internal/resolution"
 	"github.com/debricked/cli/internal/tui"
 	"github.com/debricked/cli/internal/upload"
@@ -47,13 +51,17 @@ type DebrickedOptions struct {
 	Resolve                     bool
 	Fingerprint                 bool
 	CallGraph                   bool
+	SBOM                        string
+	SBOMOutput                  string
 	Exclusions                  []string
 	Inclusions                  []string
 	Verbose                     bool
+	Debug                       bool
 	Regenerate                  int
 	VersionHint                 bool
 	RepositoryName              string
 	CommitName                  string
+	GenerateCommitName          bool
 	BranchName                  string
 	CommitAuthor                string
 	RepositoryUrl               string
@@ -64,6 +72,9 @@ type DebrickedOptions struct {
 	CallGraphUploadTimeout      int
 	CallGraphGenerateTimeout    int
 	MinFingerprintContentLength int
+	TagCommitAsRelease          bool
+	Experimental                bool
+	Version                     string
 }
 
 func NewDebrickedScanner(
@@ -91,15 +102,19 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 	if !ok {
 		return BadOptsErr
 	}
+	debug.Log("Options initialized, finding CI service...", dOptions.Debug)
 
 	e, _ := dScanner.ciService.Find()
 
+	debug.Log("Mapping environment variables...", dOptions.Debug)
 	MapEnvToOptions(&dOptions, e)
+	UpdatedEmptyCommitName(&dOptions)
 
 	if err := SetWorkingDirectory(&dOptions); err != nil {
 		return err
 	}
 
+	debug.Log("Setting up git objects...", dOptions.Debug)
 	gitMetaObject, err := git.NewMetaObject(
 		dOptions.Path,
 		dOptions.RepositoryName,
@@ -112,13 +127,15 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 		return err
 	}
 
+	debug.Log("Running scan with initialized scanner...", dOptions.Debug)
 	result, err := dScanner.scan(dOptions, *gitMetaObject)
 	if err != nil {
 		return dScanner.handleScanError(err, dOptions.PassOnTimeOut)
 	}
 
-	if result == nil {
+	if result.LongQueue {
 		fmt.Println("Progress polling terminated due to long scan times. Please try again later")
+		fmt.Printf("For full details, visit: %s\n\n", color.BlueString(result.DetailsUrl))
 
 		return nil
 	}
@@ -138,6 +155,28 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 	}
 
 	return nil
+}
+
+func (dScanner *DebrickedScanner) scanReportSBOM(options DebrickedOptions, detailsURL string) error {
+	if options.SBOM == "" {
+		return nil
+	}
+	reporter := sbom.Reporter{DebClient: *dScanner.client, FileWriter: io.FileWriter{}}
+	repositoryID, commitID, err := reporter.ParseDetailsURL(detailsURL)
+	if err != nil {
+
+		return err
+	}
+
+	return reporter.Order(sbom.OrderArgs{
+		Format:          options.SBOM,
+		RepositoryID:    repositoryID,
+		CommitID:        commitID,
+		Branch:          options.BranchName,
+		Vulnerabilities: true,
+		Licenses:        true,
+		Output:          options.SBOMOutput,
+	})
 }
 
 func (dScanner *DebrickedScanner) scanResolve(options DebrickedOptions) error {
@@ -172,6 +211,7 @@ func (dScanner *DebrickedScanner) scanFingerprint(options DebrickedOptions) erro
 				Inclusions:                   append(options.Inclusions, fingerprint.DefaultInclusionsFingerprint()...),
 				MinFingerprintContentLength:  options.MinFingerprintContentLength,
 				FingerprintCompressedContent: false,
+				Regenerate:                   options.Regenerate > 0,
 			},
 		)
 		if err != nil {
@@ -187,20 +227,23 @@ func (dScanner *DebrickedScanner) scanFingerprint(options DebrickedOptions) erro
 
 func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject git.MetaObject) (*upload.UploadResult, error) {
 
+	debug.Log("Running scanResolve...", options.Debug)
 	err := dScanner.scanResolve(options)
 	if err != nil {
 		return nil, err
 	}
 
+	debug.Log("Running scanFingerprint...", options.Debug)
 	err = dScanner.scanFingerprint(options)
 	if err != nil {
 		return nil, err
 	}
 
 	if options.CallGraph {
+		debug.Log("Running scanFingerprint...", options.Debug)
 		configs := []config.IConfig{
-			config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven"),
-			config.NewConfig("golang", []string{}, map[string]string{"pm": "go"}, true, "go"),
+			config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven", options.Version),
+			config.NewConfig("golang", []string{}, map[string]string{"pm": "go"}, true, "go", options.Version),
 		}
 		timeout := options.CallGraphGenerateTimeout
 		path := options.Path
@@ -221,6 +264,7 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		}
 	}
 
+	debug.Log("Matching groups...", options.Debug)
 	fileGroups, err := dScanner.finder.GetGroups(
 		file.DebrickedOptions{
 			RootPath:     options.Path,
@@ -234,6 +278,7 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		return nil, err
 	}
 
+	debug.Log("Starting upload...", options.Debug)
 	uploaderOptions := upload.DebrickedOptions{
 		FileGroups:             fileGroups,
 		GitMetaObject:          gitMetaObject,
@@ -241,8 +286,17 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		CallGraphUploadTimeout: options.CallGraphUploadTimeout,
 		VersionHint:            options.VersionHint,
 		DebrickedConfig:        dScanner.getDebrickedConfig(options.Path, options.Exclusions, options.Inclusions),
+		TagCommitAsRelease:     options.TagCommitAsRelease,
+		Experimental:           options.Experimental,
 	}
 	result, err := (*dScanner.uploader).Upload(uploaderOptions)
+	if err != nil {
+		return nil, err
+	}
+	err = dScanner.scanReportSBOM(
+		options,
+		result.DetailsUrl,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -280,6 +334,17 @@ func SetWorkingDirectory(d *DebrickedOptions) error {
 	fmt.Printf("Working directory: %s\n", absPath)
 
 	return nil
+}
+
+func UpdatedEmptyCommitName(o *DebrickedOptions) {
+	if o.GenerateCommitName && o.CommitName == "" {
+		debug.Log("No commit name set, generating commit name", o.Debug)
+		o.CommitName = GenerateCommitNameTimestamp()
+	}
+}
+
+func GenerateCommitNameTimestamp() string {
+	return fmt.Sprintf("generated-%d", time.Now().Unix())
 }
 
 func MapEnvToOptions(o *DebrickedOptions, env env.Env) {

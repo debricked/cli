@@ -67,7 +67,7 @@ Examples:
 $ debricked scan . --include '**/node_modules/**'`)
 	regenerateDoc := strings.Join(
 		[]string{
-			"Toggles regeneration of already existing lock files between 3 modes:\n",
+			"Toggle regeneration of already existing lock files between 3 modes:\n",
 			"Force Regeneration Level | Meaning",
 			"------------------------ | -------",
 			"0 (default)              | No regeneration",

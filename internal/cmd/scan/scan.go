@@ -3,7 +3,9 @@ package scan
 import (
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/debricked/cli/internal/file"
@@ -19,8 +21,10 @@ var callgraphGenerateTimeout int
 var callgraphUploadTimeout int
 var commitAuthor string
 var commitName string
+var generateCommitName bool
+var debug bool
 var exclusions = file.Exclusions()
-var inclusions = file.Exclusions()
+var inclusions []string
 var integrationName string
 var jsonFilePath string
 var minFingerprintContentLength int
@@ -33,6 +37,10 @@ var repositoryName string
 var repositoryUrl string
 var verbose bool
 var versionHint bool
+var sbom string
+var sbomOutput string
+var tagCommitAsRelease bool
+var experimental bool
 
 const (
 	BranchFlag                      = "branch"
@@ -41,6 +49,7 @@ const (
 	CallGraphUploadTimeoutFlag      = "callgraph-upload-timeout"
 	CommitFlag                      = "commit"
 	CommitAuthorFlag                = "author"
+	DebugFlag                       = "debug"
 	ExclusionFlag                   = "exclusion"
 	IntegrationFlag                 = "integration"
 	InclusionFlag                   = "inclusion"
@@ -55,6 +64,12 @@ const (
 	RepositoryUrlFlag               = "repository-url"
 	VerboseFlag                     = "verbose"
 	VersionHintFlag                 = "version-hint"
+	SBOMFlag                        = "sbom"
+	SBOMOutputFlag                  = "sbom-output"
+	TagCommitAsReleaseFlag          = "tag-commit-as-release"
+	TagCommitAsReleaseEnv           = "TAG_COMMIT_AS_RELEASE"
+	ExperimentalFlag                = "experimental"
+	GenerateCommitNameFlag          = "generate-commit-name"
 )
 
 var scanCmdError error
@@ -69,17 +84,13 @@ If the given path contains a git repository all flags but "integration" will be 
 			_ = viper.BindPFlags(cmd.Flags())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(viper.GetString(RepositoryFlag)) > 0 {
-				if strings.ToLower(viper.GetString(RepositoryFlag))[0] < 'd' && !cmd.Flags().Changed(NoFingerprintFlag) {
-					viper.Set(NoFingerprintFlag, false)
-				} // Temporary addition for rolling release of fingerprinting enabled by default
-			}
-
 			return RunE(&scanner)(cmd, args)
 		},
 	}
+
 	cmd.Flags().StringVarP(&repositoryName, RepositoryFlag, "r", "", "repository name")
 	cmd.Flags().StringVarP(&commitName, CommitFlag, "c", "", "commit hash")
+	cmd.Flags().BoolVar(&generateCommitName, GenerateCommitNameFlag, false, "auto-generate a commit name if no commit hash is found (in -c or env)")
 	cmd.Flags().StringVarP(&branchName, BranchFlag, "b", "", "branch name")
 	cmd.Flags().StringVarP(&commitAuthor, CommitAuthorFlag, "a", "", "commit author")
 	cmd.Flags().StringVarP(&repositoryUrl, RepositoryUrlFlag, "u", "", "repository URL")
@@ -118,10 +129,10 @@ $ debricked scan . `+exampleFlags)
 		inclusions,
 		`Forces inclusion of specified terms, see exclusion flag for more information on supported terms.
 Examples: 
-$ debricked scan . --include '**/node_modules/**'`)
+$ debricked scan . --inclusion '**/node_modules/**'`)
 	regenerateDoc := strings.Join(
 		[]string{
-			"Toggles regeneration of already existing lock files between 3 modes:\n",
+			"Toggle regeneration of already existing lock files between 3 modes:\n",
 			"Force Regeneration Level | Meaning",
 			"------------------------ | -------",
 			"0 (default)              | No regeneration",
@@ -132,20 +143,27 @@ $ debricked scan . --include '**/node_modules/**'`)
 	cmd.Flags().IntVar(&regenerate, RegenerateFlag, 0, regenerateDoc)
 	versionHintDoc := strings.Join(
 		[]string{
-			"Toggles version hinting, i.e using manifest versions to help manifestless resolution.\n",
+			"Toggle version hinting, i.e using manifest versions to help manifestless resolution.\n",
 			"\nExample:\n$ debricked scan . --version-hint=false",
 		}, "\n")
 	cmd.Flags().BoolVar(&versionHint, VersionHintFlag, true, versionHintDoc)
+	experimentalFlagDoc := strings.Join(
+		[]string{
+			"This flag allows inclusion of repository matches",
+			"\nExample:\n$ debricked scan . --experimental=false",
+		}, "\n")
+	cmd.Flags().BoolVar(&experimental, ExperimentalFlag, false, experimentalFlagDoc)
 	verboseDoc := strings.Join(
 		[]string{
 			"This flag allows you to reduce error output for resolution.",
 			"\nExample:\n$ debricked resolve --verbose=false",
 		}, "\n")
 	cmd.Flags().BoolVar(&verbose, VerboseFlag, true, verboseDoc)
+	cmd.Flags().BoolVar(&debug, DebugFlag, false, "write all debug output to stderr")
 	cmd.Flags().BoolVarP(&passOnDowntime, PassOnTimeOut, "p", false, "pass scan if there is a service access timeout")
 	cmd.Flags().BoolVar(&noResolve, NoResolveFlag, false, `disables resolution of manifest files that lack lock files. Resolving manifest files enables more accurate dependency scanning since the whole dependency tree will be analysed.
 For example, if there is a "go.mod" in the target path, its dependencies are going to get resolved onto a lock file, and latter scanned.`)
-	cmd.Flags().BoolVar(&noFingerprint, NoFingerprintFlag, true, "toggles fingerprinting for undeclared component identification. Can be run as a standalone command [fingerprint] with more granular options.")
+	cmd.Flags().BoolVar(&noFingerprint, NoFingerprintFlag, false, "Toggle fingerprinting for undeclared component identification. Can be run as a standalone command [fingerprint] with more granular options.")
 	cmd.Flags().BoolVar(&callgraph, CallGraphFlag, false, `Enables call graph generation during scan.`)
 	cmd.Flags().IntVar(&callgraphUploadTimeout, CallGraphUploadTimeoutFlag, 10*60, "Set a timeout (in seconds) on call graph upload.")
 	cmd.Flags().IntVar(&callgraphGenerateTimeout, CallGraphGenerateTimeoutFlag, 60*60, "Set a timeout (in seconds) on call graph generation.")
@@ -156,6 +174,17 @@ For example, if there is a "go.mod" in the target path, its dependencies are goi
 			"Example: debricked resolve --prefer-npm",
 		}, "\n")
 	cmd.Flags().BoolP(NpmPreferredFlag, "", npmPreferred, npmPreferredDoc)
+	cmd.Flags().StringVar(&sbom, SBOMFlag, "", `Toggle generating and downloading SBOM report after scan completion of specified format.
+Supported formats are: 'CycloneDX', 'SPDX'
+Leaving the field empty results in no SBOM generation.`,
+	)
+	cmd.Flags().StringVar(&sbomOutput, SBOMOutputFlag, "", `Set output path of downloaded SBOM report (if sbom is toggled)`)
+	cmd.Flags().BoolVar(
+		&tagCommitAsRelease,
+		TagCommitAsReleaseFlag,
+		false,
+		"Set to true to tag commit as a release. This will store the scan data indefinitely. Enterprise is required for this flag. Please visit https://debricked.com/pricing/ for more info. Can be overridden by "+TagCommitAsReleaseEnv+" environment variable.",
+	)
 
 	viper.MustBindEnv(RepositoryFlag)
 	viper.MustBindEnv(CommitFlag)
@@ -165,26 +194,56 @@ For example, if there is a "go.mod" in the target path, its dependencies are goi
 	viper.MustBindEnv(IntegrationFlag)
 	viper.MustBindEnv(PassOnTimeOut)
 	viper.MustBindEnv(NpmPreferredFlag)
+	viper.MustBindEnv(SBOMFlag)
+	viper.MustBindEnv(SBOMOutputFlag)
+	viper.MustBindEnv(TagCommitAsReleaseFlag)
+
+	// Hide experimental flag
+	err := cmd.Flags().MarkHidden(ExperimentalFlag)
+	if err != nil { // This should not be reachable
+		fmt.Println("Trying to hide non-existing flag")
+	}
 
 	return cmd
 }
 
 func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		fmt.Println("Scanner started...")
+
 		path := ""
 		if len(args) > 0 {
 			path = args[0]
 		}
+
+		tagCommitAsRelease := false
+		tagCommitAsReleaseEnv := os.Getenv(TagCommitAsReleaseEnv)
+		if tagCommitAsReleaseEnv != "" {
+			var err error
+			tagCommitAsRelease, err = strconv.ParseBool(tagCommitAsReleaseEnv)
+
+			if err != nil {
+				return errors.Join(errors.New("failed to convert "+TagCommitAsReleaseEnv+" to boolean"), err)
+			}
+		} else {
+			tagCommitAsRelease = viper.GetBool(TagCommitAsReleaseFlag)
+		}
+
 		options := scan.DebrickedOptions{
 			Path:                        path,
 			Resolve:                     !viper.GetBool(NoResolveFlag),
 			Fingerprint:                 !viper.GetBool(NoFingerprintFlag),
+			SBOM:                        viper.GetString(SBOMFlag),
+			SBOMOutput:                  viper.GetString(SBOMOutputFlag),
 			Exclusions:                  viper.GetStringSlice(ExclusionFlag),
+			Inclusions:                  viper.GetStringSlice(InclusionFlag),
 			Verbose:                     viper.GetBool(VerboseFlag),
+			Debug:                       viper.GetBool(DebugFlag),
 			Regenerate:                  viper.GetInt(RegenerateFlag),
 			VersionHint:                 viper.GetBool(VersionHintFlag),
 			RepositoryName:              viper.GetString(RepositoryFlag),
 			CommitName:                  viper.GetString(CommitFlag),
+			GenerateCommitName:          viper.GetBool(GenerateCommitNameFlag),
 			BranchName:                  viper.GetString(BranchFlag),
 			CommitAuthor:                viper.GetString(CommitAuthorFlag),
 			RepositoryUrl:               viper.GetString(RepositoryUrlFlag),
@@ -196,6 +255,8 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			CallGraphUploadTimeout:      viper.GetInt(CallGraphUploadTimeoutFlag),
 			CallGraphGenerateTimeout:    viper.GetInt(CallGraphGenerateTimeoutFlag),
 			MinFingerprintContentLength: viper.GetInt(MinFingerprintContentLengthFlag),
+			TagCommitAsRelease:          tagCommitAsRelease,
+			Experimental:                viper.GetBool(ExperimentalFlag),
 		}
 		if s != nil {
 			scanCmdError = (*s).Scan(options)

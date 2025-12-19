@@ -44,14 +44,14 @@ Check out the [releases](https://github.com/debricked/cli/releases/tag/release-v
 Below follow some common ways to install the CLI.
 ### Linux
 ```sh
-curl -L https://github.com/debricked/cli/releases/download/release-v2/cli_linux_x86_64.tar.gz | tar -xz debricked
+curl -LsS https://github.com/debricked/cli/releases/download/release-v2/cli_linux_x86_64.tar.gz | tar -xz debricked
 ```
 ```sh
 ./debricked
 ```
 ### Mac
 ```sh
-curl -L https://github.com/debricked/cli/releases/download/release-v2/cli_macOS_arm64.tar.gz | tar -xz debricked
+curl -LsS https://github.com/debricked/cli/releases/download/release-v2/cli_macOS_arm64.tar.gz | tar -xz debricked
 ```
 ```sh
 ./debricked
@@ -64,12 +64,12 @@ curl -L https://github.com/debricked/cli/releases/download/release-v2/cli_macOS_
 ```
 ### Docker
 ```sh
-docker pull debricked/cli:1-resolution-debian
+docker pull debricked/cli:2-resolution-debian
 ```
 ## Scan
 Once you've installed the CLI, you're ready to scan your project. You can scan a local project, or integrate a scanning mechanism in your CI/CD pipeline.
 1. [Sign up to Debricked](https://debricked.com/app/en/register)
-2. [Create an access token](https://portal.debricked.com/administration-47/how-do-i-generate-an-access-token-130)
+2. [Create an access token](https://docs.debricked.com/product/administration/generate-access-token)
 3. `debricked scan -t <access-token>`
 
 When the scan is complete, you will see the total number of vulnerabilities found and a list of automation rules that have been evaluated. Read more about automations [here](https://debricked.com/docs/automation/automation-overview.html#automation-overview).
@@ -77,7 +77,7 @@ When the scan is complete, you will see the total number of vulnerabilities foun
 ### Docker
 To make a scan directly through Docker based on your current working directory, you can use the following command:
 ```sh
-docker run -v $(pwd):/root debricked/cli:1-resolution-debian debricked scan -t <access-token>
+docker run -v $(pwd):/root debricked/cli:2-resolution-debian debricked scan -t <access-token>
 ```
 
 ### CI/CD integration
@@ -87,5 +87,27 @@ If you would rather use `debricked` in your CI/CD pipelines, check out the [temp
 Thank you for your interest in making Debricked CLI even better! Read more about contributing to the
 project [here](CONTRIBUTING.md).
 
-Also, make sure to check out the [Debricked Portal](https://portal.debricked.com/). There, you can share your great ideas with us! 
+## Releasing
+1. Go to the [releases page](https://github.com/debricked/cli/releases), press [Draft a new release](https://github.com/debricked/cli/releases/new).
+
+2. Create a new tag. We loosely use semantic versioning for our versions.
+- Major releases should only be used for major breaking changes.
+- Minor releases should be used for minor breaking changes and new major features.
+- Patch releases should be used for smaller improvements, bug fixes etc. No breaking changes are allowed in these.
+
+2a. IF you released a major version. The following needs to be done:
+- For a major, a upgrade document needs to be provided like we did for the [2.0 release](https://github.com/debricked/cli/blob/main/UPGRADE-2.0.md).
+- Our GitHub actions need to be updated accordingly. Like was done [in this commit](https://github.com/debricked/actions/commit/659ae7accc12313772fbfbd1b1fccec31772ce41) for the v1 -> v2 upgrade.
+- Users need to be informed that a new major version is available and that they should upgrade.
+- [All integration templates](https://github.com/debricked/cli/tree/main/examples/templates) needs to be updated to use the new major version.
+- Our documentation needs to be updated to use the new major version.
+
+3. After having created a new tag in the New release dialogue. Press `Generate release notes` to get some sane default notes. Adjust if necessary. It will look something like this:
+
+![image](https://github.com/user-attachments/assets/7e1511ea-efad-49d4-a4eb-8ee762dcd1b2)
+
+4. When satisfied, press `Publish release`.
+
+5. Artifacts should be automatically built in the [Release workflow](https://github.com/debricked/cli/actions/workflows/release.yml), please monitor it to make sure that the release are done correctly. Also make sure that the [Docker workflow](https://github.com/debricked/cli/actions/workflows/docker.yml) is triggered and successful for the given tag.
+
 

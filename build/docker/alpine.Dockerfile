@@ -1,13 +1,12 @@
-FROM golang:1.22-alpine AS dev
+FROM golang:1.23-alpine AS dev
 WORKDIR /cli
-RUN apk update \
-  && apk --no-cache --update add git build-base
+RUN apk --no-cache --update add git build-base
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 COPY . .
 RUN mkdir -p internal/file/embedded && \
     wget -O internal/file/embedded/supported_formats.json https://debricked.com/api/1.0/open/files/supported-formats
-RUN go build -o debricked ./cmd/debricked
+RUN apk add --no-cache make curl && make install && apk del make curl
 CMD [ "debricked" ]
 
 FROM alpine:latest AS cli-base
@@ -23,24 +22,39 @@ FROM cli AS scan
 CMD [ "debricked",  "scan" ]
 
 FROM cli-base AS resolution
-ENV MAVEN_VERSION 3.9.6
-ENV MAVEN_HOME /usr/lib/mvn
-ENV PATH $MAVEN_HOME/bin:$PATH
+
+# Copy Go from the dev stage to avoid Alpine package conflicts with dotnet8-sdk
+COPY --from=dev /usr/local/go /usr/local/go
+ENV PATH="/usr/local/go/bin:$PATH"
+
+ENV MAVEN_VERSION="3.9.9"
+ENV MAVEN_HOME="/usr/lib/mvn"
+ENV PATH="$MAVEN_HOME/bin:$PATH"
 RUN wget http://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz && \
   tar -zxvf apache-maven-$MAVEN_VERSION-bin.tar.gz && \
   rm apache-maven-$MAVEN_VERSION-bin.tar.gz && \
   mv apache-maven-$MAVEN_VERSION $MAVEN_HOME
 
-ENV GRADLE_VERSION 8.7
-ENV GRADLE_HOME /usr/lib/gradle
-ENV PATH $GRADLE_HOME/gradle-$GRADLE_VERSION/bin:$PATH
+ENV GRADLE_VERSION="8.10.1"
+ENV GRADLE_HOME="/usr/lib/gradle"
+ENV PATH="$GRADLE_HOME/gradle-$GRADLE_VERSION/bin:$PATH"
 RUN wget https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip && \
   unzip gradle-$GRADLE_VERSION-bin.zip -d $GRADLE_HOME && \
   rm gradle-$GRADLE_VERSION-bin.zip
 
+# Add SBT, used for Scala resolution
+ENV SBT_VERSION="1.10.11"
+ENV SBT_HOME="/usr/lib/sbt"
+ENV PATH="$SBT_HOME/bin:$PATH"
+RUN wget https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz && \
+  mkdir -p $SBT_HOME && \
+  tar -zxvf sbt-${SBT_VERSION}.tgz -C $SBT_HOME --strip-components=1 && \
+  rm sbt-${SBT_VERSION}.tgz && \
+  ln -s $SBT_HOME/bin/sbt /usr/bin/sbt
+
 # g++ needed to compile python packages with C dependencies (numpy, scipy, etc.)
 RUN apk --no-cache --update add \
-  openjdk21-jre \
+  openjdk21-jdk \
   python3 \
   py3-scipy \
   py3-pip \
@@ -48,11 +62,12 @@ RUN apk --no-cache --update add \
   npm \
   yarn \
   g++ \
-  curl
+  curl \
+  bash
 
-RUN apk --no-cache --update add dotnet8-sdk go~=1.22 --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
+RUN apk --no-cache --update add dotnet8-sdk --repository=https://dl-cdn.alpinelinux.org/alpine/v3.20/community
 
-RUN dotnet --version && npm -v && yarn -v
+RUN dotnet --version && npm -v && yarn -v && go version
 
 RUN npm install --global bower && bower -v
 
@@ -69,7 +84,7 @@ RUN apk add --no-cache --virtual build-dependencies curl && \
     curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
     && apk del build-dependencies
 
-RUN php -v && composer --version
+RUN php -v && composer --version && sbt --version
 
 CMD [ "debricked",  "scan" ]
 

@@ -23,6 +23,9 @@ type FileSystemMock struct {
 	FsOpenEmbedError error
 	FsReadAllError   error
 	FsWriteFileError error
+	MkdirError       error
+	CopyError        error
+	CopySize         int64
 }
 
 func (fsm FileSystemMock) Open(path string) (*os.File, error) {
@@ -64,6 +67,10 @@ func (fsm FileSystemMock) MkdirTemp(pattern string) (string, error) {
 	return pattern, fsm.MkdirTempError
 }
 
+func (fsm FileSystemMock) Mkdir(name string, perm fs.FileMode) error {
+	return fsm.MkdirError
+}
+
 func (fsm FileSystemMock) RemoveAll(path string) {
 }
 
@@ -80,4 +87,8 @@ func (fsm FileSystemMock) FsReadAll(file fs.File) ([]byte, error) {
 
 func (fsm FileSystemMock) FsWriteFile(path string, bytes []byte, perm fs.FileMode) error {
 	return fsm.FsWriteFileError
+}
+
+func (fsm FileSystemMock) Copy(destination io.Writer, source io.Reader) (int64, error) {
+	return fsm.CopySize, fsm.CopyError
 }
