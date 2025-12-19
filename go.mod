@@ -2,7 +2,7 @@ module github.com/debricked/cli
 
 go 1.23
 
-toolchain go1.24.3
+toolchain go1.23
 
 require (
 	github.com/bmatcuk/doublestar/v4 v4.6.0
