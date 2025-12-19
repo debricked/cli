@@ -2,8 +2,6 @@ module github.com/debricked/cli
 
 go 1.23.0
 
-toolchain go1.24.3
-
 require (
 	github.com/becheran/wildmatch-go v1.0.0
 	github.com/bmatcuk/doublestar/v4 v4.6.0
