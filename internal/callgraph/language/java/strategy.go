@@ -167,7 +167,7 @@ func buildProjects(s Strategy, roots []string) error {
 			strategyWarning(err)
 		}
 
-		return fmt.Errorf(strings.Join([]string{
+		return fmt.Errorf("%s", strings.Join([]string{
 			"Build failed for all projects, if already built disable the build flag.",
 			"Or you can refer to the documentation for a detailed guide on manually building your Java project:",
 			"https://github.com/debricked/cli/blob/main/internal/callgraph/language/java11/README.md",

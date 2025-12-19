@@ -454,7 +454,7 @@ func inMemFingerprintZipContent(filename string, exclusions []string, inclusions
 
 		fingerprints = append(fingerprints, FileFingerprint{
 			path:          longFileName,
-			contentLength: int64(f.UncompressedSize64),
+			contentLength: int64(f.UncompressedSize64), //nolint:gosec // G115: intentional conversion, file sizes are within int64 range
 			fingerprint:   hasher.Sum(nil),
 		})
 
