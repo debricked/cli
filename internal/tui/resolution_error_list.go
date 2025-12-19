@@ -27,7 +27,7 @@ func (jobsErrList JobsErrorList) Render(verbose bool) error {
 	var listBuffer bytes.Buffer
 
 	formattedTitle := fmt.Sprintf("%s\n", color.BlueString(title))
-	underlining := fmt.Sprintf(strings.Repeat("-", len(title)+1) + "\n")
+	underlining := fmt.Sprintf("%s\n", strings.Repeat("-", len(title)+1))
 	listBuffer.Write([]byte(formattedTitle))
 	listBuffer.Write([]byte(underlining))
 
