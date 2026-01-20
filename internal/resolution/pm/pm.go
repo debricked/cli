@@ -9,6 +9,7 @@ import (
 	"github.com/debricked/cli/internal/resolution/pm/npm"
 	"github.com/debricked/cli/internal/resolution/pm/nuget"
 	"github.com/debricked/cli/internal/resolution/pm/pip"
+	"github.com/debricked/cli/internal/resolution/pm/poetry"
 	"github.com/debricked/cli/internal/resolution/pm/sbt"
 	"github.com/debricked/cli/internal/resolution/pm/yarn"
 )
@@ -24,6 +25,7 @@ func Pms() []IPm {
 		gradle.NewPm(),
 		gomod.NewPm(),
 		pip.NewPm(),
+		poetry.NewPm(),
 		yarn.NewPm(),
 		npm.NewPm(),
 		bower.NewPm(),
