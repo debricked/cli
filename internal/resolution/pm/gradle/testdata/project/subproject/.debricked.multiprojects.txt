@@ -1,1 +1,0 @@
-C:\Users\sjadhav2\Debricked\cli\internal\resolution\pm\gradle\testdata\project\subproject
