@@ -1,13 +1,9 @@
 package java
 
 import (
-	"errors"
-	"fmt"
 	"os"
 	"os/exec"
 	"path"
-	"path/filepath"
-	"strings"
 	"syscall"
 
 	"github.com/debricked/cli/internal/callgraph/cgexec"
@@ -86,8 +82,6 @@ func (j *Job) Run() {
 
 			return
 		}
-
-		j.cleanBadJars(targetDir)
 	}
 	callgraph := NewCallgraph(
 		j.cmdFactory,
@@ -116,27 +110,6 @@ func (j *Job) runCopyDependencies(osCmd *exec.Cmd) {
 	if err != nil {
 		j.Errors().Critical(err)
 	}
-}
-
-func (j *Job) cleanBadJars(targetDir string) {
-	files, err := os.ReadDir(targetDir)
-	if err != nil {
-		j.Errors().Warning(errors.New(fmt.Sprintf("failed to read target dir %s: %v", targetDir, err)))
-		return
-	}
-	for _, file := range files {
-		if strings.HasSuffix(file.Name(), ".jar") {
-			jarPath := filepath.Join(targetDir, file.Name())
-			if !j.isValidJar(jarPath) {
-				j.Errors().Warning(errors.New(fmt.Sprintf("removing invalid jar: %s", jarPath)))
-				j.fs.Remove(jarPath)
-			}
-		}
-	}
-}
-
-func (j *Job) isValidJar(jarPath string) bool {
-	return j.archive.IsValidZip(jarPath)
 }
 
 func (j *Job) runCallGraph(callgraph ICallgraph) {

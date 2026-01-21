@@ -11,7 +11,6 @@ type IArchive interface {
 	UnzipFile(sourcePath string, targetPath string) error
 	B64(sourceName string, targetName string) error
 	Cleanup(targetName string) error
-	IsValidZip(path string) bool
 }
 
 type Archive struct {
@@ -140,13 +139,4 @@ func (arc *Archive) B64(sourceName string, targetName string) error {
 func (arc *Archive) Cleanup(fileName string) error {
 
 	return arc.fs.Remove(path.Join(arc.workingDirectory, fileName))
-}
-
-func (arc *Archive) IsValidZip(path string) bool {
-	r, err := arc.zip.OpenReader(path)
-	if err != nil {
-		return false
-	}
-	defer arc.zip.CloseReader(r)
-	return true
 }
