@@ -141,8 +141,10 @@ RUN curl -sSL https://install.python-poetry.org | python3 - && \
     poetry --version
 
 # Install uv for Python resolution (pyproject.toml managed by uv)
-RUN python3 -m pip install --no-cache-dir uv && \
-    uv --version
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+  /root/.cargo/bin/uv --version
+
+ENV PATH="/root/.cargo/bin:$PATH"
 
 CMD [ "debricked",  "scan" ]
 
