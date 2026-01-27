@@ -13,7 +13,7 @@ import (
 	"github.com/fatih/color"
 )
 
-const DefaultDebrickedUri = "http://localhost:8888"
+const DefaultDebrickedUri = "https://debricked.com"
 const DefaultTimeout = 15
 const enterpriseCheckUri = "/api/1.0/open/user-profile/get-billing-info"
 
