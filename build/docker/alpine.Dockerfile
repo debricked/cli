@@ -88,8 +88,12 @@ RUN php -v && composer --version && sbt --version
 
 # Install Poetry for Python resolution (pyproject.toml)
 RUN curl -sSL https://install.python-poetry.org | python3 - && \
-	ln -s /root/.local/bin/poetry /usr/local/bin/poetry && \
-	poetry --version
+  ln -s /root/.local/bin/poetry /usr/local/bin/poetry && \
+  poetry --version
+
+# Install uv for Python resolution (pyproject.toml managed by uv)
+RUN python3 -m pip install --no-cache-dir uv && \
+  uv --version
 
 CMD [ "debricked",  "scan" ]
 

@@ -99,6 +99,7 @@ RUN apt -y update && apt -y upgrade && apt -y install ca-certificates && \
     apt -y install -t unstable \
     python3.13 \
     python3.13-venv \
+    python3-pip \
     openjdk-21-jdk && \
     apt -y clean && rm -rf /var/lib/apt/lists/* && \
     ln -s /usr/bin/python3.13 /usr/bin/python
@@ -138,6 +139,10 @@ RUN ln -sf /usr/bin/python3.13 /usr/bin/python3 && php -v && composer --version 
 RUN curl -sSL https://install.python-poetry.org | python3 - && \
     ln -s /root/.local/bin/poetry /usr/local/bin/poetry && \
     poetry --version
+
+# Install uv for Python resolution (pyproject.toml managed by uv)
+RUN python3 -m pip install --no-cache-dir uv && \
+    uv --version
 
 CMD [ "debricked",  "scan" ]
 
