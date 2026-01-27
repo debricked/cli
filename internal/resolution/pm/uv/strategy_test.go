@@ -3,13 +3,8 @@ package uv
 import (
 	"testing"
 
-	"github.com/debricked/cli/internal/resolution/job"
 	"github.com/stretchr/testify/assert"
 )
-
-type jobMock struct {
-	job.IJob
-}
 
 func TestNewStrategy(t *testing.T) {
 	files := []string{"pyproject.toml"}
