@@ -10,7 +10,7 @@ RUN mkdir -p internal/file/embedded && \
     wget -O internal/file/embedded/supported_formats.json https://debricked.com/api/1.0/open/files/supported-formats
 RUN go mod download && go mod verify
 COPY . .
-RUN make install
+RUN sed -i 's/\r$//' scripts/install.sh scripts/fetch_supported_formats.sh && make install
 CMD [ "debricked" ]
 
 FROM debian:bookworm-slim AS cli-base
