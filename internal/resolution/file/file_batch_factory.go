@@ -33,44 +33,54 @@ func (bf *BatchFactory) SetNpmPreferred(npmPreferred bool) {
 	bf.npmPreferred = npmPreferred
 }
 
+//nolint:cyclop
 func (bf *BatchFactory) Make(files []string) []IBatch {
 	batchMap := make(map[string]IBatch)
 	for _, file := range files {
-		base := filepath.Base(file)
-		for _, p := range bf.pms {
-			if bf.skipPackageManager(p) {
-				continue
-			}
-
-			for _, manifest := range p.Manifests() {
-				// Special handling for Python pyproject.toml, which may belong to either Poetry or uv.
-				if manifest == "pyproject.toml" && strings.EqualFold(base, "pyproject.toml") {
-					pmName := detectPyprojectPm(file)
-					if pmName != p.Name() {
-						continue
-					}
-				}
-
-				compiledRegex, _ := regexp.Compile(manifest)
-				if compiledRegex.MatchString(base) {
-					batch, ok := batchMap[p.Name()]
-					if !ok {
-						batch = NewBatch(p)
-						batchMap[p.Name()] = batch
-					}
-					batch.Add(file)
-				}
-			}
-		}
+		bf.processFile(file, batchMap)
 	}
 
 	batches := make([]IBatch, 0, len(batchMap))
-
 	for _, batch := range batchMap {
 		batches = append(batches, batch)
 	}
 
 	return batches
+}
+
+func (bf *BatchFactory) processFile(file string, batchMap map[string]IBatch) {
+	base := filepath.Base(file)
+	for _, p := range bf.pms {
+		if bf.skipPackageManager(p) {
+			continue
+		}
+
+		for _, manifest := range p.Manifests() {
+			if bf.shouldProcessManifest(manifest, base, file, p) {
+				compiledRegex, _ := regexp.Compile(manifest)
+				if compiledRegex.MatchString(base) {
+					bf.addToBatch(p, file, batchMap)
+				}
+			}
+		}
+	}
+}
+
+func (bf *BatchFactory) shouldProcessManifest(manifest, base, file string, p pm.IPm) bool {
+	if manifest == "pyproject.toml" && strings.EqualFold(base, "pyproject.toml") {
+		pmName := detectPyprojectPm(file)
+		return pmName == p.Name()
+	}
+	return true
+}
+
+func (bf *BatchFactory) addToBatch(p pm.IPm, file string, batchMap map[string]IBatch) {
+	batch, ok := batchMap[p.Name()]
+	if !ok {
+		batch = NewBatch(p)
+		batchMap[p.Name()] = batch
+	}
+	batch.Add(file)
 }
 
 func (bf *BatchFactory) skipPackageManager(p pm.IPm) bool {
