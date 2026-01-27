@@ -134,6 +134,11 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin -
 
 RUN ln -sf /usr/bin/python3.13 /usr/bin/python3 && php -v && composer --version && python3 --version
 
+# Install Poetry for Python resolution (pyproject.toml)
+RUN curl -sSL https://install.python-poetry.org | python3 - && \
+    ln -s /root/.local/bin/poetry /usr/local/bin/poetry && \
+    poetry --version
+
 CMD [ "debricked",  "scan" ]
 
 # Put copy at the end to speedup Docker build by caching previous RUNs and run those concurrently
