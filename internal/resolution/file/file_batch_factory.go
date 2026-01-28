@@ -69,8 +69,10 @@ func (bf *BatchFactory) processFile(file string, batchMap map[string]IBatch) {
 func (bf *BatchFactory) shouldProcessManifest(manifest, base, file string, p pm.IPm) bool {
 	if manifest == "pyproject.toml" && strings.EqualFold(base, "pyproject.toml") {
 		pmName := detectPyprojectPm(file)
+
 		return pmName == p.Name()
 	}
+
 	return true
 }
 
@@ -116,17 +118,21 @@ func detectPyprojectPm(pyprojectPath string) string {
 
 		if hasPoetry && hasProject {
 			// Ambiguous: both Poetry and UV indicators present
+
 			return ""
 		}
 		if hasPoetry {
+
 			return poetry.Name
 		}
 		if hasProject {
+
 			return uv.Name
 		}
 	}
 
 	// If no indicators found, cannot determine PM
+
 	return ""
 }
 
