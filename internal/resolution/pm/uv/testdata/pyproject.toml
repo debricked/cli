@@ -1,0 +1,36 @@
+[project]
+name = "debricked"
+version = "0.1.0"
+description = "Test Debricked"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "langchain-chroma>=0.2.2",
+    "langchain-community>=0.3.18",
+    "langchain-openai>=0.3.7",
+    "langchain-weaviate>=0.0.4",
+    "langgraph==0.3.31",
+    "langgraph-cli[inmem]>=0.1.74",
+    "lark>=1.2.2",
+    "pandas>=2.2.3",
+    "python-dotenv>=1.0.1",
+    "pytube==11.0.2",
+    "rich>=13.9.4",
+    "scikit-learn>=1.6.1",
+    "transformers==4.49.0",
+    "umap-learn>=0.5.7",
+    "youtube-transcript-api==1.0.3",
+]
+
+[project.optional-dependencies]
+ragatouille = ["ragatouille>=0.0.9"]
+
+[project.dependency-groups]
+dev = [
+    "anywidget>=0.9.18",
+    "ipywidgets>=8.1.5",
+    "jupyterlab>=4.3.5",
+    "jupyterlab-git>=0.51.0",
+    "plotly[express]>=6.0.1",
+    "ruff>=0.9.7",
+]
