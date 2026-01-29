@@ -15,7 +15,7 @@ func (execPathMock) LookPath(file string) (string, error) {
 
 func TestMakeLockCmd(t *testing.T) {
 	factory := CmdFactory{execPath: execPathMock{}}
-	manifest := filepath.Join("testdata", "pyproject.toml")
+	manifest := filepath.Join("./", "testdata", "pyproject.toml")
 
 	cmd, err := factory.MakeLockCmd(manifest)
 	assert.NoError(t, err)
