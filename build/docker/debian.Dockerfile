@@ -10,7 +10,7 @@ RUN mkdir -p internal/file/embedded && \
     wget -O internal/file/embedded/supported_formats.json https://debricked.com/api/1.0/open/files/supported-formats
 RUN go mod download && go mod verify
 COPY . .
-RUN make install
+RUN sed -i 's/\r$//' scripts/install.sh scripts/fetch_supported_formats.sh && make install
 CMD [ "debricked" ]
 
 FROM debian:bookworm-slim AS cli-base
@@ -99,6 +99,7 @@ RUN apt -y update && apt -y upgrade && apt -y install ca-certificates && \
     apt -y install -t unstable \
     python3.13 \
     python3.13-venv \
+    python3-pip \
     openjdk-21-jdk && \
     apt -y clean && rm -rf /var/lib/apt/lists/* && \
     ln -s /usr/bin/python3.13 /usr/bin/python
@@ -138,6 +139,12 @@ RUN ln -sf /usr/bin/python3.13 /usr/bin/python3 && php -v && composer --version 
 RUN curl -sSL https://install.python-poetry.org | python3 - && \
     ln -s /root/.local/bin/poetry /usr/local/bin/poetry && \
     poetry --version
+
+# Install uv for Python resolution (pyproject.toml managed by uv)
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+    /root/.local/bin/uv --version
+
+ENV PATH="/root/.local/bin:$PATH"
 
 CMD [ "debricked",  "scan" ]
 

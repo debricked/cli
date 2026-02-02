@@ -6,7 +6,10 @@ RUN go mod download && go mod verify
 COPY . .
 RUN mkdir -p internal/file/embedded && \
     wget -O internal/file/embedded/supported_formats.json https://debricked.com/api/1.0/open/files/supported-formats
-RUN apk add --no-cache make curl && make install && apk del make curl
+RUN apk add --no-cache make curl && \
+    sed -i 's/\r$//' scripts/install.sh scripts/fetch_supported_formats.sh && \
+    make install && \
+    apk del make curl
 CMD [ "debricked" ]
 
 FROM alpine:latest AS cli-base
@@ -88,8 +91,14 @@ RUN php -v && composer --version && sbt --version
 
 # Install Poetry for Python resolution (pyproject.toml)
 RUN curl -sSL https://install.python-poetry.org | python3 - && \
-	ln -s /root/.local/bin/poetry /usr/local/bin/poetry && \
-	poetry --version
+  ln -s /root/.local/bin/poetry /usr/local/bin/poetry && \
+  poetry --version
+
+# Install uv for Python resolution (pyproject.toml managed by uv)
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+  /root/.local/bin/uv --version
+
+ENV PATH="/root/.local/bin:$PATH"
 
 CMD [ "debricked",  "scan" ]
 
