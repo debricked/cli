@@ -37,7 +37,6 @@ jobs:
         shell: bash
         run: |
           set -e
-
           echo "Installing PHP and Composer on macOS"
 
           # Use the system PHP if available, otherwise install via Homebrew
