@@ -1,0 +1,28 @@
+OPENTEXT+sjadhav2@OTX-BQSBY24 MINGW64 ~/Debricked/cli (6737-add-new-pm-pnpm)
+$ ./debricked.exe resolve ../Repos/PNPM/modern-typescript-monorepo-example-main
+⚠️ Unable to get supported formats from the server. Using cached data instead.
+✓ Resolving ..\...\modern-typescript-monorepo-example-main\package.json: done
+✗ Resolving ..\...\typescript-example-1\package.json: failed
+✓ Resolving ..\...\typescript-example-2\package.json: done
+Errors
+-------
+..\Repos\PNPM\modern-typescript-monorepo-example-main\packages\typescript-example-1\package.json
+* Critical: installing dependencies failed
+Failed to find package "https://registry.yarnpkg.com/@mme%2ftypescript-example-2" that satisfies the requirement from yarn dependencies. Please check that dependencies are correct in your package.json file.
+If this is a private dependency, please make sure that the debricked CLI has access to install it or pre-install it before running the debricked CLI.
+`C:\Users\sjadhav2\AppData\Roaming\npm\yarn.cmd install --non-interactive --ignore-scripts --ignore-engines --ignore-platform --no-bin-links --production=false`
+        |yarn install v1.22.22
+        |info No lockfile found.
+        |[1/4] Resolving packages...
+        |info Visit https://yarnpkg.com/en/docs/cli/install for documentation about this command.
+        |error Error: https://registry.yarnpkg.com/@mme%2ftypescript-example-2: Not found
+        |    at params.callback [as _callback] (C:\Users\sjadhav2\AppData\Roaming\npm\node_modules\yarn\lib\cli.js:66680:18)
+        |    at self.callback (C:\Users\sjadhav2\AppData\Roaming\npm\node_modules\yarn\lib\cli.js:141410:22)     
+        |    at Request.emit (node:events:518:28)
+        |    at Request.<anonymous> (C:\Users\sjadhav2\AppData\Roaming\npm\node_modules\yarn\lib\cli.js:142382:10)
+        |    at Request.emit (node:events:518:28)
+        |    at IncomingMessage.<anonymous> (C:\Users\sjadhav2\AppData\Roaming\npm\node_modules\yarn\lib\cli.js:142304:12)
+        |    at Object.onceWrapper (node:events:632:28)
+        |    at IncomingMessage.emit (node:events:530:35)
+        |    at endReadableNT (node:internal/streams/readable:1698:12)
+        |    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)

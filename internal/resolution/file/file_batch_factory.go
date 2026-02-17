@@ -1,6 +1,8 @@
 package file
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -8,9 +10,11 @@ import (
 
 	"github.com/debricked/cli/internal/resolution/pm"
 	"github.com/debricked/cli/internal/resolution/pm/npm"
+	"github.com/debricked/cli/internal/resolution/pm/pnpm"
 	"github.com/debricked/cli/internal/resolution/pm/poetry"
 	"github.com/debricked/cli/internal/resolution/pm/uv"
 	"github.com/debricked/cli/internal/resolution/pm/yarn"
+	"github.com/fatih/color"
 )
 
 type IBatchFactory interface {
@@ -19,8 +23,9 @@ type IBatchFactory interface {
 }
 
 type BatchFactory struct {
-	pms          []pm.IPm
-	npmPreferred bool
+	pms                 []pm.IPm
+	npmPreferred        bool
+	warnedYarnDefaultPM bool
 }
 
 func NewBatchFactory() *BatchFactory {
@@ -51,10 +56,6 @@ func (bf *BatchFactory) Make(files []string) []IBatch {
 func (bf *BatchFactory) processFile(file string, batchMap map[string]IBatch) {
 	base := filepath.Base(file)
 	for _, p := range bf.pms {
-		if bf.skipPackageManager(p) {
-			continue
-		}
-
 		for _, manifest := range p.Manifests() {
 			if bf.shouldProcessManifest(manifest, base, file, p) {
 				compiledRegex, _ := regexp.Compile(manifest)
@@ -67,6 +68,25 @@ func (bf *BatchFactory) processFile(file string, batchMap map[string]IBatch) {
 }
 
 func (bf *BatchFactory) shouldProcessManifest(manifest, base, file string, p pm.IPm) bool {
+	if manifest == `package\.json$` && strings.EqualFold(base, "package.json") {
+		pmName := detectNodePm(file)
+		if pmName != "" {
+			// If we can detect the PM from lockfiles, use that
+			return pmName == p.Name()
+		}
+
+		// No lockfiles found: fall back to npmPreferred flag between npm and yarn
+		switch {
+		case p.Name() == npm.Name && bf.npmPreferred:
+			return true
+		case p.Name() == yarn.Name && !bf.npmPreferred:
+			bf.warnYarnDefault()
+			return true
+		default:
+			return false
+		}
+	}
+
 	if manifest == "pyproject.toml" && strings.EqualFold(base, "pyproject.toml") {
 		pmName := detectPyprojectPm(file)
 
@@ -85,17 +105,59 @@ func (bf *BatchFactory) addToBatch(p pm.IPm, file string, batchMap map[string]IB
 	batch.Add(file)
 }
 
-func (bf *BatchFactory) skipPackageManager(p pm.IPm) bool {
-	name := p.Name()
-
-	switch true {
-	case name == npm.Name && !bf.npmPreferred:
-		return true
-	case name == yarn.Name && bf.npmPreferred:
-		return true
+func (bf *BatchFactory) warnYarnDefault() {
+	if bf.warnedYarnDefaultPM {
+		return
 	}
 
-	return false
+	fmt.Printf("%s  Unable to detect package manager through package.json file, defaulting to yarn.\n", color.YellowString("⚠️"))
+	bf.warnedYarnDefaultPM = true
+}
+
+func detectNodePm(packageJSONPath string) string {
+	// Prefer explicit packageManager field if present
+	content, err := os.ReadFile(packageJSONPath)
+	if err == nil {
+		var pkg struct {
+			PackageManager string `json:"packageManager"`
+		}
+		if jsonErr := json.Unmarshal(content, &pkg); jsonErr == nil && pkg.PackageManager != "" {
+			name := pkg.PackageManager
+			if at := strings.Index(name, "@"); at > 0 {
+				name = name[:at]
+			}
+
+			switch name {
+			case pnpm.Name:
+				return pnpm.Name
+			case yarn.Name:
+				return yarn.Name
+			case npm.Name:
+				return npm.Name
+			}
+		}
+	}
+
+	// Fallback to lockfile-based detection when available
+	dir := filepath.Dir(packageJSONPath)
+
+	// Prefer pnpm if pnpm lockfile exists
+	if fileExists(filepath.Join(dir, "pnpm-lock.yaml")) || fileExists(filepath.Join(dir, "pnpm-lock.yml")) {
+		return pnpm.Name
+	}
+
+	// Then yarn if yarn.lock exists
+	if fileExists(filepath.Join(dir, "yarn.lock")) {
+		return yarn.Name
+	}
+
+	// Then npm if package-lock.json exists
+	if fileExists(filepath.Join(dir, "package-lock.json")) {
+		return npm.Name
+	}
+
+	// Could not determine
+	return ""
 }
 
 func detectPyprojectPm(pyprojectPath string) string {

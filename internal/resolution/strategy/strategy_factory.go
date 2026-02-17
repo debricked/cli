@@ -12,6 +12,7 @@ import (
 	"github.com/debricked/cli/internal/resolution/pm/npm"
 	"github.com/debricked/cli/internal/resolution/pm/nuget"
 	"github.com/debricked/cli/internal/resolution/pm/pip"
+	"github.com/debricked/cli/internal/resolution/pm/pnpm"
 	"github.com/debricked/cli/internal/resolution/pm/poetry"
 	"github.com/debricked/cli/internal/resolution/pm/sbt"
 	"github.com/debricked/cli/internal/resolution/pm/uv"
@@ -46,6 +47,8 @@ func (sf Factory) Make(pmFileBatch file.IBatch, paths []string) (IStrategy, erro
 		return uv.NewStrategy(pmFileBatch.Files()), nil
 	case yarn.Name:
 		return yarn.NewStrategy(pmFileBatch.Files()), nil
+	case pnpm.Name:
+		return pnpm.NewStrategy(pmFileBatch.Files()), nil
 	case npm.Name:
 		return npm.NewStrategy(pmFileBatch.Files()), nil
 	case bower.Name:
