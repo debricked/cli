@@ -68,32 +68,49 @@ func (bf *BatchFactory) processFile(file string, batchMap map[string]IBatch) {
 }
 
 func (bf *BatchFactory) shouldProcessManifest(manifest, base, file string, p pm.IPm) bool {
-	if manifest == `package\.json$` && strings.EqualFold(base, "package.json") {
-		pmName := detectNodePm(file)
-		if pmName != "" {
-			// If we can detect the PM from lockfiles, use that
-			return pmName == p.Name()
-		}
-
-		// No lockfiles found: fall back to npmPreferred flag between npm and yarn
-		switch {
-		case p.Name() == npm.Name && bf.npmPreferred:
-			return true
-		case p.Name() == yarn.Name && !bf.npmPreferred:
-			bf.warnYarnDefault()
-			return true
-		default:
-			return false
-		}
+	if isNodePackageJSON(manifest, base) {
+		return bf.shouldProcessNodeManifest(file, p)
 	}
 
-	if manifest == "pyproject.toml" && strings.EqualFold(base, "pyproject.toml") {
-		pmName := detectPyprojectPm(file)
-
-		return pmName == p.Name()
+	if isPyprojectToml(manifest, base) {
+		return shouldProcessPyprojectManifest(file, p)
 	}
 
 	return true
+}
+
+func isNodePackageJSON(manifest, base string) bool {
+	return manifest == `package\.json$` && strings.EqualFold(base, "package.json")
+}
+
+func (bf *BatchFactory) shouldProcessNodeManifest(file string, p pm.IPm) bool {
+	pmName := detectNodePm(file)
+	if pmName != "" {
+		// If we can detect the PM from lockfiles or package.json, use that
+		return pmName == p.Name()
+	}
+
+	// No lockfiles or explicit packageManager found: fall back to npmPreferred flag between npm and yarn
+	switch {
+	case p.Name() == npm.Name && bf.npmPreferred:
+		return true
+	case p.Name() == yarn.Name && !bf.npmPreferred:
+		bf.warnYarnDefault()
+
+		return true
+	default:
+		return false
+	}
+}
+
+func isPyprojectToml(manifest, base string) bool {
+	return manifest == "pyproject.toml" && strings.EqualFold(base, "pyproject.toml")
+}
+
+func shouldProcessPyprojectManifest(file string, p pm.IPm) bool {
+	pmName := detectPyprojectPm(file)
+
+	return pmName == p.Name()
 }
 
 func (bf *BatchFactory) addToBatch(p pm.IPm, file string, batchMap map[string]IBatch) {
@@ -107,6 +124,7 @@ func (bf *BatchFactory) addToBatch(p pm.IPm, file string, batchMap map[string]IB
 
 func (bf *BatchFactory) warnYarnDefault() {
 	if bf.warnedYarnDefaultPM {
+
 		return
 	}
 
@@ -115,49 +133,38 @@ func (bf *BatchFactory) warnYarnDefault() {
 }
 
 func detectNodePm(packageJSONPath string) string {
+	return detectNodePmFromPackageJSON(packageJSONPath)
+}
+
+func detectNodePmFromPackageJSON(packageJSONPath string) string {
 	// Prefer explicit packageManager field if present
 	content, err := os.ReadFile(packageJSONPath)
-	if err == nil {
-		var pkg struct {
-			PackageManager string `json:"packageManager"`
-		}
-		if jsonErr := json.Unmarshal(content, &pkg); jsonErr == nil && pkg.PackageManager != "" {
-			name := pkg.PackageManager
-			if at := strings.Index(name, "@"); at > 0 {
-				name = name[:at]
-			}
-
-			switch name {
-			case pnpm.Name:
-				return pnpm.Name
-			case yarn.Name:
-				return yarn.Name
-			case npm.Name:
-				return npm.Name
-			}
-		}
+	if err != nil {
+		return ""
 	}
 
-	// Fallback to lockfile-based detection when available
-	dir := filepath.Dir(packageJSONPath)
+	var pkg struct {
+		PackageManager string `json:"packageManager"`
+	}
+	if jsonErr := json.Unmarshal(content, &pkg); jsonErr != nil || pkg.PackageManager == "" {
+		return ""
+	}
 
-	// Prefer pnpm if pnpm lockfile exists
-	if fileExists(filepath.Join(dir, "pnpm-lock.yaml")) || fileExists(filepath.Join(dir, "pnpm-lock.yml")) {
+	name := pkg.PackageManager
+	if at := strings.Index(name, "@"); at > 0 {
+		name = name[:at]
+	}
+
+	switch name {
+	case pnpm.Name:
 		return pnpm.Name
-	}
-
-	// Then yarn if yarn.lock exists
-	if fileExists(filepath.Join(dir, "yarn.lock")) {
+	case yarn.Name:
 		return yarn.Name
-	}
-
-	// Then npm if package-lock.json exists
-	if fileExists(filepath.Join(dir, "package-lock.json")) {
+	case npm.Name:
 		return npm.Name
+	default:
+		return ""
 	}
-
-	// Could not determine
-	return ""
 }
 
 func detectPyprojectPm(pyprojectPath string) string {
