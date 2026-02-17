@@ -31,6 +31,68 @@ jobs:
           npm install --global bower
           bower -v
 
+      - name: Install PHP & Composer (official tools)
+        shell: bash
+        run: |
+          set -e
+
+          echo "Installing PHP and Composer on ${{ matrix.os }}"
+
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            sudo apt-get update
+            # Use distro PHP; don't pin a minor version that may not exist.
+            sudo apt-get install -y php php-cli php-mbstring php-xml php-curl curl
+            php -v
+
+            # Install Composer from the official installer
+            EXPECTED_SIGNATURE="$(curl -s https://composer.github.io/installer.sig)"
+            php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+            ACTUAL_SIGNATURE="$(php -r "echo hash_file('sha384', 'composer-setup.php');")"
+            if [ "$EXPECTED_SIGNATURE" != "$ACTUAL_SIGNATURE" ]; then
+              >&2 echo 'ERROR: Invalid composer installer signature'
+              rm composer-setup.php
+              exit 1
+            fi
+            php composer-setup.php --install-dir=/usr/local/bin --filename=composer
+            rm composer-setup.php
+            composer --version
+
+          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            # Use the system PHP if available, otherwise install via Homebrew
+            if ! command -v php >/dev/null 2>&1; then
+              brew update
+              brew install php
+            fi
+            php -v
+
+            EXPECTED_SIGNATURE="$(curl -s https://composer.github.io/installer.sig)"
+            php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+            ACTUAL_SIGNATURE="$(php -r "echo hash_file('sha384', 'composer-setup.php');")"
+            if [ "$EXPECTED_SIGNATURE" != "$ACTUAL_SIGNATURE" ]; then
+              >&2 echo 'ERROR: Invalid composer installer signature'
+              rm composer-setup.php
+              exit 1
+            fi
+            php composer-setup.php --install-dir=/usr/local/bin --filename=composer
+            rm composer-setup.php
+            composer --version
+
+          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            # Enable PHP from the existing Windows image and install Composer globally.
+            choco install php -y
+            refreshenv
+            php -v
+
+            # Download Composer installer PHAR from the official source
+            curl -sS https://getcomposer.org/installer -o composer-setup.php
+            php composer-setup.php --install-dir=C:/tools/composer --filename=composer.phar
+            echo 'export PATH=$PATH:/c/tools/composer' >> "$GITHUB_ENV"
+
+          else
+            echo "Unsupported OS: ${{ matrix.os }}"
+            exit 1
+          fi
+
       - name: Pull Supported Formats
         run: |
           cd cmd/debricked
