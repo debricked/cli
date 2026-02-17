@@ -32,32 +32,6 @@ jobs:
           npm install --global bower
           bower -v
 
-      - name: Install PHP & Composer (Linux)
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          set -e
-
-          echo "Installing PHP and Composer on Linux"
-
-          sudo apt-get update
-          # Use distro PHP; don't pin a minor version that may not exist.
-          sudo apt-get install -y php php-cli php-mbstring php-xml php-curl curl
-          php -v
-
-          # Install Composer from the official installer
-          EXPECTED_SIGNATURE="$(curl -s https://composer.github.io/installer.sig)"
-          php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-          ACTUAL_SIGNATURE="$(php -r "echo hash_file('sha384', 'composer-setup.php');")"
-          if [ "$EXPECTED_SIGNATURE" != "$ACTUAL_SIGNATURE" ]; then
-            >&2 echo 'ERROR: Invalid composer installer signature'
-            rm composer-setup.php
-            exit 1
-          fi
-          php composer-setup.php --install-dir=/usr/local/bin --filename=composer
-          rm composer-setup.php
-          composer --version
-
       - name: Install PHP & Composer (macOS)
         if: runner.os == 'macOS'
         shell: bash
@@ -84,32 +58,6 @@ jobs:
           php composer-setup.php --install-dir=/usr/local/bin --filename=composer
           rm composer-setup.php
           composer --version
-
-      - name: Install PHP & Composer (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-
-          Write-Host "Installing PHP and Composer on Windows"
-
-          choco install php -y
-          php -v
-
-          # Download Composer installer from the official source
-          $expected = (Invoke-WebRequest -UseBasicParsing https://composer.github.io/installer.sig).Content.Trim()
-          Invoke-WebRequest -Uri https://getcomposer.org/installer -OutFile composer-setup.php
-          $actual = (Get-FileHash composer-setup.php -Algorithm SHA384).Hash.ToLower()
-          if ($expected.ToLower() -ne $actual) {
-            Write-Error 'ERROR: Invalid composer installer signature'
-            Remove-Item composer-setup.php
-            exit 1
-          }
-
-          php composer-setup.php --install-dir=C:/tools/composer --filename=composer.phar
-          Remove-Item composer-setup.php
-
-            # Make sure Composer directory is on PATH for subsequent steps
 
       - name: Pull Supported Formats
         run: |
