@@ -6,17 +6,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type fakeExecPath struct{}
-
-func (fakeExecPath) LookPath(file string) (string, error) {
-	// Simulate a successful lookup of the composer binary without requiring it in PATH.
-	return file, nil
-}
-
 func TestMakeInstallCmd(t *testing.T) {
 	composerCommand := "composer"
 	cmd, err := CmdFactory{
-		execPath: fakeExecPath{},
+		execPath: ExecPath{},
 	}.MakeInstallCmd(composerCommand, "file")
 	assert.NoError(t, err)
 	assert.NotNil(t, cmd)

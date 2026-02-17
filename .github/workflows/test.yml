@@ -31,6 +31,22 @@ jobs:
           npm install --global bower
           bower -v
 
+      - name: Install Composer
+        shell: bash
+        run: |
+          set -e
+
+          php -v
+
+          php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+          php composer-setup.php --install-dir=$HOME --filename=composer
+          php -r "unlink('composer-setup.php');"
+
+          echo "$HOME" >> $GITHUB_PATH
+
+          composer --version
+
+
       - name: Pull Supported Formats
         run: |
           cd cmd/debricked
