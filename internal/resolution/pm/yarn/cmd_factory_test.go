@@ -6,10 +6,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type fakeExecPath struct{}
+
+func (fakeExecPath) LookPath(file string) (string, error) {
+	// Simulate a successful lookup of the yarn binary without requiring it in PATH.
+	return file, nil
+}
+
 func TestMakeInstallCmd(t *testing.T) {
 	yarnCommand := "yarn"
 	cmd, err := CmdFactory{
-		execPath: ExecPath{},
+		execPath: fakeExecPath{},
 	}.MakeInstallCmd(yarnCommand, "file")
 	assert.NoError(t, err)
 	assert.NotNil(t, cmd)
