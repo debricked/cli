@@ -11,10 +11,11 @@ jobs:
     name: CLI
     strategy:
       matrix:
-        os: [ 'ubuntu-latest', 'windows-latest', 'macos-13' ]
+        os: [ 'ubuntu-latest', 'windows-latest', 'macos-latest' ]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set git to use LF
+
         run: |
           git config --global core.autocrlf input
           git config --global core.eol lf
@@ -30,6 +31,32 @@ jobs:
         run: |
           npm install --global bower
           bower -v
+
+      - name: Install PHP & Composer (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -e
+          echo "Installing PHP and Composer on macOS"
+
+          # Use the system PHP if available, otherwise install via Homebrew
+          if ! command -v php >/dev/null 2>&1; then
+            brew update
+            brew install php
+          fi
+          php -v
+
+          EXPECTED_SIGNATURE="$(curl -s https://composer.github.io/installer.sig)"
+          php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+          ACTUAL_SIGNATURE="$(php -r "echo hash_file('sha384', 'composer-setup.php');")"
+          if [ "$EXPECTED_SIGNATURE" != "$ACTUAL_SIGNATURE" ]; then
+            >&2 echo 'ERROR: Invalid composer installer signature'
+            rm composer-setup.php
+            exit 1
+          fi
+          php composer-setup.php --install-dir=/usr/local/bin --filename=composer
+          rm composer-setup.php
+          composer --version
 
       - name: Pull Supported Formats
         run: |
