@@ -90,7 +90,7 @@ func (bf *BatchFactory) shouldProcessNodeManifest(file string, p pm.IPm) bool {
 		return pmName == p.Name()
 	}
 
-	// No lockfiles or explicit packageManager found: fall back to npmPreferred flag between npm and yarn
+	// No explicit packageManager found: fall back to npmPreferred flag between npm and yarn
 	switch {
 	case p.Name() == npm.Name && bf.npmPreferred:
 		return true
