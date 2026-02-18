@@ -1,6 +1,8 @@
 package file
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -8,9 +10,11 @@ import (
 
 	"github.com/debricked/cli/internal/resolution/pm"
 	"github.com/debricked/cli/internal/resolution/pm/npm"
+	"github.com/debricked/cli/internal/resolution/pm/pnpm"
 	"github.com/debricked/cli/internal/resolution/pm/poetry"
 	"github.com/debricked/cli/internal/resolution/pm/uv"
 	"github.com/debricked/cli/internal/resolution/pm/yarn"
+	"github.com/fatih/color"
 )
 
 type IBatchFactory interface {
@@ -19,8 +23,9 @@ type IBatchFactory interface {
 }
 
 type BatchFactory struct {
-	pms          []pm.IPm
-	npmPreferred bool
+	pms                 []pm.IPm
+	npmPreferred        bool
+	warnedYarnDefaultPM bool
 }
 
 func NewBatchFactory() *BatchFactory {
@@ -51,10 +56,6 @@ func (bf *BatchFactory) Make(files []string) []IBatch {
 func (bf *BatchFactory) processFile(file string, batchMap map[string]IBatch) {
 	base := filepath.Base(file)
 	for _, p := range bf.pms {
-		if bf.skipPackageManager(p) {
-			continue
-		}
-
 		for _, manifest := range p.Manifests() {
 			if bf.shouldProcessManifest(manifest, base, file, p) {
 				compiledRegex, _ := regexp.Compile(manifest)
@@ -67,13 +68,49 @@ func (bf *BatchFactory) processFile(file string, batchMap map[string]IBatch) {
 }
 
 func (bf *BatchFactory) shouldProcessManifest(manifest, base, file string, p pm.IPm) bool {
-	if manifest == "pyproject.toml" && strings.EqualFold(base, "pyproject.toml") {
-		pmName := detectPyprojectPm(file)
+	if isNodePackageJSON(manifest, base) {
+		return bf.shouldProcessNodeManifest(file, p)
+	}
 
-		return pmName == p.Name()
+	if isPyprojectToml(manifest, base) {
+		return shouldProcessPyprojectManifest(file, p)
 	}
 
 	return true
+}
+
+func isNodePackageJSON(manifest, base string) bool {
+	return manifest == `package\.json$` && strings.EqualFold(base, "package.json")
+}
+
+func (bf *BatchFactory) shouldProcessNodeManifest(file string, p pm.IPm) bool {
+	pmName := detectNodePm(file)
+	if pmName != "" {
+		// If we can detect the PM from lockfiles or package.json, use that
+		return pmName == p.Name()
+	}
+
+	// No explicit packageManager found: fall back to npmPreferred flag between npm and yarn
+	switch {
+	case p.Name() == npm.Name && bf.npmPreferred:
+		return true
+	case p.Name() == yarn.Name && !bf.npmPreferred:
+		bf.warnYarnDefault()
+
+		return true
+	default:
+		return false
+	}
+}
+
+func isPyprojectToml(manifest, base string) bool {
+	return manifest == "pyproject.toml" && strings.EqualFold(base, "pyproject.toml")
+}
+
+func shouldProcessPyprojectManifest(file string, p pm.IPm) bool {
+	pmName := detectPyprojectPm(file)
+
+	return pmName == p.Name()
 }
 
 func (bf *BatchFactory) addToBatch(p pm.IPm, file string, batchMap map[string]IBatch) {
@@ -85,17 +122,49 @@ func (bf *BatchFactory) addToBatch(p pm.IPm, file string, batchMap map[string]IB
 	batch.Add(file)
 }
 
-func (bf *BatchFactory) skipPackageManager(p pm.IPm) bool {
-	name := p.Name()
+func (bf *BatchFactory) warnYarnDefault() {
+	if bf.warnedYarnDefaultPM {
 
-	switch true {
-	case name == npm.Name && !bf.npmPreferred:
-		return true
-	case name == yarn.Name && bf.npmPreferred:
-		return true
+		return
 	}
 
-	return false
+	fmt.Printf("%s  Unable to detect package manager through package.json file, defaulting to yarn.\n", color.YellowString("⚠️"))
+	bf.warnedYarnDefaultPM = true
+}
+
+func detectNodePm(packageJSONPath string) string {
+	return detectNodePmFromPackageJSON(packageJSONPath)
+}
+
+func detectNodePmFromPackageJSON(packageJSONPath string) string {
+	// Prefer explicit packageManager field if present
+	content, err := os.ReadFile(packageJSONPath)
+	if err != nil {
+		return ""
+	}
+
+	var pkg struct {
+		PackageManager string `json:"packageManager"`
+	}
+	if jsonErr := json.Unmarshal(content, &pkg); jsonErr != nil || pkg.PackageManager == "" {
+		return ""
+	}
+
+	name := pkg.PackageManager
+	if at := strings.Index(name, "@"); at > 0 {
+		name = name[:at]
+	}
+
+	switch name {
+	case pnpm.Name:
+		return pnpm.Name
+	case yarn.Name:
+		return yarn.Name
+	case npm.Name:
+		return npm.Name
+	default:
+		return ""
+	}
 }
 
 func detectPyprojectPm(pyprojectPath string) string {

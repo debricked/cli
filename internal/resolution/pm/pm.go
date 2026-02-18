@@ -9,6 +9,7 @@ import (
 	"github.com/debricked/cli/internal/resolution/pm/npm"
 	"github.com/debricked/cli/internal/resolution/pm/nuget"
 	"github.com/debricked/cli/internal/resolution/pm/pip"
+	"github.com/debricked/cli/internal/resolution/pm/pnpm"
 	"github.com/debricked/cli/internal/resolution/pm/poetry"
 	"github.com/debricked/cli/internal/resolution/pm/sbt"
 	"github.com/debricked/cli/internal/resolution/pm/uv"
@@ -29,6 +30,7 @@ func Pms() []IPm {
 		poetry.NewPm(),
 		uv.NewPm(),
 		yarn.NewPm(),
+		pnpm.NewPm(),
 		npm.NewPm(),
 		bower.NewPm(),
 		nuget.NewPm(),

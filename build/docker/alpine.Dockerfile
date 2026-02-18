@@ -72,7 +72,9 @@ RUN apk --no-cache --update add dotnet8-sdk --repository=https://dl-cdn.alpineli
 
 RUN dotnet --version && npm -v && yarn -v && go version
 
-RUN npm install --global bower && bower -v
+# Install pnpm and bower for JavaScript resolution (npm/yarn/pnpm/bower)
+RUN npm install --global pnpm && pnpm -v && \
+  npm install --global bower && bower -v
 
 RUN apk add --no-cache \
     git \

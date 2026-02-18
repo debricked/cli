@@ -77,9 +77,10 @@ RUN apt -y update && apt -y upgrade && apt -y install nodejs && \
     apt -y clean && rm -rf /var/lib/apt/lists/*
 RUN npm install --global npm@latest && \
     npm install --global yarn && \
+    npm install --global pnpm && \
     npm install --global bower
 
-RUN npm -v && yarn -v && bower -v
+RUN npm -v && yarn -v && pnpm -v && bower -v
 
 # https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install
 # https://learn.microsoft.com/en-us/dotnet/core/install/linux-debian
