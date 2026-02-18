@@ -109,7 +109,6 @@ func isPyprojectToml(manifest, base string) bool {
 
 func shouldProcessPyprojectManifest(file string, p pm.IPm) bool {
 	pmName := detectPyprojectPm(file)
-
 	return pmName == p.Name()
 }
 
