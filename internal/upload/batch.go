@@ -322,8 +322,9 @@ type purlConfig struct {
 }
 
 type DebrickedConfig struct {
-	Overrides []purlConfig  `json:"override,omitempty" yaml:"overrides"`
-	Ignore    *IgnoreConfig `json:"ignore,omitempty" yaml:"ignore,omitempty"`
+	Overrides []purlConfig    `json:"override,omitempty" yaml:"overrides"`
+	Ignore    *IgnoreConfig   `json:"ignore,omitempty" yaml:"ignore,omitempty"`
+	Policies  *PoliciesConfig `json:"policies,omitempty" yaml:"policies,omitempty"`
 }
 
 // IgnoreConfig matches the structure of the 'ignore' section in YAML
@@ -334,6 +335,17 @@ type IgnoreConfig struct {
 type IgnorePackage struct {
 	PURL    string `json:"pURL" yaml:"pURL"`
 	Version string `json:"version,omitempty" yaml:"version,omitempty"`
+}
+
+// PoliciesConfig matches the structure of the 'policies' section in YAML
+type PoliciesConfig struct {
+	Allow *PolicyPackages `json:"allow,omitempty" yaml:"allow,omitempty"`
+	Deny  *PolicyPackages `json:"deny,omitempty" yaml:"deny,omitempty"`
+}
+
+// PolicyPackages contains a list of package identifiers.
+type PolicyPackages struct {
+	Packages []string `json:"packages" yaml:"packages"`
 }
 
 type uploadFinish struct {
@@ -380,6 +392,21 @@ func extractIgnore(raw map[string]interface{}) *IgnoreConfig {
 			var ignoreObj IgnoreConfig
 			if yaml.Unmarshal(ignoreYaml, &ignoreObj) == nil {
 				return &ignoreObj
+			}
+		}
+	}
+
+	return nil
+}
+
+// extractPolicies unmarshals the policies section from raw config
+func extractPolicies(raw map[string]interface{}) *PoliciesConfig {
+	if rawPolicies, ok := raw["policies"]; ok {
+		policiesYaml, err := yaml.Marshal(rawPolicies)
+		if err == nil {
+			var policiesObj PoliciesConfig
+			if yaml.Unmarshal(policiesYaml, &policiesObj) == nil {
+				return &policiesObj
 			}
 		}
 	}
@@ -463,10 +490,12 @@ func GetDebrickedConfig(path string) *DebrickedConfig {
 	}
 
 	ignore := extractIgnore(raw)
+	policies := extractPolicies(raw)
 	overrides := convertOverrides(yamlConfig.Overrides)
 
 	return &DebrickedConfig{
 		Overrides: overrides,
 		Ignore:    ignore,
+		Policies:  policies,
 	}
 }
