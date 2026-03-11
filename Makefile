@@ -29,3 +29,5 @@ docker-build-scan:
 .PHONY: docker-build-cli-resolution
 docker-build-cli-resolution:
 	docker build -f build/docker/alpine.Dockerfile -t debricked/cli:resolution --target resolution .
+
+
