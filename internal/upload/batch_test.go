@@ -310,3 +310,113 @@ func TestGetDebrickedConfigSingularOverride(t *testing.T) {
 	assert.Nil(t, err)
 	assert.JSONEq(t, string(configJSON), string(expectedJSON))
 }
+
+func TestGetDebrickedConfigPolicies(t *testing.T) {
+	config := GetDebrickedConfig(filepath.Join("testdata", "debricked-config-policies.yaml"))
+	configJSON, err := json.Marshal(config)
+	assert.Nil(t, err)
+	expectedJSON, err := json.Marshal(DebrickedConfig{
+		Overrides: []purlConfig{
+			{
+				PackageURL:  "pkg:npm/lodash",
+				Version:     boolOrString{Version: "1.0.0", HasVersion: true},
+				FileRegexes: []string{"chart.js-2.6.0.tgz"},
+			},
+		},
+		Ignore: &IgnoreConfig{
+			Packages: []IgnorePackage{
+				{PURL: "pkg:maven/javax.transaction/jta"},
+				{PURL: "pkg:maven/org.quartz-scheduler/quartz"},
+				{PURL: "pkg:maven/com.google.guava/guava", Version: "1.1.1"},
+				{PURL: "pkg:maven/com.googlecode.json-simple/json-simplea", Version: "1.1.1"},
+				{PURL: "pkg:maven/com.fasterxml.jackson.core/jackson-databind"},
+			},
+		},
+		Policies: &PoliciesConfig{
+			Allow: &PolicyPackages{
+				Packages: []string{
+					"pkg:npm/lodash@4.17.21",
+					"pkg:maven/org.springframework/spring-core@5.3.20",
+					"react",
+					"express",
+					"axios@1.3.0",
+					"lodash@>=4.17.21,<5.0.0",
+					"log4j@2.15.0-2.17.1",
+				},
+			},
+			Deny: &PolicyPackages{
+				Packages: []string{
+					"pkg:npm/request",
+					"colors@<=1.4.0",
+					"node-ipc@<=9.2.1",
+					"pkg:pypi/setuptools@<65.0.0",
+					"pkg:pypi/gpl-restricted-package",
+					"proprietary-lib",
+				},
+			},
+		},
+	})
+	assert.Nil(t, err)
+	assert.JSONEq(t, string(configJSON), string(expectedJSON))
+}
+
+func TestGetDebrickedConfigPoliciesOnly(t *testing.T) {
+	config := GetDebrickedConfig(filepath.Join("testdata", "debricked-config-policies-only.yaml"))
+	configJSON, err := json.Marshal(config)
+	assert.Nil(t, err)
+	expectedJSON, err := json.Marshal(DebrickedConfig{
+		Policies: &PoliciesConfig{
+			Allow: &PolicyPackages{
+				Packages: []string{
+					// PURL format
+					"pkg:npm/lodash@4.17.21",
+					"pkg:maven/org.springframework/spring-core@5.3.20",
+					"pkg:pypi/requests@2.28.0",
+					"pkg:nuget/Newtonsoft.Json@13.0.1",
+					"pkg:npm/@angular/core@15.0.0",
+					// Name only
+					"react",
+					"webpack",
+					"express",
+					"typescript",
+					// Name@version
+					"axios@1.3.0",
+					"lodash@4.17.21",
+					"vue@3.2.45",
+					// Version ranges
+					"django@>=3.2.0,<5.0.0",
+					"spring-boot@>=2.7.0,<3.0.0",
+					"lodash@>=4.17.21,<5.0.0",
+					"log4j@2.15.0-2.17.1",
+					// Comparison operators
+					"pytest@>=7.0.0",
+					"guava@>=31.0.0",
+				},
+			},
+			Deny: &PolicyPackages{
+				Packages: []string{
+					// PURL format
+					"pkg:npm/request",
+					"pkg:npm/event-stream@3.3.6",
+					"pkg:maven/log4j/log4j@1.2.17",
+					"pkg:pypi/pycrypto",
+					"pkg:npm/flatmap-stream",
+					// Name only
+					"colors",
+					"node-ipc",
+					// Version ranges and constraints
+					"setuptools@<65.0.0",
+					"minimist@<1.2.6",
+					"pillow@<8.3.2",
+					"log4j@1.0-2.14.1",
+					"commons-collections@<=3.2.1",
+					// Comparison operators
+					"System.Text.Encodings.Web@<4.7.2",
+					"moment@<=2.29.1",
+				},
+			},
+		},
+	})
+	assert.Nil(t, err)
+	assert.JSONEq(t, string(configJSON), string(expectedJSON))
+}
