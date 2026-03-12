@@ -48,3 +48,6 @@ internal/scan/testdata/npm/result.json
 /internal/file/testdata/misc/yarn.lock
 /internal/callgraph/finder/javafinder/testdata/guava/maven.debricked.lock
 /internal/resolution/pm/maven/testdata/guava/maven.debricked.lock
+
+
+
