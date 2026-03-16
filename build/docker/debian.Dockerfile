@@ -96,8 +96,15 @@ RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh \
     && rm ./dotnet-install.sh \
     && dotnet help
 
-RUN apt -y update && apt -y upgrade && apt -y install ca-certificates && \
-    apt -y install -t unstable \
+# Prevent systemd from being configured to avoid QEMU segfaults on arm64
+RUN echo 'exit 101' > /usr/sbin/policy-rc.d && chmod +x /usr/sbin/policy-rc.d
+
+RUN apt -y update && apt -y install ca-certificates && \
+    apt-mark hold systemd && \
+    apt -y -o Dpkg::Options::="--force-overwrite" \
+          -o Dpkg::Options::="--force-confold" \
+          -o Dpkg::Options::="--force-confdef" \
+          install -t unstable --no-install-recommends \
     python3.13 \
     python3.13-venv \
     python3-pip \
