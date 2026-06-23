@@ -2,8 +2,6 @@ package java
 
 import (
 	"fmt"
-	"path/filepath"
-	"strings"
 	"testing"
 
 	ioTestData "github.com/debricked/cli/internal/io/testdata"
@@ -114,50 +112,4 @@ func TestGetSootUpHandlerJavaVersionAbove21(t *testing.T) {
 	assert.Equal(t, "21", v)
 }
 
-// ── GetSootUpWrapper ──────────────────────────────────────────────────────────
-
-func TestGetSootUpWrapperInvalidVersion(t *testing.T) {
-	fsMock := ioTestData.FileSystemMock{}
-	arcMock := ioTestData.ArchiveMock{}
-	_, err := sootUpHandler.GetSootUpWrapper("not-a-number", fsMock, arcMock)
-	assert.Error(t, err)
-}
-
-func TestGetSootUpWrapperUnsupportedVersion(t *testing.T) {
-	fsMock := ioTestData.FileSystemMock{}
-	arcMock := ioTestData.ArchiveMock{}
-	_, err := sootUpHandler.GetSootUpWrapper("8", fsMock, arcMock)
-	assert.Error(t, err)
-}
-
-func TestGetSootUpWrapperMkdirError(t *testing.T) {
-	errString := "mkdir error"
-	fsMock := ioTestData.FileSystemMock{
-		IsNotExistBool: true,
-		MkdirError:     fmt.Errorf("%s", errString), //nolint
-	}
-	arcMock := ioTestData.ArchiveMock{}
-	_, err := sootUpHandler.GetSootUpWrapper("21", fsMock, arcMock)
-	assert.Error(t, err)
-	assert.Equal(t, errString, err.Error())
-}
-
-func TestGetSootUpWrapperEmbedded(t *testing.T) {
-	fsMock := ioTestData.FileSystemMock{
-		IsNotExistBool: true,
-	}
-	arcMock := ioTestData.ArchiveMock{}
-	jarPath, err := sootUpHandler.GetSootUpWrapper("21", fsMock, arcMock)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, jarPath)
-	assert.True(t, strings.HasSuffix(filepath.ToSlash(jarPath), "/.debricked/SootUpWrapper.jar"))
-}
-
-func TestGetSootUpWrapperReturnsExistingPath(t *testing.T) {
-	fsMock := ioTestData.FileSystemMock{}
-	arcMock := ioTestData.ArchiveMock{}
-	jarPath, err := sootUpHandler.GetSootUpWrapper("17", fsMock, arcMock)
-	assert.NoError(t, err)
-	assert.True(t, strings.HasSuffix(filepath.ToSlash(jarPath), "/.debricked/SootUpWrapper.jar"))
-}
-
+// Component tests moved to sootup_handler_component_test.go for consistency with soot_handler structure
