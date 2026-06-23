@@ -3,6 +3,7 @@ package java
 import (
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -24,6 +25,12 @@ type Strategy struct {
 	finder     finder.IFinder
 	ctx        cgexec.IContext
 }
+
+const (
+	javaCallgraphEngineEnv    = "DEBRICKED_JAVA_CALLGRAPH_ENGINE"
+	javaCallgraphEngineSoot   = "soot"
+	javaCallgraphEngineSootUp = "sootup"
+)
 
 func (s Strategy) Invoke() ([]job.IJob, error) {
 	var jobs []job.IJob
@@ -86,6 +93,11 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 		strategyWarning("Found " + fmt.Sprint(foundRootsWoClasses) + " roots without related classes, make sure to build your project before running.")
 	}
 	for rootFile, classDirs := range rootClassMapping {
+		handler := selectJavaCallgraphHandler(s.config)
+		if _, isSootUp := handler.(SootUpHandler); isSootUp {
+			classDirs = normalizeSootUpUserClassDirs(classDirs)
+		}
+
 		// For each class paths dir within the root, find GCDPath as entrypoint
 		// classDir := finder.GCDPath(classDirs)
 		rootDir := filepath.Dir(rootFile)
@@ -98,12 +110,68 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 			s.config,
 			s.ctx,
 			io.FileSystem{},
-			SootHandler{s.config.Version()},
+			handler,
 		),
 		)
 	}
 
 	return jobs, nil
+}
+
+func selectJavaCallgraphHandler(config conf.IConfig) ISootHandler {
+	engine := ""
+	cliVersion := ""
+	if config != nil {
+		cliVersion = config.Version()
+		engine = strings.ToLower(strings.TrimSpace(config.Kwargs()["java-callgraph-engine"]))
+	}
+	if engine == "" {
+		engine = strings.ToLower(strings.TrimSpace(os.Getenv(javaCallgraphEngineEnv)))
+	}
+
+	switch engine {
+	case "", javaCallgraphEngineSoot:
+		return SootHandler{cliVersion}
+	case javaCallgraphEngineSootUp:
+		return SootUpHandler{cliVersion}
+	default:
+		strategyWarning(fmt.Sprintf("Unknown %s value '%s'; defaulting to '%s'", javaCallgraphEngineEnv, engine, javaCallgraphEngineSoot))
+		return SootHandler{cliVersion}
+	}
+}
+
+func normalizeSootUpUserClassDirs(classDirs []string) []string {
+	roots := make(map[string]struct{})
+
+	for _, classDir := range classDirs {
+		normalized := normalizeToClassRoot(classDir)
+		roots[normalized] = struct{}{}
+	}
+
+	result := make([]string, 0, len(roots))
+	for root := range roots {
+		result = append(result, root)
+	}
+
+	return result
+}
+
+func normalizeToClassRoot(classDir string) string {
+	clean := filepath.Clean(classDir)
+	markers := []string{
+		filepath.Join("target", "classes"),
+		filepath.Join("target", "test-classes"),
+		filepath.Join("build", "classes", "java", "main"),
+		filepath.Join("build", "classes", "java", "test"),
+	}
+
+	for _, marker := range markers {
+		if idx := strings.Index(clean, marker); idx >= 0 {
+			return clean[:idx+len(marker)]
+		}
+	}
+
+	return clean
 }
 
 func NewStrategy(

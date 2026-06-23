@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strings"
 	"syscall"
 
 	"github.com/debricked/cli/internal/callgraph/cgexec"
@@ -14,10 +15,11 @@ import (
 )
 
 const (
-	maven         = "maven"
-	gradle        = "gradle"
-	dependencyDir = ".debrickedTmpFolder"
-	outputName    = "debricked-call-graph.java"
+	maven            = "maven"
+	gradle           = "gradle"
+	dependencyDir    = ".debrickedTmpFolder"
+	outputName       = "debricked-call-graph.java"
+	outputNameSootUp = "debricked-call-graph-sootup.java"
 )
 
 type Job struct {
@@ -55,6 +57,7 @@ func NewJob(
 func (j *Job) Run() {
 	workingDirectory := j.GetDir()
 	pmConfig := j.config.PackageManager()
+	outputName := j.outputName()
 	targetDir := path.Join(workingDirectory, dependencyDir)
 	targetClasses := []string{workingDirectory}
 	if len(j.GetFiles()) > 0 {
@@ -123,6 +126,7 @@ func (j *Job) runCallGraph(callgraph ICallgraph) {
 
 func (j *Job) runPostProcess() {
 	workingDirectory := j.GetDir()
+	outputName := j.outputName()
 	outputFullPath := path.Join(workingDirectory, outputName)
 	outputFullPathZip := outputFullPath + ".zip"
 	j.SendStatus("zipping callgraph")
@@ -153,4 +157,14 @@ func (j *Job) runPostProcess() {
 			return
 		}
 	}
+}
+
+func (j *Job) outputName() string {
+	if j.config != nil {
+		if engine, ok := j.config.Kwargs()["java-callgraph-engine"]; ok && strings.EqualFold(strings.TrimSpace(engine), "sootup") {
+			return outputNameSootUp
+		}
+	}
+
+	return outputName
 }

@@ -53,3 +53,13 @@ type MockSootHandler struct {
 func (msh MockSootHandler) GetSootWrapper(version string, fs ioFs.IFileSystem, arc ioFs.IArchive) (string, error) {
 	return "", msh.GetSootWrapperError
 }
+
+type MockSootUpHandler struct {
+	GetSootUpWrapperError error
+	GetSootUpWrapperPath  string
+}
+
+func (msh MockSootUpHandler) GetSootUpWrapper(version string, fs ioFs.IFileSystem, arc ioFs.IArchive) (string, error) {
+	return msh.GetSootUpWrapperPath, msh.GetSootUpWrapperError
+}
+
