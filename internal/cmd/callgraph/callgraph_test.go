@@ -20,10 +20,12 @@ func TestNewCallgraphCmd(t *testing.T) {
 
 	flags := cmd.Flags()
 	flagAssertions := map[string]string{
-		ExclusionFlag:       "e",
-		InclusionFlag:       "",
-		NoBuildFlag:         "",
-		GenerateTimeoutFlag: "",
+		ExclusionFlag:                "e",
+		InclusionFlag:                "",
+		NoBuildFlag:                  "",
+		GenerateTimeoutFlag:          "",
+		JavaCallgraphEngineFlag:      "",
+		JavaCallgraphEngineAliasFlag: "",
 	}
 	for name, shorthand := range flagAssertions {
 		flag := flags.Lookup(name)
@@ -99,4 +101,23 @@ func TestParseAndValidateLanguages(t *testing.T) {
 	languages = "java,golang,python2"
 	_, err = parseAndValidateLanguages(languages)
 	assert.Error(t, err)
+}
+
+func TestParseAndValidateJavaCallgraphEngine(t *testing.T) {
+	engine, err := parseAndValidateJavaCallgraphEngine("soot")
+	assert.NoError(t, err)
+	assert.Equal(t, "soot", engine)
+
+	engine, err = parseAndValidateJavaCallgraphEngine(" SOOTUP ")
+	assert.NoError(t, err)
+	assert.Equal(t, "sootup", engine)
+
+	_, err = parseAndValidateJavaCallgraphEngine("invalid")
+	assert.Error(t, err)
+}
+
+func TestResolveJavaCallgraphEngine(t *testing.T) {
+	assert.Equal(t, "soot", resolveJavaCallgraphEngine("soot", ""))
+	assert.Equal(t, "sootup", resolveJavaCallgraphEngine("soot", "sootup"))
+	assert.Equal(t, "  sootup  ", resolveJavaCallgraphEngine("soot", "  sootup  "))
 }

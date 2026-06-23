@@ -114,20 +114,24 @@ func (sh SootHandler) GetSootWrapper(version string, fs ioFs.IFileSystem, arc io
 			return "", err
 		}
 	}
-	path, err := filepath.Abs(path.Join(debrickedDir, "soot-wrapper.jar"))
+	absDebrickedDir, err := filepath.Abs(debrickedDir)
+	if err != nil {
+		return "", err
+	}
+	jarPath, err := filepath.Abs(path.Join(debrickedDir, "soot-wrapper.jar"))
 	if err != nil {
 
 		return "", err
 	}
-	if _, err := fs.Stat(path); fs.IsNotExist(err) {
+	if _, err := fs.Stat(jarPath); fs.IsNotExist(err) {
 		if version == "21" {
-			return sh.initializeSootWrapper(fs, debrickedDir)
+			return sh.initializeSootWrapper(fs, absDebrickedDir)
 		}
 
-		return path, sh.downloadSootWrapper(arc, fs, path, version)
+		return jarPath, sh.downloadSootWrapper(arc, fs, jarPath, version)
 	}
 
-	return path, nil
+	return jarPath, nil
 }
 
 func (sh SootHandler) getSootHandlerJavaVersion(version int) (string, error) {

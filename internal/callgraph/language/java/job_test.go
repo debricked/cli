@@ -42,6 +42,18 @@ func TestNewJob(t *testing.T) {
 	assert.False(t, j.Errors().HasError())
 }
 
+func TestOutputNameDefault(t *testing.T) {
+	config := conf.NewConfig("java", nil, map[string]string{}, true, "maven", "")
+	j := NewJob(dir, files, testdata.NewEchoCmdFactory(), io.FileWriter{}, io.NewArchive("dir"), config, nil, io.FileSystem{}, testdata.MockSootHandler{})
+	assert.Equal(t, "debricked-call-graph.java", j.outputName())
+}
+
+func TestOutputNameSootUp(t *testing.T) {
+	config := conf.NewConfig("java", nil, map[string]string{"java-callgraph-engine": "sootup"}, true, "maven", "")
+	j := NewJob(dir, files, testdata.NewEchoCmdFactory(), io.FileWriter{}, io.NewArchive("dir"), config, nil, io.FileSystem{}, testdata.MockSootHandler{})
+	assert.Equal(t, "debricked-call-graph-sootup.java", j.outputName())
+}
+
 func TestRunMakeMavenCopyDependenciesCmdErr(t *testing.T) {
 	cmdErr := errors.New("cmd-error")
 	cmdFactoryMock := testdata.NewEchoCmdFactory()
