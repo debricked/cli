@@ -32,10 +32,36 @@ jobs:
           npm install --global bower
           bower -v
 
-      - name: Install Dart SDK
-        uses: dart-lang/setup-dart@v1
-        with:
-          sdk: stable
+      - name: Install Dart (Ubuntu)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -e
+          sudo apt-get update
+          sudo apt-get install -y apt-transport-https curl gnupg
+          curl -fsSL https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/dart-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/dart-archive-keyring.gpg] https://storage.googleapis.com/download.dartlang.org/linux/debian stable main" | sudo tee /etc/apt/sources.list.d/dart_stable.list
+          sudo apt-get update
+          sudo apt-get install -y dart
+          dart --version
+
+      - name: Install Dart (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -e
+          brew update
+          brew tap dart-lang/dart
+          brew install dart-lang/dart/dart
+          dart --version
+
+      - name: Install Dart (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install dart-sdk --no-progress -y
+          $env:Path += ";C:\tools\dart-sdk\bin"
+          dart --version
 
       - name: Install PHP & Composer (macOS)
         if: runner.os == 'macOS'
