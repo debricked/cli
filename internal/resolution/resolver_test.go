@@ -3,6 +3,8 @@ package resolution
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/debricked/cli/internal/file"
@@ -377,4 +379,39 @@ func TestGetStrictnessLevel(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestShouldGenerateLockPubDepsMissing(t *testing.T) {
+	tmpDir := t.TempDir()
+	manifest := filepath.Join(tmpDir, "pubspec.yaml")
+	lock := filepath.Join(tmpDir, "pubspec.lock")
+
+	err := os.WriteFile(manifest, []byte("name: app"), 0600)
+	assert.NoError(t, err)
+	err = os.WriteFile(lock, []byte("packages:"), 0600)
+	assert.NoError(t, err)
+
+	group := file.Group{ManifestFile: manifest, LockFiles: []string{lock}}
+
+	assert.True(t, shouldGenerateLock(group, 0))
+	assert.True(t, shouldGenerateLock(group, 1))
+}
+
+func TestShouldGenerateLockPubDepsExists(t *testing.T) {
+	tmpDir := t.TempDir()
+	manifest := filepath.Join(tmpDir, "pubspec.yaml")
+	lock := filepath.Join(tmpDir, "pubspec.lock")
+	deps := filepath.Join(tmpDir, "pubspec.deps.json")
+
+	err := os.WriteFile(manifest, []byte("name: app"), 0600)
+	assert.NoError(t, err)
+	err = os.WriteFile(lock, []byte("packages:"), 0600)
+	assert.NoError(t, err)
+	err = os.WriteFile(deps, []byte("{}"), 0600)
+	assert.NoError(t, err)
+
+	group := file.Group{ManifestFile: manifest, LockFiles: []string{lock}}
+
+	assert.False(t, shouldGenerateLock(group, 0))
+	assert.False(t, shouldGenerateLock(group, 1))
 }

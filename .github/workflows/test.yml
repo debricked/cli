@@ -32,6 +32,11 @@ jobs:
           npm install --global bower
           bower -v
 
+      - name: Install Dart SDK
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
       - name: Install PHP & Composer (macOS)
         if: runner.os == 'macOS'
         shell: bash

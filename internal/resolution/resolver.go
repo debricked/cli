@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/debricked/cli/internal/cmd/cmderror"
 	"github.com/debricked/cli/internal/file"
@@ -271,9 +273,9 @@ func shouldGenerateLock(fileGroup file.Group, regenerate int) bool {
 	}
 	switch regenerate {
 	case 0:
-		return !fileGroup.HasLockFiles()
+		return !fileGroup.HasLockFiles() || shouldGeneratePubDepsFile(fileGroup)
 	case 1:
-		return onlyNonNativeLockFiles(fileGroup.LockFiles)
+		return onlyNonNativeLockFiles(fileGroup.LockFiles) || shouldGeneratePubDepsFile(fileGroup)
 	case 2:
 		return true
 	}
@@ -291,4 +293,15 @@ func onlyNonNativeLockFiles(lockFiles []string) bool {
 
 	return true
 
+}
+
+func shouldGeneratePubDepsFile(fileGroup file.Group) bool {
+	if !strings.EqualFold(filepath.Base(fileGroup.ManifestFile), "pubspec.yaml") {
+		return false
+	}
+
+	depsFile := filepath.Join(filepath.Dir(fileGroup.ManifestFile), "pubspec.deps.json")
+	_, err := os.Stat(depsFile)
+
+	return os.IsNotExist(err)
 }
