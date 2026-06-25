@@ -10,7 +10,6 @@ func TestLanguages(t *testing.T) {
 	langs := Languages()
 	langNames := []string{
 		"java",
-		"dart",
 	}
 
 	for _, langName := range langNames {

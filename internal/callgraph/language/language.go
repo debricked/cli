@@ -1,9 +1,6 @@
 package language
 
-import (
-	"github.com/debricked/cli/internal/callgraph/language/dart"
-	"github.com/debricked/cli/internal/callgraph/language/java"
-)
+import "github.com/debricked/cli/internal/callgraph/language/java"
 
 type ILanguage interface {
 	Name() string
@@ -13,6 +10,5 @@ type ILanguage interface {
 func Languages() []ILanguage {
 	return []ILanguage{
 		java.NewLanguage(),
-		dart.NewLanguage(),
 	}
 }
