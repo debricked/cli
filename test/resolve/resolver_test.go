@@ -2,7 +2,6 @@ package resolve
 
 import (
 	"os"
-	"os/exec"
 	"path/filepath"
 	"testing"
 
@@ -19,6 +18,9 @@ func TestResolves(t *testing.T) {
 		manifestFile   string
 		lockFileName   string
 		packageManager string
+		preserveLock   bool
+		extraFileName  string
+		removeExtra    bool
 	}{
 		{
 			name:           "basic composer.json",
@@ -80,6 +82,23 @@ func TestResolves(t *testing.T) {
 			lockFileName:   "gradle.debricked.lock",
 			packageManager: "gradle",
 		},
+		{
+			name:           "basic pubspec.yaml",
+			manifestFile:   "testdata/pub/pubspec.yaml",
+			lockFileName:   "pubspec.lock",
+			packageManager: "pub",
+			extraFileName:  "pubspec.deps.json",
+			removeExtra:    true,
+		},
+		{
+			name:           "pubspec.lock exists but deps is missing",
+			manifestFile:   "testdata/pub/pubspec.yaml",
+			lockFileName:   "pubspec.lock",
+			packageManager: "pub",
+			preserveLock:   true,
+			extraFileName:  "pubspec.deps.json",
+			removeExtra:    true,
+		},
 	}
 
 	for _, cT := range cases {
@@ -92,8 +111,15 @@ func TestResolves(t *testing.T) {
 			resolveCmd := resolve.NewResolveCmd(wire.GetCliContainer().Resolver())
 			lockFileDir := filepath.Dir(c.manifestFile)
 			lockFile := filepath.Join(lockFileDir, c.lockFileName)
-			// Remove the lock file if it exists
-			os.Remove(lockFile)
+			if !c.preserveLock {
+				// Remove the lock file if it exists
+				os.Remove(lockFile)
+			}
+
+			if c.removeExtra && c.extraFileName != "" {
+				extraFile := filepath.Join(lockFileDir, c.extraFileName)
+				os.Remove(extraFile)
+			}
 
 			err := resolveCmd.RunE(resolveCmd, []string{c.manifestFile})
 			assert.NoError(t, err)
@@ -105,54 +131,13 @@ func TestResolves(t *testing.T) {
 
 			assert.Greater(t, len(actualString), 0)
 
+			if c.extraFileName != "" {
+				extraFile := filepath.Join(lockFileDir, c.extraFileName)
+				extraContents, extraErr := os.ReadFile(extraFile)
+				assert.NoError(t, extraErr)
+				assert.Greater(t, len(extraContents), 0)
+			}
+
 		})
 	}
-}
-
-// TestResolvePub verifies that `dart pub get` produces a pubspec.lock when
-// the Dart SDK is available on PATH. The test is skipped if dart is not found,
-// so it is safe to run in environments without the Dart SDK installed.
-func TestResolvePub(t *testing.T) {
-	if _, err := exec.LookPath("dart"); err != nil {
-		t.Skip("dart not found in PATH; skipping pub resolution test")
-	}
-
-	manifestFile := "testdata/pub/pubspec.yaml"
-	lockFile := "testdata/pub/pubspec.lock"
-	depsFile := "testdata/pub/pubspec.deps.json"
-
-	// Preserve and restore the original lock file if it exists so the test
-	// data directory remains clean after the test run.
-	original, readErr := os.ReadFile(lockFile)
-	originalDeps, readDepsErr := os.ReadFile(depsFile)
-
-	t.Cleanup(func() {
-		if readErr == nil {
-			_ = os.WriteFile(lockFile, original, 0600)
-		} else {
-			_ = os.Remove(lockFile)
-		}
-
-		if readDepsErr == nil {
-			_ = os.WriteFile(depsFile, originalDeps, 0600)
-		} else {
-			_ = os.Remove(depsFile)
-		}
-	})
-
-	// Remove any stale lock file so the resolver has to generate a fresh one.
-	_ = os.Remove(lockFile)
-	_ = os.Remove(depsFile)
-
-	resolveCmd := resolve.NewResolveCmd(wire.GetCliContainer().Resolver())
-	err := resolveCmd.RunE(resolveCmd, []string{manifestFile})
-	assert.NoError(t, err)
-
-	contents, fileErr := os.ReadFile(lockFile)
-	assert.NoError(t, fileErr)
-	assert.Greater(t, len(contents), 0)
-
-	depsContents, depsErr := os.ReadFile(depsFile)
-	assert.NoError(t, depsErr)
-	assert.Greater(t, len(depsContents), 0)
 }
