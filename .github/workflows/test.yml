@@ -32,45 +32,10 @@ jobs:
           npm install --global bower
           bower -v
 
-      - name: Install Dart (Ubuntu)
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          set -e
-          sudo apt-get update
-          sudo apt-get install -y apt-transport-https curl gnupg
-          curl -fsSL https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/dart-archive-keyring.gpg
-          echo "deb [signed-by=/usr/share/keyrings/dart-archive-keyring.gpg] https://storage.googleapis.com/download.dartlang.org/linux/debian stable main" | sudo tee /etc/apt/sources.list.d/dart_stable.list
-          sudo apt-get update
-          sudo apt-get install -y dart
-          dart --version
-
-      - name: Install Dart (macOS)
-        if: runner.os == 'macOS'
-        shell: bash
-        run: |
-          set -e
-          ARCH="x64"
-          if [ "$(uname -m)" = "arm64" ]; then
-            ARCH="arm64"
-          fi
-          DART_ZIP="dartsdk-macos-${ARCH}-release.zip"
-          curl -fsSL "https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/${DART_ZIP}" -o dart-sdk.zip
-          rm -rf "$HOME/.local/dart-sdk"
-          mkdir -p "$HOME/.local"
-          unzip -q dart-sdk.zip -d "$HOME/.local"
-          rm -f dart-sdk.zip
-          echo "$HOME/.local/dart-sdk/bin" >> "$GITHUB_PATH"
-          export PATH="$HOME/.local/dart-sdk/bin:$PATH"
-          dart --version
-
-      - name: Install Dart (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          choco install dart-sdk --no-progress -y
-          $env:Path += ";C:\tools\dart-sdk\bin"
-          dart --version
+      - name: Install Dart SDK
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
 
       - name: Install PHP & Composer (macOS)
         if: runner.os == 'macOS'
