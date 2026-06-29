@@ -101,7 +101,8 @@ RUN apt -y update && apt -y install ca-certificates && \
     -o Dpkg::Options::="--force-overwrite" \
     python3.13 \
     python3.13-venv && \
-    python3.13 -m ensurepip --break-system-packages && \
+    apt -y install -t unstable --no-install-recommends \
+    python3-pip && \
     apt -y install --no-install-recommends \
     openjdk-21-jdk
 
