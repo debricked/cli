@@ -103,7 +103,7 @@ RUN apt -y update && apt -y install ca-certificates && \
     python3.13-venv && \
     apt -y install -t unstable --no-install-recommends \
     python3-pip && \
-    apt -y install --no-install-recommends \
+    apt -y install -t unstable --no-install-recommends \
     openjdk-21-jdk
 
 RUN dotnet --version && go version
