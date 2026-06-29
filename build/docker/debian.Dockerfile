@@ -97,14 +97,11 @@ RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh \
     && dotnet help
 
 RUN apt -y update && apt -y install ca-certificates && \
-    apt -y install -t unstable --no-install-recommends \
-    -o Dpkg::Options::="--force-overwrite" \
-    python3.13 \
-    python3.13-venv && \
-    apt -y install -t unstable --no-install-recommends \
-    python3-pip && \
-    apt -y install -t unstable --no-install-recommends \
-    openjdk-21-jdk
+    apt -y install --no-install-recommends \
+    python3 \
+    python3-venv \
+    python3-pip \
+    openjdk-17-jdk
 
 RUN dotnet --version && go version
 
