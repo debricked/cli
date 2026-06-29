@@ -96,6 +96,9 @@ RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh \
     && rm ./dotnet-install.sh \
     && dotnet help
 
+#Prevent systemd from being configured to avoid QEMU segfaults on arm64
+RUN echo 'exit 101' > /usr/sbin/policy-rc.d && chmod +x /usr/sbin/policy-rc.d
+
 RUN apt -y update && apt -y install ca-certificates && \
     apt -y install --no-install-recommends \
     python3 \
