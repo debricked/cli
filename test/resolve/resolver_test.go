@@ -112,7 +112,7 @@ func TestResolves(t *testing.T) {
 			lockFileDir := filepath.Dir(c.manifestFile)
 			lockFile := filepath.Join(lockFileDir, c.lockFileName)
 			if !c.preserveLock {
-				// Remove the lock file if it exists
+				// Remove the lock file if it exists.
 				os.Remove(lockFile)
 			}
 
