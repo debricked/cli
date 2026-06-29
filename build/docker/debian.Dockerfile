@@ -50,7 +50,7 @@ RUN echo "deb http://deb.debian.org/debian unstable main" >> /etc/apt/sources.li
 #    echo "Pin: release a=testing" >> /etc/apt/preferences && \
 #    echo "Pin-Priority: -3" >> /etc/apt/preferences
 
-RUN apt -y update && apt -y upgrade && apt -y install curl gnupg unzip && \
+RUN apt -y update && apt -y install curl gnupg unzip && \
     apt -y clean && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /etc/apt/keyrings
@@ -73,7 +73,7 @@ RUN curl -fsSLO https://services.gradle.org/distributions/gradle-$GRADLE_VERSION
 ENV NODE_MAJOR="20"
 RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
 RUN echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
-RUN apt -y update && apt -y upgrade && apt -y install nodejs && \
+RUN apt -y update && apt -y install nodejs && \
     apt -y clean && rm -rf /var/lib/apt/lists/*
 RUN npm install --global npm@latest && \
     npm install --global yarn && \
@@ -96,15 +96,8 @@ RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh \
     && rm ./dotnet-install.sh \
     && dotnet help
 
-# Prevent systemd from being configured to avoid QEMU segfaults on arm64
-RUN echo 'exit 101' > /usr/sbin/policy-rc.d && chmod +x /usr/sbin/policy-rc.d
-
 RUN apt -y update && apt -y install ca-certificates && \
-    apt-mark hold systemd && \
-    apt -y -o Dpkg::Options::="--force-overwrite" \
-          -o Dpkg::Options::="--force-confold" \
-          -o Dpkg::Options::="--force-confdef" \
-          install -t unstable --no-install-recommends \
+    apt -y install -t unstable --no-install-recommends \
     python3.13 \
     python3.13-venv \
     python3-pip \
@@ -115,12 +108,8 @@ RUN apt -y update && apt -y install ca-certificates && \
 RUN dotnet --version && go version
 
 RUN apt update -y && \
-    apt install -y --no-install-recommends \
-    lsb-release \
-    apt-transport-https \
-    ca-certificates \
-    software-properties-common && \
-    curl -fsSL -o /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
+    apt install lsb-release apt-transport-https ca-certificates software-properties-common -y && \
+    curl -o /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
     sh -c 'echo "deb https://packages.sury.org/php/ bookworm main" > /etc/apt/sources.list.d/php.list' && \
     apt -y clean && rm -rf /var/lib/apt/lists/*
 
@@ -145,7 +134,7 @@ RUN apt -y update && apt -y install \
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
 
-RUN ln -sf /usr/bin/python3.13 /usr/bin/python3 && php -v && composer --version && python3 --version
+RUN php -v && composer --version && python3 --version
 
 # Install Poetry for Python resolution (pyproject.toml)
 RUN curl -sSL https://install.python-poetry.org | python3 - && \
