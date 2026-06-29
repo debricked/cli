@@ -99,11 +99,10 @@ RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh \
 RUN apt -y update && apt -y install ca-certificates && \
     apt -y install -t unstable --no-install-recommends \
     python3.13 \
-    python3.13-venv \
+    python3.13-venv && \
+    apt -y install --no-install-recommends \
     python3-pip \
-    openjdk-21-jdk && \
-    apt -y clean && rm -rf /var/lib/apt/lists/* && \
-    ln -s /usr/bin/python3.13 /usr/bin/python
+    openjdk-17-jdk
 
 RUN dotnet --version && go version
 
