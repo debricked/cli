@@ -18,6 +18,9 @@ func TestResolves(t *testing.T) {
 		manifestFile   string
 		lockFileName   string
 		packageManager string
+		preserveLock   bool
+		extraFileName  string
+		removeExtra    bool
 	}{
 		{
 			name:           "basic composer.json",
@@ -79,6 +82,23 @@ func TestResolves(t *testing.T) {
 			lockFileName:   "gradle.debricked.lock",
 			packageManager: "gradle",
 		},
+		{
+			name:           "basic pubspec.yaml",
+			manifestFile:   "testdata/pub/pubspec.yaml",
+			lockFileName:   "pubspec.lock",
+			packageManager: "pub",
+			extraFileName:  "pubspec.deps.json",
+			removeExtra:    true,
+		},
+		{
+			name:           "pubspec.lock exists but deps is missing",
+			manifestFile:   "testdata/pub/pubspec.yaml",
+			lockFileName:   "pubspec.lock",
+			packageManager: "pub",
+			preserveLock:   true,
+			extraFileName:  "pubspec.deps.json",
+			removeExtra:    true,
+		},
 	}
 
 	for _, cT := range cases {
@@ -91,8 +111,15 @@ func TestResolves(t *testing.T) {
 			resolveCmd := resolve.NewResolveCmd(wire.GetCliContainer().Resolver())
 			lockFileDir := filepath.Dir(c.manifestFile)
 			lockFile := filepath.Join(lockFileDir, c.lockFileName)
-			// Remove the lock file if it exists
-			os.Remove(lockFile)
+			if !c.preserveLock {
+				// Remove the lock file if it exists.
+				os.Remove(lockFile)
+			}
+
+			if c.removeExtra && c.extraFileName != "" {
+				extraFile := filepath.Join(lockFileDir, c.extraFileName)
+				os.Remove(extraFile)
+			}
 
 			err := resolveCmd.RunE(resolveCmd, []string{c.manifestFile})
 			assert.NoError(t, err)
@@ -103,6 +130,13 @@ func TestResolves(t *testing.T) {
 			actualString := string(lockFileContents)
 
 			assert.Greater(t, len(actualString), 0)
+
+			if c.extraFileName != "" {
+				extraFile := filepath.Join(lockFileDir, c.extraFileName)
+				extraContents, extraErr := os.ReadFile(extraFile)
+				assert.NoError(t, extraErr)
+				assert.Greater(t, len(extraContents), 0)
+			}
 
 		})
 	}

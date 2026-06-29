@@ -14,6 +14,7 @@ import (
 	"github.com/debricked/cli/internal/resolution/pm/pip"
 	"github.com/debricked/cli/internal/resolution/pm/pnpm"
 	"github.com/debricked/cli/internal/resolution/pm/poetry"
+	"github.com/debricked/cli/internal/resolution/pm/pub"
 	"github.com/debricked/cli/internal/resolution/pm/sbt"
 	"github.com/debricked/cli/internal/resolution/pm/uv"
 	"github.com/debricked/cli/internal/resolution/pm/yarn"
@@ -59,6 +60,8 @@ func (sf Factory) Make(pmFileBatch file.IBatch, paths []string) (IStrategy, erro
 		return composer.NewStrategy(pmFileBatch.Files()), nil
 	case sbt.Name:
 		return sbt.NewStrategy(pmFileBatch.Files()), nil
+	case pub.Name:
+		return pub.NewStrategy(pmFileBatch.Files()), nil
 	default:
 		return nil, fmt.Errorf("failed to make strategy from %s", name)
 	}

@@ -11,6 +11,7 @@ import (
 	"github.com/debricked/cli/internal/resolution/pm/nuget"
 	"github.com/debricked/cli/internal/resolution/pm/pip"
 	"github.com/debricked/cli/internal/resolution/pm/poetry"
+	"github.com/debricked/cli/internal/resolution/pm/pub"
 	"github.com/debricked/cli/internal/resolution/pm/sbt"
 	"github.com/debricked/cli/internal/resolution/pm/testdata"
 	"github.com/debricked/cli/internal/resolution/pm/yarn"
@@ -41,6 +42,7 @@ func TestMake(t *testing.T) {
 		nuget.Name:    nuget.NewStrategy(nil),
 		composer.Name: composer.NewStrategy(nil),
 		sbt.Name:      sbt.NewStrategy(nil),
+		pub.Name:      pub.NewStrategy(nil),
 	}
 	f := NewStrategyFactory()
 	var batch file.IBatch

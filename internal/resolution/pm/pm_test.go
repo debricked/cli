@@ -13,6 +13,7 @@ func TestPms(t *testing.T) {
 		"go",
 		"gradle",
 		"composer",
+		"pub",
 	}
 
 	for _, pmName := range pmNames {

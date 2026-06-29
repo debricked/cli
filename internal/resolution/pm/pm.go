@@ -11,6 +11,7 @@ import (
 	"github.com/debricked/cli/internal/resolution/pm/pip"
 	"github.com/debricked/cli/internal/resolution/pm/pnpm"
 	"github.com/debricked/cli/internal/resolution/pm/poetry"
+	"github.com/debricked/cli/internal/resolution/pm/pub"
 	"github.com/debricked/cli/internal/resolution/pm/sbt"
 	"github.com/debricked/cli/internal/resolution/pm/uv"
 	"github.com/debricked/cli/internal/resolution/pm/yarn"
@@ -36,5 +37,6 @@ func Pms() []IPm {
 		nuget.NewPm(),
 		composer.NewPm(),
 		sbt.NewPm(),
+		pub.NewPm(),
 	}
 }
