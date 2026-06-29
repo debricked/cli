@@ -115,8 +115,12 @@ RUN apt -y update && apt -y install ca-certificates && \
 RUN dotnet --version && go version
 
 RUN apt update -y && \
-    apt install -t unstable lsb-release apt-transport-https ca-certificates software-properties-common -y && \
-    curl -o /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
+    apt install -y --no-install-recommends \
+    lsb-release \
+    apt-transport-https \
+    ca-certificates \
+    software-properties-common && \
+    curl -fsSL -o /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
     sh -c 'echo "deb https://packages.sury.org/php/ bookworm main" > /etc/apt/sources.list.d/php.list' && \
     apt -y clean && rm -rf /var/lib/apt/lists/*
 
