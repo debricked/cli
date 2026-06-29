@@ -97,7 +97,8 @@ RUN curl -fsSLO https://dot.net/v1/dotnet-install.sh \
     && dotnet help
 
 RUN apt -y update && apt -y install ca-certificates && \
-    apt -y install -t unstable --no-install-recommends \
+    apt -y install -t unstable --no-install-recommends --allow-downgrades --allow-change-held-packages \
+    -o Dpkg::Options::="--force-overwrite" \
     python3.13 \
     python3.13-venv && \
     apt -y install --no-install-recommends \
