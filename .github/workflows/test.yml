@@ -50,9 +50,18 @@ jobs:
         shell: bash
         run: |
           set -e
-          brew update
-          brew tap dart-lang/dart
-          brew install dart-lang/dart/dart
+          ARCH="x64"
+          if [ "$(uname -m)" = "arm64" ]; then
+            ARCH="arm64"
+          fi
+          DART_ZIP="dartsdk-macos-${ARCH}-release.zip"
+          curl -fsSL "https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/${DART_ZIP}" -o dart-sdk.zip
+          rm -rf "$HOME/.local/dart-sdk"
+          mkdir -p "$HOME/.local"
+          unzip -q dart-sdk.zip -d "$HOME/.local"
+          rm -f dart-sdk.zip
+          echo "$HOME/.local/dart-sdk/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.local/dart-sdk/bin:$PATH"
           dart --version
 
       - name: Install Dart (Windows)
