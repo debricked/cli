@@ -58,6 +58,28 @@ func TestMatch(t *testing.T) {
 	}
 }
 
+func TestMatchSPDX(t *testing.T) {
+	f := Format{
+		ManifestFileRegex: "",
+		DocumentationUrl:  "",
+		LockFileRegexes:   []string{"^.*\\.spdx\\.json$"},
+	}
+	compiledF, _ := NewCompiledFormat(&f)
+	var gs Groups
+
+	matched := gs.Match(compiledF, "directory/example.spdx.json", false)
+	assert.True(t, matched, "failed to assert that the SPDX file matched")
+	assert.Equal(t, 1, gs.Size(), "failed to assert that there was one Group in Groups")
+
+	g := gs.groups[0]
+	assert.False(t, g.HasFile(), "failed to assert that SPDX group had no manifest file")
+	assert.Len(t, g.LockFiles, 1, "failed to assert that there was one SPDX lock file")
+	assert.Equal(t, "directory/example.spdx.json", g.LockFiles[0], "failed to assert SPDX lock file name")
+
+	// A non-SPDX json file must not match this format.
+	assert.False(t, gs.Match(compiledF, "directory/package.json", false), "failed to assert that a non-SPDX file did not match")
+}
+
 func TestGetFiles(t *testing.T) {
 	g1 := NewGroup("file1", nil, []string{"lockfile1"})
 	g2 := NewGroup("", nil, []string{"lockfile2"})

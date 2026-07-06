@@ -1,0 +1,27 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "example-project",
+  "documentNamespace": "https://debricked.com/spdxdocs/example-project",
+  "creationInfo": {
+    "created": "2024-01-01T00:00:00Z",
+    "creators": ["Tool: debricked-cli"]
+  },
+  "packages": [
+    {
+      "name": "lodash",
+      "SPDXID": "SPDXRef-Package-lodash",
+      "versionInfo": "4.17.21",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "MIT",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/lodash@4.17.21"
+        }
+      ]
+    }
+  ]
+}
