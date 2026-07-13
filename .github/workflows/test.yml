@@ -123,9 +123,6 @@ jobs:
           java-version: ${{matrix.java}}
           distribution: 'temurin'
 
-      - name: Build embedded SootUp wrapper
-        run: make build-sootup-jar-embed
-
       - name: Install Debricked CLI
         run: |
           go install -ldflags "-X main.version=${{ secrets.DEBRICKED_VERSION }}" ./cmd/debricked
