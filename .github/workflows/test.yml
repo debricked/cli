@@ -175,6 +175,6 @@ jobs:
           cd cmd/debricked
           go generate -v -x
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v8
         with:
-          version: v1.62
+          version: v1.62.2
