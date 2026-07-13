@@ -174,7 +174,7 @@ jobs:
         run: |
           cd cmd/debricked
           go generate -v -x
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.62.2
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v4
-        with:
-          version: v1.62
+        run: $(go env GOPATH)/bin/golangci-lint run ./...
