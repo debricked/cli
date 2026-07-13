@@ -11,8 +11,25 @@ import (
 )
 
 func TestGenerateCallgraph(t *testing.T) {
+	testGenerateCallgraph(t, filepath.Join("testdata", "mvnproj-build"), []string{"callgraph"})
+}
 
-	mavenProjectPath := filepath.Join("testdata", "mvnproj-build")
+func TestGenerateCallgraphSootUp(t *testing.T) {
+	testGenerateCallgraph(t, filepath.Join("testdata", "mvnproj-build"), []string{"callgraph", "--java-callgraph-engine", "sootup"})
+}
+
+func TestGenerateCallgraphNoBuild(t *testing.T) {
+	testGenerateCallgraphNoBuild(t, filepath.Join("testdata", "mvnproj-no-build"), []string{"callgraph", "--no-build"})
+}
+
+func TestGenerateCallgraphNoBuildSootUp(t *testing.T) {
+	testGenerateCallgraphNoBuild(t, filepath.Join("testdata", "mvnproj-no-build"), []string{"callgraph", "--no-build", "--java-callgraph-engine", "sootup"})
+}
+
+func testGenerateCallgraph(t *testing.T, mavenProjectPath string, commandArgs []string) {
+	t.Helper()
+	requireDebrickedBinary(t)
+
 	tmpFolder := filepath.Join(mavenProjectPath, ".debrickedTmpFolder")
 	targetFolder := filepath.Join(mavenProjectPath, "target")
 	callgraphFile := filepath.Join(mavenProjectPath, "debricked-call-graph.java")
@@ -21,7 +38,7 @@ func TestGenerateCallgraph(t *testing.T) {
 	assert.NoDirExists(t, targetFolder)
 	assert.NoFileExists(t, callgraphFile)
 
-	args := []string{"callgraph", mavenProjectPath}
+	args := append(commandArgs, mavenProjectPath)
 	out, err := exec.Command("debricked", args...).Output()
 	fmt.Println("debricked callgraph output:")
 	fmt.Println(string(out))
@@ -35,12 +52,12 @@ func TestGenerateCallgraph(t *testing.T) {
 	os.RemoveAll(tmpFolder)
 	os.RemoveAll(targetFolder)
 	os.Remove(callgraphFile)
-
 }
 
-func TestGenerateCallgraphNoBuild(t *testing.T) {
+func testGenerateCallgraphNoBuild(t *testing.T, mavenProjectPath string, commandArgs []string) {
+	t.Helper()
+	requireDebrickedBinary(t)
 
-	mavenProjectPath := filepath.Join("testdata", "mvnproj-no-build")
 	tmpFolder := filepath.Join(mavenProjectPath, ".debrickedTmpFolder")
 	targetFolder := filepath.Join(mavenProjectPath, "target")
 	callgraphFile := filepath.Join(mavenProjectPath, "debricked-call-graph.java")
@@ -53,7 +70,7 @@ func TestGenerateCallgraphNoBuild(t *testing.T) {
 	assert.NoError(t, targetErr)
 	targetFolderModTimeBefore := targetFolderInfoBefore.ModTime()
 
-	args := []string{"callgraph", mavenProjectPath, "--no-build"}
+	args := append(commandArgs, mavenProjectPath)
 	out, err := exec.Command("debricked", args...).Output()
 	fmt.Println("debricked callgraph --no-build output:")
 	fmt.Println(string(out))
@@ -67,7 +84,13 @@ func TestGenerateCallgraphNoBuild(t *testing.T) {
 	assert.True(t, tmpFolderModTimeBefore == tmpFolderModTimeAfter)
 	assert.True(t, targetFolderModTimeBefore == targetFolderModTimeAfter)
 	assert.FileExists(t, callgraphFile)
-
 	os.Remove(callgraphFile)
+}
 
+func requireDebrickedBinary(t *testing.T) {
+	t.Helper()
+
+	if _, err := exec.LookPath("debricked"); err != nil {
+		t.Skip("debricked binary is not available in PATH")
+	}
 }

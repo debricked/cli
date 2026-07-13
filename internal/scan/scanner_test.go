@@ -822,8 +822,43 @@ func TestScanWithCallgraph(t *testing.T) {
 	}
 	err := scanner.Scan(opts)
 	assert.ErrorContains(t, err, "failed to find dependency files")
+	assert.Len(t, generatorMock.LastOptions.Configs, 2)
+	assert.Equal(t, "soot", generatorMock.LastOptions.Configs[0].Kwargs()["java-callgraph-engine"])
 	cwd, _ = os.Getwd()
 	assert.Contains(t, cwd, path)
+}
+
+func TestScanWithCallgraphSootUpEngine(t *testing.T) {
+	if runtime.GOOS == windowsOS {
+		t.Skipf("TestScan is skipped due to Windows env")
+	}
+	clientMock := testdata.NewDebClientMock()
+	addMockedFormatsResponse(clientMock, "yarn\\.lock")
+	addMockedFileUploadResponse(clientMock)
+	addMockedFinishResponse(clientMock, http.StatusNoContent)
+	addMockedStatusResponse(clientMock, http.StatusOK, 100)
+
+	generatorMock := callgraphTestdata.GeneratorMock{}
+
+	scanner := makeScanner(clientMock, nil, &generatorMock)
+	scanner.fingerprint = fingerprint.NewFingerprinter()
+
+	cwd, _ := os.Getwd()
+	defer resetWd(t, cwd)
+
+	opts := DebrickedOptions{
+		Path:                testdataNpm,
+		Resolve:             false,
+		Fingerprint:         false,
+		CallGraph:           true,
+		JavaCallgraphEngine: "sootup",
+		RepositoryName:      testdataNpm,
+		CommitName:          "testdata/npm-commit-callgraph-sootup",
+	}
+	err := scanner.Scan(opts)
+	assert.ErrorContains(t, err, "failed to find dependency files")
+	assert.Len(t, generatorMock.LastOptions.Configs, 2)
+	assert.Equal(t, "sootup", generatorMock.LastOptions.Configs[0].Kwargs()["java-callgraph-engine"])
 }
 
 func TestScanWithSBOMReport(t *testing.T) {

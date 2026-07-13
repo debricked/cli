@@ -154,6 +154,13 @@ func TestInitUpload(t *testing.T) {
 	assert.Equal(t, 1, batch.ciUploadId)
 }
 
+func TestIsCallgraphFile(t *testing.T) {
+	assert.True(t, isCallgraphFile("debricked-call-graph.java"))
+	assert.True(t, isCallgraphFile("debricked-call-graph.golang"))
+	assert.True(t, isCallgraphFile("debricked-call-graph-sootup.java"))
+	assert.False(t, isCallgraphFile("package.json"))
+}
+
 func TestGetDebrickedConfig(t *testing.T) {
 	config := GetDebrickedConfig(filepath.Join("testdata", "debricked-config.yaml"))
 	configJSON, err := json.Marshal(config)

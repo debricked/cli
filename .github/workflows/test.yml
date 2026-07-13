@@ -97,7 +97,7 @@ jobs:
     strategy:
       matrix: 
         os: [ 'ubuntu-latest', 'macos-latest', 'windows-latest' ]
-        java: [11, 17, 20]
+        java: [11, 17, 21]
       fail-fast: false
     runs-on: ${{ matrix.os }}
 
@@ -122,6 +122,9 @@ jobs:
         with:
           java-version: ${{matrix.java}}
           distribution: 'temurin'
+
+      - name: Build embedded SootUp wrapper
+        run: make build-sootup-jar-embed
 
       - name: Install Debricked CLI
         run: |

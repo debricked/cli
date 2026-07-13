@@ -32,6 +32,10 @@ var (
 
 const callgraphName = "debricked-call-graph"
 
+func isCallgraphFile(filePath string) bool {
+	return strings.HasPrefix(filepath.Base(filePath), callgraphName)
+}
+
 type uploadBatch struct {
 	client             *client.IDebClient
 	fileGroups         file.Groups
@@ -74,7 +78,7 @@ func (uploadBatch *uploadBatch) upload() error {
 			fileName := filepath.Base(f)
 			var err error
 			timeout := 0
-			if strings.HasSuffix(fileName, callgraphName) {
+			if isCallgraphFile(fileName) {
 				timeout = uploadBatch.callGraphTimeout
 			}
 			err = uploadBatch.uploadFile(f, timeout)
@@ -277,7 +281,7 @@ func (uploadBatch *uploadBatch) initUpload() ([]string, error) {
 		entryFile = files[0]
 		files = files[1:]
 		timeout := 0
-		if strings.HasSuffix(filepath.Base(entryFile), callgraphName) {
+		if isCallgraphFile(entryFile) {
 			timeout = 30
 		}
 		err = uploadBatch.uploadFile(entryFile, timeout)

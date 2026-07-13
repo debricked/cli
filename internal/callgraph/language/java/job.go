@@ -4,7 +4,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"strings"
 	"syscall"
 
 	"github.com/debricked/cli/internal/callgraph/cgexec"
@@ -15,11 +14,10 @@ import (
 )
 
 const (
-	maven            = "maven"
-	gradle           = "gradle"
-	dependencyDir    = ".debrickedTmpFolder"
-	outputName       = "debricked-call-graph.java"
-	outputNameSootUp = "debricked-call-graph-sootup.java"
+	maven         = "maven"
+	gradle        = "gradle"
+	dependencyDir = ".debrickedTmpFolder"
+	outputName    = "debricked-call-graph.java"
 )
 
 type Job struct {
@@ -160,11 +158,5 @@ func (j *Job) runPostProcess() {
 }
 
 func (j *Job) outputName() string {
-	if j.config != nil {
-		if engine, ok := j.config.Kwargs()["java-callgraph-engine"]; ok && strings.EqualFold(strings.TrimSpace(engine), "sootup") {
-			return outputNameSootUp
-		}
-	}
-
 	return outputName
 }
