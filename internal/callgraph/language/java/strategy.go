@@ -34,7 +34,6 @@ const (
 
 func (s Strategy) Invoke() ([]job.IJob, error) {
 	var jobs []job.IJob
-	// Filter relevant files
 
 	if s.config == nil {
 		strategyWarning("No config is setup")
@@ -83,37 +82,11 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	absClassDirs, _ := finder.ConvertPathsToAbsPaths(javaClassDirs)
 	rootClassMapping := finder.MapFilesToDir(absRoots, absClassDirs)
 
-	foundRootsWoClasses := 0
-	for _, root := range absRoots {
-		if _, ok := rootClassMapping[root]; !ok {
-			foundRootsWoClasses += 1
-		}
-	}
+	foundRootsWoClasses := countRootsWithoutClasses(absRoots, rootClassMapping)
 	if foundRootsWoClasses > 0 {
 		strategyWarning("Found " + fmt.Sprint(foundRootsWoClasses) + " roots without related classes, make sure to build your project before running.")
 	}
-	for rootFile, classDirs := range rootClassMapping {
-		handler := selectJavaCallgraphHandler(s.config)
-		if _, isSootUp := handler.(SootUpHandler); isSootUp {
-			classDirs = normalizeSootUpUserClassDirs(classDirs)
-		}
-
-		// For each class paths dir within the root, find GCDPath as entrypoint
-		// classDir := finder.GCDPath(classDirs)
-		rootDir := filepath.Dir(rootFile)
-		jobs = append(jobs, NewJob(
-			rootDir,
-			classDirs,
-			s.cmdFactory,
-			io.FileWriter{},
-			io.NewArchive(rootDir),
-			s.config,
-			s.ctx,
-			io.FileSystem{},
-			handler,
-		),
-		)
-	}
+	jobs = s.createJobs(rootClassMapping)
 
 	return jobs, nil
 }
@@ -131,13 +104,57 @@ func selectJavaCallgraphHandler(config conf.IConfig) ISootHandler {
 
 	switch engine {
 	case "", javaCallgraphEngineSoot:
-		return SootHandler{cliVersion}
+		handler := SootHandler{cliVersion}
+
+		return handler
 	case javaCallgraphEngineSootUp:
-		return SootUpHandler{cliVersion}
+		handler := SootUpHandler{cliVersion}
+
+		return handler
 	default:
 		strategyWarning(fmt.Sprintf("Unknown %s value '%s'; defaulting to '%s'", javaCallgraphEngineEnv, engine, javaCallgraphEngineSoot))
-		return SootHandler{cliVersion}
+		handler := SootHandler{cliVersion}
+
+		return handler
 	}
+}
+
+func countRootsWithoutClasses(absRoots []string, rootClassMapping map[string][]string) int {
+	foundRootsWoClasses := 0
+	for _, root := range absRoots {
+		if _, ok := rootClassMapping[root]; !ok {
+			foundRootsWoClasses++
+		}
+	}
+
+	return foundRootsWoClasses
+}
+
+func (s Strategy) createJobs(rootClassMapping map[string][]string) []job.IJob {
+	jobs := make([]job.IJob, 0, len(rootClassMapping))
+	handler := selectJavaCallgraphHandler(s.config)
+
+	for rootFile, classDirs := range rootClassMapping {
+		if _, isSootUp := handler.(SootUpHandler); isSootUp {
+			classDirs = normalizeSootUpUserClassDirs(classDirs)
+		}
+
+		rootDir := filepath.Dir(rootFile)
+		jobs = append(jobs, NewJob(
+			rootDir,
+			classDirs,
+			s.cmdFactory,
+			io.FileWriter{},
+			io.NewArchive(rootDir),
+			s.config,
+			s.ctx,
+			io.FileSystem{},
+			handler,
+		),
+		)
+	}
+
+	return jobs
 }
 
 func normalizeSootUpUserClassDirs(classDirs []string) []string {

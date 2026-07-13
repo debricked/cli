@@ -55,4 +55,3 @@ func TestSootHandlerComponent_GetSootWrapperReturnsExistingPath(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, strings.HasSuffix(filepath.ToSlash(p), "/.debricked/soot-wrapper.jar"))
 }
-
