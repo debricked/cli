@@ -154,6 +154,11 @@ func TestNormalizeSootUpUserClassDirsDeduplicatesRoots(t *testing.T) {
 
 	assert.ElementsMatch(t, []string{
 		filepath.Join("/tmp", "demo", "target", "classes"),
-		filepath.Join("/tmp", "demo", "target", "test-classes"),
 	}, out)
+}
+
+func TestIsSootUpTestClassRoot(t *testing.T) {
+	assert.True(t, isSootUpTestClassRoot(filepath.Join("/tmp", "demo", "target", "test-classes")))
+	assert.True(t, isSootUpTestClassRoot(filepath.Join("/tmp", "demo", "build", "classes", "java", "test")))
+	assert.False(t, isSootUpTestClassRoot(filepath.Join("/tmp", "demo", "target", "classes")))
 }

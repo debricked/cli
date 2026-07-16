@@ -59,3 +59,19 @@ func TestRunCallGraphErrorMock(t *testing.T) {
 
 	assert.NotNil(t, err)
 }
+
+func TestIsSootUpWrapperJar(t *testing.T) {
+	assert.True(t, isSootUpWrapperJar("/tmp/.debricked/SootUpWrapper.jar"))
+	assert.False(t, isSootUpWrapperJar("/tmp/.debricked/soot-wrapper.jar"))
+}
+
+func TestExtractSootUpDiagnostics(t *testing.T) {
+	stdout := "[SootUpWrapper] Call graph succeeded after excluding 1 problematic jar(s): [foo.jar]\n"
+	stderr := "[SootUpWrapper] Warning: TypeAssigner bug in jar 'foo.jar' (x)\n  Excluding jar from deep analysis and retrying...\n"
+	lines := extractSootUpDiagnostics(stdout, stderr)
+
+	assert.Len(t, lines, 3)
+	assert.Contains(t, lines[0], "Call graph succeeded after excluding")
+	assert.Contains(t, lines[1], "TypeAssigner bug in jar")
+	assert.Contains(t, lines[2], "Excluding jar from deep analysis and retrying")
+}

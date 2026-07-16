@@ -162,6 +162,9 @@ func normalizeSootUpUserClassDirs(classDirs []string) []string {
 
 	for _, classDir := range classDirs {
 		normalized := normalizeToClassRoot(classDir)
+		if isSootUpTestClassRoot(normalized) {
+			continue
+		}
 		roots[normalized] = struct{}{}
 	}
 
@@ -171,6 +174,21 @@ func normalizeSootUpUserClassDirs(classDirs []string) []string {
 	}
 
 	return result
+}
+
+func isSootUpTestClassRoot(path string) bool {
+	testMarkers := []string{
+		filepath.Join("target", "test-classes"),
+		filepath.Join("build", "classes", "java", "test"),
+	}
+
+	for _, marker := range testMarkers {
+		if strings.Contains(path, marker) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func normalizeToClassRoot(classDir string) string {
