@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGenerateCallgraph(t *testing.T) {
@@ -64,10 +65,16 @@ func testGenerateCallgraphNoBuild(t *testing.T, mavenProjectPath string, command
 
 	assert.NoFileExists(t, callgraphFile)
 	tmpFolderInfoBefore, tmpErr := os.Stat(tmpFolder)
-	assert.NoError(t, tmpErr)
-	tmpFolderModTimeBefore := tmpFolderInfoBefore.ModTime()
+	tmpFolderExistsBefore := tmpErr == nil
+	var tmpFolderModTimeBefore interface{} = nil
+	if tmpFolderExistsBefore {
+		tmpFolderModTimeBefore = tmpFolderInfoBefore.ModTime()
+	} else {
+		assert.True(t, os.IsNotExist(tmpErr))
+	}
+
 	targetFolderInfoBefore, targetErr := os.Stat(targetFolder)
-	assert.NoError(t, targetErr)
+	require.NoError(t, targetErr)
 	targetFolderModTimeBefore := targetFolderInfoBefore.ModTime()
 
 	args := append(commandArgs, mavenProjectPath)
@@ -77,10 +84,18 @@ func testGenerateCallgraphNoBuild(t *testing.T, mavenProjectPath string, command
 	assert.NoError(t, err)
 	assert.NotContains(t, string(out), "Errors")
 
-	tmpFolderInfoAfter, _ := os.Stat(tmpFolder)
-	tmpFolderModTimeAfter := tmpFolderInfoAfter.ModTime()
+	tmpFolderInfoAfter, tmpErrAfter := os.Stat(tmpFolder)
+	tmpFolderExistsAfter := tmpErrAfter == nil
+	var tmpFolderModTimeAfter interface{} = nil
+	if tmpFolderExistsAfter {
+		tmpFolderModTimeAfter = tmpFolderInfoAfter.ModTime()
+	} else {
+		assert.True(t, os.IsNotExist(tmpErrAfter))
+	}
+
 	targetFolderInfoAfter, _ := os.Stat(targetFolder)
 	targetFolderModTimeAfter := targetFolderInfoAfter.ModTime()
+	assert.Equal(t, tmpFolderExistsBefore, tmpFolderExistsAfter)
 	assert.True(t, tmpFolderModTimeBefore == tmpFolderModTimeAfter)
 	assert.True(t, targetFolderModTimeBefore == targetFolderModTimeAfter)
 	assert.FileExists(t, callgraphFile)
