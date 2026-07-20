@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/debricked/cli/internal/callgraph/cgexec"
@@ -94,29 +95,56 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 func selectJavaCallgraphHandler(config conf.IConfig) ISootHandler {
 	engine := ""
 	cliVersion := ""
+	verbose := false
 	if config != nil {
 		cliVersion = config.Version()
 		engine = strings.ToLower(strings.TrimSpace(config.Kwargs()["java-callgraph-engine"]))
+		verbose = isVerboseEnabled(config)
 	}
 	if engine == "" {
 		engine = strings.ToLower(strings.TrimSpace(os.Getenv(javaCallgraphEngineEnv)))
 	}
 
+	selectedEngine := javaCallgraphEngineSoot
 	switch engine {
 	case "", javaCallgraphEngineSoot:
+		selectedEngine = javaCallgraphEngineSoot
 		handler := SootHandler{cliVersion}
+		logSelectedJavaCallgraphEngine(verbose, selectedEngine)
 
 		return handler
 	case javaCallgraphEngineSootUp:
+		selectedEngine = javaCallgraphEngineSootUp
 		handler := SootUpHandler{cliVersion}
+		logSelectedJavaCallgraphEngine(verbose, selectedEngine)
 
 		return handler
 	default:
 		strategyWarning(fmt.Sprintf("Unknown %s value '%s'; defaulting to '%s'", javaCallgraphEngineEnv, engine, javaCallgraphEngineSoot))
 		handler := SootHandler{cliVersion}
+		logSelectedJavaCallgraphEngine(verbose, selectedEngine)
 
 		return handler
 	}
+}
+
+func isVerboseEnabled(config conf.IConfig) bool {
+	if config == nil {
+		return false
+	}
+
+	verbose, _ := strconv.ParseBool(strings.TrimSpace(config.Kwargs()["verbose"]))
+
+	return verbose
+}
+
+func logSelectedJavaCallgraphEngine(verbose bool, engine string) {
+	if !verbose {
+		return
+	}
+
+	infoColor := color.New(color.FgBlue, color.Bold).SprintFunc()
+	log.Println(infoColor("Info: ") + fmt.Sprintf("Using Java callgraph engine: %s", engine))
 }
 
 func countRootsWithoutClasses(absRoots []string, rootClassMapping map[string][]string) int {

@@ -1,7 +1,9 @@
 package java
 
 import (
+	"bytes"
 	"fmt"
+	"log"
 	"path/filepath"
 	"testing"
 
@@ -128,6 +130,25 @@ func TestSelectJavaCallgraphHandlerEnvFallback(t *testing.T) {
 	h := selectJavaCallgraphHandler(config)
 	_, ok := h.(SootUpHandler)
 	assert.True(t, ok)
+}
+
+func TestSelectJavaCallgraphHandlerVerboseLogsEngine(t *testing.T) {
+	var buf bytes.Buffer
+	prev := log.Writer()
+	log.SetOutput(&buf)
+	t.Cleanup(func() {
+		log.SetOutput(prev)
+	})
+
+	config := config.NewConfig("java", []string{"."}, map[string]string{
+		"java-callgraph-engine": "sootup",
+		"verbose":               "true",
+	}, true, "maven", "v2.0.0")
+
+	h := selectJavaCallgraphHandler(config)
+	_, ok := h.(SootUpHandler)
+	assert.True(t, ok)
+	assert.Contains(t, buf.String(), "Using Java callgraph engine: sootup")
 }
 
 func TestNormalizeToClassRootTargetClasses(t *testing.T) {

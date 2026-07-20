@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/debricked/cli/internal/callgraph"
@@ -18,6 +19,7 @@ var (
 	exclusions                    = file.DefaultExclusions()
 	inclusions                    []string
 	buildDisabled                 bool
+	verbose                       bool
 	generateTimeout               int
 	languages                     string
 	javaCallgraphEngine           string
@@ -34,6 +36,7 @@ const (
 	ExclusionFlag                = "exclusion"
 	InclusionFlag                = "inclusion"
 	NoBuildFlag                  = "no-build"
+	VerboseFlag                  = "verbose"
 	GenerateTimeoutFlag          = "generate-timeout"
 	LanguagesFlag                = "languages"
 	JavaCallgraphEngineFlag      = "java-callgraph-engine"
@@ -85,6 +88,7 @@ $ debricked scan . --include '**/node_modules/**'`)
 	cmd.Flags().BoolVar(&buildDisabled, NoBuildFlag, false, `Do not automatically build all source code in the project to enable call graph generation.
 This option requires a pre-built project. For more detailed documentation on the callgraph generation, visit:
 https://docs.debricked.com/tools-and-integrations/cli/debricked-cli#callgraph`)
+	cmd.Flags().BoolVar(&verbose, VerboseFlag, false, "Print callgraph engine selection and other informational output.")
 	cmd.Flags().IntVar(&generateTimeout, GenerateTimeoutFlag, 60*60, "Timeout (in seconds) on call graph generation.")
 	cmd.Flags().StringVarP(&languages, LanguagesFlag, "l", strings.Join(supportedLanguages, ","), "Colon separated list of languages to create a call graph for.")
 	cmd.Flags().StringVar(&javaCallgraphEngine, JavaCallgraphEngineFlag, "soot", "Java call graph engine to use: soot or sootup.")
@@ -146,6 +150,7 @@ func RunE(callgraph callgraph.IGenerator) func(_ *cobra.Command, args []string) 
 			kwargs := map[string]string{}
 			if language == "java" {
 				kwargs[JavaCallgraphEngineFlag] = javaEngine
+				kwargs["verbose"] = strconv.FormatBool(viper.GetBool(VerboseFlag))
 			}
 
 			configs = append(configs, conf.NewConfig(language, args, kwargs, !buildDisabled, languageMap[language], version))

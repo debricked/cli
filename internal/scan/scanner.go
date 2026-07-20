@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/debricked/cli/internal/callgraph"
@@ -243,6 +244,7 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 	if options.CallGraph {
 		debug.Log("Running callgraph generation...", options.Debug)
 		javaConfigKwargs := map[string]string{"pm": "maven"}
+		javaConfigKwargs["verbose"] = strconv.FormatBool(options.Verbose)
 		javaEngine := options.JavaCallgraphEngine
 		if javaEngine == "" {
 			javaEngine = "soot"

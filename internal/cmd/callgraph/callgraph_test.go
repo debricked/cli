@@ -23,6 +23,7 @@ func TestNewCallgraphCmd(t *testing.T) {
 		ExclusionFlag:                "e",
 		InclusionFlag:                "",
 		NoBuildFlag:                  "",
+		VerboseFlag:                  "",
 		GenerateTimeoutFlag:          "",
 		JavaCallgraphEngineFlag:      "",
 		JavaCallgraphEngineAliasFlag: "",
@@ -56,6 +57,21 @@ func TestRunE(t *testing.T) {
 	err := runE(nil, []string{"."})
 
 	assert.NoError(t, err)
+}
+
+func TestRunEVerbosePassesEngineLoggingFlag(t *testing.T) {
+	g := &callgraphTestdata.GeneratorMock{}
+	runE := RunE(g)
+
+	viper.Set(VerboseFlag, true)
+	t.Cleanup(func() {
+		viper.Set(VerboseFlag, false)
+	})
+
+	err := runE(nil, []string{"."})
+
+	assert.NoError(t, err)
+	assert.Equal(t, "true", g.LastOptions.Configs[0].Kwargs()["verbose"])
 }
 
 func TestRunENoPath(t *testing.T) {
