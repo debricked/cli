@@ -19,6 +19,7 @@ var branchName string
 var callgraph bool
 var callgraphGenerateTimeout int
 var callgraphUploadTimeout int
+var javaCallgraphEngine string
 var commitAuthor string
 var commitName string
 var generateCommitName bool
@@ -47,6 +48,7 @@ const (
 	CallGraphFlag                   = "callgraph"
 	CallGraphGenerateTimeoutFlag    = "callgraph-generate-timeout"
 	CallGraphUploadTimeoutFlag      = "callgraph-upload-timeout"
+	JavaCallgraphEngineFlag         = "java-callgraph-engine"
 	CommitFlag                      = "commit"
 	CommitAuthorFlag                = "author"
 	DebugFlag                       = "debug"
@@ -165,6 +167,7 @@ $ debricked scan . --inclusion '**/node_modules/**'`)
 For example, if there is a "go.mod" in the target path, its dependencies are going to get resolved onto a lock file, and latter scanned.`)
 	cmd.Flags().BoolVar(&noFingerprint, NoFingerprintFlag, false, "Toggle fingerprinting for undeclared component identification. Can be run as a standalone command [fingerprint] with more granular options.")
 	cmd.Flags().BoolVar(&callgraph, CallGraphFlag, false, `Enables call graph generation during scan.`)
+	cmd.Flags().StringVar(&javaCallgraphEngine, JavaCallgraphEngineFlag, "soot", "Java call graph engine to use during scan callgraph generation: soot or sootup.")
 	cmd.Flags().IntVar(&callgraphUploadTimeout, CallGraphUploadTimeoutFlag, 10*60, "Set a timeout (in seconds) on call graph upload.")
 	cmd.Flags().IntVar(&callgraphGenerateTimeout, CallGraphGenerateTimeoutFlag, 60*60, "Set a timeout (in seconds) on call graph generation.")
 	cmd.Flags().IntVar(&minFingerprintContentLength, MinFingerprintContentLengthFlag, 0, "Set minimum content length (in bytes) for files to fingerprint.")
@@ -252,6 +255,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			NpmPreferred:                viper.GetBool(NpmPreferredFlag),
 			PassOnTimeOut:               viper.GetBool(PassOnTimeOut),
 			CallGraph:                   viper.GetBool(CallGraphFlag),
+			JavaCallgraphEngine:         viper.GetString(JavaCallgraphEngineFlag),
 			CallGraphUploadTimeout:      viper.GetInt(CallGraphUploadTimeoutFlag),
 			CallGraphGenerateTimeout:    viper.GetInt(CallGraphGenerateTimeoutFlag),
 			MinFingerprintContentLength: viper.GetInt(MinFingerprintContentLengthFlag),

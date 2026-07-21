@@ -1,7 +1,9 @@
 package java
 
 import (
+	"bytes"
 	"fmt"
+	"log"
 	"path/filepath"
 	"testing"
 
@@ -96,4 +98,88 @@ func TestBuildProjectsError(t *testing.T) {
 	err := buildProjects(s, []string{"file-3/pom.xml"})
 
 	assert.NotNil(t, err)
+}
+
+func TestSelectJavaCallgraphHandlerDefault(t *testing.T) {
+	t.Setenv(javaCallgraphEngineEnv, "")
+	config := config.NewConfig("java", []string{"."}, map[string]string{}, true, "maven", "v2.0.0")
+	h := selectJavaCallgraphHandler(config)
+	_, ok := h.(SootHandler)
+	assert.True(t, ok)
+}
+
+func TestSelectJavaCallgraphHandlerSootUp(t *testing.T) {
+	config := config.NewConfig("java", []string{"."}, map[string]string{"java-callgraph-engine": "sootup"}, true, "maven", "v2.0.0")
+	h := selectJavaCallgraphHandler(config)
+	_, ok := h.(SootUpHandler)
+	assert.True(t, ok)
+}
+
+func TestSelectJavaCallgraphHandlerUnknownFallsBackToSoot(t *testing.T) {
+	t.Setenv(javaCallgraphEngineEnv, "unknown")
+
+	config := config.NewConfig("java", []string{"."}, map[string]string{}, true, "maven", "v2.0.0")
+	h := selectJavaCallgraphHandler(config)
+	_, ok := h.(SootHandler)
+	assert.True(t, ok)
+}
+
+func TestSelectJavaCallgraphHandlerEnvFallback(t *testing.T) {
+	t.Setenv(javaCallgraphEngineEnv, "sootup")
+	config := config.NewConfig("java", []string{"."}, map[string]string{}, true, "maven", "v2.0.0")
+	h := selectJavaCallgraphHandler(config)
+	_, ok := h.(SootUpHandler)
+	assert.True(t, ok)
+}
+
+func TestSelectJavaCallgraphHandlerVerboseLogsEngine(t *testing.T) {
+	var buf bytes.Buffer
+	prev := log.Writer()
+	log.SetOutput(&buf)
+	t.Cleanup(func() {
+		log.SetOutput(prev)
+	})
+
+	config := config.NewConfig("java", []string{"."}, map[string]string{
+		"java-callgraph-engine": "sootup",
+		"verbose":               "true",
+	}, true, "maven", "v2.0.0")
+
+	h := selectJavaCallgraphHandler(config)
+	_, ok := h.(SootUpHandler)
+	assert.True(t, ok)
+	assert.Contains(t, buf.String(), "Using Java callgraph engine: sootup")
+}
+
+func TestNormalizeToClassRootTargetClasses(t *testing.T) {
+	in := filepath.Join("/tmp", "demo", "target", "classes", "com", "example")
+	out := normalizeToClassRoot(in)
+	expected := filepath.Join("/tmp", "demo", "target", "classes")
+	assert.Equal(t, expected, out)
+}
+
+func TestNormalizeToClassRootTargetTestClasses(t *testing.T) {
+	in := filepath.Join("/tmp", "demo", "target", "test-classes", "com", "example")
+	out := normalizeToClassRoot(in)
+	expected := filepath.Join("/tmp", "demo", "target", "test-classes")
+	assert.Equal(t, expected, out)
+}
+
+func TestNormalizeSootUpUserClassDirsDeduplicatesRoots(t *testing.T) {
+	in := []string{
+		filepath.Join("/tmp", "demo", "target", "classes", "com", "example", "a"),
+		filepath.Join("/tmp", "demo", "target", "classes", "com", "example", "b"),
+		filepath.Join("/tmp", "demo", "target", "test-classes", "com", "example"),
+	}
+	out := normalizeSootUpUserClassDirs(in)
+
+	assert.ElementsMatch(t, []string{
+		filepath.Join("/tmp", "demo", "target", "classes"),
+	}, out)
+}
+
+func TestIsSootUpTestClassRoot(t *testing.T) {
+	assert.True(t, isSootUpTestClassRoot(filepath.Join("/tmp", "demo", "target", "test-classes")))
+	assert.True(t, isSootUpTestClassRoot(filepath.Join("/tmp", "demo", "build", "classes", "java", "test")))
+	assert.False(t, isSootUpTestClassRoot(filepath.Join("/tmp", "demo", "target", "classes")))
 }

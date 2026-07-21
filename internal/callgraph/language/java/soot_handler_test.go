@@ -12,6 +12,8 @@ import (
 
 var sootHandler = SootHandler{}
 
+const createErr = "create error"
+
 func TestInitializeSootWrapper(t *testing.T) {
 	fsMock := ioTestData.FileSystemMock{}
 	tempDir, err := fsMock.MkdirTemp(".tmp")
@@ -68,7 +70,7 @@ func TestDownloadSootWrapperMkdirTempError(t *testing.T) {
 }
 
 func TestDownloadSootWrapperCreateError(t *testing.T) {
-	errString := "create error"
+	errString := createErr
 	fsMock := ioTestData.FileSystemMock{CreateError: fmt.Errorf("%s", errString)} //nolint
 	arcMock := ioTestData.ArchiveMock{}
 	err := sootHandler.downloadSootWrapper(arcMock, fsMock, "soot-wrapper.jar", "11")
@@ -77,7 +79,7 @@ func TestDownloadSootWrapperCreateError(t *testing.T) {
 }
 
 func TestDownloadSootWrapperUnzipError(t *testing.T) {
-	errString := "create error"
+	errString := createErr
 	fsMock := ioTestData.FileSystemMock{}
 	arcMock := ioTestData.ArchiveMock{UnzipFileError: fmt.Errorf("%s", errString)} //nolint
 	err := sootHandler.downloadSootWrapper(arcMock, fsMock, "soot-wrapper.jar", "11")

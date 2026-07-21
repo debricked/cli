@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/debricked/cli/internal/callgraph"
@@ -51,6 +52,7 @@ type DebrickedOptions struct {
 	Resolve                     bool
 	Fingerprint                 bool
 	CallGraph                   bool
+	JavaCallgraphEngine         string
 	SBOM                        string
 	SBOMOutput                  string
 	Exclusions                  []string
@@ -240,9 +242,16 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 	}
 
 	if options.CallGraph {
-		debug.Log("Running scanFingerprint...", options.Debug)
+		debug.Log("Running callgraph generation...", options.Debug)
+		javaConfigKwargs := map[string]string{"pm": "maven"}
+		javaConfigKwargs["verbose"] = strconv.FormatBool(options.Verbose)
+		javaEngine := options.JavaCallgraphEngine
+		if javaEngine == "" {
+			javaEngine = "soot"
+		}
+		javaConfigKwargs["java-callgraph-engine"] = javaEngine
 		configs := []config.IConfig{
-			config.NewConfig("java", []string{}, map[string]string{"pm": "maven"}, true, "maven", options.Version),
+			config.NewConfig("java", []string{}, javaConfigKwargs, true, "maven", options.Version),
 			config.NewConfig("golang", []string{}, map[string]string{"pm": "go"}, true, "go", options.Version),
 		}
 		timeout := options.CallGraphGenerateTimeout

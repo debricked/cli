@@ -23,6 +23,7 @@ func TestNewScanCmd(t *testing.T) {
 		PassOnTimeOut:                "p",
 		NoResolveFlag:                "",
 		CallGraphFlag:                "",
+		JavaCallgraphEngineFlag:      "",
 		CallGraphUploadTimeoutFlag:   "",
 		CallGraphGenerateTimeoutFlag: "",
 	}

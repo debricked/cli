@@ -9,15 +9,20 @@ import (
 )
 
 type GeneratorMock struct {
-	Err   error
-	files []string
+	Err         error
+	files       []string
+	LastOptions callgraph.DebrickedOptions
 }
 
-func (r *GeneratorMock) GenerateWithTimer(_ callgraph.DebrickedOptions) error {
+func (r *GeneratorMock) GenerateWithTimer(options callgraph.DebrickedOptions) error {
+	r.LastOptions = options
+
 	return r.Err
 }
 
-func (r *GeneratorMock) Generate(_ callgraph.DebrickedOptions, _ cgexec.IContext) error {
+func (r *GeneratorMock) Generate(options callgraph.DebrickedOptions, _ cgexec.IContext) error {
+	r.LastOptions = options
+
 	for _, f := range r.files {
 		createdFile, err := os.Create(f)
 		if err != nil {

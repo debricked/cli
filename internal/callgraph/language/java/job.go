@@ -55,8 +55,24 @@ func NewJob(
 func (j *Job) Run() {
 	workingDirectory := j.GetDir()
 	pmConfig := j.config.PackageManager()
+	outputName := j.outputName()
 	targetDir := path.Join(workingDirectory, dependencyDir)
+
+	// Resolve compiled classes directory based on package manager
+	classesPath := workingDirectory
+	switch pmConfig {
+	case maven:
+		classesPath = path.Join(workingDirectory, "target", "classes")
+	case gradle:
+		classesPath = path.Join(workingDirectory, "build", "classes", "java", "main")
+	}
+
+	// Use compiled classes path if it exists; otherwise fallback to working directory
 	targetClasses := []string{workingDirectory}
+	if _, err := j.fs.Stat(classesPath); !j.fs.IsNotExist(err) {
+		targetClasses = []string{classesPath}
+	}
+
 	if len(j.GetFiles()) > 0 {
 		targetClasses = j.GetFiles()
 	}
@@ -123,6 +139,7 @@ func (j *Job) runCallGraph(callgraph ICallgraph) {
 
 func (j *Job) runPostProcess() {
 	workingDirectory := j.GetDir()
+	outputName := j.outputName()
 	outputFullPath := path.Join(workingDirectory, outputName)
 	outputFullPathZip := outputFullPath + ".zip"
 	j.SendStatus("zipping callgraph")
@@ -153,4 +170,8 @@ func (j *Job) runPostProcess() {
 			return
 		}
 	}
+}
+
+func (j *Job) outputName() string {
+	return outputName
 }

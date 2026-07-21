@@ -3,7 +3,9 @@ package java
 import (
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/debricked/cli/internal/callgraph/cgexec"
@@ -25,9 +27,14 @@ type Strategy struct {
 	ctx        cgexec.IContext
 }
 
+const (
+	javaCallgraphEngineEnv    = "DEBRICKED_JAVA_CALLGRAPH_ENGINE"
+	javaCallgraphEngineSoot   = "soot"
+	javaCallgraphEngineSootUp = "sootup"
+)
+
 func (s Strategy) Invoke() ([]job.IJob, error) {
 	var jobs []job.IJob
-	// Filter relevant files
 
 	if s.config == nil {
 		strategyWarning("No config is setup")
@@ -76,18 +83,90 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 	absClassDirs, _ := finder.ConvertPathsToAbsPaths(javaClassDirs)
 	rootClassMapping := finder.MapFilesToDir(absRoots, absClassDirs)
 
-	foundRootsWoClasses := 0
-	for _, root := range absRoots {
-		if _, ok := rootClassMapping[root]; !ok {
-			foundRootsWoClasses += 1
-		}
-	}
+	foundRootsWoClasses := countRootsWithoutClasses(absRoots, rootClassMapping)
 	if foundRootsWoClasses > 0 {
 		strategyWarning("Found " + fmt.Sprint(foundRootsWoClasses) + " roots without related classes, make sure to build your project before running.")
 	}
+	jobs = s.createJobs(rootClassMapping)
+
+	return jobs, nil
+}
+
+func selectJavaCallgraphHandler(config conf.IConfig) ISootHandler {
+	engine := ""
+	cliVersion := ""
+	verbose := false
+	if config != nil {
+		cliVersion = config.Version()
+		engine = strings.ToLower(strings.TrimSpace(config.Kwargs()["java-callgraph-engine"]))
+		verbose = isVerboseEnabled(config)
+	}
+	if engine == "" {
+		engine = strings.ToLower(strings.TrimSpace(os.Getenv(javaCallgraphEngineEnv)))
+	}
+
+	selectedEngine := javaCallgraphEngineSoot
+	switch engine {
+	case "", javaCallgraphEngineSoot:
+		selectedEngine = javaCallgraphEngineSoot
+		handler := SootHandler{cliVersion}
+		logSelectedJavaCallgraphEngine(verbose, selectedEngine)
+
+		return handler
+	case javaCallgraphEngineSootUp:
+		selectedEngine = javaCallgraphEngineSootUp
+		handler := SootUpHandler{cliVersion}
+		logSelectedJavaCallgraphEngine(verbose, selectedEngine)
+
+		return handler
+	default:
+		strategyWarning(fmt.Sprintf("Unknown %s value '%s'; defaulting to '%s'", javaCallgraphEngineEnv, engine, javaCallgraphEngineSoot))
+		handler := SootHandler{cliVersion}
+		logSelectedJavaCallgraphEngine(verbose, selectedEngine)
+
+		return handler
+	}
+}
+
+func isVerboseEnabled(config conf.IConfig) bool {
+	if config == nil {
+		return false
+	}
+
+	verbose, _ := strconv.ParseBool(strings.TrimSpace(config.Kwargs()["verbose"]))
+
+	return verbose
+}
+
+func logSelectedJavaCallgraphEngine(verbose bool, engine string) {
+	if !verbose {
+		return
+	}
+
+	infoColor := color.New(color.FgBlue, color.Bold).SprintFunc()
+	log.Println(infoColor("Info: ") + fmt.Sprintf("Using Java callgraph engine: %s", engine))
+}
+
+func countRootsWithoutClasses(absRoots []string, rootClassMapping map[string][]string) int {
+	foundRootsWoClasses := 0
+	for _, root := range absRoots {
+		if _, ok := rootClassMapping[root]; !ok {
+			foundRootsWoClasses++
+		}
+	}
+
+	return foundRootsWoClasses
+}
+
+func (s Strategy) createJobs(rootClassMapping map[string][]string) []job.IJob {
+	jobs := make([]job.IJob, 0, len(rootClassMapping))
+	handler := selectJavaCallgraphHandler(s.config)
+
 	for rootFile, classDirs := range rootClassMapping {
-		// For each class paths dir within the root, find GCDPath as entrypoint
-		// classDir := finder.GCDPath(classDirs)
+		if _, isSootUp := handler.(SootUpHandler); isSootUp {
+			classDirs = normalizeSootUpUserClassDirs(classDirs)
+		}
+
 		rootDir := filepath.Dir(rootFile)
 		jobs = append(jobs, NewJob(
 			rootDir,
@@ -98,12 +177,64 @@ func (s Strategy) Invoke() ([]job.IJob, error) {
 			s.config,
 			s.ctx,
 			io.FileSystem{},
-			SootHandler{s.config.Version()},
+			handler,
 		),
 		)
 	}
 
-	return jobs, nil
+	return jobs
+}
+
+func normalizeSootUpUserClassDirs(classDirs []string) []string {
+	roots := make(map[string]struct{})
+
+	for _, classDir := range classDirs {
+		normalized := normalizeToClassRoot(classDir)
+		if isSootUpTestClassRoot(normalized) {
+			continue
+		}
+		roots[normalized] = struct{}{}
+	}
+
+	result := make([]string, 0, len(roots))
+	for root := range roots {
+		result = append(result, root)
+	}
+
+	return result
+}
+
+func isSootUpTestClassRoot(path string) bool {
+	testMarkers := []string{
+		filepath.Join("target", "test-classes"),
+		filepath.Join("build", "classes", "java", "test"),
+	}
+
+	for _, marker := range testMarkers {
+		if strings.Contains(path, marker) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func normalizeToClassRoot(classDir string) string {
+	clean := filepath.Clean(classDir)
+	markers := []string{
+		filepath.Join("target", "classes"),
+		filepath.Join("target", "test-classes"),
+		filepath.Join("build", "classes", "java", "main"),
+		filepath.Join("build", "classes", "java", "test"),
+	}
+
+	for _, marker := range markers {
+		if idx := strings.Index(clean, marker); idx >= 0 {
+			return clean[:idx+len(marker)]
+		}
+	}
+
+	return clean
 }
 
 func NewStrategy(
@@ -169,8 +300,8 @@ func buildProjects(s Strategy, roots []string) error {
 
 		return fmt.Errorf("%s", strings.Join([]string{
 			"Build failed for all projects, if already built disable the build flag.",
-			"Or you can refer to the documentation for a detailed guide on manually building your Java project:",
-			"https://github.com/debricked/cli/blob/main/internal/callgraph/language/java11/README.md",
+			"Or you can refer to the CLI documentation for a detailed guide on manually building your Java project:",
+			"https://docs.debricked.com/tools-and-integrations/cli/debricked-cli",
 		}, " "))
 	}
 

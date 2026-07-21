@@ -2,7 +2,9 @@ package java
 
 import (
 	"fmt"
+	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/debricked/cli/internal/callgraph/cgexec"
 	ioFs "github.com/debricked/cli/internal/io"
@@ -103,6 +105,43 @@ func (cg *Callgraph) RunCallGraph(callgraphJarPath string) error {
 
 	cmd := cgexec.NewCommand(osCmd)
 	err = cgexec.RunCommand(*cmd, cg.ctx)
+	if err != nil {
+		return err
+	}
 
-	return err
+	if isSootUpWrapperJar(callgraphJarPath) {
+		for _, line := range extractSootUpDiagnostics(cmd.GetStdOut().String(), cmd.GetStdErr().String()) {
+			fmt.Println(line)
+		}
+	}
+
+	return nil
+}
+
+func isSootUpWrapperJar(callgraphJarPath string) bool {
+	return strings.EqualFold(filepath.Base(callgraphJarPath), "SootUpWrapper.jar")
+}
+
+func extractSootUpDiagnostics(stdout string, stderr string) []string {
+	all := strings.Split(strings.Join([]string{stdout, stderr}, "\n"), "\n")
+	seen := map[string]struct{}{}
+	out := []string{}
+
+	for _, line := range all {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+
+		if strings.Contains(trimmed, "TypeAssigner bug in jar") ||
+			strings.Contains(trimmed, "Excluding jar from deep analysis and retrying") ||
+			strings.Contains(trimmed, "Call graph succeeded after excluding") {
+			if _, ok := seen[trimmed]; !ok {
+				seen[trimmed] = struct{}{}
+				out = append(out, trimmed)
+			}
+		}
+	}
+
+	return out
 }
