@@ -367,6 +367,36 @@ func TestGetDebrickedConfigPolicies(t *testing.T) {
 	assert.JSONEq(t, string(configJSON), string(expectedJSON))
 }
 
+func TestInitUploadSPDX(t *testing.T) {
+	spdxFile := filepath.Join("testdata", "spdx", "example.spdx.json")
+	group := file.NewGroup("", nil, []string{spdxFile})
+	var groups file.Groups
+	groups.Add(*group)
+
+	assert.Contains(t, groups.GetFiles(), spdxFile, "failed to assert that the SPDX file is part of the files to upload")
+
+	metaObj, err := git.NewMetaObject("", "repository-name", "commit-name", "", "", "")
+	if err != nil {
+		t.Fatal("failed to create new MetaObject")
+	}
+
+	clientMock := testdata.NewDebClientMock()
+	mockRes := testdata.MockResponse{
+		StatusCode:   http.StatusOK,
+		ResponseBody: io.NopCloser(strings.NewReader(`{"ciUploadId": 1}`)),
+	}
+	clientMock.AddMockResponse(mockRes)
+
+	var c client.IDebClient = clientMock
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{}, true, false)
+
+	files, err := batch.initUpload()
+
+	assert.NoError(t, err)
+	assert.Len(t, files, 0, "failed to assert that the SPDX file was uploaded during init")
+	assert.Equal(t, 1, batch.ciUploadId)
+}
+
 func TestGetDebrickedConfigPoliciesOnly(t *testing.T) {
 	config := GetDebrickedConfig(filepath.Join("testdata", "debricked-config-policies-only.yaml"))
 	configJSON, err := json.Marshal(config)
