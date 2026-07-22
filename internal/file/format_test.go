@@ -42,6 +42,12 @@ var formatsMock = []Format{
 		DocumentationUrl:  "https://debricked.com/docs/language-support/python.html",
 		LockFileRegexes:   []string{".*\\.pip\\.debricked\\.lock"},
 	},
+	{
+		// Format without regex, matching SPDX SBOM files by lock file regex only
+		ManifestFileRegex: "",
+		DocumentationUrl:  "https://docs.debricked.com/overview/language-support",
+		LockFileRegexes:   []string{"^.*\\.spdx\\.json$"},
+	},
 }
 
 func TestNewCompiledFormat(t *testing.T) {
