@@ -302,6 +302,38 @@ func TestGetGroupsWithOnlyLockFiles(t *testing.T) {
 	assert.Contains(t, file, "Cargo.lock", "failed to assert that the related file was Cargo.lock")
 }
 
+func TestGetGroupsSPDX(t *testing.T) {
+	setUp(true)
+	dir := t.TempDir()
+	spdxFile := filepath.Join(dir, "example.spdx.json")
+	if err := os.WriteFile(spdxFile, []byte("{}"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	// A non-SPDX json file in the same dir must not be discovered.
+	if err := os.WriteFile(filepath.Join(dir, "notes.json"), []byte("{}"), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	const nbrOfGroups = 1
+	fileGroups, err := finder.GetGroups(
+		DebrickedOptions{
+			RootPath:     dir,
+			Exclusions:   []string{},
+			Inclusions:   []string{},
+			LockFileOnly: false,
+			Strictness:   StrictAll,
+		},
+	)
+
+	assert.NoError(t, err)
+	assert.Equalf(t, nbrOfGroups, fileGroups.Size(), "failed to assert that %d groups were created. %d was found", nbrOfGroups, fileGroups.Size())
+
+	fileGroup := fileGroups.groups[0]
+	assert.False(t, fileGroup.HasFile(), "failed to assert that SPDX group lacked a manifest file")
+	assert.Len(t, fileGroup.LockFiles, 1, "failed to assert that there was one SPDX lock file")
+	assert.Contains(t, fileGroup.GetAllFiles()[0], "example.spdx.json", "failed to assert that the SPDX file was discovered")
+}
+
 func TestGetGroupsWithTwoFileMatchesInSameDir(t *testing.T) {
 	setUp(true)
 	const nbrOfGroups = 3
