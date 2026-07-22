@@ -10,14 +10,11 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/debricked/cli/internal/client"
 	ioFs "github.com/debricked/cli/internal/io"
 	"github.com/fatih/color"
 )
-
-const spdxFormatJSON = `{"regex":"","documentationUrl":"https://docs.debricked.com/overview/language-support","lockFileRegexes":["^.*\\.spdx\\.json$"]}`
 
 //go:embed embedded/supported_formats.json
 var supportedFormats embed.FS
@@ -248,12 +245,7 @@ func (finder *Finder) GetSupportedFormatsJson() ([]byte, error) {
 
 	defer res.Body.Close()
 
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return addSPDXFormat(body), nil
+	return io.ReadAll(res.Body)
 }
 
 func (finder *Finder) GetSupportedFormatsFallbackJson() ([]byte, error) {
@@ -268,18 +260,5 @@ func (finder *Finder) GetSupportedFormatsFallbackJson() ([]byte, error) {
 		return nil, err
 	}
 
-	return addSPDXFormat(jsonData), nil
-}
-
-func addSPDXFormat(jsonData []byte) []byte {
-	if strings.Contains(string(jsonData), "spdx") {
-		return jsonData
-	}
-
-	content := string(jsonData)
-	if i := strings.LastIndex(content, "]"); i >= 0 {
-		return []byte(content[:i] + "," + spdxFormatJSON + content[i:])
-	}
-
-	return jsonData
+	return jsonData, nil
 }
