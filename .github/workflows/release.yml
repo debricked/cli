@@ -127,9 +127,6 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Build embedded SootUp wrapper
-        run: make build-sootup-jar-embed
-
       - name: Import GPG signing key
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v6
