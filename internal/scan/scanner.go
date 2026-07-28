@@ -14,6 +14,7 @@ import (
 	"github.com/debricked/cli/internal/ci"
 	"github.com/debricked/cli/internal/ci/env"
 	"github.com/debricked/cli/internal/client"
+	"github.com/debricked/cli/internal/cmd/cmderror"
 	"github.com/debricked/cli/internal/debug"
 	"github.com/debricked/cli/internal/file"
 	"github.com/debricked/cli/internal/fingerprint"
@@ -29,6 +30,7 @@ import (
 var (
 	BadOptsErr      = errors.New("failed to type case IOptions")
 	FailPipelineErr = errors.New("")
+	LongQueueErr    = errors.New("progress polling terminated due to long scan times")
 )
 
 type IScanner interface {
@@ -77,6 +79,7 @@ type DebrickedOptions struct {
 	TagCommitAsRelease          bool
 	Experimental                bool
 	Version                     string
+	ResolutionStrictness        resolution.StrictnessLevel
 }
 
 func NewDebrickedScanner(
@@ -129,6 +132,12 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 		return err
 	}
 
+	debug.Log("Running scanResolve...", dOptions.Debug)
+	resolutionErr := dScanner.scanResolve(dOptions)
+	if isFatalResolutionErr(resolutionErr) {
+		return resolutionErr
+	}
+
 	debug.Log("Running scan with initialized scanner...", dOptions.Debug)
 	result, err := dScanner.scan(dOptions, *gitMetaObject)
 	if err != nil {
@@ -136,13 +145,40 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 	}
 
 	if result.LongQueue {
-		fmt.Println("Progress polling terminated due to long scan times. Please try again later")
-		fmt.Printf("For full details, visit: %s\n\n", color.BlueString(result.DetailsUrl))
-
-		return nil
+		return dScanner.handleLongQueue(dOptions, result, resolutionErr)
 	}
 
-	WriteApiReplyToJsonFile(dOptions, result)
+	if dScanner.reportResult(dOptions, result) {
+		return FailPipelineErr
+	}
+
+	// A non-fatal resolution failure is deliberately surfaced only here, so that
+	// its exit code never costs the user the scan results they asked for.
+	return resolutionErr
+}
+
+// handleLongQueue reports a scan that is still queued once progress polling
+// gives up. Passing on it is opt-in via --pass-on-timeout, which also covers
+// service access timeouts.
+func (dScanner *DebrickedScanner) handleLongQueue(
+	options DebrickedOptions,
+	result *upload.UploadResult,
+	resolutionErr error,
+) error {
+	fmt.Println("Progress polling terminated due to long scan times. Please try again later")
+	fmt.Printf("For full details, visit: %s\n\n", color.BlueString(result.DetailsUrl))
+
+	if options.PassOnTimeOut {
+		return resolutionErr
+	}
+
+	return LongQueueErr
+}
+
+// reportResult renders a completed scan and reports whether a triggered
+// automation rule requires the pipeline to fail.
+func (dScanner *DebrickedScanner) reportResult(options DebrickedOptions, result *upload.UploadResult) bool {
+	WriteApiReplyToJsonFile(options, result)
 
 	fmt.Printf("\n%d vulnerabilities found\n", result.VulnerabilitiesFound)
 	fmt.Println("")
@@ -152,11 +188,25 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 		failPipeline = failPipeline || (rule.Triggered && rule.FailPipeline())
 	}
 	fmt.Printf("For full details, visit: %s\n\n", color.BlueString(result.DetailsUrl))
-	if failPipeline {
-		return FailPipelineErr
+
+	return failPipeline
+}
+
+// isFatalResolutionErr reports whether a resolution error should abort the scan
+// before anything is uploaded. Resolution reports non-fatal outcomes as a
+// CommandError carrying the exit code the CLI should eventually exit with;
+// those let the scan run to completion. Anything else stops it.
+func isFatalResolutionErr(err error) bool {
+	if err == nil {
+		return false
 	}
 
-	return nil
+	var cmdErr cmderror.CommandError
+	if !errors.As(err, &cmdErr) {
+		return true
+	}
+
+	return cmdErr.Code == 1
 }
 
 func (dScanner *DebrickedScanner) scanReportSBOM(options DebrickedOptions, detailsURL string) error {
@@ -183,12 +233,13 @@ func (dScanner *DebrickedScanner) scanReportSBOM(options DebrickedOptions, detai
 
 func (dScanner *DebrickedScanner) scanResolve(options DebrickedOptions) error {
 	resolveOptions := resolution.DebrickedOptions{
-		Path:         options.Path,
-		Verbose:      options.Verbose,
-		Regenerate:   options.Regenerate,
-		Exclusions:   options.Exclusions,
-		Inclusions:   options.Inclusions,
-		NpmPreferred: options.NpmPreferred,
+		Path:                 options.Path,
+		Verbose:              options.Verbose,
+		Regenerate:           options.Regenerate,
+		Exclusions:           options.Exclusions,
+		Inclusions:           options.Inclusions,
+		NpmPreferred:         options.NpmPreferred,
+		ResolutionStrictness: options.ResolutionStrictness,
 	}
 	if options.Resolve {
 		_, resErr := dScanner.resolver.Resolve([]string{options.Path}, resolveOptions)
@@ -229,14 +280,8 @@ func (dScanner *DebrickedScanner) scanFingerprint(options DebrickedOptions) erro
 
 func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject git.MetaObject) (*upload.UploadResult, error) {
 
-	debug.Log("Running scanResolve...", options.Debug)
-	err := dScanner.scanResolve(options)
-	if err != nil {
-		return nil, err
-	}
-
 	debug.Log("Running scanFingerprint...", options.Debug)
-	err = dScanner.scanFingerprint(options)
+	err := dScanner.scanFingerprint(options)
 	if err != nil {
 		return nil, err
 	}

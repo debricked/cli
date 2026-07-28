@@ -9,14 +9,17 @@ import (
 )
 
 type ResolverMock struct {
-	Err   error
-	files []string
+	Err error
+	// Options records the options of the most recent Resolve call.
+	Options resolution.IOptions
+	files   []string
 }
 
 func (r *ResolverMock) SetNpmPreferred(_ bool) {
 }
 
-func (r *ResolverMock) Resolve(_ []string, _ resolution.IOptions) (resolution.IResolution, error) {
+func (r *ResolverMock) Resolve(_ []string, options resolution.IOptions) (resolution.IResolution, error) {
+	r.Options = options
 	for _, f := range r.files {
 		createdFile, err := os.Create(f)
 		if err != nil {

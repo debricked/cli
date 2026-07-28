@@ -74,6 +74,29 @@ Once you've installed the CLI, you're ready to scan your project. You can scan a
 
 When the scan is complete, you will see the total number of vulnerabilities found and a list of automation rules that have been evaluated. Read more about automations [here](https://debricked.com/docs/automation/automation-overview.html#automation-overview).
 
+### Exit codes
+| Code | Meaning |
+| ---- | ------- |
+| 0    | The scan completed and no triggered automation rule failed the pipeline |
+| 1    | The scan failed. This covers triggered automation rules configured to fail the pipeline, resolution failures (see below), and errors such as a bad access token or an unreachable service |
+| 3    | The scan completed, but some (not all) dependency files failed to resolve. Only produced by `--resolution-strictness=3` |
+
+Failed resolution of dependency files affects the scan and its exit code according to
+`--resolution-strictness` (default `1`):
+
+| Level | Meaning |
+| ----- | ------- |
+| 0     | Always continue the scan, even if any or all files failed to resolve |
+| 1     | Exit with code 1 if all files failed to resolve, otherwise continue the scan |
+| 2     | Exit with code 1 if any file failed to resolve, otherwise continue the scan |
+| 3     | Exit with code 1 if all files failed to resolve. If some but not all files failed to resolve, complete the scan and then exit with code 3 |
+
+A resolution failure typically means the relevant package manager is not installed or not on the
+`PATH` (for example `mvn` or `composer`).
+
+If Debricked's scan queue is long, the CLI stops polling for progress and exits with code 1, having
+printed a link to the results. Pass `--pass-on-timeout` to exit 0 in that case instead.
+
 ### Docker
 To make a scan directly through Docker based on your current working directory, you can use the following command:
 ```sh
