@@ -388,7 +388,7 @@ func TestInitUploadSPDX(t *testing.T) {
 	clientMock.AddMockResponse(mockRes)
 
 	var c client.IDebClient = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{}, true, false)
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{}, true, false, false)
 
 	files, err := batch.initUpload()
 
