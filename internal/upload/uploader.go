@@ -19,6 +19,7 @@ type DebrickedOptions struct {
 	DebrickedConfig        *DebrickedConfig
 	TagCommitAsRelease     bool
 	Experimental           bool
+	NoResolve              bool
 }
 
 type IUploader interface {
@@ -49,6 +50,7 @@ func (uploader *Uploader) Upload(o IOptions) (*UploadResult, error) {
 		dOptions.DebrickedConfig,
 		dOptions.TagCommitAsRelease,
 		dOptions.Experimental,
+		dOptions.NoResolve,
 	)
 
 	err := batch.upload()
