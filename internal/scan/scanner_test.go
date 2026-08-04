@@ -305,6 +305,13 @@ func TestScanEmptyResult(t *testing.T) {
 		string(out),
 		"http://localhost:8888/app/en/repository/13/commit/37")
 	assert.True(t, existsMessageInCMDOutputDetails, "failed to assert that long queue scan contain detailed url")
+
+	// A scan that is still queued exits non-zero, so it must not render as a
+	// completed one. TestScan asserts the success visuals ("100% |", "32m✔")
+	// on the same bar.
+	assert.Contains(t, string(out), "31m⨯", "failed to assert that a queued scan renders an error mark")
+	assert.NotContains(t, string(out), "32m✔", "failed to assert that a queued scan renders no checkmark")
+	assert.NotContains(t, string(out), "100% |", "failed to assert that the bar was not filled to 100%")
 }
 
 func TestScanEmptyResultPassOnTimeOut(t *testing.T) {
@@ -499,6 +506,63 @@ func TestScanWithNonFatalResolveCommandErr(t *testing.T) {
 	assert.Equal(t, 3, cmdErr.Code)
 	assert.Contains(t, out, "vulnerabilities found",
 		"failed to assert that the scan ran to completion despite the resolution failure")
+}
+
+// Passing on a service timeout must not swallow a non-fatal resolution failure:
+// --pass-on-timeout forgives the timeout, not the files that failed to resolve.
+func TestScanPassOnTimeOutKeepsResolutionExitCode(t *testing.T) {
+	if runtime.GOOS == windowsOS {
+		t.Skipf("TestScan is skipped due to Windows env")
+	}
+	clientMock := testdata.NewDebClientMock()
+	addMockedFormatsResponse(clientMock, "yarn\\.lock")
+	addMockedFileUploadResponse(clientMock)
+	addMockedFinishResponse(clientMock, http.StatusNoContent)
+	// The scan itself goes down mid-poll, which --pass-on-timeout forgives.
+	clientMock.AddMockUriResponse(
+		"/api/1.0/open/ci/upload/status",
+		testdata.MockResponse{StatusCode: http.StatusOK, Error: client.NoResErr},
+	)
+
+	resolutionErr := cmderror.CommandError{Code: resolution.WarnExitCode, Err: errors.New("resolution failed")}
+	resolverMock := resolveTestdata.ResolverMock{Err: resolutionErr}
+	resolverMock.SetFiles([]string{"yarn.lock"})
+
+	scanner := makeScanner(clientMock, &resolverMock, nil)
+
+	cwd, _ := os.Getwd()
+	defer resetWd(t, cwd)
+	defer cleanUpResolution(t, resolverMock)
+
+	opts := DebrickedOptions{
+		Path:                 testdataNpm,
+		Resolve:              true,
+		RepositoryName:       testdataNpm,
+		CommitName:           "testdata/npm-commit",
+		ResolutionStrictness: resolution.FailOrWarn,
+		PassOnTimeOut:        true,
+	}
+
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	outC := make(chan string, 1)
+	go func() {
+		var buf bytes.Buffer
+		_, _ = io.Copy(&buf, r)
+		outC <- buf.String()
+	}()
+
+	err := scanner.Scan(opts)
+
+	_ = w.Close()
+	os.Stdout = rescueStdout
+	<-outC
+
+	var cmdErr cmderror.CommandError
+	assert.True(t, errors.As(err, &cmdErr), "failed to assert that the resolution CommandError survived the passed-on timeout")
+	assert.Equal(t, resolution.WarnExitCode, cmdErr.Code)
 }
 
 func TestScanPassesResolutionStrictnessToResolver(t *testing.T) {

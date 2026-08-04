@@ -141,7 +141,13 @@ func (dScanner *DebrickedScanner) Scan(o IOptions) error {
 	debug.Log("Running scan with initialized scanner...", dOptions.Debug)
 	result, err := dScanner.scan(dOptions, *gitMetaObject)
 	if err != nil {
-		return dScanner.handleScanError(err, dOptions.PassOnTimeOut)
+		if scanErr := dScanner.handleScanError(err, dOptions.PassOnTimeOut); scanErr != nil {
+			return scanErr
+		}
+
+		// The scan error was passed on, but a non-fatal resolution failure still
+		// owns the exit code, the same way handleLongQueue surfaces it.
+		return resolutionErr
 	}
 
 	if result.LongQueue {
@@ -193,9 +199,11 @@ func (dScanner *DebrickedScanner) reportResult(options DebrickedOptions, result 
 }
 
 // isFatalResolutionErr reports whether a resolution error should abort the scan
-// before anything is uploaded. Resolution reports non-fatal outcomes as a
-// CommandError carrying the exit code the CLI should eventually exit with;
-// those let the scan run to completion. Anything else stops it.
+// before anything is uploaded. Resolution signals how bad the failure was with
+// the exit code on a CommandError: only resolution.WarnExitCode is survivable,
+// meaning some but not all files failed and the user still wants their scan.
+// Every other error - including a CommandError carrying any other code - stops
+// the scan, so a code added to resolution later fails safe.
 func isFatalResolutionErr(err error) bool {
 	if err == nil {
 		return false
@@ -206,7 +214,7 @@ func isFatalResolutionErr(err error) bool {
 		return true
 	}
 
-	return cmdErr.Code == 1
+	return cmdErr.Code != resolution.WarnExitCode
 }
 
 func (dScanner *DebrickedScanner) scanReportSBOM(options DebrickedOptions, detailsURL string) error {
