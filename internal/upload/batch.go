@@ -47,12 +47,13 @@ type uploadBatch struct {
 	debrickedConfig    *DebrickedConfig // JSON Config
 	tagCommitAsRelease bool
 	experimental       bool
+	noResolve          bool
 }
 
 func newUploadBatch(
 	client *client.IDebClient, fileGroups file.Groups, gitMetaObject *git.MetaObject,
 	integrationName string, callGraphTimeout int, versionHint bool,
-	debrickedConfig *DebrickedConfig, tagCommitAsRelease bool, experimental bool,
+	debrickedConfig *DebrickedConfig, tagCommitAsRelease bool, experimental bool, noResolve bool,
 ) *uploadBatch {
 	return &uploadBatch{
 		client:             client,
@@ -65,6 +66,7 @@ func newUploadBatch(
 		debrickedConfig:    debrickedConfig,
 		tagCommitAsRelease: tagCommitAsRelease,
 		experimental:       experimental,
+		noResolve:          noResolve,
 	}
 }
 
@@ -194,6 +196,7 @@ func (uploadBatch *uploadBatch) initAnalysis() error {
 		DebrickedIntegration: "cli",
 		TagCommitAsRelease:   uploadBatch.tagCommitAsRelease,
 		Experimental:         uploadBatch.experimental,
+		NoResolve:            uploadBatch.noResolve,
 	})
 
 	if err != nil {
@@ -363,6 +366,7 @@ type uploadFinish struct {
 	DebrickedConfig      *DebrickedConfig `json:"debrickedConfig"`
 	TagCommitAsRelease   bool             `json:"isRelease"`
 	Experimental         bool             `json:"experimental"`
+	NoResolve            bool             `json:"noResolve"`
 }
 
 func getRelativeFilePath(filePath string) string {

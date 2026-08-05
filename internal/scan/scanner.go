@@ -297,6 +297,7 @@ func (dScanner *DebrickedScanner) scan(options DebrickedOptions, gitMetaObject g
 		DebrickedConfig:        dScanner.getDebrickedConfig(options.Path, options.Exclusions, options.Inclusions),
 		TagCommitAsRelease:     options.TagCommitAsRelease,
 		Experimental:           options.Experimental,
+		NoResolve:              !options.Resolve,
 	}
 	result, err := (*dScanner.uploader).Upload(uploaderOptions)
 	if err != nil {

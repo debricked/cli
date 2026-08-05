@@ -38,7 +38,7 @@ func TestUploadWithBadFiles(t *testing.T) {
 	clientMock.AddMockResponse(mockRes)
 	clientMock.AddMockResponse(mockRes)
 	c = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{}, true, false)
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{}, true, false, false)
 	var buf bytes.Buffer
 	log.SetOutput(&buf)
 	err = batch.upload()
@@ -50,10 +50,50 @@ func TestUploadWithBadFiles(t *testing.T) {
 }
 
 func TestInitAnalysisWithoutAnyFiles(t *testing.T) {
-	batch := newUploadBatch(nil, file.Groups{}, nil, "CLI", 10*60, true, &DebrickedConfig{}, true, false)
+	batch := newUploadBatch(nil, file.Groups{}, nil, "CLI", 10*60, true, &DebrickedConfig{}, true, false, false)
 	err := batch.initAnalysis()
 
 	assert.ErrorContains(t, err, "failed to find dependency files")
+}
+
+func TestInitAnalysisNoResolve(t *testing.T) {
+	metaObj, err := git.NewMetaObject("", "repository-name", "commit-name", "", "", "")
+	if err != nil {
+		t.Fatal("failed to create new MetaObject")
+	}
+
+	clientMock := testdata.NewDebClientMock()
+	clientMock.AddMockResponse(testdata.MockResponse{
+		StatusCode:   http.StatusNoContent,
+		ResponseBody: io.NopCloser(strings.NewReader("")),
+	})
+	var c client.IDebClient = clientMock
+	batch := newUploadBatch(&c, file.Groups{}, metaObj, "CLI", 10*60, true, &DebrickedConfig{}, false, false, true)
+	batch.ciUploadId = 1
+
+	assert.True(t, batch.noResolve)
+	err = batch.initAnalysis()
+	assert.NoError(t, err)
+}
+
+func TestUploadFinishNoResolveJSON(t *testing.T) {
+	finish := uploadFinish{
+		CiUploadId: "1",
+		NoResolve:  true,
+	}
+	body, err := json.Marshal(finish)
+	assert.NoError(t, err)
+	assert.Contains(t, string(body), `"noResolve":true`)
+}
+
+func TestUploadFinishResolveJSON(t *testing.T) {
+	finish := uploadFinish{
+		CiUploadId: "1",
+		NoResolve:  false,
+	}
+	body, err := json.Marshal(finish)
+	assert.NoError(t, err)
+	assert.Contains(t, string(body), `"noResolve":false`)
 }
 
 func TestWaitWithPollingTerminatedError(t *testing.T) {
@@ -73,7 +113,7 @@ func TestWaitWithPollingTerminatedError(t *testing.T) {
 	}
 	clientMock.AddMockResponse(mockRes)
 	c = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{}, true, false)
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{}, true, false, false)
 
 	uploadResult, err := batch.wait()
 
@@ -98,7 +138,7 @@ func TestInitUploadBadFile(t *testing.T) {
 	clientMock.AddMockResponse(mockRes)
 
 	var c client.IDebClient = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{}, true, false)
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{}, true, false, false)
 
 	files, err := batch.initUpload()
 
@@ -120,7 +160,7 @@ func TestInitUploadFingerprintsFree(t *testing.T) {
 	clientMock := testdata.NewDebClientMock()
 	clientMock.SetEnterpriseCustomer(false)
 	var c client.IDebClient = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{}, true, false)
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{}, true, false, false)
 
 	files, err := batch.initUpload()
 
@@ -145,7 +185,7 @@ func TestInitUpload(t *testing.T) {
 	clientMock.AddMockResponse(mockRes)
 
 	var c client.IDebClient = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{}, true, false)
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{}, true, false, false)
 
 	files, err := batch.initUpload()
 
@@ -388,7 +428,7 @@ func TestInitUploadSPDX(t *testing.T) {
 	clientMock.AddMockResponse(mockRes)
 
 	var c client.IDebClient = clientMock
-	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{}, true, false)
+	batch := newUploadBatch(&c, groups, metaObj, "CLI", 10*60, true, &DebrickedConfig{}, true, false, false)
 
 	files, err := batch.initUpload()
 
