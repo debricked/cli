@@ -56,6 +56,46 @@ func TestInitAnalysisWithoutAnyFiles(t *testing.T) {
 	assert.ErrorContains(t, err, "failed to find dependency files")
 }
 
+func TestInitAnalysisNoResolve(t *testing.T) {
+	metaObj, err := git.NewMetaObject("", "repository-name", "commit-name", "", "", "")
+	if err != nil {
+		t.Fatal("failed to create new MetaObject")
+	}
+
+	clientMock := testdata.NewDebClientMock()
+	clientMock.AddMockResponse(testdata.MockResponse{
+		StatusCode:   http.StatusNoContent,
+		ResponseBody: io.NopCloser(strings.NewReader("")),
+	})
+	var c client.IDebClient = clientMock
+	batch := newUploadBatch(&c, file.Groups{}, metaObj, "CLI", 10*60, true, &DebrickedConfig{}, false, false, true)
+	batch.ciUploadId = 1
+
+	assert.True(t, batch.noResolve)
+	err = batch.initAnalysis()
+	assert.NoError(t, err)
+}
+
+func TestUploadFinishNoResolveJSON(t *testing.T) {
+	finish := uploadFinish{
+		CiUploadId: "1",
+		NoResolve:  true,
+	}
+	body, err := json.Marshal(finish)
+	assert.NoError(t, err)
+	assert.Contains(t, string(body), `"noResolve":true`)
+}
+
+func TestUploadFinishResolveJSON(t *testing.T) {
+	finish := uploadFinish{
+		CiUploadId: "1",
+		NoResolve:  false,
+	}
+	body, err := json.Marshal(finish)
+	assert.NoError(t, err)
+	assert.Contains(t, string(body), `"noResolve":false`)
+}
+
 func TestWaitWithPollingTerminatedError(t *testing.T) {
 	group := file.NewGroup("package.json", nil, []string{"yarn.lock"})
 	var groups file.Groups
