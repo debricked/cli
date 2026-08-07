@@ -30,6 +30,11 @@ const (
 	FailOrWarn
 )
 
+// WarnExitCode is produced by FailOrWarn when some, but not all, files failed to
+// resolve. It is the only resolution exit code that lets a scan run to
+// completion - every other non-zero code aborts it.
+const WarnExitCode = 3
+
 func GetStrictnessLevel(level int) (StrictnessLevel, error) {
 	switch level {
 	case 0:
@@ -141,7 +146,7 @@ func (r Resolver) failOrWarnLogic(errorCount, jobCount int) (int, error) {
 		return 1, nil
 	}
 
-	return 3, nil
+	return WarnExitCode, nil
 }
 
 func (r Resolver) Resolve(paths []string, options IOptions) (IResolution, error) {

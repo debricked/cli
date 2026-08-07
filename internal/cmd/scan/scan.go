@@ -8,7 +8,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/debricked/cli/internal/cmd/cmderror"
 	"github.com/debricked/cli/internal/file"
+	"github.com/debricked/cli/internal/resolution"
 	"github.com/debricked/cli/internal/scan"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -36,6 +38,7 @@ var passOnDowntime bool
 var regenerate int
 var repositoryName string
 var repositoryUrl string
+var resolutionStrictness int
 var verbose bool
 var versionHint bool
 var sbom string
@@ -72,6 +75,7 @@ const (
 	TagCommitAsReleaseEnv           = "TAG_COMMIT_AS_RELEASE"
 	ExperimentalFlag                = "experimental"
 	GenerateCommitNameFlag          = "generate-commit-name"
+	ResolutionStrictnessFlag        = "resolution-strictness"
 )
 
 var scanCmdError error
@@ -162,9 +166,21 @@ $ debricked scan . --inclusion '**/node_modules/**'`)
 		}, "\n")
 	cmd.Flags().BoolVar(&verbose, VerboseFlag, true, verboseDoc)
 	cmd.Flags().BoolVar(&debug, DebugFlag, false, "write all debug output to stderr")
-	cmd.Flags().BoolVarP(&passOnDowntime, PassOnTimeOut, "p", false, "pass scan if there is a service access timeout")
+	cmd.Flags().BoolVarP(&passOnDowntime, PassOnTimeOut, "p", false, "pass scan if there is a service access timeout, or if the scan is still queued once progress polling gives up")
 	cmd.Flags().BoolVar(&noResolve, NoResolveFlag, false, `disables resolution of manifest files that lack lock files. Resolving manifest files enables more accurate dependency scanning since the whole dependency tree will be analysed.
 For example, if there is a "go.mod" in the target path, its dependencies are going to get resolved onto a lock file, and latter scanned.`)
+	resolutionStrictnessDoc := strings.Join(
+		[]string{
+			"Allows you to configure how failed resolution of manifest files affects the scan and its exit code.\n",
+			"Strictness Level | Meaning",
+			"---------------- | -------",
+			"0                | Always continue the scan, even if any or all files failed to resolve",
+			"1 (default)      | Exit with code 1 if all files failed to resolve, otherwise continue the scan",
+			"2                | Exit with code 1 if any file failed to resolve, otherwise continue the scan",
+			"3                | Exit with code 1 if all files failed to resolve. If some but not all files failed to resolve, complete the scan and then exit with code 3",
+			"\nExample:\n$ debricked scan . --resolution-strictness=3",
+		}, "\n")
+	cmd.Flags().IntVar(&resolutionStrictness, ResolutionStrictnessFlag, int(resolution.FailIfAllFail), resolutionStrictnessDoc)
 	cmd.Flags().BoolVar(&noFingerprint, NoFingerprintFlag, false, "Toggle fingerprinting for undeclared component identification. Can be run as a standalone command [fingerprint] with more granular options.")
 	cmd.Flags().BoolVar(&callgraph, CallGraphFlag, false, `Enables call graph generation during scan.`)
 	cmd.Flags().StringVar(&javaCallgraphEngine, JavaCallgraphEngineFlag, "soot", "Java call graph engine to use during scan callgraph generation: soot or sootup.")
@@ -232,6 +248,11 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			tagCommitAsRelease = viper.GetBool(TagCommitAsReleaseFlag)
 		}
 
+		strictness, err := resolution.GetStrictnessLevel(viper.GetInt(ResolutionStrictnessFlag))
+		if err != nil {
+			return err
+		}
+
 		options := scan.DebrickedOptions{
 			Path:                        path,
 			Resolve:                     !viper.GetBool(NoResolveFlag),
@@ -261,6 +282,7 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			MinFingerprintContentLength: viper.GetInt(MinFingerprintContentLengthFlag),
 			TagCommitAsRelease:          tagCommitAsRelease,
 			Experimental:                viper.GetBool(ExperimentalFlag),
+			ResolutionStrictness:        strictness,
 		}
 		if s != nil {
 			scanCmdError = (*s).Scan(options)
@@ -268,7 +290,8 @@ func RunE(s *scan.IScanner) func(_ *cobra.Command, args []string) error {
 			scanCmdError = errors.New("scanner was nil")
 		}
 
-		if scanCmdError == scan.FailPipelineErr {
+		var cmdErr cmderror.CommandError
+		if scanCmdError == scan.FailPipelineErr || scanCmdError == scan.LongQueueErr || errors.As(scanCmdError, &cmdErr) {
 			cmd.SilenceUsage = true
 			cmd.SilenceErrors = true
 

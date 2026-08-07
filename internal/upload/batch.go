@@ -243,7 +243,10 @@ func (uploadBatch *uploadBatch) wait() (*UploadResult, error) {
 			return nil, err
 		}
 		if res.StatusCode == http.StatusCreated {
-			err := bar.Finish()
+			// The scan is still queued, so the bar must not be filled to 100%
+			// and marked as a success - the CLI exits non-zero on this path
+			// unless --pass-on-timeout is set.
+			err := bar.Fail()
 			if err != nil {
 				return resultStatus, err
 			}

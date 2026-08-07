@@ -27,6 +27,7 @@ import (
 	"github.com/debricked/cli/internal/ci/travis"
 	"github.com/debricked/cli/internal/client"
 	"github.com/debricked/cli/internal/client/testdata"
+	"github.com/debricked/cli/internal/cmd/cmderror"
 	"github.com/debricked/cli/internal/file"
 	"github.com/debricked/cli/internal/fingerprint"
 	"github.com/debricked/cli/internal/git"
@@ -297,13 +298,55 @@ func TestScanEmptyResult(t *testing.T) {
 		string(out),
 		"Progress polling terminated due to long scan times. Please try again later")
 
-	assert.NoError(t, err, "failed to assert that scan ran without errors")
+	assert.ErrorIs(t, err, LongQueueErr, "failed to assert that scan returned LongQueueErr")
 	assert.True(t, existsMessageInCMDOutput, "failed to assert that scan ran without errors")
 
 	existsMessageInCMDOutputDetails := strings.Contains(
 		string(out),
 		"http://localhost:8888/app/en/repository/13/commit/37")
 	assert.True(t, existsMessageInCMDOutputDetails, "failed to assert that long queue scan contain detailed url")
+
+	// A scan that is still queued exits non-zero, so it must not render as a
+	// completed one. TestScan asserts the success visuals ("100% |", "32m✔")
+	// on the same bar.
+	assert.Contains(t, string(out), "31m⨯", "failed to assert that a queued scan renders an error mark")
+	assert.NotContains(t, string(out), "32m✔", "failed to assert that a queued scan renders no checkmark")
+	assert.NotContains(t, string(out), "100% |", "failed to assert that the bar was not filled to 100%")
+}
+
+func TestScanEmptyResultPassOnTimeOut(t *testing.T) {
+	if runtime.GOOS == windowsOS {
+		t.Skipf("TestScan is skipped due to Windows env")
+	}
+	clientMock := testdata.NewDebClientMock()
+	addMockedFormatsResponse(clientMock, "package\\.json")
+	addMockedFileUploadResponse(clientMock)
+	addMockedFinishResponse(clientMock, http.StatusNoContent)
+	addMockedStatusResponse(clientMock, http.StatusOK, 50)
+	addMockedQueueTooLongStatusResponse(clientMock)
+
+	scanner := makeScanner(clientMock, nil, nil)
+	cwd, _ := os.Getwd()
+	defer resetWd(t, cwd)
+
+	opts := DebrickedOptions{
+		Path:           testdataNpm,
+		RepositoryName: testdataNpm,
+		CommitName:     testdataNpm,
+		PassOnTimeOut:  true,
+	}
+
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := scanner.Scan(opts)
+
+	_ = w.Close()
+	_, _ = io.ReadAll(r)
+	os.Stdout = rescueStdout
+
+	assert.NoError(t, err, "failed to assert that a long queue passes when pass-on-timeout is set")
 }
 
 func TestScanInCiWithPathSet(t *testing.T) {
@@ -386,6 +429,171 @@ func TestScanWithResolveErr(t *testing.T) {
 	}
 	err := scanner.Scan(opts)
 	assert.ErrorIs(t, err, resolutionErr)
+}
+
+// A resolution failure that resolution deems fatal (exit code 1) must stop the
+// scan before anything is uploaded. The client mock has no upload responses
+// registered, so reaching the upload at all would surface a different error.
+func TestScanWithFatalResolveCommandErr(t *testing.T) {
+	clientMock := testdata.NewDebClientMock()
+	resolutionErr := cmderror.CommandError{Code: 1, Err: errors.New("resolution failed")}
+	scanner := makeScanner(clientMock, &resolveTestdata.ResolverMock{Err: resolutionErr}, nil)
+	cwd, _ := os.Getwd()
+	defer resetWd(t, cwd)
+
+	opts := DebrickedOptions{
+		Path:                 testdataNpm,
+		Resolve:              true,
+		RepositoryName:       testdataNpm,
+		CommitName:           "testdata/npm-commit",
+		ResolutionStrictness: resolution.FailIfAllFail,
+	}
+	err := scanner.Scan(opts)
+
+	var cmdErr cmderror.CommandError
+	assert.True(t, errors.As(err, &cmdErr), "failed to assert that a CommandError was returned")
+	assert.Equal(t, 1, cmdErr.Code)
+}
+
+// A partial resolution failure under FailOrWarn must not cost the user their
+// scan. The scan has to run to completion and only then surface exit code 3.
+func TestScanWithNonFatalResolveCommandErr(t *testing.T) {
+	clientMock := testdata.NewDebClientMock()
+	addMockedFormatsResponse(clientMock, "yarn\\.lock")
+	addMockedFileUploadResponse(clientMock)
+	addMockedFinishResponse(clientMock, http.StatusNoContent)
+	addMockedStatusResponse(clientMock, http.StatusOK, 100)
+
+	resolutionErr := cmderror.CommandError{Code: 3, Err: errors.New("resolution failed")}
+	resolverMock := resolveTestdata.ResolverMock{Err: resolutionErr}
+	resolverMock.SetFiles([]string{"yarn.lock"})
+
+	scanner := makeScanner(clientMock, &resolverMock, nil)
+
+	cwd, _ := os.Getwd()
+	defer resetWd(t, cwd)
+	defer cleanUpResolution(t, resolverMock)
+
+	opts := DebrickedOptions{
+		Path:                 testdataNpm,
+		Resolve:              true,
+		RepositoryName:       testdataNpm,
+		CommitName:           "testdata/npm-commit",
+		ResolutionStrictness: resolution.FailOrWarn,
+	}
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	// Drain concurrently. This scan renders a progress bar, and reading only
+	// after Scan returns deadlocks as soon as the output exceeds the pipe
+	// buffer - which is small enough on Windows to hit.
+	outC := make(chan string, 1)
+	go func() {
+		var buf bytes.Buffer
+		_, _ = io.Copy(&buf, r)
+		outC <- buf.String()
+	}()
+
+	err := scanner.Scan(opts)
+
+	_ = w.Close()
+	os.Stdout = rescueStdout
+	out := <-outC
+
+	var cmdErr cmderror.CommandError
+	assert.True(t, errors.As(err, &cmdErr), "failed to assert that a CommandError was returned")
+	assert.Equal(t, 3, cmdErr.Code)
+	assert.Contains(t, out, "vulnerabilities found",
+		"failed to assert that the scan ran to completion despite the resolution failure")
+}
+
+// Passing on a service timeout must not swallow a non-fatal resolution failure:
+// --pass-on-timeout forgives the timeout, not the files that failed to resolve.
+func TestScanPassOnTimeOutKeepsResolutionExitCode(t *testing.T) {
+	if runtime.GOOS == windowsOS {
+		t.Skipf("TestScan is skipped due to Windows env")
+	}
+	clientMock := testdata.NewDebClientMock()
+	addMockedFormatsResponse(clientMock, "yarn\\.lock")
+	addMockedFileUploadResponse(clientMock)
+	addMockedFinishResponse(clientMock, http.StatusNoContent)
+	// The scan itself goes down mid-poll, which --pass-on-timeout forgives.
+	clientMock.AddMockUriResponse(
+		"/api/1.0/open/ci/upload/status",
+		testdata.MockResponse{StatusCode: http.StatusOK, Error: client.NoResErr},
+	)
+
+	resolutionErr := cmderror.CommandError{Code: resolution.WarnExitCode, Err: errors.New("resolution failed")}
+	resolverMock := resolveTestdata.ResolverMock{Err: resolutionErr}
+	resolverMock.SetFiles([]string{"yarn.lock"})
+
+	scanner := makeScanner(clientMock, &resolverMock, nil)
+
+	cwd, _ := os.Getwd()
+	defer resetWd(t, cwd)
+	defer cleanUpResolution(t, resolverMock)
+
+	opts := DebrickedOptions{
+		Path:                 testdataNpm,
+		Resolve:              true,
+		RepositoryName:       testdataNpm,
+		CommitName:           "testdata/npm-commit",
+		ResolutionStrictness: resolution.FailOrWarn,
+		PassOnTimeOut:        true,
+	}
+
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	outC := make(chan string, 1)
+	go func() {
+		var buf bytes.Buffer
+		_, _ = io.Copy(&buf, r)
+		outC <- buf.String()
+	}()
+
+	err := scanner.Scan(opts)
+
+	_ = w.Close()
+	os.Stdout = rescueStdout
+	<-outC
+
+	var cmdErr cmderror.CommandError
+	assert.True(t, errors.As(err, &cmdErr), "failed to assert that the resolution CommandError survived the passed-on timeout")
+	assert.Equal(t, resolution.WarnExitCode, cmdErr.Code)
+}
+
+func TestScanPassesResolutionStrictnessToResolver(t *testing.T) {
+	clientMock := testdata.NewDebClientMock()
+	addMockedFormatsResponse(clientMock, "yarn\\.lock")
+	addMockedFileUploadResponse(clientMock)
+	addMockedFinishResponse(clientMock, http.StatusNoContent)
+	addMockedStatusResponse(clientMock, http.StatusOK, 100)
+
+	resolverMock := resolveTestdata.ResolverMock{}
+	resolverMock.SetFiles([]string{"yarn.lock"})
+
+	scanner := makeScanner(clientMock, &resolverMock, nil)
+
+	cwd, _ := os.Getwd()
+	defer resetWd(t, cwd)
+	defer cleanUpResolution(t, resolverMock)
+
+	opts := DebrickedOptions{
+		Path:                 testdataNpm,
+		Resolve:              true,
+		RepositoryName:       testdataNpm,
+		CommitName:           "testdata/npm-commit",
+		ResolutionStrictness: resolution.FailIfAnyFail,
+	}
+	err := scanner.Scan(opts)
+	assert.NoError(t, err)
+
+	resolveOptions, ok := resolverMock.Options.(resolution.DebrickedOptions)
+	assert.True(t, ok, "failed to assert that resolve options were passed")
+	assert.Equal(t, resolution.FailIfAnyFail, resolveOptions.ResolutionStrictness)
 }
 
 // TestScanWithResolveErr tests that the scan is not aborted if the resolution fails
