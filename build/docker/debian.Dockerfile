@@ -116,6 +116,7 @@ RUN apt -y update && apt -y install --no-install-recommends \
       libcurl4 \
       libedit2 \
       libgcc-s1 \
+      libncurses6 \
       libpython3-dev \
       libsqlite3-0 \
       libstdc++6 \
