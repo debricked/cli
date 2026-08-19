@@ -199,6 +199,35 @@ func TestResolveDirWithManifestFiles(t *testing.T) {
 	}
 }
 
+func TestShouldGenerateSwiftLockUntilBothFilesExist(t *testing.T) {
+	tests := []struct {
+		name      string
+		lockFiles []string
+		want      bool
+	}{
+		{name: "no lock files", want: true},
+		{name: "native lock only", lockFiles: []string{"Package.resolved"}, want: true},
+		{name: "debricked lock only", lockFiles: []string{".spm.debricked.lock"}, want: true},
+		{name: "both lock files", lockFiles: []string{"Package.resolved", ".spm.debricked.lock"}, want: false},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			group := file.Group{
+				ManifestFile: "Package.swift",
+				LockFiles:    test.lockFiles,
+			}
+			assert.Equal(t, test.want, shouldGenerateLock(group, 0))
+		})
+	}
+
+	group := file.Group{
+		ManifestFile: "Package.swift",
+		LockFiles:    []string{"Package.resolved", ".spm.debricked.lock"},
+	}
+	assert.True(t, shouldGenerateLock(group, 2))
+}
+
 func TestResolveDirWithExclusions(t *testing.T) {
 	f := testdata.NewFinderMock()
 	groups := file.Groups{}

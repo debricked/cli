@@ -276,6 +276,9 @@ func shouldGenerateLock(fileGroup file.Group, regenerate int) bool {
 	if !fileGroup.HasFile() {
 		return false
 	}
+	if isSwiftManifest(fileGroup.ManifestFile) {
+		return shouldGenerateSwiftLock(fileGroup, regenerate)
+	}
 	switch regenerate {
 	case 0:
 		return !fileGroup.HasLockFiles() || shouldGeneratePubDepsFile(fileGroup)
@@ -286,6 +289,29 @@ func shouldGenerateLock(fileGroup file.Group, regenerate int) bool {
 	}
 
 	return false
+}
+
+func isSwiftManifest(manifestFile string) bool {
+	return strings.EqualFold(filepath.Base(manifestFile), "Package.swift")
+}
+
+func shouldGenerateSwiftLock(fileGroup file.Group, regenerate int) bool {
+	if regenerate == 2 {
+		return true
+	}
+
+	nativeLockExists := false
+	debrickedLockExists := false
+	for _, lockFile := range fileGroup.LockFiles {
+		switch filepath.Base(lockFile) {
+		case "Package.resolved":
+			nativeLockExists = true
+		case ".spm.debricked.lock":
+			debrickedLockExists = true
+		}
+	}
+
+	return !nativeLockExists || !debrickedLockExists
 }
 
 func onlyNonNativeLockFiles(lockFiles []string) bool {

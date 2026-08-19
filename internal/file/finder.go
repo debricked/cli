@@ -219,7 +219,14 @@ func (finder *Finder) GetSupportedFormats() ([]*CompiledFormat, error) {
 		LockFileRegexes:   []string{""},
 	}
 
+	swiftEntry := &Format{
+		ManifestFileRegex: "^Package\\.swift$",
+		DocumentationUrl:  "https://docs.debricked.com/overview/language-support/swift",
+		LockFileRegexes:   []string{"^Package\\.resolved$", "^\\.spm\\.debricked\\.lock$"},
+	}
+
 	formats = append(formats, sbtEntry)
+	formats = append(formats, swiftEntry)
 
 	var compiledDependencyFileFormats []*CompiledFormat
 	for _, format := range formats {

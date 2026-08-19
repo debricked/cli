@@ -22,6 +22,7 @@ var defaultExclusions = DefaultExclusionList{
 		"obj",              // nuget
 		"bower_components", // bower
 		".vscode-test",     // excluding testing framework
+		".build",           // swiftpm checkouts and build artifacts
 	},
 }
 

@@ -70,7 +70,25 @@ RUN apk --no-cache --update add \
 
 RUN apk --no-cache --update add dotnet8-sdk --repository=https://dl-cdn.alpinelinux.org/alpine/v3.20/community
 
-RUN dotnet --version && npm -v && yarn -v && go version
+# Install Swift toolchain for Swift Package Manager resolution in CI.
+ARG SWIFT_VERSION="6.3.3"
+ENV SWIFTLY_HOME_DIR="/root/.local/share/swiftly"
+ENV PATH="$SWIFTLY_HOME_DIR/bin:$PATH"
+RUN apk add --no-cache \
+  ca-certificates \
+  curl \
+  gcompat \
+  tar \
+  xz && \
+  curl -O https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz && \
+  tar zxf swiftly-$(uname -m).tar.gz && \
+  ./swiftly init --quiet-shell-followup && \
+  . "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh" && \
+  swiftly install "$SWIFT_VERSION" && \
+  swiftly use "$SWIFT_VERSION" && \
+  rm -f swiftly swiftly-$(uname -m).tar.gz
+
+RUN dotnet --version && npm -v && yarn -v && go version && swift --version
 
 # Install pnpm and bower for JavaScript resolution (npm/yarn/pnpm/bower)
 RUN npm install --global pnpm && pnpm -v && \

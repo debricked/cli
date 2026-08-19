@@ -13,6 +13,7 @@ import (
 	"github.com/debricked/cli/internal/resolution/pm/poetry"
 	"github.com/debricked/cli/internal/resolution/pm/pub"
 	"github.com/debricked/cli/internal/resolution/pm/sbt"
+	"github.com/debricked/cli/internal/resolution/pm/swift"
 	"github.com/debricked/cli/internal/resolution/pm/uv"
 	"github.com/debricked/cli/internal/resolution/pm/yarn"
 )
@@ -38,5 +39,6 @@ func Pms() []IPm {
 		composer.NewPm(),
 		sbt.NewPm(),
 		pub.NewPm(),
+		swift.NewPm(),
 	}
 }

@@ -106,7 +106,34 @@ RUN apt -y update && apt -y install ca-certificates && \
     python3-pip \
     openjdk-17-jdk
 
-RUN dotnet --version && go version
+# Install Swift toolchain for Swift Package Manager resolution in CI.
+ARG SWIFT_VERSION="6.3.3"
+ENV SWIFTLY_HOME_DIR="/root/.local/share/swiftly"
+ENV PATH="$SWIFTLY_HOME_DIR/bin:$PATH"
+RUN apt -y update && apt -y install --no-install-recommends \
+      clang \
+      curl \
+      libcurl4 \
+      libedit2 \
+      libgcc-s1 \
+      libpython3-dev \
+      libsqlite3-0 \
+      libstdc++6 \
+      libxml2 \
+      libz3-4 \
+      pkg-config \
+      tar \
+      xz-utils \
+      zlib1g && \
+    curl -O https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz && \
+    tar zxf swiftly-$(uname -m).tar.gz && \
+    ./swiftly init --quiet-shell-followup && \
+    . "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh" && \
+    swiftly install "$SWIFT_VERSION" && \
+    swiftly use "$SWIFT_VERSION" && \
+    rm -f swiftly swiftly-$(uname -m).tar.gz
+
+RUN dotnet --version && go version && swift --version
 
 RUN apt update -y && \
     apt install lsb-release apt-transport-https ca-certificates software-properties-common -y && \

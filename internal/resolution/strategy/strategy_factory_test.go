@@ -13,6 +13,7 @@ import (
 	"github.com/debricked/cli/internal/resolution/pm/poetry"
 	"github.com/debricked/cli/internal/resolution/pm/pub"
 	"github.com/debricked/cli/internal/resolution/pm/sbt"
+	"github.com/debricked/cli/internal/resolution/pm/swift"
 	"github.com/debricked/cli/internal/resolution/pm/testdata"
 	"github.com/debricked/cli/internal/resolution/pm/yarn"
 	"github.com/stretchr/testify/assert"
@@ -43,6 +44,7 @@ func TestMake(t *testing.T) {
 		composer.Name: composer.NewStrategy(nil),
 		sbt.Name:      sbt.NewStrategy(nil),
 		pub.Name:      pub.NewStrategy(nil),
+		swift.Name:    swift.NewStrategy(nil),
 	}
 	f := NewStrategyFactory()
 	var batch file.IBatch
