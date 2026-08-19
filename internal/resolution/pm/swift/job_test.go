@@ -104,6 +104,7 @@ func TestExtractDependencyTree(t *testing.T) {
 			if c.wantErr != "" {
 				assert.ErrorContains(t, err, c.wantErr)
 				assert.Nil(t, tree)
+
 				return
 			}
 			assert.NoError(t, err)
