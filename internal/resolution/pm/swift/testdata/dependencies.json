@@ -1,0 +1,36 @@
+{
+  "identity" : "example-app",
+  "name" : "ExampleApp",
+  "url" : "/workspace/example-app",
+  "version" : "unspecified",
+  "path" : "/workspace/example-app",
+  "dependencies" : [
+    {
+      "identity" : "swift-nio",
+      "name" : "swift-nio",
+      "url" : "https://github.com/apple/swift-nio.git",
+      "version" : "2.65.0",
+      "path" : "/workspace/example-app/.build/checkouts/swift-nio",
+      "dependencies" : [
+        {
+          "identity" : "swift-collections",
+          "name" : "swift-collections",
+          "url" : "https://github.com/apple/swift-collections.git",
+          "version" : "1.1.0",
+          "path" : "/workspace/example-app/.build/checkouts/swift-collections",
+          "dependencies" : [
+          ]
+        }
+      ]
+    },
+    {
+      "identity" : "swift-log",
+      "name" : "swift-log",
+      "url" : "https://github.com/apple/swift-log.git",
+      "version" : "1.6.1",
+      "path" : "/workspace/example-app/.build/checkouts/swift-log",
+      "dependencies" : [
+      ]
+    }
+  ]
+}
