@@ -14,8 +14,17 @@ import (
 
 const (
 	executableNotFoundErrRegex = `executable file not found`
+	resolvedFileName           = "Package.resolved"
 	depsFileName               = ".spm.debricked.lock"
 )
+
+const emptyResolvedFile = `{
+  "pins" : [
+
+  ],
+  "version" : 2
+}
+`
 
 // dependencyNode mirrors the `swift package show-dependencies --format json`
 // tree, which carries every field the backend needs to rebuild the transitive
@@ -66,6 +75,12 @@ func (j *Job) Run() {
 		return
 	}
 
+	if err := j.ensurePackageResolvedFile(); err != nil {
+		j.handleError(j.createError(err.Error(), "", status))
+
+		return
+	}
+
 	status = "generating .spm.debricked.lock"
 	j.SendStatus(status)
 
@@ -105,6 +120,19 @@ func (j *Job) Run() {
 
 		return
 	}
+}
+
+func (j *Job) ensurePackageResolvedFile() error {
+	resolvedFile := util.MakePathFromManifestFile(j.GetFile(), resolvedFileName)
+	_, err := os.Stat(resolvedFile)
+	if err == nil {
+		return nil
+	}
+	if !os.IsNotExist(err) {
+		return err
+	}
+
+	return os.WriteFile(resolvedFile, []byte(emptyResolvedFile), 0600)
 }
 
 // extractDependencyTree strips non-JSON command noise and verifies that the

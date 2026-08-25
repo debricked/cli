@@ -57,6 +57,11 @@ func TestRunSuccess(t *testing.T) {
 	j.Run()
 
 	assert.False(t, j.Errors().HasError())
+	resolvedContent, resolvedErr := os.ReadFile(filepath.Join(tmpDir, "Package.resolved"))
+	assert.NoError(t, resolvedErr)
+	assert.Contains(t, string(resolvedContent), `"pins"`)
+	assert.Contains(t, string(resolvedContent), `"version" : 2`)
+
 	lockContent, statErr := os.ReadFile(filepath.Join(tmpDir, ".spm.debricked.lock"))
 	assert.NoError(t, statErr)
 
@@ -68,6 +73,27 @@ func TestRunSuccess(t *testing.T) {
 	assert.Equal(t, "2.65.0", root.Dependencies[0].Version)
 	assert.Len(t, root.Dependencies[0].Dependencies, 1)
 	assert.Equal(t, "swift-collections", root.Dependencies[0].Dependencies[0].Identity)
+}
+
+func TestRunPreservesExistingPackageResolved(t *testing.T) {
+	tmpDir := t.TempDir()
+	manifest := filepath.Join(tmpDir, "Package.swift")
+	assert.NoError(t, os.WriteFile(manifest, []byte("// swift-tools-version: 5.9\n"), 0600))
+
+	existingResolved := []byte(`{"pins":[],"version":3}`)
+	assert.NoError(t, os.WriteFile(filepath.Join(tmpDir, "Package.resolved"), existingResolved, 0600))
+
+	depsFile, err := filepath.Abs(filepath.Join("testdata", "dependencies.json"))
+	assert.NoError(t, err)
+
+	j := NewJob(manifest, testdata.CmdFactoryMock{Name: "echo", Arg: "ok", DepsFile: depsFile})
+	go jobTestdata.WaitStatus(j)
+	j.Run()
+
+	assert.False(t, j.Errors().HasError())
+	resolvedContent, resolvedErr := os.ReadFile(filepath.Join(tmpDir, "Package.resolved"))
+	assert.NoError(t, resolvedErr)
+	assert.Equal(t, existingResolved, resolvedContent)
 }
 
 func TestRunInvalidDependencyTree(t *testing.T) {
