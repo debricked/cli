@@ -110,29 +110,36 @@ RUN apt -y update && apt -y install ca-certificates && \
 ARG SWIFT_VERSION="6.3.3"
 ENV SWIFTLY_HOME_DIR="/root/.local/share/swiftly"
 ENV PATH="$SWIFTLY_HOME_DIR/bin:$PATH"
-RUN bash -c 'apt -y update && apt -y install --no-install-recommends \
+RUN apt -y update && apt -y install --no-install-recommends \
       clang \
       curl \
+      gcc \
+      libcurl4-openssl-dev \
       libcurl4 \
+      libedit-dev \
       libedit2 \
       libgcc-s1 \
+      libicu-dev \
+      libncurses-dev \
       libncurses6 \
       libpython3-dev \
+      libsqlite3-dev \
       libsqlite3-0 \
       libstdc++6 \
+      libxml2-dev \
       libxml2 \
       libz3-4 \
       pkg-config \
       tar \
+      uuid-dev \
       xz-utils \
-      zlib1g && \
+    zlib1g && \
     curl -O https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz && \
     tar zxf swiftly-$(uname -m).tar.gz && \
     ./swiftly init --quiet-shell-followup && \
-    . "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh" && \
-    swiftly install "$SWIFT_VERSION" && \
-    swiftly use "$SWIFT_VERSION" && \
-    rm -f swiftly swiftly-$(uname -m).tar.gz\''
+    "$SWIFTLY_HOME_DIR/bin/swiftly" install "$SWIFT_VERSION" && \
+    "$SWIFTLY_HOME_DIR/bin/swiftly" use "$SWIFT_VERSION" && \
+    rm -f swiftly swiftly-$(uname -m).tar.gz
 
 RUN dotnet --version && go version && swift --version
 
