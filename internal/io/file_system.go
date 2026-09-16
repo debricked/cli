@@ -58,7 +58,7 @@ func (_ FileSystem) Remove(path string) error {
 }
 
 func (_ FileSystem) CloseFile(file *os.File) {
-	file.Close()
+	_ = file.Close()
 }
 
 func (_ FileSystem) WriteToWriter(writer io.Writer, content []byte) (int, error) {
@@ -74,7 +74,7 @@ func (_ FileSystem) Mkdir(name string, perm fs.FileMode) error {
 }
 
 func (_ FileSystem) RemoveAll(path string) {
-	os.RemoveAll(path)
+	_ = os.RemoveAll(path)
 }
 
 func (_ FileSystem) FsOpenEmbed(file embed.FS, path string) (fs.File, error) {
@@ -82,7 +82,7 @@ func (_ FileSystem) FsOpenEmbed(file embed.FS, path string) (fs.File, error) {
 }
 
 func (_ FileSystem) FsCloseFile(file fs.File) {
-	file.Close()
+	_ = file.Close()
 }
 
 func (_ FileSystem) FsReadAll(file fs.File) ([]byte, error) {

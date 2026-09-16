@@ -87,7 +87,7 @@ func (m *mockCmdFactory) MakeFindSubGraphCmd(workingDirectory string, _ string, 
 
 			return nil, err
 		}
-		defer file.Close()
+		defer func() { _ = file.Close() }()
 		_, err = file.Write(content)
 		if err != nil {
 

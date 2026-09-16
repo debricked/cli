@@ -23,7 +23,7 @@ func TestShouldProcessFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temporary directory: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	// Create a test file and a symbolic link to the file in the temporary directory
 	testFile := filepath.Join(tempDir, "test.py")
@@ -197,7 +197,7 @@ func TestFingerprintFilesAlreadyExists(t *testing.T) {
 			Regenerate:                   false,
 		},
 	)
-	os.Remove(temp.Name())
+	_ = os.Remove(temp.Name())
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Fingerprint file already exists")
 }
@@ -208,7 +208,7 @@ func TestFingerprintFilesBackslash(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temporary directory: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 	testFile := filepath.Join(tempDir, "testfile.py")
 
 	testFileSlashes := filepath.ToSlash(testFile)
@@ -298,7 +298,7 @@ func TestFingerprintsToFile(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Failed to create temporary directory: %v", err)
 			}
-			defer os.RemoveAll(dir)
+			defer func() { _ = os.RemoveAll(dir) }()
 
 			// Create fingerprints
 			fingerprints := Fingerprints{}

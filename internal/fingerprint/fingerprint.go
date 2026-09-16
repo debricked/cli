@@ -283,7 +283,7 @@ func (f *Fingerprints) ToFile(outputFile string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	return f.writeToFile(file)
 }
@@ -347,7 +347,7 @@ func inMemFingerprintTarBZip2Content(filename string, exclusions []string, inclu
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	bz2Reader := bzip2.NewReader(file)
 	tarReader := tar.NewReader(bz2Reader)
 	fingerprints := []FileFingerprint{}
@@ -384,7 +384,7 @@ func inMemFingerprintTarGZipContent(filename string, exclusions []string, inclus
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	gzReader, err := gzip.NewReader(file)
 	if err != nil {
 		return nil, err
@@ -425,7 +425,7 @@ func inMemFingerprintZipContent(filename string, exclusions []string, inclusions
 	if err != nil {
 		return nil, err
 	}
-	defer r.Close()
+	defer func() { _ = r.Close() }()
 
 	fingerprints := []FileFingerprint{}
 
@@ -447,7 +447,7 @@ func inMemFingerprintZipContent(filename string, exclusions []string, inclusions
 
 		_, err = io.Copy(hasher, rc) // #nosec
 		if err != nil {
-			rc.Close()
+			_ = rc.Close()
 
 			return nil, err
 		}
@@ -458,7 +458,7 @@ func inMemFingerprintZipContent(filename string, exclusions []string, inclusions
 			fingerprint:   hasher.Sum(nil),
 		})
 
-		rc.Close()
+		_ = rc.Close()
 	}
 
 	return fingerprints, nil

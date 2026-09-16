@@ -208,7 +208,7 @@ func CaptureStdout(function func(options DebrickedOptions) (Groups, error), opti
 		return ""
 	}
 
-	write.Close()
+	_ = write.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, err = io.Copy(&buf, read)

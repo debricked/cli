@@ -193,7 +193,7 @@ func parsePackagesConfig(filePath string) (*Packages, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer xmlFile.Close()
+	defer func() { _ = xmlFile.Close() }()
 
 	byteValue, err := ioReadAllCsproj(xmlFile)
 	if err != nil {
@@ -244,7 +244,7 @@ func writeContentToCsprojFile(newFilename string, content string) error {
 	if err != nil {
 		return err
 	}
-	defer csprojFile.Close()
+	defer func() { _ = csprojFile.Close() }()
 
 	_, err = csprojFile.WriteString(content)
 

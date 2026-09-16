@@ -41,7 +41,7 @@ func (r Reporter) Order(args report.IOrderArgs) error {
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	if res.StatusCode == http.StatusForbidden {
 		return SubscriptionError
 	}
@@ -66,7 +66,7 @@ func (r Reporter) getCommitId(hash string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode == http.StatusForbidden {
 		return 0, SubscriptionError

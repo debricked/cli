@@ -100,7 +100,7 @@ func (debClient *DebClient) IsEnterpriseCustomer(silent bool) bool {
 
 		return false
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode != http.StatusOK {
 		printNonEnterpriseMessage("HTTP error", "If this issue persists please create an issue on github: https://github.com/debricked/cli/issues\n", silent)

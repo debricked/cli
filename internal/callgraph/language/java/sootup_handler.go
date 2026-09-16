@@ -73,7 +73,7 @@ func (sh SootUpHandler) downloadSootUpWrapper(arc ioFs.IArchive, fs ioFs.IFileSy
 	if err != nil {
 		return err
 	}
-	defer zipFile.Close()
+	defer func() { _ = zipFile.Close() }()
 
 	err = sh.downloadCompressedSootUpWrapper(fs, zipFile, version)
 	if err != nil {
@@ -103,7 +103,7 @@ func (sh SootUpHandler) downloadCompressedSootUpWrapper(fs ioFs.IFileSystem, zip
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	_, err = fs.Copy(zipFile, resp.Body)
 

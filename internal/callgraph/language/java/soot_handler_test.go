@@ -94,7 +94,7 @@ func TestDownloadCompressedSootWrapper(t *testing.T) {
 	path := dir + "/soot_wrapper.zip"
 	file, err := fs.Create(path)
 	assert.NoError(t, err, "trying to create file")
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	err = sootHandler.downloadCompressedSootWrapper(fs, file, "11")
 	assert.NoError(t, err, "expected no error for downloading soot-wrapper")

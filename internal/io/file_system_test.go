@@ -122,7 +122,7 @@ func TestWriteToWriter(t *testing.T) {
 func TestMkdirTemp(t *testing.T) {
 	fn := fileNameFS + t.Name()
 	tmpdir, err := filesystem.MkdirTemp(fn)
-	defer os.RemoveAll(tmpdir)
+	defer func() { _ = os.RemoveAll(tmpdir) }()
 	assert.NoError(t, err)
 	assert.NotNil(t, tmpdir)
 }
@@ -140,7 +140,7 @@ func TestRemoveAll(t *testing.T) {
 func TestOpenEmbed(t *testing.T) {
 	file, err := filesystem.FsOpenEmbed(embedFile, embedFilePath)
 	assert.Nil(t, err)
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 }
 
 func TestCloseFs(t *testing.T) {
@@ -150,7 +150,7 @@ func TestCloseFs(t *testing.T) {
 
 func TestReadAll(t *testing.T) {
 	file, _ := filesystem.FsOpenEmbed(embedFile, embedFilePath)
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	bytes, err := filesystem.FsReadAll(file)
 
 	assert.Nil(t, err)

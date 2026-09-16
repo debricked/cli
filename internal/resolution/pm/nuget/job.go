@@ -128,7 +128,7 @@ func (j *Job) handleError(cmdError job.IError) {
 
 	// Remove lock file
 	dir := filepath.Dir(j.GetFile())
-	os.Remove(filepath.Join(dir, packagesConfigLockfile))
+	_ = os.Remove(filepath.Join(dir, packagesConfigLockfile))
 }
 
 func (j *Job) addDocumentation(expr string, matches [][]string, cmdError job.IError) job.IError {

@@ -26,7 +26,7 @@ func (i InitScriptHandler) WriteInitFile(targetFileName string, fileWriter write
 
 		return SetupScriptError{message: err.Error()}
 	}
-	defer lockFile.Close()
+	defer func() { _ = lockFile.Close() }()
 	err = fileWriter.Write(lockFile, content)
 	if err != nil {
 

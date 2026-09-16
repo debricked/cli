@@ -32,9 +32,9 @@ func TestGenerateCallgraph(t *testing.T) {
 	assert.DirExists(t, targetFolder)
 	assert.FileExists(t, callgraphFile)
 
-	os.RemoveAll(tmpFolder)
-	os.RemoveAll(targetFolder)
-	os.Remove(callgraphFile)
+	_ = os.RemoveAll(tmpFolder)
+	_ = os.RemoveAll(targetFolder)
+	_ = os.Remove(callgraphFile)
 
 }
 
@@ -68,6 +68,6 @@ func TestGenerateCallgraphNoBuild(t *testing.T) {
 	assert.True(t, targetFolderModTimeBefore == targetFolderModTimeAfter)
 	assert.FileExists(t, callgraphFile)
 
-	os.Remove(callgraphFile)
+	_ = os.Remove(callgraphFile)
 
 }

@@ -135,7 +135,7 @@ func (uploadBatch *uploadBatch) uploadFile(filePath string, timeout int) error {
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	defer writer.Close()
+	defer func() { _ = writer.Close() }()
 
 	fileData, _ := writer.CreateFormFile("fileData", filepath.Base(filePath))
 	f, err := os.Open(filepath.Clean(filePath))
@@ -168,7 +168,7 @@ func (uploadBatch *uploadBatch) uploadFile(filePath string, timeout int) error {
 	}
 	if !uploadBatch.initialized() {
 		data, _ := io.ReadAll(response.Body)
-		defer response.Body.Close()
+		defer func() { _ = response.Body.Close() }()
 		uFile := uploadedFile{}
 		_ = json.Unmarshal(data, &uFile)
 		if uFile.CiUploadId == 0 {
@@ -212,7 +212,7 @@ func (uploadBatch *uploadBatch) initAnalysis() error {
 	if err != nil {
 		return err
 	}
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 	if response.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("failed to initialize scan due to status code %d", response.StatusCode)
 	} else {
@@ -238,6 +238,7 @@ func (uploadBatch *uploadBatch) wait() (*UploadResult, error) {
 		if err != nil {
 			return nil, err
 		}
+		defer func() { _ = res.Body.Close() }()
 		status, err := newUploadStatus(res)
 		if err != nil {
 			return nil, err

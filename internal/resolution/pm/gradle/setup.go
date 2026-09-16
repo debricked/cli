@@ -144,8 +144,8 @@ func (gs *Setup) setupSubProjectPaths(gp Project) error {
 
 		return SetupSubprojectError{message: err.Error()}
 	}
-	defer file.Close()
-	defer os.Remove(multiProject)
+	defer func() { _ = file.Close() }()
+	defer func() { _ = os.Remove(multiProject) }()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
