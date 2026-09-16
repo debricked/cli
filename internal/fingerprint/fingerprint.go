@@ -235,7 +235,7 @@ func shouldProcessFile(fileInfo os.FileInfo, exclusions []string, inclusions []s
 }
 
 func computeHashForFile(filename string) (FileFingerprint, error) {
-	data, err := os.ReadFile(filename)
+	data, err := os.ReadFile(filename) // #nosec G304 -- filename comes from the CLI's own file discovery, not raw external input
 	if err != nil {
 		return FileFingerprint{}, err
 	}
@@ -270,7 +270,7 @@ func ensureDirExists(dir string) error {
 		return nil
 	}
 
-	return os.MkdirAll(dir, 0755)
+	return os.MkdirAll(dir, 0750)
 }
 
 func (f *Fingerprints) ToFile(outputFile string) error {
@@ -343,7 +343,7 @@ func shouldProcessTarHeader(header tar.Header, exclusions []string, inclusions [
 }
 
 func inMemFingerprintTarBZip2Content(filename string, exclusions []string, inclusions []string) ([]FileFingerprint, error) {
-	file, err := os.Open(filename)
+	file, err := os.Open(filename) // #nosec G304 -- filename comes from the CLI's own file discovery, not raw external input
 	if err != nil {
 		return nil, err
 	}
@@ -380,7 +380,7 @@ func inMemFingerprintTarBZip2Content(filename string, exclusions []string, inclu
 }
 
 func inMemFingerprintTarGZipContent(filename string, exclusions []string, inclusions []string) ([]FileFingerprint, error) {
-	file, err := os.Open(filename)
+	file, err := os.Open(filename) // #nosec G304 -- filename comes from the CLI's own file discovery, not raw external input
 	if err != nil {
 		return nil, err
 	}

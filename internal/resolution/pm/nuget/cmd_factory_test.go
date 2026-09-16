@@ -218,7 +218,7 @@ func TestWriteContentToCsprojFileErr(t *testing.T) {
 					panic(err)
 				}
 				_ = file.Close()
-				err = os.Chmod("readonly.csproj", 0444) // Set file permissions to read-only
+				err = os.Chmod("readonly.csproj", 0444) // #nosec G302 -- intentionally setting file read-only to test error handling
 				if err != nil {
 					panic(err)
 				}
@@ -335,7 +335,7 @@ func TestMakeInstallCmdNotAccessToFile(t *testing.T) {
 
 	filePath := filepath.Join(tempDir, "packages.config")
 
-	file, err := os.Create(filePath)
+	file, err := os.Create(filePath) // #nosec G304 -- filePath is a fixed test fixture path
 	if err != nil {
 		panic(err)
 	}

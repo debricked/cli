@@ -449,7 +449,7 @@ func convertOverrides(yamlOverrides []pURLConfigYAML) []purlConfig {
 
 func GetDebrickedConfig(path string) *DebrickedConfig {
 	var yamlConfig DebrickedConfigYAML
-	yamlFile, err := os.ReadFile(path)
+	yamlFile, err := os.ReadFile(path) // #nosec G304 -- path is the CLI's own configured debricked-config.yaml location
 	if err != nil {
 		fmt.Printf(
 			"%s Failed to read debricked config file on path \"%s\"",

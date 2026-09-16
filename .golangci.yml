@@ -13,10 +13,11 @@ linters:
     - cyclop # Checks function and package cyclomatic complexity
     - dupl # Tool for code clone detection
     - gocognit # Computes and checks the cognitive complexity of functions
+    - gosec # Inspects source code for security problems
     - nilerr # Finds the code that returns nil even if it checks that the error is not nil
     - nilnil # Checks that there is no simultaneous return of `nil` error and an invalid value
     - nlreturn # nlreturn checks for a new line before return and branch statements to increase code clarity
-    # TODO: goconst and gosec disabled after the golangci-lint v2 upgrade surfaced pre-existing findings; re-enable after a follow-up cleanup.
+    # TODO: goconst disabled after the golangci-lint v2 upgrade surfaced pre-existing findings; re-enable after a follow-up cleanup.
   exclusions:
     rules:
       # TODO: pre-existing staticcheck findings surfaced by the golangci-lint v2 upgrade, tracked for a follow-up cleanup.

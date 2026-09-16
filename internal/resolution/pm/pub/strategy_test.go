@@ -24,7 +24,7 @@ func TestStrategyInvoke(t *testing.T) {
 
 	for _, files := range cases {
 		filesCopy := append([]string{}, files...)
-		name := "len=" + string(rune(len(filesCopy)))
+		name := "len=" + string(rune(len(filesCopy))) // #nosec G115 -- test-name generation only, value bounded by small fixture slice lengths
 		t.Run(name, func(t *testing.T) {
 			s := NewStrategy(filesCopy)
 			jobs, err := s.Invoke()

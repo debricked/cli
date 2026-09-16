@@ -124,7 +124,7 @@ func TestResolves(t *testing.T) {
 			err := resolveCmd.RunE(resolveCmd, []string{c.manifestFile})
 			assert.NoError(t, err)
 
-			lockFileContents, fileErr := os.ReadFile(lockFile)
+			lockFileContents, fileErr := os.ReadFile(lockFile) // #nosec G304 -- lockFile is a fixed test fixture path
 			assert.NoError(t, fileErr)
 
 			actualString := string(lockFileContents)
@@ -133,7 +133,7 @@ func TestResolves(t *testing.T) {
 
 			if c.extraFileName != "" {
 				extraFile := filepath.Join(lockFileDir, c.extraFileName)
-				extraContents, extraErr := os.ReadFile(extraFile)
+				extraContents, extraErr := os.ReadFile(extraFile) // #nosec G304 -- extraFile is a fixed test fixture path
 				assert.NoError(t, extraErr)
 				assert.Greater(t, len(extraContents), 0)
 			}

@@ -46,7 +46,7 @@ func RunE(a auth.IAuthenticator) func(_ *cobra.Command, args []string) error {
 			return err
 		}
 		if viper.GetBool(JsonFlag) {
-			jsonToken, _ := json.Marshal(token)
+			jsonToken, _ := json.Marshal(token) // #nosec G117 -- CLI intentionally prints the user's own token locally, not transmitted or logged
 			fmt.Println(string(jsonToken))
 		} else {
 			fmt.Printf(

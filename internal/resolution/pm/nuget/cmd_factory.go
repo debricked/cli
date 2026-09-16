@@ -189,7 +189,7 @@ func getDefaultFrameworkOfDotnetVersion(dotnetVersion string) string {
 }
 
 func parsePackagesConfig(filePath string) (*Packages, error) {
-	xmlFile, err := os.Open(filePath)
+	xmlFile, err := os.Open(filePath) // #nosec G304 -- filePath is discovered by the CLI's own file scan
 	if err != nil {
 		return nil, err
 	}

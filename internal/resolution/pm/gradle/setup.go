@@ -139,7 +139,7 @@ func (gs *Setup) setupSubProjectPaths(gp Project) error {
 		return SetupSubprojectError{message: errorOutput + err.Error()}
 	}
 	multiProject := filepath.Join(gp.dir, multiProjectFilename)
-	file, err := os.Open(multiProject)
+	file, err := os.Open(multiProject) // #nosec G304 -- multiProject path is built from the CLI's own configured project directory
 	if err != nil {
 
 		return SetupSubprojectError{message: err.Error()}

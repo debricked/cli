@@ -28,7 +28,7 @@ func TestWrite(t *testing.T) {
 	err := fw.Write(testFile, content)
 
 	assert.NoError(t, err)
-	fileContents, err := os.ReadFile(fn)
+	fileContents, err := os.ReadFile(fn) // #nosec G304 -- fn is a fixed test fixture path
 	assert.NoError(t, err)
 	assert.Equal(t, fileContents, content)
 }

@@ -143,7 +143,7 @@ lazy val util = project("util-module")
 	assert.NoError(t, err)
 
 	targetDir := filepath.Join(tempDir, "target", "scala-3.6.4")
-	err = os.MkdirAll(targetDir, 0755)
+	err = os.MkdirAll(targetDir, 0750)
 	assert.NoError(t, err)
 
 	pomFilePath := filepath.Join(targetDir, "project.pom")

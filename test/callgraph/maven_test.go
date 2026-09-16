@@ -22,7 +22,7 @@ func TestGenerateCallgraph(t *testing.T) {
 	assert.NoFileExists(t, callgraphFile)
 
 	args := []string{"callgraph", mavenProjectPath}
-	out, err := exec.Command("debricked", args...).Output()
+	out, err := exec.Command("debricked", args...).Output() // #nosec G204 -- test invokes the CLI's own built binary with fixed test args
 	fmt.Println("debricked callgraph output:")
 	fmt.Println(string(out))
 	assert.NoError(t, err)
@@ -54,7 +54,7 @@ func TestGenerateCallgraphNoBuild(t *testing.T) {
 	targetFolderModTimeBefore := targetFolderInfoBefore.ModTime()
 
 	args := []string{"callgraph", mavenProjectPath, "--no-build"}
-	out, err := exec.Command("debricked", args...).Output()
+	out, err := exec.Command("debricked", args...).Output() // #nosec G204 -- test invokes the CLI's own built binary with fixed test args
 	fmt.Println("debricked callgraph --no-build output:")
 	fmt.Println(string(out))
 	assert.NoError(t, err)

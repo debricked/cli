@@ -154,7 +154,7 @@ func TestInstallCmdErrCleansUpLockFile(t *testing.T) {
 	j.Run()
 
 	lockFile := filepath.Join(dir, "packages.config.nuget.debricked.lock")
-	lockFileContents, fileErr := os.ReadFile(lockFile)
+	lockFileContents, fileErr := os.ReadFile(lockFile) // #nosec G304 -- lockFile is a fixed test fixture path
 
 	assert.Nil(t, lockFileContents)
 	assert.Regexp(t, regexp.MustCompile(`(no such file or directory|cannot find the file)`), fileErr.Error())
@@ -171,7 +171,7 @@ func TestSuccessfulInstallCmdWontDeleteLockFile(t *testing.T) {
 	j.Run()
 
 	lockFile := filepath.Join(dir, "packages.config.nuget.debricked.lock")
-	lockFileContents, fileErr := os.ReadFile(lockFile)
+	lockFileContents, fileErr := os.ReadFile(lockFile) // #nosec G304 -- lockFile is a fixed test fixture path
 
 	assert.NotNil(t, lockFileContents)
 	assert.Nil(t, fileErr)

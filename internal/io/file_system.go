@@ -30,11 +30,11 @@ type IFileSystem interface {
 type FileSystem struct{}
 
 func (_ FileSystem) Open(path string) (*os.File, error) {
-	return os.Open(path)
+	return os.Open(path) // #nosec G304 -- path is provided by CLI callers operating on user-specified project files
 }
 
 func (_ FileSystem) Create(path string) (*os.File, error) {
-	return os.Create(path)
+	return os.Create(path) // #nosec G304 -- path is provided by CLI callers operating on user-specified project files
 }
 
 func (_ FileSystem) Stat(path string) (os.FileInfo, error) {
@@ -50,7 +50,7 @@ func (_ FileSystem) StatFile(file *os.File) (os.FileInfo, error) {
 }
 
 func (_ FileSystem) ReadFile(path string) ([]byte, error) {
-	return os.ReadFile(path)
+	return os.ReadFile(path) // #nosec G304 -- path is provided by CLI callers operating on user-specified project files
 }
 
 func (_ FileSystem) Remove(path string) error {

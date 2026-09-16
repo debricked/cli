@@ -138,7 +138,7 @@ func detectNodePm(packageJSONPath string) string {
 
 func detectNodePmFromPackageJSON(packageJSONPath string) string {
 	// Prefer explicit packageManager field if present
-	content, err := os.ReadFile(packageJSONPath)
+	content, err := os.ReadFile(packageJSONPath) // #nosec G304 -- packageJSONPath is discovered by the CLI's own file scan
 	if err != nil {
 		return ""
 	}
@@ -178,7 +178,7 @@ func detectPyprojectPm(pyprojectPath string) string {
 		return poetry.Name
 	}
 
-	content, err := os.ReadFile(pyprojectPath)
+	content, err := os.ReadFile(pyprojectPath) // #nosec G304 -- pyprojectPath is discovered by the CLI's own file scan
 	if err == nil {
 		data := string(content)
 		hasPoetry := strings.Contains(data, "[tool.poetry]") ||
