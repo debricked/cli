@@ -45,7 +45,7 @@ func TestNewFingerprintCmd(t *testing.T) {
 
 func TestRunE(t *testing.T) {
 	defer func() {
-		os.Remove(fingerprint.OutputFileNameFingerprints)
+		_ = os.Remove(fingerprint.OutputFileNameFingerprints)
 	}()
 	fingerprintMock := testdata.NewFingerprintMock()
 	runE := RunE(fingerprintMock)
@@ -57,7 +57,7 @@ func TestRunE(t *testing.T) {
 
 func TestRunEFileExistsError(t *testing.T) {
 	defer func() {
-		os.Remove(fingerprint.OutputFileNameFingerprints)
+		_ = os.Remove(fingerprint.OutputFileNameFingerprints)
 	}()
 	fingerprintMock := testdata.NewFingerprintMockFileExistsError()
 	runE := RunE(fingerprintMock)

@@ -1,6 +1,6 @@
 module github.com/debricked/cli
 
-go 1.23.0
+go 1.27.1
 
 require (
 	github.com/becheran/wildmatch-go v1.0.0

@@ -13,7 +13,7 @@ type IFileWriter interface {
 type FileWriter struct{}
 
 func (fw FileWriter) Create(name string) (*os.File, error) {
-	return os.Create(name)
+	return os.Create(name) // #nosec G304 -- name is provided by CLI callers operating on user-specified project files
 }
 
 func (fw FileWriter) Write(file *os.File, p []byte) error {

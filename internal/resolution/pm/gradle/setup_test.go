@@ -82,12 +82,12 @@ func (m *mockCmdFactory) MakeFindSubGraphCmd(workingDirectory string, _ string, 
 	if m.createFile {
 		fileName := filepath.Join(workingDirectory, multiProjectFilename)
 		content := []byte(workingDirectory)
-		file, err := os.Create(fileName)
+		file, err := os.Create(fileName) // #nosec G304 -- fileName is a fixed test fixture path
 		if err != nil {
 
 			return nil, err
 		}
-		defer file.Close()
+		defer func() { _ = file.Close() }()
 		_, err = file.Write(content)
 		if err != nil {
 

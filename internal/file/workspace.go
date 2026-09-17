@@ -54,7 +54,7 @@ func (workspaceManifest *WorkspaceManifest) matchManifest(manifestPath string) b
 func getPackageJSONWorkspaces(rootManifest string) ([]string, error) {
 	var packageJson PackageJSON
 
-	jsonData, err := os.ReadFile(rootManifest)
+	jsonData, err := os.ReadFile(rootManifest) // #nosec G304 -- rootManifest is a manifest path discovered by the CLI's own file scan
 	if err != nil {
 		return nil, err
 	}

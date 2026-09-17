@@ -8,7 +8,7 @@ Feel free to reach out to any of the maintainers or other community members if y
 
 Requirements
 
-    Go version 1.20 or higher
+    Go version 1.27.1 or higher
 
 To simplify installation and testing during development, follow these steps to install the source code version of the CLI:
 
@@ -34,9 +34,8 @@ comment with your perspective on the idea.
 
 To get started, [fork this project](https://github.com/debricked/cli/fork) to your own git.
 
+Make sure to keep your fork up to date as well. You can do so by:
 
- Make sure to keep your fork up to date as well. You can do so by: 
- 
 `$ git remote add debricked-cli https://github.com/debricked/cli.git`
 
 `$ git fetch debricked-cli`
@@ -56,19 +55,25 @@ Create Branch:
 `$ git checkout -b my-cool-branch`
 
 ### Requirements
+
 Requirements for testing are generally included in the Go installation and the project, but its generally recommended to also install;
+
 - the language server [`gopls`](https://pkg.go.dev/golang.org/x/tools/gopls)
 - the linters runner [`golangci-lint`](https://github.com/golangci/golangci-lint) (we run it in our CI pipeline so its a requirement for merging), to enable running `make lint`.
 
 ### Testing
+
 All tests and a coverage check is run when calling the command;
+
 - `make test`
 
 We have a mininum test coverage limit at 95%.
 
 ### Linting
+
 To keep the project tidy we use `golangci-lint`, please run it during development to ensure an accaptable PR;
-- `make lint` 
+
+- `make lint`
 
 ## Submitting a Pull Request
 
@@ -90,7 +95,7 @@ $ git push -u origin my-cool-branch
 
 **Before Submitting a Bug Report**
 
-Make sure to include as much details as possible by using our general guidelines below before submitting a bug issue. 
+Make sure to include as much details as possible by using our general guidelines below before submitting a bug issue.
 
 - Make sure that your fork is up to date.
 - Determine if your bug is really a bug and not an error on your side.

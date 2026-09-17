@@ -39,7 +39,7 @@ func (awh AuthWebHelper) Callback(state string) string {
 		}
 
 		code <- r.URL.Query().Get("code")
-		fmt.Fprintf(w, "Authentication successful! You can close this window now.")
+		_, _ = fmt.Fprintf(w, "Authentication successful! You can close this window now.")
 	})
 
 	server := &http.Server{

@@ -15,7 +15,7 @@ type IBuildService interface {
 type BuildService struct{}
 
 func (b BuildService) ParseBuildModules(path string) ([]string, error) {
-	content, err := os.ReadFile(path)
+	content, err := os.ReadFile(path) // #nosec G304 -- path is discovered by the CLI's own file scan
 	if err != nil {
 		return nil, err
 	}
@@ -52,13 +52,13 @@ func (b BuildService) FindPomFile(dir string) (string, error) {
 }
 
 func (b BuildService) RenamePomToXml(pomFile, destDir string) (string, error) {
-	content, err := os.ReadFile(pomFile)
+	content, err := os.ReadFile(pomFile) // #nosec G304 -- pomFile path is discovered by the CLI's own file scan
 	if err != nil {
 		return "", err
 	}
 
 	pomXmlPath := filepath.Join(destDir, "pom.xml")
-	err = os.WriteFile(pomXmlPath, content, 0600)
+	err = os.WriteFile(pomXmlPath, content, 0600) // #nosec G703 -- pomXmlPath is built from the CLI's own resolved destination directory
 	if err != nil {
 		return "", err
 	}

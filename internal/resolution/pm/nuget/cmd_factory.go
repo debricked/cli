@@ -189,11 +189,11 @@ func getDefaultFrameworkOfDotnetVersion(dotnetVersion string) string {
 }
 
 func parsePackagesConfig(filePath string) (*Packages, error) {
-	xmlFile, err := os.Open(filePath)
+	xmlFile, err := os.Open(filePath) // #nosec G304 -- filePath is discovered by the CLI's own file scan
 	if err != nil {
 		return nil, err
 	}
-	defer xmlFile.Close()
+	defer func() { _ = xmlFile.Close() }()
 
 	byteValue, err := ioReadAllCsproj(xmlFile)
 	if err != nil {
@@ -244,7 +244,7 @@ func writeContentToCsprojFile(newFilename string, content string) error {
 	if err != nil {
 		return err
 	}
-	defer csprojFile.Close()
+	defer func() { _ = csprojFile.Close() }()
 
 	_, err = csprojFile.WriteString(content)
 

@@ -26,7 +26,7 @@ func TestIdentify(t *testing.T) {
 			t.Error("failed to assert that CI was identified")
 		}
 		_ = os.Unsetenv(EnvKey)
-		defer os.Setenv(EnvKey, value)
+		defer func() { _ = os.Setenv(EnvKey, value) }()
 
 		if ci.Identify() {
 			t.Error("failed to assert that CI was not identified")

@@ -85,7 +85,7 @@ func TestParsePackagesConfig(t *testing.T) {
 				return file.Name()
 			},
 			teardown: func() {
-				os.Remove("unreadable_file.config") // clean up the unreadable file
+				_ = os.Remove("unreadable_file.config") // clean up the unreadable file
 			},
 			shouldFail: true,
 		},
@@ -104,7 +104,7 @@ func TestParsePackagesConfig(t *testing.T) {
 				return file.Name()
 			},
 			teardown: func() {
-				os.Remove("malformed_file.config") // clean up the malformed file
+				_ = os.Remove("malformed_file.config") // clean up the malformed file
 			},
 			shouldFail: true,
 		},
@@ -197,7 +197,7 @@ func TestWriteContentToCsprojFileErr(t *testing.T) {
 			content:    "<Project></Project>",
 			shouldFail: false,
 			teardown: func() {
-				os.Remove("test.csproj") // Clean up the created file
+				_ = os.Remove("test.csproj") // Clean up the created file
 			},
 		},
 		{
@@ -217,15 +217,15 @@ func TestWriteContentToCsprojFileErr(t *testing.T) {
 				if err != nil {
 					panic(err)
 				}
-				file.Close()
-				err = os.Chmod("readonly.csproj", 0444) // Set file permissions to read-only
+				_ = file.Close()
+				err = os.Chmod("readonly.csproj", 0444) // #nosec G302 -- intentionally setting file read-only to test error handling
 				if err != nil {
 					panic(err)
 				}
 
 			},
 			teardown: func() {
-				os.Remove("readonly.csproj") // Clean up the read-only file
+				_ = os.Remove("readonly.csproj") // Clean up the read-only file
 			},
 		},
 	}
@@ -331,15 +331,15 @@ func TestMakeInstallCmdNotAccessToFile(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	filePath := filepath.Join(tempDir, "packages.config")
 
-	file, err := os.Create(filePath)
+	file, err := os.Create(filePath) // #nosec G304 -- filePath is a fixed test fixture path
 	if err != nil {
 		panic(err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	err = file.Chmod(0222) // write-only permissions
 

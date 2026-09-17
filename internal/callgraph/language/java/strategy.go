@@ -252,7 +252,8 @@ func strategyWarning(errMsg string) {
 	err := fmt.Errorf("%s", errMsg)
 	warningColor := color.New(color.FgYellow, color.Bold).SprintFunc()
 	defaultOutputWriter := log.Writer()
-	log.Println(warningColor("Warning: ") + err.Error())
+	sanitizedErr := strings.ReplaceAll(err.Error(), "\n", " ")
+	log.Println(warningColor("Warning: ") + sanitizedErr) // #nosec G706 -- newlines stripped above to prevent log-line injection
 	log.SetOutput(defaultOutputWriter)
 }
 

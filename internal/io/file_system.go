@@ -30,11 +30,11 @@ type IFileSystem interface {
 type FileSystem struct{}
 
 func (_ FileSystem) Open(path string) (*os.File, error) {
-	return os.Open(path)
+	return os.Open(path) // #nosec G304 -- path is provided by CLI callers operating on user-specified project files
 }
 
 func (_ FileSystem) Create(path string) (*os.File, error) {
-	return os.Create(path)
+	return os.Create(path) // #nosec G304 -- path is provided by CLI callers operating on user-specified project files
 }
 
 func (_ FileSystem) Stat(path string) (os.FileInfo, error) {
@@ -50,7 +50,7 @@ func (_ FileSystem) StatFile(file *os.File) (os.FileInfo, error) {
 }
 
 func (_ FileSystem) ReadFile(path string) ([]byte, error) {
-	return os.ReadFile(path)
+	return os.ReadFile(path) // #nosec G304 -- path is provided by CLI callers operating on user-specified project files
 }
 
 func (_ FileSystem) Remove(path string) error {
@@ -58,7 +58,7 @@ func (_ FileSystem) Remove(path string) error {
 }
 
 func (_ FileSystem) CloseFile(file *os.File) {
-	file.Close()
+	_ = file.Close()
 }
 
 func (_ FileSystem) WriteToWriter(writer io.Writer, content []byte) (int, error) {
@@ -74,7 +74,7 @@ func (_ FileSystem) Mkdir(name string, perm fs.FileMode) error {
 }
 
 func (_ FileSystem) RemoveAll(path string) {
-	os.RemoveAll(path)
+	_ = os.RemoveAll(path)
 }
 
 func (_ FileSystem) FsOpenEmbed(file embed.FS, path string) (fs.File, error) {
@@ -82,7 +82,7 @@ func (_ FileSystem) FsOpenEmbed(file embed.FS, path string) (fs.File, error) {
 }
 
 func (_ FileSystem) FsCloseFile(file fs.File) {
-	file.Close()
+	_ = file.Close()
 }
 
 func (_ FileSystem) FsReadAll(file fs.File) ([]byte, error) {

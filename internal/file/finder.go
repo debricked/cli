@@ -243,7 +243,7 @@ func (finder *Finder) GetSupportedFormatsJson() ([]byte, error) {
 		return finder.GetSupportedFormatsFallbackJson()
 	}
 
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	return io.ReadAll(res.Body)
 }

@@ -59,7 +59,7 @@ func TestCallbackInvalidState(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to make callback request: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusBadRequest {
 		t.Errorf("Expected status Bad Request, got %v", resp.Status)

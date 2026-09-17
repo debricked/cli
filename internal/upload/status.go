@@ -20,7 +20,7 @@ type uploadStatus struct {
 func newUploadStatus(response *http.Response) (*uploadStatus, error) {
 	status := uploadStatus{}
 	data, _ := io.ReadAll(response.Body)
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 	err := json.Unmarshal(data, &status)
 	if err != nil {
 		return nil, err

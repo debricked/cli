@@ -57,12 +57,12 @@ func TestRunSuccess(t *testing.T) {
 	j.Run()
 
 	assert.False(t, j.Errors().HasError())
-	resolvedContent, resolvedErr := os.ReadFile(filepath.Join(tmpDir, "Package.resolved"))
+	resolvedContent, resolvedErr := os.ReadFile(filepath.Join(tmpDir, "Package.resolved")) // #nosec G304 -- tmpDir is a test-created temp directory
 	assert.NoError(t, resolvedErr)
 	assert.Contains(t, string(resolvedContent), `"pins"`)
 	assert.Contains(t, string(resolvedContent), `"version" : 2`)
 
-	lockContent, statErr := os.ReadFile(filepath.Join(tmpDir, ".spm.debricked.lock"))
+	lockContent, statErr := os.ReadFile(filepath.Join(tmpDir, ".spm.debricked.lock")) // #nosec G304 -- tmpDir is a test-created temp directory
 	assert.NoError(t, statErr)
 
 	var root dependencyNode
@@ -91,7 +91,7 @@ func TestRunPreservesExistingPackageResolved(t *testing.T) {
 	j.Run()
 
 	assert.False(t, j.Errors().HasError())
-	resolvedContent, resolvedErr := os.ReadFile(filepath.Join(tmpDir, "Package.resolved"))
+	resolvedContent, resolvedErr := os.ReadFile(filepath.Join(tmpDir, "Package.resolved")) // #nosec G304 -- tmpDir is a test-created temp directory
 	assert.NoError(t, resolvedErr)
 	assert.Equal(t, existingResolved, resolvedContent)
 }

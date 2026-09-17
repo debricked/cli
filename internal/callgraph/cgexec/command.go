@@ -161,7 +161,7 @@ func MakeCommand(workingDir string, path string, args []string, ctx IContext) *e
 	} else {
 		command := args[0]
 		arguments := args[1:]
-		cmd = exec.CommandContext(ctx.Context(), command, arguments...)
+		cmd = exec.CommandContext(ctx.Context(), command, arguments...) // #nosec G204 -- command comes from the CLI's own configured tooling, not raw user input
 		cmd.Path = path
 		cmd.Dir = workingDir
 	}

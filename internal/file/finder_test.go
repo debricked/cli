@@ -208,7 +208,7 @@ func CaptureStdout(function func(options DebrickedOptions) (Groups, error), opti
 		return ""
 	}
 
-	write.Close()
+	_ = write.Close()
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
 	_, err = io.Copy(&buf, read)
@@ -461,10 +461,10 @@ func TestGetGroupsWithStrictFlag(t *testing.T) {
 					assert.Containsf(
 						t,
 						lockFiles[i],
-						expectedLockFiles[i],
+						expectedLockFiles[i], // #nosec G602 -- test data lengths are asserted to match earlier in the test
 						"actual lock file %s doesn't match expected %s",
 						lockFiles[i],
-						expectedLockFiles[i],
+						expectedLockFiles[i], // #nosec G602 -- test data lengths are asserted to match earlier in the test
 					)
 				}
 			}

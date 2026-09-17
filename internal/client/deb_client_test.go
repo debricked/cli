@@ -38,9 +38,9 @@ func TestNewDebClientWithNilToken(t *testing.T) {
 
 func TestNewDebClientWithWithURI(t *testing.T) {
 	accessToken := ""
-	os.Setenv("DEBRICKED_URI", "https://subdomain.debricked.com")
+	_ = os.Setenv("DEBRICKED_URI", "https://subdomain.debricked.com")
 	debClient := NewDebClient(&accessToken, nil)
-	os.Setenv("DEBRICKED_URI", "")
+	_ = os.Setenv("DEBRICKED_URI", "")
 	if *debClient.host != "https://subdomain.debricked.com" {
 		t.Error("failed to assert that host was set properly")
 	}
@@ -59,7 +59,7 @@ func TestClientUnauthorized(t *testing.T) {
 	res, err := client.Get("/api/1.0/open/user-profile/is-admin", "application/json")
 	if err == nil {
 		t.Error("failed to assert client error")
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 	}
 
 	if !strings.Contains(err.Error(), "Unauthorized. Specify access token") {
@@ -93,7 +93,7 @@ func TestGet(t *testing.T) {
 	if res.StatusCode != http.StatusOK {
 		t.Error("failed to assert that status code was 200")
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		t.Error("failed to read body")
@@ -125,7 +125,7 @@ func TestPost(t *testing.T) {
 	}
 	if res != nil {
 		t.Error("res should be nil with forbidden")
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 	}
 }
 
@@ -150,7 +150,7 @@ func TestPostWithTimeout(t *testing.T) {
 	}
 	if res != nil {
 		t.Error("res should be nil with forbidden")
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 	}
 }
 

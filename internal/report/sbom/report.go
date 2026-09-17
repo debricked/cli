@@ -104,7 +104,7 @@ func (r Reporter) generate(orderArgs OrderArgs) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 	if response.StatusCode == http.StatusPaymentRequired {
 		return "", ErrSubscription
 	} else if response.StatusCode != http.StatusOK {
@@ -140,7 +140,7 @@ func (r Reporter) download(uuid string) ([]byte, error) {
 		switch statusCode := res.StatusCode; statusCode {
 		case http.StatusOK:
 			data, _ := io.ReadAll(res.Body)
-			defer res.Body.Close()
+			defer func() { _ = res.Body.Close() }()
 			fmt.Printf("%s\n", color.GreenString("✔"))
 
 			return data, nil

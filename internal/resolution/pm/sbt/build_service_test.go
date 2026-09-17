@@ -32,13 +32,13 @@ func TestParseBuildModules(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
 
 	_, err = tmpFile.WriteString(content)
 	if err != nil {
 		t.Fatalf("Failed to write to temp file: %v", err)
 	}
-	tmpFile.Close()
+	_ = tmpFile.Close()
 
 	b := BuildService{}
 	modules, err := b.ParseBuildModules(tmpFile.Name())
@@ -60,10 +60,10 @@ func TestFindPomFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	scalaDir := filepath.Join(tempDir, "target", "scala-2.13")
-	err = os.MkdirAll(scalaDir, 0755)
+	err = os.MkdirAll(scalaDir, 0750)
 	if err != nil {
 		t.Fatalf("Failed to create directories: %v", err)
 	}
@@ -86,7 +86,7 @@ func TestFindPomFileNoTarget(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	b := BuildService{}
 	foundPom, err := b.FindPomFile(tempDir)
@@ -100,7 +100,7 @@ func TestRenamePomToXml(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	pomContent := "<project><artifactId>test</artifactId></project>"
 	pomPath := filepath.Join(tempDir, "test.pom")
@@ -115,7 +115,7 @@ func TestRenamePomToXml(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, filepath.Join(tempDir, "pom.xml"), xmlPath)
 
-	content, err := os.ReadFile(xmlPath)
+	content, err := os.ReadFile(xmlPath) // #nosec G304 -- xmlPath is a fixed test fixture path
 	assert.Nil(t, err)
 	assert.Equal(t, pomContent, string(content))
 }

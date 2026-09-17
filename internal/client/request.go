@@ -150,7 +150,7 @@ func (debClient *DebClient) authenticateExplicitToken() error {
 	}
 
 	if res != nil {
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 	}
 
 	var tokenData map[string]string
