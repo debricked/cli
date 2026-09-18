@@ -41,7 +41,7 @@ func TestNewStartCmdExplicitTokenTakesPrecedence(t *testing.T) {
 	}
 
 	token := "explicit-token"
-	authenticator := fakeAuthenticator{token: &oauth2.Token{RefreshToken: "cached-refresh-token"}}
+	authenticator := fakeAuthenticator{token: &oauth2.Token{RefreshToken: "cached-refresh-token"}} //nolint:gosec // test fixture, not a real credential
 	cmd := NewStartCmd(&token, authenticator, "https://debricked.com")
 
 	err := cmd.Execute()
@@ -65,7 +65,7 @@ func TestNewStartCmdFallsBackToCachedLogin(t *testing.T) {
 	}
 
 	token := ""
-	authenticator := fakeAuthenticator{token: &oauth2.Token{
+	authenticator := fakeAuthenticator{token: &oauth2.Token{ //nolint:gosec // test fixture, not a real credential
 		AccessToken:  "cached-jwt",
 		RefreshToken: "cached-refresh-token",
 	}}
@@ -241,13 +241,13 @@ func TestResolveToken(t *testing.T) {
 		{
 			name:          "explicit token wins over cached login",
 			explicit:      "explicit-token",
-			authenticator: fakeAuthenticator{token: &oauth2.Token{RefreshToken: "cached-refresh-token"}},
+			authenticator: fakeAuthenticator{token: &oauth2.Token{RefreshToken: "cached-refresh-token"}}, //nolint:gosec // test fixture, not a real credential
 			wantToken:     "explicit-token",
 		},
-		{
+		{ //nolint:gosec // test fixture, not a real credential
 			name:          "falls back to cached refresh token",
 			explicit:      "",
-			authenticator: fakeAuthenticator{token: &oauth2.Token{AccessToken: "jwt", RefreshToken: "cached-refresh-token"}},
+			authenticator: fakeAuthenticator{token: &oauth2.Token{AccessToken: "jwt", RefreshToken: "cached-refresh-token"}}, //nolint:gosec // test fixture, not a real credential
 			wantToken:     "cached-refresh-token",
 		},
 		{

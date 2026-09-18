@@ -49,7 +49,9 @@ func NewStartCmd(accessToken *string, authenticator auth.IAuthenticator, baseURL
 			}
 
 			// stdout is reserved for MCP JSON-RPC traffic, so status goes to stderr.
-			fmt.Fprintln(cmd.ErrOrStderr(), "debricked MCP server authenticated, running on stdio. Hit Ctrl-C to exit.")
+			if _, err := fmt.Fprintln(cmd.ErrOrStderr(), "debricked MCP server authenticated, running on stdio. Hit Ctrl-C to exit."); err != nil {
+				return cmderror.CommandError{Code: 1, Err: err}
+			}
 
 			err := serveFn(cmd.Context(), options, os.Stdin, os.Stdout)
 			if err == nil || errors.Is(err, context.Canceled) {
