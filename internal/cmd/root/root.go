@@ -5,6 +5,7 @@ import (
 	"github.com/debricked/cli/internal/cmd/callgraph"
 	"github.com/debricked/cli/internal/cmd/files"
 	"github.com/debricked/cli/internal/cmd/fingerprint"
+	"github.com/debricked/cli/internal/cmd/mcp"
 	"github.com/debricked/cli/internal/cmd/report"
 	"github.com/debricked/cli/internal/cmd/resolve"
 	"github.com/debricked/cli/internal/cmd/scan"
@@ -53,6 +54,7 @@ Read more: https://docs.debricked.com/product/administration/generate-access-tok
 	rootCmd.AddCommand(resolve.NewResolveCmd(container.Resolver()))
 	rootCmd.AddCommand(callgraph.NewCallgraphCmd(container.CallgraphGenerator()))
 	rootCmd.AddCommand(auth.NewAuthCmd(container.Authenticator()))
+	rootCmd.AddCommand(mcp.NewMCPCmd(&accessToken, container.Authenticator(), container.DebClient().Host()))
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 
