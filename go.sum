@@ -30,8 +30,8 @@ github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSs
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/debricked/fortify-sca-mcp/v26 v26.3.1 h1:TpZkBqKwpIXBbCWs69B42cet5pKfDUWjviiWiQd8ckc=
-github.com/debricked/fortify-sca-mcp/v26 v26.3.1/go.mod h1:CK+FgE9i0E2YS0WOljHDuFVZdE3GQrggoqDuF9C+CYw=
+github.com/debricked/fortify-sca-mcp/v26 v26.3.2 h1:33vsbzmTT9Pfs+QQohwOCyCPOcA49X87ryUeK06DpbQ=
+github.com/debricked/fortify-sca-mcp/v26 v26.3.2/go.mod h1:CK+FgE9i0E2YS0WOljHDuFVZdE3GQrggoqDuF9C+CYw=
 github.com/elazarl/goproxy v0.0.0-20230808193330-2592e75ae04a h1:mATvB/9r/3gvcejNsXKSkQ6lcIaNec2nyfOdlTBR2lU=
 github.com/elazarl/goproxy v0.0.0-20230808193330-2592e75ae04a/go.mod h1:Ro8st/ElPeALwNFlcTpWmkr6IoMFfkjXAvTHpevnDsM=
 github.com/emirpasic/gods v1.18.1 h1:FXtiHYKDGKCW2KzwZKx0iC0PQmdlorYgdFG9jPXJ1Bc=

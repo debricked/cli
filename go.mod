@@ -6,7 +6,7 @@ require (
 	github.com/becheran/wildmatch-go v1.0.0
 	github.com/bmatcuk/doublestar/v4 v4.6.0
 	github.com/chelnak/ysmrr v0.2.1
-	github.com/debricked/fortify-sca-mcp/v26 v26.3.1
+	github.com/debricked/fortify-sca-mcp/v26 v26.3.2
 	github.com/fatih/color v1.16.0
 	github.com/go-git/go-billy/v5 v5.5.0
 	github.com/go-git/go-git/v5 v5.11.0
