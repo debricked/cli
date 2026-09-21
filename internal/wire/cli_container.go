@@ -11,6 +11,7 @@ import (
 	"github.com/debricked/cli/internal/file"
 	"github.com/debricked/cli/internal/fingerprint"
 	"github.com/debricked/cli/internal/io"
+	"github.com/debricked/cli/internal/policy"
 	licenseReport "github.com/debricked/cli/internal/report/license"
 	sbomReport "github.com/debricked/cli/internal/report/sbom"
 	vulnerabilityReport "github.com/debricked/cli/internal/report/vulnerability"
@@ -95,6 +96,7 @@ func (cc *CliContainer) wire() error {
 	cc.vulnerabilityReporter = vulnerabilityReport.Reporter{DebClient: cc.debClient}
 	cc.sbomReporter = sbomReport.Reporter{DebClient: cc.debClient, FileWriter: io.FileWriter{}}
 	cc.authenticator = cc.debClient.Authenticator()
+	cc.policyValidator = policy.Validator{DebClient: cc.debClient, FileSystem: io.FileSystem{}}
 
 	return nil
 }
@@ -118,6 +120,7 @@ type CliContainer struct {
 	cgScheduler           callgraph.IScheduler
 	cgStrategyFactory     callgraphStrategy.IFactory
 	authenticator         auth.IAuthenticator
+	policyValidator       policy.IValidator
 }
 
 func (cc *CliContainer) DebClient() client.IDebClient {
@@ -158,6 +161,10 @@ func (cc *CliContainer) Fingerprinter() fingerprint.IFingerprint {
 
 func (cc *CliContainer) Authenticator() auth.IAuthenticator {
 	return cc.authenticator
+}
+
+func (cc *CliContainer) PolicyValidator() policy.IValidator {
+	return cc.policyValidator
 }
 
 func wireErr(err error) error {
