@@ -1,0 +1,24 @@
+name: Notify release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Notify Slack and Teams
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_URL: ${{ github.event.release.html_url }}
+          SLACK_WEBHOOK_URL: ${{ secrets.RELEASE_BOT_SLACK_WEBHOOK}}
+          RELEASE_BOT_TEAMS_WEBHOOK: ${{ secrets.RELEASE_BOT_TEAMS_WEBHOOK }}
+        run: python3 .github/scripts/notify_release.py
