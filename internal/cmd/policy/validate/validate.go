@@ -115,7 +115,7 @@ func print(writer io.Writer, result policy.Result, format string) error {
 
 func printText(writer io.Writer, result policy.Result) {
 	if result.Valid {
-		fmt.Fprintf(writer, "%s %s is valid\n", color.GreenString("✔"), result.File)
+		_, _ = fmt.Fprintf(writer, "%s %s is valid\n", color.GreenString("✔"), result.File)
 
 		return
 	}
@@ -124,7 +124,7 @@ func printText(writer io.Writer, result policy.Result) {
 	if len(result.Errors) == 1 {
 		errorLabel = "error"
 	}
-	fmt.Fprintf(
+	_, _ = fmt.Fprintf(
 		writer,
 		"%s %s has %d validation %s\n",
 		color.RedString("⨯"),
@@ -133,7 +133,7 @@ func printText(writer io.Writer, result policy.Result) {
 		errorLabel,
 	)
 	for _, validationError := range result.Errors {
-		fmt.Fprintf(writer, "%s\n", validationError.String())
+		_, _ = fmt.Fprintf(writer, "%s\n", validationError.String())
 	}
 }
 
@@ -142,7 +142,7 @@ func printText(writer io.Writer, result policy.Result) {
 func fail(cmd *cobra.Command, err error) error {
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
-	fmt.Fprintf(cmd.ErrOrStderr(), "%s %s\n", color.RedString("⨯"), err.Error())
+	_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s %s\n", color.RedString("⨯"), err.Error())
 
 	return cmderror.CommandError{Code: FailureExitCode, Err: err}
 }
