@@ -133,7 +133,7 @@ policies before it's installed.
 {
   "mcpServers": {
     "debricked": {
-      
+      "type": "stdio",
       "command": "debricked",
       "args": ["mcp", "start"]
     }
@@ -146,6 +146,7 @@ policies before it's installed.
 {
   "mcpServers": {
     "debricked": {
+      "type": "stdio",
       "command": "debricked",
       "args": ["mcp", "start"]
     }
