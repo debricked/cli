@@ -19,6 +19,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
           RELEASE_URL: ${{ github.event.release.html_url }}
-          SLACK_WEBHOOK_URL: ${{ secrets.RELEASE_BOT_SLACK_WEBHOOK}}
+          RELEASE_ASSETS_JSON: ${{ toJson(github.event.release.assets) }}
+          RELEASE_BOT_SLACK_WEBHOOK: ${{ secrets.RELEASE_BOT_SLACK_WEBHOOK }}
           RELEASE_BOT_TEAMS_WEBHOOK: ${{ secrets.RELEASE_BOT_TEAMS_WEBHOOK }}
         run: python3 .github/scripts/notify_release.py

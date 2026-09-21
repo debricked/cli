@@ -35,16 +35,23 @@ def env(name: str) -> str:
     return value
 
 
-def http_json(method: str, url: str, headers: dict, body: dict | None = None) -> dict:
-    data = json.dumps(body).encode() if body is not None else None
+def http_request(method: str, url: str, headers: dict, data: bytes | None = None) -> bytes:
     request = urllib.request.Request(url, data=data, method=method, headers=headers)
     try:
         with urllib.request.urlopen(request) as response:
-            return json.load(response)
+            return response.read()
     except urllib.error.HTTPError as error:
         detail = error.read().decode(errors="replace")
         print(f"::error::{method} {url} returned {error.code}: {detail}", file=sys.stderr)
         raise
+
+
+def http_json(method: str, url: str, headers: dict, body: dict | None = None) -> dict:
+    data = json.dumps(body).encode() if body is not None else None
+    # Webhook endpoints (Slack, Teams/Power Automate) commonly reply with an
+    # empty or plain-text body on success, not JSON, so only parse if present.
+    raw = http_request(method, url, headers, data)
+    return json.loads(raw) if raw.strip() else {}
 
 
 def generate_release_notes(repo: str, token: str, tag: str) -> dict:
@@ -74,7 +81,36 @@ def parse_changelog_url(body: str) -> str | None:
     return match.group(1) if match else None
 
 
-def slack_payload(tag: str, release_url: str, prs: list[dict], changelog_url: str | None) -> dict:
+def human_size(num_bytes: float) -> str:
+    # Matches GitHub's own release page style, e.g. "612 Bytes", "1.51 KB", "31.0 MB".
+    for unit in ("Bytes", "KB", "MB", "GB"):
+        if num_bytes < 1024 or unit == "GB":
+            return f"{num_bytes:.0f} {unit}" if unit == "Bytes" else f"{num_bytes:.2f} {unit}"
+        num_bytes /= 1024
+    return f"{num_bytes:.2f} GB"
+
+
+def parse_assets(raw_assets_json: str) -> list[dict]:
+    # Comes straight from the `release` event payload (`github.event.release.assets`),
+    # so no extra GitHub API call is needed to list them.
+    assets = json.loads(raw_assets_json or "[]")
+    return [
+        {
+            "name": asset["name"],
+            "url": asset["browser_download_url"],
+            "size": human_size(asset["size"]),
+        }
+        for asset in assets
+    ]
+
+
+def slack_payload(
+    tag: str,
+    release_url: str,
+    prs: list[dict],
+    changelog_url: str | None,
+    assets: list[dict],
+) -> dict:
     if prs:
         pr_text = "".join(f"\u2022 <{pr['url']}|{pr['title']}>\n" for pr in prs)
     else:
@@ -82,34 +118,76 @@ def slack_payload(tag: str, release_url: str, prs: list[dict], changelog_url: st
     if changelog_url:
         pr_text += f"\n<{changelog_url}|Full Changelog>\n"
 
+    blocks = [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": (
+                    f":sparkles: *New Debricked CLI release: {tag}* :sparkles:\n"
+                    f"<{release_url}|View release on GitHub>\n"
+                ),
+            },
+        },
+        {
+            "type": "section",
+            "text": {"type": "mrkdwn", "text": f"*What's Changed*\n{pr_text}"},
+        },
+    ]
+    blocks.extend(asset_blocks(assets))
+
     return {
         "text": f"New Debricked CLI release: {tag}!",
-        "blocks": [
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": (
-                        f":sparkles: *New Debricked CLI release: {tag}* :sparkles:\n"
-                        f"<{release_url}|View release on GitHub>\n"
-                    ),
-                },
-            },
-            {
-                "type": "section",
-                "text": {"type": "mrkdwn", "text": f"*What's Changed*\n{pr_text}"},
-            },
-        ],
+        "blocks": blocks,
     }
 
 
-def teams_payload(tag: str, release_url: str, prs: list[dict], changelog_url: str | None) -> dict:
+# Slack rejects section blocks whose text exceeds 3000 characters, so a long
+# asset list (this repo publishes 25+ per release) is split across blocks.
+MAX_BLOCK_TEXT_LEN = 2900
+
+
+def asset_blocks(assets: list[dict]) -> list[dict]:
+    if not assets:
+        return [
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": "*Assets (0)*\n_No assets attached to this release_\n"},
+            }
+        ]
+
+    heading = f"*Assets ({len(assets)})*\n"
+    blocks = []
+    current = heading
+    for asset in assets:
+        line = f"\u2022 <{asset['url']}|{asset['name']}> ({asset['size']})\n"
+        if len(current) + len(line) > MAX_BLOCK_TEXT_LEN and current != heading:
+            blocks.append({"type": "section", "text": {"type": "mrkdwn", "text": current}})
+            current = ""
+        current += line
+    if current:
+        blocks.append({"type": "section", "text": {"type": "mrkdwn", "text": current}})
+    return blocks
+
+
+def teams_payload(
+    tag: str,
+    release_url: str,
+    prs: list[dict],
+    changelog_url: str | None,
+    assets: list[dict],
+) -> dict:
     if prs:
         pr_text = "\n".join(f"- [{pr['title']}]({pr['url']})" for pr in prs)
     else:
         pr_text = "_No pull requests in this release_"
     if changelog_url:
         pr_text += f"\n\n[Full Changelog]({changelog_url})"
+
+    if assets:
+        assets_text = "\n".join(f"- [{a['name']}]({a['url']}) ({a['size']})" for a in assets)
+    else:
+        assets_text = "_No assets attached to this release_"
 
     pr_word = "pull request" if len(prs) == 1 else "pull requests"
 
@@ -138,6 +216,15 @@ def teams_payload(tag: str, release_url: str, prs: list[dict], changelog_url: st
             "separator": True,
         },
         {"type": "TextBlock", "text": pr_text, "wrap": True},
+        {
+            "type": "TextBlock",
+            "text": f"Assets ({len(assets)})",
+            "wrap": True,
+            "weight": "Bolder",
+            "size": "Medium",
+            "separator": True,
+        },
+        {"type": "TextBlock", "text": assets_text, "wrap": True},
     ]
 
     return {
@@ -167,7 +254,12 @@ def teams_payload(tag: str, release_url: str, prs: list[dict], changelog_url: st
 
 
 def post_webhook(url: str, payload: dict) -> None:
-    http_json("POST", url, headers={"Content-Type": "application/json"}, body=payload)
+    http_request(
+        "POST",
+        url,
+        headers={"Content-Type": "application/json"},
+        data=json.dumps(payload).encode(),
+    )
 
 
 def main() -> None:
@@ -175,6 +267,7 @@ def main() -> None:
     token = env("GH_TOKEN")
     tag = env("RELEASE_TAG")
     release_url = env("RELEASE_URL")
+    assets = parse_assets(os.environ.get("RELEASE_ASSETS_JSON", ""))
     slack_webhook = os.environ.get("RELEASE_BOT_SLACK_WEBHOOK", "").strip()
     teams_webhook = os.environ.get("RELEASE_BOT_TEAMS_WEBHOOK", "").strip()
 
@@ -188,13 +281,13 @@ def main() -> None:
     notes = generate_release_notes(repo, token, tag)
     prs = parse_pull_requests(notes["body"])
     changelog_url = parse_changelog_url(notes["body"])
-    print(f"Found {len(prs)} pull request(s) for release {tag}")
+    print(f"Found {len(prs)} pull request(s) and {len(assets)} asset(s) for release {tag}")
 
     if slack_webhook:
-        post_webhook(slack_webhook, slack_payload(tag, release_url, prs, changelog_url))
+        post_webhook(slack_webhook, slack_payload(tag, release_url, prs, changelog_url, assets))
         print("Posted to Slack")
     if teams_webhook:
-        post_webhook(teams_webhook, teams_payload(tag, release_url, prs, changelog_url))
+        post_webhook(teams_webhook, teams_payload(tag, release_url, prs, changelog_url, assets))
         print("Posted to Teams")
 
 
