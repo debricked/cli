@@ -69,6 +69,18 @@ def generate_release_notes(repo: str, token: str, tag: str) -> dict:
     )
 
 
+def get_release(repo: str, token: str, tag: str) -> dict:
+    return http_json(
+        "GET",
+        f"{GITHUB_API}/repos/{repo}/releases/tags/{tag}",
+        headers={
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {token}",
+            "X-GitHub-Api-Version": "2022-11-28",
+        },
+    )
+
+
 def parse_pull_requests(body: str) -> list[dict]:
     return [
         {"number": int(m["number"]), "title": m["title"], "url": m["url"]}
@@ -267,7 +279,12 @@ def main() -> None:
     token = env("GH_TOKEN")
     tag = env("RELEASE_TAG")
     release_url = env("RELEASE_URL")
-    assets = parse_assets(os.environ.get("RELEASE_ASSETS_JSON", ""))
+    assets_json = os.environ.get("RELEASE_ASSETS_JSON", "").strip()
+    if assets_json:
+        assets = parse_assets(assets_json)
+    else:
+        release = get_release(repo, token, tag)
+        assets = parse_assets(json.dumps(release.get("assets", [])))
     slack_webhook = os.environ.get("RELEASE_BOT_SLACK_WEBHOOK", "").strip()
     teams_webhook = os.environ.get("RELEASE_BOT_TEAMS_WEBHOOK", "").strip()
 

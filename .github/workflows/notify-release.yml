@@ -1,14 +1,16 @@
 name: Notify release
 
 on:
-  release:
-    types: [published]
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
 
 permissions:
   contents: read
 
 jobs:
   notify:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -17,9 +19,9 @@ jobs:
       - name: Notify Slack and Teams
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
-          RELEASE_URL: ${{ github.event.release.html_url }}
-          RELEASE_ASSETS_JSON: ${{ toJson(github.event.release.assets) }}
+          RELEASE_TAG: ${{ github.event.workflow_run.head_branch }}
+          RELEASE_URL: https://github.com/${{ github.repository }}/releases/tag/${{ github.event.workflow_run.head_branch }}
+          RELEASE_ASSETS_JSON: ""
           RELEASE_BOT_SLACK_WEBHOOK: ${{ secrets.RELEASE_BOT_SLACK_WEBHOOK }}
           RELEASE_BOT_TEAMS_WEBHOOK: ${{ secrets.RELEASE_BOT_TEAMS_WEBHOOK }}
         run: python3 .github/scripts/notify_release.py
