@@ -109,12 +109,14 @@ func requiredEnv(name string) string {
 	if value == "" {
 		fail(name + " is required")
 	}
+
 	return value
 }
 
 func getRelease(repo, token, tag string) release {
 	var release release
 	githubRequest(http.MethodGet, fmt.Sprintf("%s/repos/%s/releases/tags/%s", githubAPI, repo, tag), token, nil, &release)
+
 	return release
 }
 
@@ -128,17 +130,23 @@ func githubRequest(method, url, token string, body interface{}, target interface
 		requestBody = bytes.NewReader(encoded)
 	}
 
-	request, err := http.NewRequest(method, url, requestBody)
+	request, err := http.NewRequest(method, url, requestBody) //nolint:gosec // GitHub API URL is built from the configured repository.
 	if err != nil {
 		fail(fmt.Sprintf("create GitHub request: %v", err))
 	}
+
 	request.Header.Set("Accept", "application/vnd.github+json")
 	request.Header.Set("Authorization", "Bearer "+token)
 	request.Header.Set("X-GitHub-Api-Version", "2022-11-28")
 	request.Header.Set("Content-Type", "application/json")
 
 	response := doRequest(request)
-	defer response.Body.Close()
+	defer func() {
+		if err := response.Body.Close(); err != nil {
+			fail(fmt.Sprintf("close GitHub response: %v", err))
+		}
+	}()
+
 	if err := json.NewDecoder(response.Body).Decode(target); err != nil {
 		fail(fmt.Sprintf("decode GitHub response: %v", err))
 	}
@@ -150,6 +158,7 @@ func parsePullRequests(body string) []pullRequest {
 	for _, match := range matches {
 		prs = append(prs, pullRequest{Title: match[1], URL: match[2]})
 	}
+
 	return prs
 }
 
@@ -300,25 +309,32 @@ func postWebhook(url string, payload interface{}) {
 	if err != nil {
 		fail(fmt.Sprintf("encode webhook payload: %v", err))
 	}
-	request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
+	request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(body)) //nolint:gosec // Webhook URL is supplied through a repository secret.
 	if err != nil {
 		fail(fmt.Sprintf("create webhook request: %v", err))
 	}
 	request.Header.Set("Content-Type", "application/json")
 	response := doRequest(request)
-	response.Body.Close()
+	if err := response.Body.Close(); err != nil {
+		fail(fmt.Sprintf("close webhook response: %v", err))
+	}
 }
 
 func doRequest(request *http.Request) *http.Response {
-	response, err := http.DefaultClient.Do(request)
+	response, err := http.DefaultClient.Do(request) //nolint:gosec // URLs are the configured GitHub API or webhook endpoints.
 	if err != nil {
 		fail(fmt.Sprintf("%s %s failed: %v", request.Method, request.URL, err))
 	}
+
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
-		defer response.Body.Close()
 		body, _ := io.ReadAll(response.Body)
+		if err := response.Body.Close(); err != nil {
+			fail(fmt.Sprintf("close error response: %v", err))
+		}
+
 		fail(fmt.Sprintf("%s %s returned HTTP %d: %s", request.Method, request.URL, response.StatusCode, string(body)))
 	}
+
 	return response
 }
 
