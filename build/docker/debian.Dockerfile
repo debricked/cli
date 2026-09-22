@@ -126,6 +126,7 @@ RUN apt -y update && apt -y install --no-install-recommends \
       libsqlite3-dev \
       libsqlite3-0 \
       libstdc++6 \
+      zip \
       libxml2-dev \
       libxml2 \
       libz3-4 \
