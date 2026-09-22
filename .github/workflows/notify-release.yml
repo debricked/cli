@@ -16,6 +16,11 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.27.1"
+
       - name: Notify Slack and Teams
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -24,4 +29,4 @@ jobs:
           RELEASE_ASSETS_JSON: ""
           RELEASE_BOT_SLACK_WEBHOOK: ${{ secrets.RELEASE_BOT_SLACK_WEBHOOK }}
           RELEASE_BOT_TEAMS_WEBHOOK: ${{ secrets.RELEASE_BOT_TEAMS_WEBHOOK }}
-        run: python3 .github/scripts/notify_release.py
+        run: go run ./cmd/release-notifier
