@@ -134,6 +134,7 @@ RUN apt -y update && apt -y install --no-install-recommends \
       tar \
       uuid-dev \
       xz-utils \
+      zip \
     zlib1g && \
     curl -O https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz && \
     tar zxf swiftly-$(uname -m).tar.gz && \
