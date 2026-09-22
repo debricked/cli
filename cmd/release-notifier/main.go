@@ -218,6 +218,7 @@ func slackMessage(tag, releaseURL string, prs []pullRequest, changelogURL string
 		section("*What's Changed*\n" + changed),
 	}
 	blocks = append(blocks, slackAssetBlocks(assets)...)
+
 	return slackPayload{Text: fmt.Sprintf("New Debricked CLI release: %s!", tag), Blocks: blocks}
 }
 
@@ -241,6 +242,7 @@ func slackAssetBlocks(assets []asset) []slackBlock {
 		}
 		current += line
 	}
+
 	return append(blocks, section(current))
 }
 
@@ -304,6 +306,7 @@ func textBlock(text, weight, size string, separator bool) map[string]interface{}
 	if separator {
 		block["separator"] = true
 	}
+
 	return block
 }
 
