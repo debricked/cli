@@ -167,6 +167,7 @@ func parseChangelogURL(body string) string {
 	if len(match) == 0 {
 		return ""
 	}
+
 	return match[1]
 }
 
@@ -179,6 +180,7 @@ func parseAssets(releaseAssets []releaseAsset) []asset {
 			Size: humanSize(releaseAsset.Size),
 		})
 	}
+
 	return assets
 }
 
@@ -194,6 +196,7 @@ func humanSize(size int64) string {
 			return fmt.Sprintf("%.2f %s", value, unit)
 		}
 	}
+
 	return fmt.Sprintf("%.2f GB", value)
 }
 
