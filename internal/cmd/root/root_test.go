@@ -11,7 +11,7 @@ import (
 func TestNewRootCmd(t *testing.T) {
 	cmd := NewRootCmd("v0.0.0", wire.GetCliContainer())
 	commands := cmd.Commands()
-	nbrOfCommands := 8
+	nbrOfCommands := 9
 	if len(commands) != nbrOfCommands {
 		t.Errorf(
 			"failed to assert that there were %d sub commands connected (was %d)",
@@ -36,6 +36,16 @@ func TestNewRootCmd(t *testing.T) {
 	}
 	assert.Truef(t, match, "failed to assert that flag was present: "+OldAccessTokenFlag)
 	assert.Len(t, viperKeys, 23)
+
+	mcpMatch := false
+	for _, subCmd := range commands {
+		if subCmd.Name() == "mcp" {
+			mcpMatch = true
+
+			break
+		}
+	}
+	assert.True(t, mcpMatch, "failed to assert that mcp command was registered")
 }
 
 func TestPreRun(t *testing.T) {

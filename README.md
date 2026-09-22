@@ -106,6 +106,65 @@ docker run -v $(pwd):/root debricked/cli:2-resolution-debian debricked scan -t <
 ### CI/CD integration
 If you would rather use `debricked` in your CI/CD pipelines, check out the [templates](examples/templates/README.md).
 
+## MCP
+`debricked mcp start` runs a [Model Context Protocol](https://modelcontextprotocol.io) server over stdio, letting
+AI coding assistants (Claude, Copilot, Cursor, etc.) check whether a dependency is allowed by your Fortify SCA
+policies before it's installed.
+
+1. Authenticate once with `debricked auth login`, or have a [Debricked access token](https://docs.debricked.com/product/administration/generate-access-token) ready to pass via `--access-token`/`DEBRICKED_TOKEN`.
+2. Point your MCP client at the `debricked` binary with the `mcp start` arguments. Examples below assume `debricked`
+   is on your `PATH`; otherwise use the full path to the binary.
+
+### VS Code (`.vscode/mcp.json`)
+```jsonc
+{
+  "servers": {
+    "debricked": {
+      "type": "stdio",
+      "command": "debricked",
+      "args": ["mcp", "start"]
+    }
+  }
+}
+```
+
+### Claude Desktop (`claude_desktop_config.json`)
+```jsonc
+{
+  "mcpServers": {
+    "debricked": {
+      "type": "stdio",
+      "command": "debricked",
+      "args": ["mcp", "start"]
+    }
+  }
+}
+```
+
+### Cursor (`.cursor/mcp.json`)
+```jsonc
+{
+  "mcpServers": {
+    "debricked": {
+      "type": "stdio",
+      "command": "debricked",
+      "args": ["mcp", "start"]
+    }
+  }
+}
+```
+
+If you haven't run `debricked auth login`, pass the token explicitly instead:
+```jsonc
+{
+  "command": "debricked",
+  "args": ["mcp", "start"],
+  "env": {
+    "DEBRICKED_TOKEN": "<access-token>"
+  }
+}
+```
+
 ## Policy
 Validate your `debricked_policy.json` against Debricked's policy schema before you scan, so that a
 broken policy file is caught locally instead of in your pipeline.
