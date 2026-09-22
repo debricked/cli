@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "policies": [
+    {
+      "name": "No critical vulnerabilities",
+      "action": "fail",
+      "rules": [
+        {
+          "attribute": "cvss3",
+          "operator": ">=",
+          "value": 9
+        }
+      ]
+    }
+  ]
+}

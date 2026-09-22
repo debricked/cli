@@ -106,6 +106,46 @@ docker run -v $(pwd):/root debricked/cli:2-resolution-debian debricked scan -t <
 ### CI/CD integration
 If you would rather use `debricked` in your CI/CD pipelines, check out the [templates](examples/templates/README.md).
 
+## Policy
+Validate your `debricked_policy.json` against Debricked's policy schema before you scan, so that a
+broken policy file is caught locally instead of in your pipeline.
+
+```sh
+debricked policy validate                                  # validates ./debricked_policy.json
+debricked policy validate .debricked/debricked_policy.json # validates a specific file
+debricked policy validate .debricked                       # validates debricked_policy.json in that directory
+```
+
+Each validation error is printed on its own line, prefixed with the property it concerns:
+```
+⨯ debricked_policy.json has 2 validation errors
+policies[0].name: The property name is required
+policies[0].rules: Array must have at least 1 item
+```
+
+Pass `--output json` (`-o json`) to emit the result as JSON for CI integrations. Validation results
+are written to stdout, other failures to stderr, which keeps the JSON output parseable:
+```json
+{
+  "file": "debricked_policy.json",
+  "valid": false,
+  "errors": [
+    {
+      "propertyPath": "policies[0].name",
+      "message": "The property name is required",
+      "context": {"constraint": "required"}
+    }
+  ]
+}
+```
+
+### Exit codes
+| Code | Meaning |
+| ---- | ------- |
+| 0    | The policy file is valid |
+| 1    | The policy file contains validation errors |
+| 2    | The validation could not be performed, for example due to a missing policy file, a bad access token or an unreachable service |
+
 ## Contributing
 Thank you for your interest in making Debricked CLI even better! Read more about contributing to the
 project [here](CONTRIBUTING.md).
