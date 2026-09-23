@@ -40,10 +40,13 @@ Complete documentation is available at https://docs.debricked.com/tools-and-inte
 		&accessToken,
 		OldAccessTokenFlag,
 		"t",
-		viper.GetString(AccessTokenFlag),
+		"",
 		`Debricked access token. 
 Read more: https://docs.debricked.com/product/administration/generate-access-token`,
 	)
+	// Set the env var value directly on the variable (not as the flag's registered default) so it
+	// isn't echoed back in --help/usage output, while still allowing -t/--access-token to override it.
+	accessToken = viper.GetString(AccessTokenFlag)
 
 	var debClient = container.DebClient()
 	debClient.SetAccessToken(&accessToken)
