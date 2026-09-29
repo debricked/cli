@@ -82,39 +82,39 @@ func checkClientScope(cmd *cobra.Command, fs io.IFileSystem, env mcpclient.IEnvi
 
 	path, err := mcpclient.ConfigPath(client, global, env)
 	if err != nil {
-		fmt.Fprintf(out, "%s %s: %v\n", color.RedString("✘"), label, err)
+		_, _ = fmt.Fprintf(out, "%s %s: %v\n", color.RedString("✘"), label, err)
 
 		return false
 	}
 
 	config, existed, err := mcpclient.ReadConfig(fs, path)
 	if err != nil {
-		fmt.Fprintf(out, "%s %s: %v\n", color.RedString("✘"), label, err)
+		_, _ = fmt.Fprintf(out, "%s %s: %v\n", color.RedString("✘"), label, err)
 
 		return false
 	}
 
 	entry, ok := mcpclient.HasServerEntry(config, mcpclient.ServerMapKey(client), mcpclient.ServerEntryName)
 	if !existed || !ok {
-		fmt.Fprintf(out, "%s %s: not configured (%s)\n", color.RedString("✘"), label, path)
+		_, _ = fmt.Fprintf(out, "%s %s: not configured (%s)\n", color.RedString("✘"), label, path)
 
 		return false
 	}
 
 	command, args, err := mcpclient.EntryCommand(entry)
 	if err != nil {
-		fmt.Fprintf(out, "%s %s: configured at %s but entry is invalid: %v\n", color.RedString("✘"), label, path, err)
+		_, _ = fmt.Fprintf(out, "%s %s: configured at %s but entry is invalid: %v\n", color.RedString("✘"), label, path, err)
 
 		return false
 	}
-	fmt.Fprintf(out, "%s %s: configured (%s)\n", color.GreenString("✔"), label, path)
+	_, _ = fmt.Fprintf(out, "%s %s: configured (%s)\n", color.GreenString("✔"), label, path)
 
 	if err := mcpclient.CheckServer(cmd.Context(), command, args, mcpclient.DefaultHandshakeTimeout); err != nil {
-		fmt.Fprintf(out, "  %s server check failed: %v\n", color.RedString("✘"), err)
+		_, _ = fmt.Fprintf(out, "  %s server check failed: %v\n", color.RedString("✘"), err)
 
 		return false
 	}
-	fmt.Fprintf(out, "  %s server responded to a live MCP handshake\n", color.GreenString("✔"))
+	_, _ = fmt.Fprintf(out, "  %s server responded to a live MCP handshake\n", color.GreenString("✔"))
 
 	return true
 }

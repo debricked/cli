@@ -72,7 +72,7 @@ so the server can authenticate when your MCP client starts it.`,
 
 			changed := mcpclient.UpsertServerEntry(config, mcpclient.ServerMapKey(client), mcpclient.ServerEntryName, fields)
 			if !changed {
-				fmt.Fprintf(cmd.OutOrStdout(), "%s Already configured at %s, no changes made.\n", color.GreenString("✔"), path)
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "%s Already configured at %s, no changes made.\n", color.GreenString("✔"), path)
 
 				return nil
 			}
@@ -82,12 +82,12 @@ so the server can authenticate when your MCP client starts it.`,
 			}
 
 			if existed {
-				fmt.Fprintf(cmd.OutOrStdout(), "Backed up previous config to %s%s\n", path, mcpclient.BackupSuffix)
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Backed up previous config to %s%s\n", path, mcpclient.BackupSuffix)
 			}
 			if !portable {
-				fmt.Fprintf(cmd.ErrOrStderr(), "note: %q was not found on PATH, using the current binary's absolute path instead. This is machine-specific and won't survive a reinstall or move.\n", "debricked")
+				_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "note: %q was not found on PATH, using the current binary's absolute path instead. This is machine-specific and won't survive a reinstall or move.\n", "debricked")
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "%s Configured %s at %s\n", color.GreenString("✔"), client, path)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "%s Configured %s at %s\n", color.GreenString("✔"), client, path)
 
 			warnIfNoCredentials(cmd, accessToken, authenticator, baseURL)
 
@@ -126,7 +126,7 @@ func warnIfNoCredentials(cmd *cobra.Command, accessToken *string, authenticator 
 	if token := strings.TrimSpace(*accessToken); token != "" {
 		options = server.Options{AccessToken: token, BaseURL: baseURL, APIVersion: apiVersion}
 	} else if _, err := authenticator.Token(); err != nil {
-		fmt.Fprintf(cmd.ErrOrStderr(), "warning: no access token found; run `debricked auth login` before starting the server. (%v)\n", err)
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "warning: no access token found; run `debricked auth login` before starting the server. (%v)\n", err)
 
 		return
 	} else {
@@ -134,6 +134,6 @@ func warnIfNoCredentials(cmd *cobra.Command, accessToken *string, authenticator 
 	}
 
 	if err := verifyFn(cmd.Context(), options); err != nil {
-		fmt.Fprintf(cmd.ErrOrStderr(), "warning: access token rejected: %v\n", err)
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "warning: access token rejected: %v\n", err)
 	}
 }

@@ -45,7 +45,7 @@ in it, are left in place; a backup of the previous file is written to <file>.bak
 			}
 
 			if !existed || !mcpclient.RemoveServerEntry(config, mcpclient.ServerMapKey(client), mcpclient.ServerEntryName) {
-				fmt.Fprintf(cmd.OutOrStdout(), "%s Already not configured at %s.\n", color.GreenString("✔"), path)
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "%s Already not configured at %s.\n", color.GreenString("✔"), path)
 
 				return nil
 			}
@@ -54,8 +54,8 @@ in it, are left in place; a backup of the previous file is written to <file>.bak
 				return cmderror.CommandError{Code: 1, Err: err}
 			}
 
-			fmt.Fprintf(cmd.OutOrStdout(), "Backed up previous config to %s%s\n", path, mcpclient.BackupSuffix)
-			fmt.Fprintf(cmd.OutOrStdout(), "%s Removed %s configuration from %s\n", color.GreenString("✔"), client, path)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Backed up previous config to %s%s\n", path, mcpclient.BackupSuffix)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "%s Removed %s configuration from %s\n", color.GreenString("✔"), client, path)
 
 			return nil
 		},

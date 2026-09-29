@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os/exec"
 	"strings"
 	"time"
@@ -43,32 +44,92 @@ func CheckServer(ctx context.Context, command string, args []string, timeout tim
 
 	cmd := exec.CommandContext(ctx, command, args...) // #nosec G204 -- command/args come from the user's own MCP client config, not external input
 
+	stdin, stdout, stderr, err := setupCommand(cmd)
+	if err != nil {
+		return err
+	}
+
+	if err := cmd.Start(); err != nil {
+		return handleStartError(command, err)
+	}
+
+	done := waitForCommand(cmd)
+	response := readResponse(stdout)
+
+	if err := sendHandshake(stdin, cmd, done); err != nil {
+		return classifyFailure(stderr.String(), err)
+	}
+
+	result := waitForResponse(ctx, response)
+
+	_ = cmd.Process.Kill()
+	<-done
+
+	if result != nil {
+		return classifyFailure(stderr.String(), result)
+	}
+
+	return nil
+}
+
+func setupCommand(cmd *exec.Cmd) (io.WriteCloser, io.ReadCloser, *strings.Builder, error) {
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
-		return fmt.Errorf("failed to open stdin: %w", err)
+		return nil, nil, nil, fmt.Errorf("failed to open stdin: %w", err)
 	}
+
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		return fmt.Errorf("failed to open stdout: %w", err)
+		return nil, nil, nil, fmt.Errorf("failed to open stdout: %w", err)
 	}
+
 	var stderr strings.Builder
 	cmd.Stderr = &stderr
 
-	if err := cmd.Start(); err != nil {
-		if errors.Is(err, exec.ErrNotFound) {
-			return fmt.Errorf("%q was not found on PATH", command)
-		}
+	return stdin, stdout, &stderr, nil
+}
 
-		return fmt.Errorf("failed to start %q: %w", command, err)
+func handleStartError(command string, err error) error {
+	if errors.Is(err, exec.ErrNotFound) {
+		return fmt.Errorf("%q was not found on PATH", command)
 	}
 
-	done := make(chan error, 1)
-	go func() { done <- cmd.Wait() }()
+	return fmt.Errorf("failed to start %q: %w", command, err)
+}
 
+func waitForCommand(cmd *exec.Cmd) <-chan error {
+	done := make(chan error, 1)
+
+	go func() {
+		done <- cmd.Wait()
+	}()
+
+	return done
+}
+
+func sendHandshake(
+	stdin io.WriteCloser,
+	cmd *exec.Cmd,
+	done <-chan error,
+) error {
+	_, err := stdin.Write(append(initializeRequest(), '\n'))
+	if err == nil {
+		return nil
+	}
+
+	_ = cmd.Process.Kill()
+	<-done
+
+	return fmt.Errorf("failed to send handshake request: %w", err)
+}
+
+func readResponse(stdout io.Reader) <-chan error {
 	response := make(chan error, 1)
+
 	go func() {
 		scanner := bufio.NewScanner(stdout)
 		scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+
 		for scanner.Scan() {
 			line := strings.TrimSpace(scanner.Text())
 			if line == "" {
@@ -81,53 +142,57 @@ func CheckServer(ctx context.Context, command string, args []string, timeout tim
 
 				return
 			}
+
 			if resp.Error != nil {
-				response <- fmt.Errorf("server returned an error: %s", resp.Error.Message)
+				response <- fmt.Errorf(
+					"server returned an error: %s",
+					resp.Error.Message,
+				)
 
 				return
 			}
+
 			response <- nil
 
 			return
 		}
+
+		if err := scanner.Err(); err != nil {
+			response <- fmt.Errorf("failed to read server output: %w", err)
+
+			return
+		}
+
 		response <- errors.New("server closed its output before responding")
 	}()
 
-	if _, err := stdin.Write(append(initializeRequest(), '\n')); err != nil {
-		_ = cmd.Process.Kill()
-		<-done
+	return response
+}
 
-		return classifyFailure(stderr.String(), fmt.Errorf("failed to send handshake request: %w", err))
-	}
-
-	var result error
+func waitForResponse(ctx context.Context, response <-chan error) error {
 	select {
 	case <-ctx.Done():
-		result = errors.New("timed out waiting for a response")
-	case result = <-response:
+		return errors.New("timed out waiting for a response")
+	case result := <-response:
+		return result
 	}
-
-	_ = cmd.Process.Kill()
-	<-done
-
-	if result != nil {
-		return classifyFailure(stderr.String(), result)
-	}
-
-	return nil
 }
 
 // classifyFailure turns a raw failure plus captured stderr into an actionable message,
 // recognizing the specific errors `debricked mcp start` (see start.go) prints.
 func classifyFailure(stderrOutput string, cause error) error {
 	stderrOutput = strings.TrimSpace(stderrOutput)
+
 	switch {
 	case strings.Contains(stderrOutput, "no access token found"):
 		return errors.New("no access token found; run `debricked auth login` or pass --access-token")
+
 	case strings.Contains(stderrOutput, "access token rejected"):
 		return fmt.Errorf("access token rejected: %s", stderrOutput)
+
 	case stderrOutput != "":
 		return fmt.Errorf("%w (stderr: %s)", cause, stderrOutput)
+
 	default:
 		return cause
 	}
