@@ -112,8 +112,38 @@ AI coding assistants (Claude, Copilot, Cursor, etc.) check whether a dependency 
 policies before it's installed.
 
 1. Authenticate once with `debricked auth login`, or have a [Debricked access token](https://docs.debricked.com/product/administration/generate-access-token) ready to pass via `--access-token`/`DEBRICKED_TOKEN`.
-2. Point your MCP client at the `debricked` binary with the `mcp start` arguments. Examples below assume `debricked`
-   is on your `PATH`; otherwise use the full path to the binary.
+2. Configure your MCP client. No access token is ever written to a config file by `debricked`; the server always
+   authenticates using your cached `debricked auth login` session (or `--access-token`/`DEBRICKED_TOKEN` if set).
+
+### Automatic setup (recommended)
+
+```sh
+debricked mcp setup --client vscode    # or claude / cursor
+```
+
+This adds a `debricked` entry to the client's config file (`.vscode/mcp.json`, `.cursor/mcp.json` at the project
+level by default, or Claude Desktop's global config). Existing entries/config are preserved and a `.bak` copy is
+written before any existing file is modified. Pass `--global` to configure the user-level VS Code/Cursor config
+instead of the project one.
+
+Check that everything is wired up and the server actually starts and authenticates:
+
+```sh
+debricked mcp status              # checks vscode, claude and cursor
+debricked mcp status --client vscode
+```
+
+Remove the entry again (the config file itself is never deleted):
+
+```sh
+debricked mcp uninstall --client vscode
+```
+
+### Manual setup
+
+If you'd rather edit client config yourself, or want to see what `mcp setup` writes, point your MCP client at the
+`debricked` binary with the `mcp start` arguments. Examples below assume `debricked` is on your `PATH`; otherwise
+use the full path to the binary.
 
 ### VS Code (`.vscode/mcp.json`)
 ```jsonc

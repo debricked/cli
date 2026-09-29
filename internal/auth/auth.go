@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/golang-jwt/jwt"
@@ -136,6 +137,26 @@ func (a Authenticator) refresh(refreshToken string) (*oauth2.Token, error) {
 		err = a.save(token)
 
 		return token, err
+	}
+}
+
+// NewCachedTokenFetcher returns a function that fetches a currently-valid bearer JWT
+// from the cached `debricked auth login` session on every call, reusing this
+// authenticator's own keyring + OAuth refresh logic. Intended for callers (e.g. the
+// Fortify SCA MCP server's Options.TokenFetcher) that need a fresh token on demand
+// rather than a long-lived credential to exchange/manage themselves - this avoids
+// ever handing out the OAuth refresh token, which /api/login_refresh doesn't accept.
+func NewCachedTokenFetcher(authenticator IAuthenticator) func(context.Context) (string, error) {
+	return func(context.Context) (string, error) {
+		token, err := authenticator.Token()
+		if err != nil {
+			return "", err
+		}
+		if token == nil || strings.TrimSpace(token.AccessToken) == "" {
+			return "", errors.New("cached login has no access token")
+		}
+
+		return strings.TrimSpace(token.AccessToken), nil
 	}
 }
 

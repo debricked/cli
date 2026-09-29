@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"runtime"
 	"testing"
 
@@ -258,4 +259,57 @@ func TestMockedAuthenticateOpenURLError(t *testing.T) {
 	err := authenticator.Authenticate()
 
 	assert.Error(t, err)
+}
+
+// fakeTokenAuthenticator is a minimal IAuthenticator test double with a
+// configurable Token() result.
+type fakeTokenAuthenticator struct {
+	token *oauth2.Token
+	err   error
+}
+
+func (f fakeTokenAuthenticator) Authenticate() error { return nil }
+func (f fakeTokenAuthenticator) Logout() error       { return nil }
+func (f fakeTokenAuthenticator) Token() (*oauth2.Token, error) {
+	return f.token, f.err
+}
+
+func TestNewCachedTokenFetcher(t *testing.T) {
+	tests := []struct {
+		name          string
+		authenticator fakeTokenAuthenticator
+		wantToken     string
+		wantErr       bool
+	}{
+		{
+			name:          "returns cached access token",
+			authenticator: fakeTokenAuthenticator{token: &oauth2.Token{AccessToken: "jwt", RefreshToken: "cached-refresh-token"}}, //nolint:gosec // test fixture, not a real credential
+			wantToken:     "jwt",
+		},
+		{
+			name:          "authenticator error surfaces as error",
+			authenticator: fakeTokenAuthenticator{err: assert.AnError},
+			wantToken:     "",
+			wantErr:       true,
+		},
+		{
+			name:          "cached login with empty access token errors",
+			authenticator: fakeTokenAuthenticator{token: &oauth2.Token{}},
+			wantToken:     "",
+			wantErr:       true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotToken, err := NewCachedTokenFetcher(tt.authenticator)(context.Background())
+
+			assert.Equal(t, tt.wantToken, gotToken)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
 }

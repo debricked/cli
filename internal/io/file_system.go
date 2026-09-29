@@ -24,6 +24,7 @@ type IFileSystem interface {
 	FsReadAll(file fs.File) ([]byte, error)
 	FsWriteFile(path string, bytes []byte, perm fs.FileMode) error
 	Mkdir(path string, perm fs.FileMode) error
+	MkdirAll(path string, perm fs.FileMode) error
 	Copy(destination io.Writer, source io.Reader) (int64, error)
 }
 
@@ -71,6 +72,10 @@ func (_ FileSystem) MkdirTemp(pattern string) (string, error) {
 
 func (_ FileSystem) Mkdir(name string, perm fs.FileMode) error {
 	return os.Mkdir(name, perm)
+}
+
+func (_ FileSystem) MkdirAll(path string, perm fs.FileMode) error {
+	return os.MkdirAll(path, perm)
 }
 
 func (_ FileSystem) RemoveAll(path string) {

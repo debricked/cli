@@ -1,4 +1,4 @@
-package mcp
+package start
 
 import (
 	"context"
@@ -19,8 +19,8 @@ var serveFn = server.Serve
 // verifyFn is a seam over server.VerifyAccessToken to allow tests to substitute a fake implementation.
 var verifyFn = server.VerifyAccessToken
 
-// apiVersion matches the Debricked API version the rest of the CLI targets (e.g. /api/1.0/...).
-const apiVersion = "1.0"
+// APIVersion matches the Debricked API version the rest of the CLI targets (e.g. /api/1.0/...).
+const APIVersion = "1.0"
 
 // NewStartCmd creates the `mcp start` command, which runs an MCP server over stdio.
 func NewStartCmd(accessToken *string, authenticator auth.IAuthenticator, baseURL string) *cobra.Command {
@@ -31,17 +31,10 @@ func NewStartCmd(accessToken *string, authenticator auth.IAuthenticator, baseURL
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			cmd.SilenceUsage = true
 
-			token, resolveErr := resolveToken(*accessToken, authenticator)
-			if token == "" {
-				err := errors.New("no access token found. Pass --access-token/DEBRICKED_TOKEN, or run `debricked auth login` first")
-				if resolveErr != nil {
-					err = fmt.Errorf("%w (%v)", err, resolveErr)
-				}
-
+			options, err := buildServerOptions(*accessToken, authenticator, baseURL)
+			if err != nil {
 				return cmderror.CommandError{Code: 1, Err: err}
 			}
-
-			options := server.Options{AccessToken: token, BaseURL: baseURL, APIVersion: apiVersion}
 
 			// Fail fast on bad credentials instead of only discovering it on the first tool call.
 			if err := verifyFn(cmd.Context(), options); err != nil {
@@ -53,7 +46,7 @@ func NewStartCmd(accessToken *string, authenticator auth.IAuthenticator, baseURL
 				return cmderror.CommandError{Code: 1, Err: err}
 			}
 
-			err := serveFn(cmd.Context(), options, os.Stdin, os.Stdout)
+			err = serveFn(cmd.Context(), options, os.Stdin, os.Stdout)
 			if err == nil || errors.Is(err, context.Canceled) {
 				return nil
 			}
@@ -65,23 +58,24 @@ func NewStartCmd(accessToken *string, authenticator auth.IAuthenticator, baseURL
 	return cmd
 }
 
-// resolveToken prefers an explicit access token, falling back to the CLI's cached login.
-// The Fortify SCA MCP server treats this value as a refresh token, so the cached
-// session's RefreshToken is used rather than its short-lived JWT AccessToken.
-// The returned error (only set when the token is empty) carries the underlying
-// cause, e.g. a keyring failure vs. simply never having logged in.
-func resolveToken(accessToken string, authenticator auth.IAuthenticator) (string, error) {
-	if token := strings.TrimSpace(accessToken); token != "" {
-		return token, nil
+// buildServerOptions decides how the MCP server authenticates. An explicit
+// --access-token/DEBRICKED_TOKEN (a PAT) is passed through as-is: the server exchanges
+// it itself via /api/login_refresh, exactly as before. Otherwise this falls back to the
+// cached `debricked auth login` session via a TokenFetcher callback, so the server
+// always gets a currently-valid bearer JWT on demand - the OAuth refresh token itself
+// is never handed over, since /api/login_refresh doesn't accept it.
+func buildServerOptions(explicitToken string, authenticator auth.IAuthenticator, baseURL string) (server.Options, error) {
+	if token := strings.TrimSpace(explicitToken); token != "" {
+		return server.Options{AccessToken: token, BaseURL: baseURL, APIVersion: APIVersion}, nil
 	}
 
-	cachedToken, err := authenticator.Token()
-	if err != nil {
-		return "", err
-	}
-	if cachedToken == nil || strings.TrimSpace(cachedToken.RefreshToken) == "" {
-		return "", errors.New("cached login has no refresh token")
+	if _, err := authenticator.Token(); err != nil {
+		return server.Options{}, fmt.Errorf("no access token found. Pass --access-token/DEBRICKED_TOKEN, or run `debricked auth login` first (%w)", err)
 	}
 
-	return strings.TrimSpace(cachedToken.RefreshToken), nil
+	return server.Options{
+		TokenFetcher: auth.NewCachedTokenFetcher(authenticator),
+		BaseURL:      baseURL,
+		APIVersion:   APIVersion,
+	}, nil
 }
