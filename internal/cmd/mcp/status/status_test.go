@@ -3,6 +3,7 @@ package status
 import (
 	"bytes"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"testing"
 
@@ -41,7 +42,8 @@ func TestStatusCmdConfiguredAndWorking(t *testing.T) {
 	}
 
 	fs := testdata.NewFileSystem()
-	fs.Files["/home/test/.config/Claude/claude_desktop_config.json"] = []byte(
+	configPath := filepath.Join("/home/test", ".config", "Claude", "claude_desktop_config.json")
+	fs.Files[configPath] = []byte(
 		`{"mcpServers":{"debricked":{"command":"sh","args":["-c","read line; echo '{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{}}'"]}}}`,
 	)
 	var out bytes.Buffer
@@ -64,7 +66,8 @@ func TestStatusCmdConfiguredButFailingHandshake(t *testing.T) {
 	}
 
 	fs := testdata.NewFileSystem()
-	fs.Files["/home/test/.config/Claude/claude_desktop_config.json"] = []byte(
+	configPath := filepath.Join("/home/test", ".config", "Claude", "claude_desktop_config.json")
+	fs.Files[configPath] = []byte(
 		`{"mcpServers":{"debricked":{"command":"sh","args":["-c","echo \"no access token found\" 1>&2; exit 1"]}}}`,
 	)
 	var out bytes.Buffer

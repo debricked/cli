@@ -1,6 +1,7 @@
 package mcpclient_test
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/debricked/cli/internal/mcpclient"
@@ -50,11 +51,11 @@ func TestConfigPathLocal(t *testing.T) {
 
 	path, err := mcpclient.ConfigPath(mcpclient.ClientVSCode, false, env)
 	assert.NoError(t, err)
-	assert.Equal(t, "/home/user/project/.vscode/mcp.json", path)
+	assert.Equal(t, filepath.Join("/home/user/project", ".vscode", "mcp.json"), path)
 
 	path, err = mcpclient.ConfigPath(mcpclient.ClientCursor, false, env)
 	assert.NoError(t, err)
-	assert.Equal(t, "/home/user/project/.cursor/mcp.json", path)
+	assert.Equal(t, filepath.Join("/home/user/project", ".cursor", "mcp.json"), path)
 }
 
 func TestConfigPathClaudeAlwaysGlobal(t *testing.T) {

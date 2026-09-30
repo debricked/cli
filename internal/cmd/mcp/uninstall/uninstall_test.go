@@ -1,6 +1,7 @@
 package uninstall
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/debricked/cli/internal/mcpclient/testdata"
@@ -20,32 +21,34 @@ func TestUninstallCmdRequiresClientFlag(t *testing.T) {
 func TestUninstallCmdAlreadyNotConfigured(t *testing.T) {
 	fs := testdata.NewFileSystem()
 	cmd := NewUninstallCmd(fs, testdata.Environment{Wd: "/proj", GOOSValue: "linux"})
+	configPath := filepath.Join("/proj", ".vscode", "mcp.json")
 	cmd.SetArgs([]string{"--client", "vscode"})
 
 	err := cmd.Execute()
 
 	require.NoError(t, err)
-	assert.NotContains(t, fs.Files, "/proj/.vscode/mcp.json")
+	assert.NotContains(t, fs.Files, configPath)
 }
 
 func TestUninstallCmdRemovesEntryKeepsFile(t *testing.T) {
 	fs := testdata.NewFileSystem()
-	fs.Files["/proj/.vscode/mcp.json"] = []byte(`{"servers":{"debricked":{"command":"debricked","args":["mcp","start"]},"other":{"command":"foo"}}}`)
+	configPath := filepath.Join("/proj", ".vscode", "mcp.json")
+	fs.Files[configPath] = []byte(`{"servers":{"debricked":{"command":"debricked","args":["mcp","start"]},"other":{"command":"foo"}}}`)
 	cmd := NewUninstallCmd(fs, testdata.Environment{Wd: "/proj", GOOSValue: "linux"})
 	cmd.SetArgs([]string{"--client", "vscode"})
 
 	err := cmd.Execute()
 
 	require.NoError(t, err)
-	content := string(fs.Files["/proj/.vscode/mcp.json"])
+	content := string(fs.Files[configPath])
 	assert.NotContains(t, content, `"debricked":{`)
 	assert.Contains(t, content, "other")
-	assert.Contains(t, fs.Files, "/proj/.vscode/mcp.json.bak")
+	assert.Contains(t, fs.Files, configPath+".bak")
 }
 
 func TestUninstallCmdMalformedExistingFileAborts(t *testing.T) {
 	fs := testdata.NewFileSystem()
-	fs.Files["/proj/.vscode/mcp.json"] = []byte(`{ not json`)
+	fs.Files[filepath.Join("/proj", ".vscode", "mcp.json")] = []byte(`{ not json`)
 	cmd := NewUninstallCmd(fs, testdata.Environment{Wd: "/proj", GOOSValue: "linux"})
 	cmd.SetArgs([]string{"--client", "vscode"})
 

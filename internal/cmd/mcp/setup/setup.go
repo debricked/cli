@@ -66,6 +66,7 @@ so the server can authenticate when your MCP client starts it.`,
 
 			command, portable := resolveCommand(env)
 			fields := map[string]any{
+				"type":    "stdio",
 				"command": command,
 				"args":    []string{"mcp", "start"},
 			}

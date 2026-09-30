@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os/exec"
+	"path/filepath"
 	"testing"
 
 	"github.com/debricked/cli/internal/mcpclient/testdata"
@@ -61,14 +62,16 @@ func TestSetupCmdCreatesProjectConfig(t *testing.T) {
 	token := "tok"
 	cmd := NewSetupCmd(&token, fakeAuthenticator{}, "https://debricked.com", fs, testdata.Environment{Wd: "/proj", GOOSValue: "linux"})
 	cmd.SetArgs([]string{"--client", "vscode"})
+	configPath := filepath.Join("/proj", ".vscode", "mcp.json")
 
 	err := cmd.Execute()
 
 	require.NoError(t, err)
-	content, ok := fs.Files["/proj/.vscode/mcp.json"]
+	content, ok := fs.Files[configPath]
 	require.True(t, ok)
 	assert.Contains(t, string(content), `"debricked"`)
-	assert.NotContains(t, fs.Files, "/proj/.vscode/mcp.json.bak")
+	assert.Contains(t, string(content), `"type": "stdio"`)
+	assert.NotContains(t, fs.Files, configPath+".bak")
 }
 
 func TestSetupCmdFallsBackToAbsolutePathWhenNotOnPATH(t *testing.T) {
@@ -79,11 +82,12 @@ func TestSetupCmdFallsBackToAbsolutePathWhenNotOnPATH(t *testing.T) {
 	env := testdata.Environment{Wd: "/proj", GOOSValue: "linux", ExecutablePath: "/opt/debricked/debricked"}
 	cmd := NewSetupCmd(&token, fakeAuthenticator{}, "https://debricked.com", fs, env)
 	cmd.SetArgs([]string{"--client", "vscode"})
+	configPath := filepath.Join("/proj", ".vscode", "mcp.json")
 
 	err := cmd.Execute()
 
 	require.NoError(t, err)
-	assert.Contains(t, string(fs.Files["/proj/.vscode/mcp.json"]), "/opt/debricked/debricked")
+	assert.Contains(t, string(fs.Files[configPath]), "/opt/debricked/debricked")
 }
 
 func TestSetupCmdIdempotent(t *testing.T) {
@@ -100,14 +104,15 @@ func TestSetupCmdIdempotent(t *testing.T) {
 	cmd2.SetArgs([]string{"--client", "vscode"})
 	require.NoError(t, cmd2.Execute())
 
-	assert.NotContains(t, fs.Files, "/proj/.vscode/mcp.json.bak")
+	assert.NotContains(t, fs.Files, filepath.Join("/proj", ".vscode", "mcp.json")+".bak")
 }
 
 func TestSetupCmdBacksUpExistingFile(t *testing.T) {
 	withStubbedVerify(t, nil)
 	withStubbedLookPath(t, true)
 	fs := testdata.NewFileSystem()
-	fs.Files["/proj/.vscode/mcp.json"] = []byte(`{"servers":{"other":{"command":"foo"}}}`)
+	configPath := filepath.Join("/proj", ".vscode", "mcp.json")
+	fs.Files[configPath] = []byte(`{"servers":{"other":{"command":"foo"}}}`)
 	token := "tok"
 	cmd := NewSetupCmd(&token, fakeAuthenticator{}, "https://debricked.com", fs, testdata.Environment{Wd: "/proj", GOOSValue: "linux"})
 	cmd.SetArgs([]string{"--client", "vscode"})
@@ -115,15 +120,15 @@ func TestSetupCmdBacksUpExistingFile(t *testing.T) {
 	err := cmd.Execute()
 
 	require.NoError(t, err)
-	assert.Contains(t, fs.Files, "/proj/.vscode/mcp.json.bak")
-	assert.Contains(t, string(fs.Files["/proj/.vscode/mcp.json"]), "other")
+	assert.Contains(t, fs.Files, configPath+".bak")
+	assert.Contains(t, string(fs.Files[configPath]), "other")
 }
 
 func TestSetupCmdMalformedExistingFileAborts(t *testing.T) {
 	withStubbedVerify(t, nil)
 	withStubbedLookPath(t, true)
 	fs := testdata.NewFileSystem()
-	fs.Files["/proj/.vscode/mcp.json"] = []byte(`{ not json`)
+	fs.Files[filepath.Join("/proj", ".vscode", "mcp.json")] = []byte(`{ not json`)
 	token := "tok"
 	cmd := NewSetupCmd(&token, fakeAuthenticator{}, "https://debricked.com", fs, testdata.Environment{Wd: "/proj", GOOSValue: "linux"})
 	cmd.SetArgs([]string{"--client", "vscode"})
@@ -145,5 +150,5 @@ func TestSetupCmdWarnsWhenNoCredentials(t *testing.T) {
 
 	// config is still written successfully even without credentials
 	require.NoError(t, err)
-	assert.Contains(t, fs.Files, "/proj/.vscode/mcp.json")
+	assert.Contains(t, fs.Files, filepath.Join("/proj", ".vscode", "mcp.json"))
 }
