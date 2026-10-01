@@ -2,6 +2,12 @@ package mcp
 
 import (
 	"github.com/debricked/cli/internal/auth"
+	"github.com/debricked/cli/internal/cmd/mcp/setup"
+	"github.com/debricked/cli/internal/cmd/mcp/start"
+	"github.com/debricked/cli/internal/cmd/mcp/status"
+	"github.com/debricked/cli/internal/cmd/mcp/uninstall"
+	"github.com/debricked/cli/internal/io"
+	"github.com/debricked/cli/internal/mcpclient"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +21,12 @@ func NewMCPCmd(accessToken *string, authenticator auth.IAuthenticator, baseURL s
 		Short: "Debricked MCP server.",
 		Long:  `Run a Model Context Protocol (MCP) server exposing Debricked functionality.`,
 	}
-	cmd.AddCommand(NewStartCmd(accessToken, authenticator, baseURL))
+	fs := io.FileSystem{}
+	env := mcpclient.NewEnvironment()
+	cmd.AddCommand(start.NewStartCmd(accessToken, authenticator, baseURL))
+	cmd.AddCommand(setup.NewSetupCmd(accessToken, authenticator, baseURL, fs, env))
+	cmd.AddCommand(status.NewStatusCmd(fs, env))
+	cmd.AddCommand(uninstall.NewUninstallCmd(fs, env))
 
 	return cmd
 }

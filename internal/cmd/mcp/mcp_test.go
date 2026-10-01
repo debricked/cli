@@ -10,16 +10,16 @@ func TestNewMCPCmd(t *testing.T) {
 	token := ""
 	cmd := NewMCPCmd(&token, fakeAuthenticator{}, "https://debricked.com")
 	commands := cmd.Commands()
-	nbrOfCommands := 1
+	nbrOfCommands := 4
 	assert.Lenf(t, commands, nbrOfCommands, "failed to assert that there were %d sub commands connected", nbrOfCommands)
 
-	match := false
+	expected := map[string]bool{"start": false, "setup": false, "status": false, "uninstall": false}
 	for _, subCmd := range commands {
-		if subCmd.Name() == "start" {
-			match = true
-
-			break
+		if _, ok := expected[subCmd.Name()]; ok {
+			expected[subCmd.Name()] = true
 		}
 	}
-	assert.True(t, match, "failed to assert that start command was registered")
+	for name, found := range expected {
+		assert.Truef(t, found, "failed to assert that %s command was registered", name)
+	}
 }

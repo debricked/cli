@@ -24,6 +24,7 @@ type FileSystemMock struct {
 	FsReadAllError   error
 	FsWriteFileError error
 	MkdirError       error
+	MkdirAllError    error
 	CopyError        error
 	CopySize         int64
 }
@@ -69,6 +70,10 @@ func (fsm FileSystemMock) MkdirTemp(pattern string) (string, error) {
 
 func (fsm FileSystemMock) Mkdir(name string, perm fs.FileMode) error {
 	return fsm.MkdirError
+}
+
+func (fsm FileSystemMock) MkdirAll(path string, perm fs.FileMode) error {
+	return fsm.MkdirAllError
 }
 
 func (fsm FileSystemMock) RemoveAll(path string) {

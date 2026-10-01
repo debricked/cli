@@ -1,4 +1,4 @@
-package mcp
+package start
 
 import (
 	"context"
@@ -57,9 +57,9 @@ func TestNewStartCmdFallsBackToCachedLogin(t *testing.T) {
 	defer func() { verifyFn = originalVerify }()
 	verifyFn = func(context.Context, server.Options) error { return nil }
 
-	var gotToken string
+	var gotOptions server.Options
 	serveFn = func(_ context.Context, options server.Options, _ io.Reader, _ io.Writer) error {
-		gotToken = options.AccessToken
+		gotOptions = options
 
 		return nil
 	}
@@ -74,7 +74,11 @@ func TestNewStartCmdFallsBackToCachedLogin(t *testing.T) {
 	err := cmd.Execute()
 
 	assert.NoError(t, err)
-	assert.Equal(t, "cached-refresh-token", gotToken)
+	assert.Empty(t, gotOptions.AccessToken, "cached login should never pass the OAuth refresh token as a static access token")
+	assert.NotNil(t, gotOptions.TokenFetcher)
+	fetched, err := gotOptions.TokenFetcher(context.Background())
+	assert.NoError(t, err)
+	assert.Equal(t, "cached-jwt", fetched, "TokenFetcher should hand out the cached session's JWT, not the refresh token")
 }
 
 func TestNewStartCmdPropagatesBaseURL(t *testing.T) {
@@ -228,54 +232,4 @@ func TestNewStartCmdNoStdout(t *testing.T) {
 
 	assert.NoError(t, execErr)
 	assert.Empty(t, out)
-}
-
-func TestResolveToken(t *testing.T) {
-	tests := []struct {
-		name          string
-		explicit      string
-		authenticator fakeAuthenticator
-		wantToken     string
-		wantErr       bool
-	}{
-		{
-			name:          "explicit token wins over cached login",
-			explicit:      "explicit-token",
-			authenticator: fakeAuthenticator{token: &oauth2.Token{RefreshToken: "cached-refresh-token"}}, //nolint:gosec // test fixture, not a real credential
-			wantToken:     "explicit-token",
-		},
-		{ //nolint:gosec // test fixture, not a real credential
-			name:          "falls back to cached refresh token",
-			explicit:      "",
-			authenticator: fakeAuthenticator{token: &oauth2.Token{AccessToken: "jwt", RefreshToken: "cached-refresh-token"}}, //nolint:gosec // test fixture, not a real credential
-			wantToken:     "cached-refresh-token",
-		},
-		{
-			name:          "authenticator error surfaces as error",
-			explicit:      "",
-			authenticator: fakeAuthenticator{err: errors.New("keyring unavailable")},
-			wantToken:     "",
-			wantErr:       true,
-		},
-		{
-			name:          "cached login with empty refresh token errors",
-			explicit:      "",
-			authenticator: fakeAuthenticator{token: &oauth2.Token{}},
-			wantToken:     "",
-			wantErr:       true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			gotToken, err := resolveToken(tt.explicit, tt.authenticator)
-
-			assert.Equal(t, tt.wantToken, gotToken)
-			if tt.wantErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
 }
