@@ -69,21 +69,15 @@ func (awh AuthWebHelper) OpenURL(authURL string) error {
 	if awh.openURL != nil {
 		return awh.openURL(authURL)
 	}
+
 	return browser.OpenURL(authURL)
 }
 
-func (awh AuthWebHelper) Login(ctx context.Context, authURL, state string) (string, error) {
-	listener, err := net.Listen("tcp", "127.0.0.1:9096")
-	if err != nil {
-		return "", fmt.Errorf("start OAuth callback listener: %w", err)
-	}
-	defer listener.Close()
-	codes := make(chan string, 1)
-	failures := make(chan error, 1)
-	mux := http.NewServeMux()
-	mux.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
+func loginCallbackHandler(state string, codes chan<- string, failures chan<- error) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("state") != state {
 			http.Error(w, "Invalid state", http.StatusBadRequest)
+
 			return
 		}
 		if r.URL.Query().Get("error") != "" {
@@ -92,11 +86,13 @@ func (awh AuthWebHelper) Login(ctx context.Context, authURL, state string) (stri
 			default:
 			}
 			http.Error(w, "Authorization was denied", http.StatusBadRequest)
+
 			return
 		}
 		code := r.URL.Query().Get("code")
 		if code == "" {
 			http.Error(w, "Authorization code is missing", http.StatusBadRequest)
+
 			return
 		}
 		select {
@@ -105,9 +101,32 @@ func (awh AuthWebHelper) Login(ctx context.Context, authURL, state string) (stri
 		default:
 			http.Error(w, "Authorization already received", http.StatusConflict)
 		}
-	})
+	}
+}
+
+func (awh AuthWebHelper) openLoginURL(ctx context.Context, authURL string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if err := awh.OpenURL(authURL); err != nil {
+		return fmt.Errorf("open browser: %w", err)
+	}
+
+	return nil
+}
+
+func (awh AuthWebHelper) Login(ctx context.Context, authURL, state string) (string, error) {
+	listener, err := net.Listen("tcp", "127.0.0.1:9096")
+	if err != nil {
+		return "", fmt.Errorf("start OAuth callback listener: %w", err)
+	}
+	defer func() { _ = listener.Close() }()
+	codes := make(chan string, 1)
+	failures := make(chan error, 1)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/callback", loginCallbackHandler(state, codes, failures))
 	server := &http.Server{Handler: mux, ReadHeaderTimeout: time.Minute}
-	defer server.Close()
+	defer func() { _ = server.Close() }()
 	go func() {
 		if err := server.Serve(listener); err != nil && err != http.ErrServerClosed {
 			select {
@@ -116,12 +135,10 @@ func (awh AuthWebHelper) Login(ctx context.Context, authURL, state string) (stri
 			}
 		}
 	}()
-	if err := ctx.Err(); err != nil {
+	if err := awh.openLoginURL(ctx, authURL); err != nil {
 		return "", err
 	}
-	if err := awh.OpenURL(authURL); err != nil {
-		return "", fmt.Errorf("open browser: %w", err)
-	}
+
 	select {
 	case code := <-codes:
 		return code, nil
