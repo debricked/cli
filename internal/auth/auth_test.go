@@ -261,6 +261,29 @@ func TestMockedAuthenticateOpenURLError(t *testing.T) {
 	assert.Error(t, err)
 }
 
+type cancellableLoginHelper struct {
+	testdata.MockAuthWebHelper
+	ctx context.Context
+}
+
+func (h *cancellableLoginHelper) Login(ctx context.Context, _, _ string) (string, error) {
+	h.ctx = ctx
+
+	return "", ctx.Err()
+}
+
+func TestAuthenticateContextHonorsCancellation(t *testing.T) {
+	helper := &cancellableLoginHelper{}
+	authenticator := Authenticator{
+		SecretClient: testdata.MockSecretClient{}, OAuthConfig: testdata.MockOAuthConfig{}, AuthWebHelper: helper,
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	err := authenticator.AuthenticateContext(ctx)
+	assert.ErrorIs(t, err, context.Canceled)
+	assert.Equal(t, ctx, helper.ctx)
+}
+
 // fakeTokenAuthenticator is a minimal IAuthenticator test double with a
 // configurable Token() result.
 type fakeTokenAuthenticator struct {

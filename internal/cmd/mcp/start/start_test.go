@@ -14,16 +14,25 @@ import (
 )
 
 func TestNewStartCmdMissingToken(t *testing.T) {
+	originalServe, originalVerify := serveFn, verifyFn
+	defer func() { serveFn, verifyFn = originalServe, originalVerify }()
+	verifyFn = func(context.Context, server.Options) error { return errors.New("not logged in") }
+	served := false
+	serveFn = func(_ context.Context, options server.Options, _ io.Reader, _ io.Writer) error {
+		served = true
+		assert.NotNil(t, options.Authenticate)
+		assert.NotNil(t, options.TokenFetcher)
+
+		return nil
+	}
 	token := ""
 	cmd := NewStartCmd(&token, fakeAuthenticator{err: errors.New("not logged in")}, "https://debricked.com")
 	cmd.SetArgs([]string{})
 
 	err := cmd.Execute()
 
-	assert.Error(t, err)
-	var cmdErr cmderror.CommandError
-	assert.ErrorAs(t, err, &cmdErr)
-	assert.Contains(t, err.Error(), "not logged in")
+	assert.NoError(t, err)
+	assert.True(t, served, "OAuth server must expose the login tool even without cached credentials")
 }
 
 func TestNewStartCmdExplicitTokenTakesPrecedence(t *testing.T) {
@@ -76,6 +85,7 @@ func TestNewStartCmdFallsBackToCachedLogin(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Empty(t, gotOptions.AccessToken, "cached login should never pass the OAuth refresh token as a static access token")
 	assert.NotNil(t, gotOptions.TokenFetcher)
+	assert.NotNil(t, gotOptions.Authenticate)
 	fetched, err := gotOptions.TokenFetcher(context.Background())
 	assert.NoError(t, err)
 	assert.Equal(t, "cached-jwt", fetched, "TokenFetcher should hand out the cached session's JWT, not the refresh token")

@@ -49,8 +49,10 @@ func TestCallback(t *testing.T) {
 func TestCallbackInvalidState(t *testing.T) {
 	awh := NewAuthWebHelper()
 
+	done := make(chan struct{})
 	go func() {
 		awh.Callback(testState)
+		close(done)
 	}()
 
 	time.Sleep(100 * time.Millisecond)
@@ -64,6 +66,54 @@ func TestCallbackInvalidState(t *testing.T) {
 	if resp.StatusCode != http.StatusBadRequest {
 		t.Errorf("Expected status Bad Request, got %v", resp.Status)
 	}
+	accepted, err := http.Get("http://localhost:9096/callback?state=" + testState + "&code=test_code")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = accepted.Body.Close()
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("callback did not release its listener")
+	}
+}
+
+func TestBrowserLoginCanRepeatOnSameHelper(t *testing.T) {
+	helper := NewAuthWebHelper()
+	helper.openURL = func(string) error {
+		response, err := http.Get("http://127.0.0.1:9096/callback?state=" + testState + "&code=test_code")
+		if err != nil {
+			return err
+		}
+		defer func() { assert.NoError(t, response.Body.Close()) }()
+		if response.StatusCode != http.StatusOK {
+			return fmt.Errorf("unexpected callback status %d", response.StatusCode)
+		}
+
+		return nil
+	}
+	for attempt := 0; attempt < 2; attempt++ {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		code, err := helper.Login(ctx, "https://example.invalid/oauth/authorize", testState)
+		cancel()
+		assert.NoError(t, err)
+		assert.Equal(t, "test_code", code)
+	}
+}
+
+func TestBrowserLoginCancellationReleasesListener(t *testing.T) {
+	helper := NewAuthWebHelper()
+	ctx, cancel := context.WithCancel(context.Background())
+	helper.openURL = func(string) error {
+		cancel()
+
+		return nil
+	}
+	_, err := helper.Login(ctx, "https://example.invalid/oauth/authorize", testState)
+	assert.ErrorIs(t, err, context.Canceled)
+	helper.openURL = func(string) error { return fmt.Errorf("browser unavailable") }
+	_, err = helper.Login(context.Background(), "https://example.invalid/oauth/authorize", testState)
+	assert.ErrorContains(t, err, "browser unavailable")
 }
 
 func TestCallbackServerError(t *testing.T) {
