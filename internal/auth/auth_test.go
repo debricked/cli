@@ -268,6 +268,7 @@ type cancellableLoginHelper struct {
 
 func (h *cancellableLoginHelper) Login(ctx context.Context, _, _ string) (string, error) {
 	h.ctx = ctx
+
 	return "", ctx.Err()
 }
 

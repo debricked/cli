@@ -79,6 +79,7 @@ func buildServerOptions(explicitToken string, authenticator auth.IAuthenticator,
 			}); ok {
 				return contextual.AuthenticateContext(ctx)
 			}
+
 			return authenticator.Authenticate()
 		},
 		BaseURL:    baseURL,

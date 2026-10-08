@@ -85,10 +85,11 @@ func TestBrowserLoginCanRepeatOnSameHelper(t *testing.T) {
 		if err != nil {
 			return err
 		}
-		defer response.Body.Close()
+		defer func() { assert.NoError(t, response.Body.Close()) }()
 		if response.StatusCode != http.StatusOK {
 			return fmt.Errorf("unexpected callback status %d", response.StatusCode)
 		}
+
 		return nil
 	}
 	for attempt := 0; attempt < 2; attempt++ {
@@ -103,7 +104,11 @@ func TestBrowserLoginCanRepeatOnSameHelper(t *testing.T) {
 func TestBrowserLoginCancellationReleasesListener(t *testing.T) {
 	helper := NewAuthWebHelper()
 	ctx, cancel := context.WithCancel(context.Background())
-	helper.openURL = func(string) error { cancel(); return nil }
+	helper.openURL = func(string) error {
+		cancel()
+
+		return nil
+	}
 	_, err := helper.Login(ctx, "https://example.invalid/oauth/authorize", testState)
 	assert.ErrorIs(t, err, context.Canceled)
 	helper.openURL = func(string) error { return fmt.Errorf("browser unavailable") }

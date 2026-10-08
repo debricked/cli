@@ -22,6 +22,7 @@ func TestNewStartCmdMissingToken(t *testing.T) {
 		served = true
 		assert.NotNil(t, options.Authenticate)
 		assert.NotNil(t, options.TokenFetcher)
+
 		return nil
 	}
 	token := ""
