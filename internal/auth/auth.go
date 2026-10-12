@@ -161,6 +161,10 @@ func NewCachedTokenFetcher(authenticator IAuthenticator) func(context.Context) (
 }
 
 func (a Authenticator) Authenticate() error {
+	return a.AuthenticateContext(context.Background())
+}
+
+func (a Authenticator) AuthenticateContext(ctx context.Context) error {
 	state := oauth2.GenerateVerifier()
 	codeVerifier := oauth2.GenerateVerifier()
 	authURL := a.OAuthConfig.AuthCodeURL(
@@ -168,14 +172,23 @@ func (a Authenticator) Authenticate() error {
 		oauth2.S256ChallengeOption(codeVerifier),
 	)
 
-	err := a.AuthWebHelper.OpenURL(authURL)
-	if err != nil {
-		return err
+	var authCode string
+	if helper, ok := a.AuthWebHelper.(interface {
+		Login(context.Context, string, string) (string, error)
+	}); ok {
+		var err error
+		authCode, err = helper.Login(ctx, authURL, state)
+		if err != nil {
+			return err
+		}
+	} else {
+		if err := a.AuthWebHelper.OpenURL(authURL); err != nil {
+			return err
+		}
+		authCode = a.AuthWebHelper.Callback(state)
 	}
-
-	authCode := a.AuthWebHelper.Callback(state)
 	token, err := a.OAuthConfig.Exchange(
-		context.Background(),
+		ctx,
 		authCode,
 		oauth2.VerifierOption(codeVerifier),
 	)

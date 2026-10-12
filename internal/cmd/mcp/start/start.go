@@ -36,13 +36,15 @@ func NewStartCmd(accessToken *string, authenticator auth.IAuthenticator, baseURL
 				return cmderror.CommandError{Code: 1, Err: err}
 			}
 
-			// Fail fast on bad credentials instead of only discovering it on the first tool call.
 			if err := verifyFn(cmd.Context(), options); err != nil {
-				return cmderror.CommandError{Code: 1, Err: fmt.Errorf("access token rejected: %w", err)}
+				if options.Authenticate == nil {
+					return cmderror.CommandError{Code: 1, Err: fmt.Errorf("access token rejected: %w", err)}
+				}
+				_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "debricked MCP login required; use the authenticate tool to sign in.")
 			}
 
 			// stdout is reserved for MCP JSON-RPC traffic, so status goes to stderr.
-			if _, err := fmt.Fprintln(cmd.ErrOrStderr(), "debricked MCP server authenticated, running on stdio. Hit Ctrl-C to exit."); err != nil {
+			if _, err := fmt.Fprintln(cmd.ErrOrStderr(), "debricked MCP server running on stdio. API authentication is checked on tool calls. Hit Ctrl-C to exit."); err != nil {
 				return cmderror.CommandError{Code: 1, Err: err}
 			}
 
@@ -69,13 +71,18 @@ func buildServerOptions(explicitToken string, authenticator auth.IAuthenticator,
 		return server.Options{AccessToken: token, BaseURL: baseURL, APIVersion: APIVersion}, nil
 	}
 
-	if _, err := authenticator.Token(); err != nil {
-		return server.Options{}, fmt.Errorf("no access token found. Pass --access-token/DEBRICKED_TOKEN, or run `debricked auth login` first (%w)", err)
-	}
-
 	return server.Options{
 		TokenFetcher: auth.NewCachedTokenFetcher(authenticator),
-		BaseURL:      baseURL,
-		APIVersion:   APIVersion,
+		Authenticate: func(ctx context.Context) error {
+			if contextual, ok := authenticator.(interface {
+				AuthenticateContext(context.Context) error
+			}); ok {
+				return contextual.AuthenticateContext(ctx)
+			}
+
+			return authenticator.Authenticate()
+		},
+		BaseURL:    baseURL,
+		APIVersion: APIVersion,
 	}, nil
 }
