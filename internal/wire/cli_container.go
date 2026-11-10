@@ -18,6 +18,7 @@ import (
 	"github.com/debricked/cli/internal/resolution"
 	resolutionFile "github.com/debricked/cli/internal/resolution/file"
 	"github.com/debricked/cli/internal/resolution/strategy"
+	"github.com/debricked/cli/internal/sanitize"
 	"github.com/debricked/cli/internal/scan"
 	"github.com/debricked/cli/internal/upload"
 	"github.com/hashicorp/go-retryablehttp"
@@ -97,6 +98,7 @@ func (cc *CliContainer) wire() error {
 	cc.sbomReporter = sbomReport.Reporter{DebClient: cc.debClient, FileWriter: io.FileWriter{}}
 	cc.authenticator = cc.debClient.Authenticator()
 	cc.policyValidator = policy.Validator{DebClient: cc.debClient, FileSystem: io.FileSystem{}}
+	cc.sanitizer = sanitize.NewSanitizer(cc.finder)
 
 	return nil
 }
@@ -121,6 +123,7 @@ type CliContainer struct {
 	cgStrategyFactory     callgraphStrategy.IFactory
 	authenticator         auth.IAuthenticator
 	policyValidator       policy.IValidator
+	sanitizer             sanitize.ISanitizer
 }
 
 func (cc *CliContainer) DebClient() client.IDebClient {
@@ -165,6 +168,10 @@ func (cc *CliContainer) Authenticator() auth.IAuthenticator {
 
 func (cc *CliContainer) PolicyValidator() policy.IValidator {
 	return cc.policyValidator
+}
+
+func (cc *CliContainer) Sanitizer() sanitize.ISanitizer {
+	return cc.sanitizer
 }
 
 func wireErr(err error) error {
