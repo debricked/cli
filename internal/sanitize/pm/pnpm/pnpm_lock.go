@@ -1,6 +1,7 @@
 package pnpm
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -36,6 +37,30 @@ type pnpmLockSanitizer struct {
 }
 
 func sanitizePnpmLock(content []byte, context *util.FileContext) ([]byte, error) {
+	root, err := parsePnpmLock(content)
+	if err != nil {
+		return nil, err
+	}
+
+	sanitizer := &pnpmLockSanitizer{context: context, baseKeys: map[string]string{}, usedKeys: map[string]int{}}
+
+	// Package keys get their placeholders first, so references to them can be replaced wherever
+	// they appear.
+	if packages := yamlValue(root, "packages"); packages != nil && packages.Kind == yaml.MappingNode {
+		if err = sanitizer.registerKeys(packages); err != nil {
+			return nil, util.ErrInvalidFormat
+		}
+	}
+
+	sanitized, err := sanitizer.sanitizeRoot(root)
+	if err != nil {
+		return nil, util.ErrInvalidFormat
+	}
+
+	return util.EncodeYAML(sanitized), nil
+}
+
+func parsePnpmLock(content []byte) (*yaml.Node, error) {
 	var document yaml.Node
 	if err := yaml.Unmarshal(content, &document); err != nil || len(document.Content) != 1 {
 		return nil, util.ErrInvalidFormat
@@ -45,57 +70,67 @@ func sanitizePnpmLock(content []byte, context *util.FileContext) ([]byte, error)
 		return nil, util.ErrInvalidFormat
 	}
 
-	sanitizer := &pnpmLockSanitizer{context: context, baseKeys: map[string]string{}, usedKeys: map[string]int{}}
+	return root, nil
+}
 
-	// Package keys get their placeholders first, so references to them can be replaced wherever
-	// they appear.
-	if packages := yamlValue(root, "packages"); packages != nil && packages.Kind == yaml.MappingNode {
-		if err := sanitizer.registerKeys(packages); err != nil {
-			return nil, util.ErrInvalidFormat
-		}
-	}
-
+// sanitizeRoot fails if no known section is left, because then the file isn't a pnpm lock file.
+func (s *pnpmLockSanitizer) sanitizeRoot(root *yaml.Node) (*util.OrderedObject, error) {
 	sanitized := util.NewOrderedObject()
-	recognised := false
 	var err error
 	forEachYAMLPair(root, func(key string, value *yaml.Node) {
 		if err != nil {
 			return
 		}
-		var section *util.OrderedObject
-		switch key {
-		case "lockfileVersion":
-			if value.Kind != yaml.ScalarNode {
-				err = util.ErrInvalidFormat
-
-				return
-			}
-			recognised = true
-			sanitized.Set(key, pnpmLockfileVersion(value))
-
-			return
-		case "importers":
-			section, err = sanitizer.sanitizeImporters(value)
-		case "packages":
-			section, err = sanitizer.sanitizeEntries(value, pnpmPackageAllowList)
-		case "snapshots":
-			section, err = sanitizer.sanitizeEntries(value, pnpmSnapshotAllowList)
-		case "dependencies", "devDependencies", "optionalDependencies":
-			// A single-project lock file up to v6 has these in place of importers.
-			section = sanitizeNames(value)
-		default:
-			return
-		}
-		if err == nil && section != nil {
-			recognised = true
+		var section any
+		var found bool
+		if section, found, err = s.sanitizeSection(key, value); found {
 			sanitized.Set(key, section)
 		}
 	})
-	if err != nil || !recognised {
-		return nil, util.ErrInvalidFormat
+	if err == nil && len(sanitized.Keys) == 0 {
+		err = util.ErrInvalidFormat
 	}
 
-	return util.EncodeYAML(sanitized), nil
+	return sanitized, err
+}
+
+// sanitizeSection returns found = false for a key that isn't allow-listed, or a section that is
+// empty in the source file. Both are left out of the output.
+func (s *pnpmLockSanitizer) sanitizeSection(key string, value *yaml.Node) (any, bool, error) {
+	switch key {
+	case "lockfileVersion":
+		if value.Kind != yaml.ScalarNode {
+			return nil, false, util.ErrInvalidFormat
+		}
+
+		return pnpmLockfileVersion(value), true, nil
+	case "importers":
+		return optionalSection(s.sanitizeImporters(value))
+	case "packages":
+		return optionalSection(s.sanitizeEntries(value, pnpmPackageAllowList))
+	case "snapshots":
+		return optionalSection(s.sanitizeEntries(value, pnpmSnapshotAllowList))
+	case "dependencies", "devDependencies", "optionalDependencies":
+		// A single-project lock file up to v6 has these in place of importers.
+		return sanitizeNames(value), true, nil
+	default:
+		return nil, false, nil
+	}
+}
+
+// errEmptySection marks a section that is null in the source file, such as `importers:` with
+// nothing under it.
+var errEmptySection = errors.New("section is empty")
+
+func optionalSection(section *util.OrderedObject, err error) (any, bool, error) {
+	switch {
+	case errors.Is(err, errEmptySection):
+		return nil, false, nil
+	case err != nil:
+		return nil, false, err
+	default:
+		return section, true, nil
+	}
 }
 
 func pnpmLockfileVersion(value *yaml.Node) any {
@@ -108,7 +143,7 @@ func pnpmLockfileVersion(value *yaml.Node) any {
 
 func (s *pnpmLockSanitizer) sanitizeImporters(importers *yaml.Node) (*util.OrderedObject, error) {
 	if isYAMLNull(importers) {
-		return nil, nil
+		return nil, errEmptySection
 	}
 	if importers.Kind != yaml.MappingNode {
 		return nil, util.ErrInvalidFormat
@@ -168,7 +203,7 @@ var (
 
 func (s *pnpmLockSanitizer) sanitizeEntries(entries *yaml.Node, allowed pnpmAllowList) (*util.OrderedObject, error) {
 	if isYAMLNull(entries) {
-		return nil, nil
+		return nil, errEmptySection
 	}
 	if entries.Kind != yaml.MappingNode {
 		return nil, util.ErrInvalidFormat

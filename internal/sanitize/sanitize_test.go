@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -43,7 +44,7 @@ func sanitizeGroups(t *testing.T, root string, groups ...*file.Group) Result {
 
 func readOutput(t *testing.T, result Result, relativePath string) string {
 	t.Helper()
-	content, err := os.ReadFile(filepath.Join(result.OutputDir, relativePath))
+	content, err := os.ReadFile(filepath.Join(result.OutputDir, relativePath)) // #nosec G304 -- reads a file the test run wrote
 	require.NoError(t, err)
 
 	return string(content)
@@ -65,7 +66,7 @@ func TestSanitizeKeepsRelativePathsAndOriginals(t *testing.T) {
 	lockFile := writeFixture(t, root, "services/portal/yarn.lock", fixtures.YarnV1Before)
 
 	checksum := func(path string) [32]byte {
-		content, err := os.ReadFile(path)
+		content, err := os.ReadFile(path) // #nosec G304 -- reads a fixture the test wrote
 		require.NoError(t, err)
 
 		return sha256.Sum256(content)
@@ -100,7 +101,7 @@ func TestSanitizeMasksLockFileAndManifestTheSame(t *testing.T) {
 
 func TestSanitizeSkipsAndReportsUnhandledFiles(t *testing.T) {
 	root := t.TempDir()
-	policyFile := writeFixture(t, root, ".debricked/debricked_policy.json", `{"secret": "s3cret"}`)
+	policyFile := writeFixture(t, root, ".debricked/debricked_policy.json", `{"leakedURL": "s3cret"}`)
 	fingerprints := writeFixture(t, root, "debricked.fingerprints.txt", "s3cret")
 	callGraph := writeFixture(t, root, "debricked-call-graph.java", "s3cret")
 	pom := writeFixture(t, root, "pom.xml", "<s3cret/>")
@@ -158,8 +159,8 @@ func TestSanitizeSkipsManifestWithoutSupportedLockFile(t *testing.T) {
 
 func TestSanitizeNeverWritesAFileThatFailed(t *testing.T) {
 	root := t.TempDir()
-	secret := "https://ci-user:s3cret@artifactory.acme.internal"
-	broken := writeFixture(t, root, "broken/yarn.lock", secret+"\n")
+	leakedURL := "https://ci-user:s3cret@artifactory.acme.internal" // #nosec G101 -- fake credentials, the test checks they never reach the output
+	broken := writeFixture(t, root, "broken/yarn.lock", leakedURL+"\n")
 	good := writeFixture(t, root, "good/yarn.lock", fixtures.YarnV1Before)
 
 	result := sanitizeGroups(
@@ -268,9 +269,12 @@ func TestSanitizeMapIsOutsideOutputDirectory(t *testing.T) {
 		Path:        "yarn.lock",
 	}}, readMap(t, result))
 
-	info, err := os.Stat(result.MapPath)
-	assert.NoError(t, err)
-	assert.Equal(t, os.FileMode(0o600), info.Mode().Perm())
+	// Windows has no Unix permission bits: Go reports 0o666 for any file that isn't read-only.
+	if runtime.GOOS != "windows" {
+		info, err := os.Stat(result.MapPath)
+		assert.NoError(t, err)
+		assert.Equal(t, os.FileMode(0o600), info.Mode().Perm())
+	}
 
 	assert.NotContains(t, readOutput(t, result, "yarn.lock"), "payments-portal")
 }
@@ -359,4 +363,37 @@ func TestSanitizeWritesEmptyMapWhenNothingWasRenamed(t *testing.T) {
 	result := sanitizeGroups(t, t.TempDir())
 
 	assert.Empty(t, readMap(t, result))
+}
+
+type recordingFinder struct {
+	*testdata.FinderMock
+	options file.DebrickedOptions
+}
+
+func (f *recordingFinder) GetGroups(options file.DebrickedOptions) (file.Groups, error) {
+	f.options = options
+
+	return f.FinderMock.GetGroups(options)
+}
+
+// A custom --exclusion list replaces the default one, so sanitize adds its own output folder itself.
+// Otherwise a second run would sanitize the copies from the first.
+func TestSanitizeAlwaysExcludesItsOutputDirectory(t *testing.T) {
+	cases := map[string][]string{
+		"no exclusions":     nil,
+		"custom exclusions": {"**/node_modules/**"},
+	}
+	for name, exclusions := range cases {
+		t.Run(name, func(t *testing.T) {
+			finder := &recordingFinder{FinderMock: testdata.NewFinderMock()}
+
+			_, err := NewSanitizer(finder).Sanitize(Options{RootPath: t.TempDir(), Exclusions: exclusions})
+
+			require.NoError(t, err)
+			assert.Contains(t, finder.options.Exclusions, file.SanitizedOutputExclusion)
+			for _, exclusion := range exclusions {
+				assert.Contains(t, finder.options.Exclusions, exclusion)
+			}
+		})
+	}
 }

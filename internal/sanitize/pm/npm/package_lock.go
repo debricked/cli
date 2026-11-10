@@ -101,26 +101,30 @@ func (s *packageLockSanitizer) sanitizeEntry(entry *util.OrderedObject) *util.Or
 	isLink, _ := entry.Values["link"].(bool)
 
 	for _, key := range entry.Keys {
-		value := entry.Values[key]
-		switch {
-		case key == "version":
-			if version, isString := value.(string); isString {
-				sanitized.Set(key, util.MaskValue(version))
-			}
-		case key == "dev" || key == "link":
-			if flag, isBool := value.(bool); isBool {
-				sanitized.Set(key, flag)
-			}
-		case key == "resolved":
-			if resolved, isString := value.(string); isString {
-				s.setResolved(sanitized, resolved, isLink)
-			}
-		case key == "requires" || util.IsPackageJSONDependencyList(key):
-			s.setList(sanitized, key, value)
-		}
+		s.setField(sanitized, key, entry.Values[key], isLink)
 	}
 
 	return sanitized
+}
+
+// setField copies one allow-listed field of a package entry, masked. Other fields are dropped.
+func (s *packageLockSanitizer) setField(entry *util.OrderedObject, key string, value any, isLink bool) {
+	switch {
+	case key == "version":
+		if version, isString := value.(string); isString {
+			entry.Set(key, util.MaskValue(version))
+		}
+	case key == "dev" || key == "link":
+		if flag, isBool := value.(bool); isBool {
+			entry.Set(key, flag)
+		}
+	case key == "resolved":
+		if resolved, isString := value.(string); isString {
+			s.setResolved(entry, resolved, isLink)
+		}
+	case key == "requires" || util.IsPackageJSONDependencyList(key):
+		s.setList(entry, key, value)
+	}
 }
 
 func (s *packageLockSanitizer) setResolved(entry *util.OrderedObject, resolved string, isLink bool) {
