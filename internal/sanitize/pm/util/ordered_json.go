@@ -175,7 +175,7 @@ func writeJSONLineEnd(buffer *bytes.Buffer, depth int) {
 func writeJSONScalar(buffer *bytes.Buffer, value any) error {
 	var scalar bytes.Buffer
 	encoder := json.NewEncoder(&scalar)
-	// Keeps version ranges such as ">=1.0" readable instead of writing ">=1.0".
+	// Keeps version ranges such as ">=1.0" readable instead of writing "\u003e=1.0".
 	encoder.SetEscapeHTML(false)
 	if err := encoder.Encode(value); err != nil {
 		return err
