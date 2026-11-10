@@ -48,6 +48,10 @@ type Options struct {
 	RootPath   string
 	Exclusions []string
 	Inclusions []string
+	// LockFileOnly and Strictness filter the files to sanitize, as in `debricked files find`.
+	// Their zero values sanitize every file the finder returns.
+	LockFileOnly bool
+	Strictness   int
 }
 
 type FileIssue struct {
@@ -99,10 +103,11 @@ func (s *Sanitizer) Sanitize(options Options) (Result, error) {
 	exclusions := append(append([]string{}, options.Exclusions...), file.SanitizedOutputExclusion)
 
 	groups, err := s.finder.GetGroups(file.DebrickedOptions{
-		RootPath:   root,
-		Exclusions: exclusions,
-		Inclusions: options.Inclusions,
-		Strictness: file.StrictAll,
+		RootPath:     root,
+		Exclusions:   exclusions,
+		Inclusions:   options.Inclusions,
+		LockFileOnly: options.LockFileOnly,
+		Strictness:   options.Strictness,
 	})
 	if err != nil {
 		return Result{}, err

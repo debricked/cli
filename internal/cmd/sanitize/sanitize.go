@@ -85,33 +85,39 @@ func RunE(sanitizer sanitize.ISanitizer) func(*cobra.Command, []string) error {
 			path = args[0]
 		}
 
-		result, err := sanitizer.Sanitize(sanitize.Options{
+		return Run(cmd, sanitizer, sanitize.Options{
 			RootPath:   path,
 			Exclusions: viper.GetStringSlice(ExclusionFlag),
 			Inclusions: viper.GetStringSlice(InclusionFlag),
-		})
-		if err != nil {
-			cmd.SilenceUsage = true
-
-			return cmderror.CommandError{Code: FailureExitCode, Err: err}
-		}
-
-		if err = printGroups(cmd.OutOrStdout(), result.Groups, viper.GetBool(JsonFlag)); err != nil {
-			return cmderror.CommandError{Code: FailureExitCode, Err: err}
-		}
-		printSummary(cmd.ErrOrStderr(), result)
-
-		if len(result.Failed) > 0 {
-			cmd.SilenceUsage = true
-
-			return cmderror.CommandError{
-				Code: FailureExitCode,
-				Err:  errors.New("some files could not be sanitized, so the output is incomplete"),
-			}
-		}
-
-		return nil
+		}, viper.GetBool(JsonFlag))
 	}
+}
+
+// Run sanitizes, prints the sanitized files in the format of `debricked files find` and returns
+// an error with FailureExitCode if any file failed. `debricked files find --sanitize` uses it too.
+func Run(cmd *cobra.Command, sanitizer sanitize.ISanitizer, options sanitize.Options, asJson bool) error {
+	result, err := sanitizer.Sanitize(options)
+	if err != nil {
+		cmd.SilenceUsage = true
+
+		return cmderror.CommandError{Code: FailureExitCode, Err: err}
+	}
+
+	if err = printGroups(cmd.OutOrStdout(), result.Groups, asJson); err != nil {
+		return cmderror.CommandError{Code: FailureExitCode, Err: err}
+	}
+	printSummary(cmd.ErrOrStderr(), result)
+
+	if len(result.Failed) > 0 {
+		cmd.SilenceUsage = true
+
+		return cmderror.CommandError{
+			Code: FailureExitCode,
+			Err:  errors.New("some files could not be sanitized, so the output is incomplete"),
+		}
+	}
+
+	return nil
 }
 
 // printGroups uses the output format of `debricked files find`.
