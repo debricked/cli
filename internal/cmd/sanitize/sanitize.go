@@ -8,6 +8,7 @@ import (
 
 	"github.com/debricked/cli/internal/cmd/cmderror"
 	"github.com/debricked/cli/internal/file"
+	"github.com/debricked/cli/internal/policy"
 	"github.com/debricked/cli/internal/sanitize"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -44,6 +45,8 @@ A map from each placeholder to the real name and path is written to .debricked/`
 It stays on this machine: it is outside the folder of copies and must not be uploaded.
 
 File types that sanitize doesn't handle are skipped and reported, and no copy of them is written.
+` + policy.DefaultFileName + ` files are copied unchanged, after checking that they are valid JSON, and listed
+with the other files.
 
 Exit codes:
 Code | Meaning

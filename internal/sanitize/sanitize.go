@@ -25,7 +25,6 @@ const (
 
 	reasonNotSupported = "format is not supported by sanitize"
 	reasonNoLockFile   = "manifest has no supported lock file to go with it"
-	reasonPolicyFile   = "policy file"
 )
 
 // Lock files and manifests are kept apart because a manifest is only useful with a lock file next
@@ -131,7 +130,7 @@ func (s *Sanitizer) Sanitize(options Options) (Result, error) {
 	for _, group := range groups.ToSlice() {
 		r.processGroup(group)
 	}
-	if err = r.reportPolicyFiles(exclusions, options.Inclusions); err != nil {
+	if err = r.copyPolicyFiles(exclusions, options.Inclusions); err != nil {
 		return r.result, err
 	}
 	if err = util.WriteMap(r.result.MapPath, r.placeholders.Entries()); err != nil {
@@ -142,6 +141,11 @@ func (s *Sanitizer) Sanitize(options Options) (Result, error) {
 }
 
 func (r *run) processGroup(group file.Group) {
+	if isPolicyFile(group.ManifestFile) && len(group.LockFiles) == 0 {
+		r.processPolicyFile(group.ManifestFile, group.CompiledFormat)
+
+		return
+	}
 	scope := r.newScopeIfHandled(group)
 
 	sanitizedLockFiles := []string{}
@@ -188,7 +192,7 @@ func (r *run) processFile(path string, sanitizer util.FileSanitizer, scope *util
 	}
 
 	if sanitizer == nil {
-		r.skip(path, skipReason(path))
+		r.skip(path, reasonNotSupported)
 
 		return ""
 	}
@@ -235,27 +239,33 @@ func (r *run) visit(path string) (string, bool) {
 	return relativePath, firstVisit
 }
 
-func skipReason(path string) string {
-	if filepath.Base(path) == policy.DefaultFileName {
-		return reasonPolicyFile
-	}
-
-	return reasonNotSupported
+func isPolicyFile(path string) bool {
+	return filepath.Base(path) == policy.DefaultFileName
 }
 
-// reportPolicyFiles walks separately because whether the finder returns a policy file depends on
-// the supported formats it gets from the server. Files the finder did return are already reported.
-func (r *run) reportPolicyFiles(exclusions, inclusions []string) error {
+// processPolicyFile copies a policy file and lists it on its own, as `debricked files find` does.
+// Its paths are relative, so a file the finder returned and the walk found again is handled once.
+func (r *run) processPolicyFile(path string, format *file.CompiledFormat) {
+	relativePath, err := filepath.Rel(r.root, path)
+	if err == nil && r.seen[relativePath] {
+		return
+	}
+	if output := r.processFile(path, sanitizePolicyFile, nil); output != "" {
+		r.result.Groups = append(r.result.Groups, *file.NewGroup(output, format, []string{}))
+	}
+}
+
+// copyPolicyFiles walks separately because whether the finder returns a policy file depends on
+// the supported formats it gets from the server.
+func (r *run) copyPolicyFiles(exclusions, inclusions []string) error {
 	return filepath.WalkDir(r.root, func(path string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if entry.IsDir() || entry.Name() != policy.DefaultFileName || file.Excluded(exclusions, inclusions, path) {
+		if entry.IsDir() || !isPolicyFile(path) || file.Excluded(exclusions, inclusions, path) {
 			return nil
 		}
-		if _, firstVisit := r.visit(path); firstVisit {
-			r.skip(path, reasonPolicyFile)
-		}
+		r.processPolicyFile(path, nil)
 
 		return nil
 	})

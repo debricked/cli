@@ -101,7 +101,6 @@ func TestSanitizeMasksLockFileAndManifestTheSame(t *testing.T) {
 
 func TestSanitizeSkipsAndReportsUnhandledFiles(t *testing.T) {
 	root := t.TempDir()
-	policyFile := writeFixture(t, root, ".debricked/debricked_policy.json", `{"leakedURL": "s3cret"}`)
 	fingerprints := writeFixture(t, root, "debricked.fingerprints.txt", "s3cret")
 	callGraph := writeFixture(t, root, "debricked-call-graph.java", "s3cret")
 	pom := writeFixture(t, root, "pom.xml", "<s3cret/>")
@@ -120,22 +119,69 @@ func TestSanitizeSkipsAndReportsUnhandledFiles(t *testing.T) {
 	for _, issue := range result.Skipped {
 		skipped = append(skipped, issue.Path)
 	}
-	assert.ElementsMatch(t, []string{policyFile, fingerprints, callGraph, pom, cargo}, skipped)
+	assert.ElementsMatch(t, []string{fingerprints, callGraph, pom, cargo}, skipped)
 	assert.Empty(t, result.Sanitized)
 
 	entries, err := os.ReadDir(result.OutputDir)
 	assert.NoError(t, err)
 	assert.Empty(t, entries)
-	assert.FileExists(t, policyFile, "files elsewhere in .debricked must survive")
 }
 
-func TestSanitizeReportsPolicyFileOnceWhenFinderAlsoReturnsIt(t *testing.T) {
+const policyFileContent = `{
+    "version": "1.0",
+    "policies": [
+        {
+            "name": "No critical vulnerabilities",
+            "action": "fail",
+            "rules": [
+                {
+                    "attribute": "cvss3",
+                    "operator": ">=",
+                    "value": 9
+                }
+            ]
+        }
+    ]
+}
+`
+
+// The finder only returns a policy file when the server lists it as a format, so sanitize also
+// finds it on its own. Either way it is copied unchanged and listed once, in a group of its own.
+func TestSanitizeCopiesPolicyFiles(t *testing.T) {
+	cases := map[string]bool{
+		"returned by the finder":     true,
+		"not returned by the finder": false,
+	}
+	for name, returnedByFinder := range cases {
+		t.Run(name, func(t *testing.T) {
+			root := t.TempDir()
+			policyFile := writeFixture(t, root, ".debricked/debricked_policy.json", policyFileContent)
+			var groups []*file.Group
+			if returnedByFinder {
+				groups = append(groups, file.NewGroup(policyFile, nil, []string{}))
+			}
+
+			result := sanitizeGroups(t, root, groups...)
+
+			copied := filepath.Join(result.OutputDir, ".debricked", "debricked_policy.json")
+			assert.Equal(t, []file.Group{*file.NewGroup(copied, nil, []string{})}, result.Groups)
+			assert.Equal(t, []string{policyFile}, result.Sanitized)
+			assert.Empty(t, result.Skipped)
+			assert.Equal(t, policyFileContent, readOutput(t, result, ".debricked/debricked_policy.json"))
+			assert.FileExists(t, policyFile, "files elsewhere in .debricked must survive")
+		})
+	}
+}
+
+func TestSanitizeFailsAPolicyFileThatIsNotJSON(t *testing.T) {
 	root := t.TempDir()
-	policyFile := writeFixture(t, root, ".debricked/debricked_policy.json", "{}")
+	policyFile := writeFixture(t, root, "debricked_policy.json", "version: 1.0\n")
 
-	result := sanitizeGroups(t, root, file.NewGroup(policyFile, nil, []string{}))
+	result := sanitizeGroups(t, root)
 
-	assert.Equal(t, []FileIssue{{Path: policyFile, Reason: reasonPolicyFile}}, result.Skipped)
+	assert.Equal(t, []FileIssue{{Path: policyFile, Reason: util.ErrInvalidFormat.Error()}}, result.Failed)
+	assert.Empty(t, result.Groups)
+	assert.NoFileExists(t, filepath.Join(result.OutputDir, "debricked_policy.json"))
 }
 
 func TestSanitizeSkipsManifestWithoutSupportedLockFile(t *testing.T) {
