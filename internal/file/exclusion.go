@@ -10,6 +10,10 @@ import (
 
 const debrickedExclusionEnvVar = "DEBRICKED_EXCLUSIONS"
 
+// SanitizedOutputExclusion matches the copies written by `debricked sanitize`. They must not be
+// picked up as dependency files. Other content in .debricked is not excluded.
+const SanitizedOutputExclusion = "**/.debricked/sanitized/**"
+
 type DefaultExclusionList struct {
 	Directories []string
 }
@@ -32,7 +36,7 @@ func DefaultExclusions() []string {
 		exclusions = append(exclusions, "**/"+excluded_dir+"/**")
 	}
 
-	return exclusions
+	return append(exclusions, SanitizedOutputExclusion)
 }
 
 func Exclusions() []string {
