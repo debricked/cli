@@ -40,6 +40,12 @@ var localProtocols = []string{"file:", "link:", "portal:", "exec:"}
 
 var gitPrefixes = []string{"git+", "git://", "ssh://", "git@", "github:", "gitlab:", "bitbucket:", "gist:"}
 
+// IsPlainVersion reports whether value is a version, a version range or a dist-tag, with nothing
+// that could name a host or a path.
+func IsPlainVersion(value string) bool {
+	return plainVersionRegex.MatchString(value)
+}
+
 // MaskValue replaces any private source in a dependency value with a placeholder that the
 // backend classifies the same way as the original. The function is pure, so a value gets the same
 // placeholder in a lock file and in its manifest.

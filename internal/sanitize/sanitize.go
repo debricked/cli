@@ -43,6 +43,22 @@ func sanitizersByFileName(pms []pm.IPm) (map[string]util.FileSanitizer, map[stri
 	return lockFiles, manifests
 }
 
+// sanitizerFor finds the sanitizer for a file by its name. A name can also be a pattern, such as
+// "*_install.json", for file types whose names vary.
+func sanitizerFor(sanitizers map[string]util.FileSanitizer, path string) util.FileSanitizer {
+	name := filepath.Base(path)
+	if sanitizer, found := sanitizers[name]; found {
+		return sanitizer
+	}
+	for pattern, sanitizer := range sanitizers {
+		if matched, _ := filepath.Match(pattern, name); matched {
+			return sanitizer
+		}
+	}
+
+	return nil
+}
+
 type Options struct {
 	RootPath   string
 	Exclusions []string
@@ -150,14 +166,14 @@ func (r *run) processGroup(group file.Group) {
 
 	sanitizedLockFiles := []string{}
 	for _, lockFile := range group.LockFiles {
-		if output := r.processFile(lockFile, lockFileSanitizers[filepath.Base(lockFile)], scope); output != "" {
+		if output := r.processFile(lockFile, sanitizerFor(lockFileSanitizers, lockFile), scope); output != "" {
 			sanitizedLockFiles = append(sanitizedLockFiles, output)
 		}
 	}
 
 	sanitizedManifest := ""
 	if group.HasFile() {
-		sanitizer := manifestSanitizers[filepath.Base(group.ManifestFile)]
+		sanitizer := sanitizerFor(manifestSanitizers, group.ManifestFile)
 		if sanitizer != nil && scope == nil {
 			r.skip(group.ManifestFile, reasonNoLockFile)
 		} else {
@@ -173,7 +189,7 @@ func (r *run) processGroup(group file.Group) {
 // newScopeIfHandled returns nil for a group with no lock file that sanitize can handle.
 func (r *run) newScopeIfHandled(group file.Group) *util.ProjectScope {
 	for _, lockFile := range group.LockFiles {
-		if lockFileSanitizers[filepath.Base(lockFile)] != nil {
+		if sanitizerFor(lockFileSanitizers, lockFile) != nil {
 			r.projectCount++
 
 			return util.NewProjectScope(&r.placeholders, r.projectCount)

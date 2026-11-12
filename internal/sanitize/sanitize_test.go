@@ -104,7 +104,7 @@ func TestSanitizeSkipsAndReportsUnhandledFiles(t *testing.T) {
 	fingerprints := writeFixture(t, root, "debricked.fingerprints.txt", "s3cret")
 	callGraph := writeFixture(t, root, "debricked-call-graph.java", "s3cret")
 	pom := writeFixture(t, root, "pom.xml", "<s3cret/>")
-	cargo := writeFixture(t, root, "Cargo.lock", "s3cret")
+	unknownLock := writeFixture(t, root, "unknown-format.lock", "s3cret")
 
 	result := sanitizeGroups(
 		t,
@@ -112,14 +112,14 @@ func TestSanitizeSkipsAndReportsUnhandledFiles(t *testing.T) {
 		file.NewGroup("", nil, []string{fingerprints}),
 		file.NewGroup(callGraph, nil, []string{}),
 		file.NewGroup(pom, nil, []string{}),
-		file.NewGroup("", nil, []string{cargo}),
+		file.NewGroup("", nil, []string{unknownLock}),
 	)
 
 	var skipped []string
 	for _, issue := range result.Skipped {
 		skipped = append(skipped, issue.Path)
 	}
-	assert.ElementsMatch(t, []string{fingerprints, callGraph, pom, cargo}, skipped)
+	assert.ElementsMatch(t, []string{fingerprints, callGraph, pom, unknownLock}, skipped)
 	assert.Empty(t, result.Sanitized)
 
 	entries, err := os.ReadDir(result.OutputDir)
@@ -188,7 +188,7 @@ func TestSanitizeSkipsManifestWithoutSupportedLockFile(t *testing.T) {
 	root := t.TempDir()
 	alone := writeFixture(t, root, "alone/package.json", fixtures.PackageJSONBefore)
 	withUnsupported := writeFixture(t, root, "other/package.json", fixtures.PackageJSONBefore)
-	unsupportedLock := writeFixture(t, root, "other/Cargo.lock", "version = 3\n")
+	unsupportedLock := writeFixture(t, root, "other/unknown-format.lock", "s3cret\n")
 
 	result := sanitizeGroups(
 		t,
@@ -200,7 +200,7 @@ func TestSanitizeSkipsManifestWithoutSupportedLockFile(t *testing.T) {
 	assert.Empty(t, result.Sanitized)
 	assert.Len(t, result.Skipped, 3)
 	assert.NoFileExists(t, filepath.Join(result.OutputDir, "alone/package.json"))
-	assert.NoFileExists(t, filepath.Join(result.OutputDir, "other/Cargo.lock"))
+	assert.NoFileExists(t, filepath.Join(result.OutputDir, "other/unknown-format.lock"))
 }
 
 func TestSanitizeNeverWritesAFileThatFailed(t *testing.T) {
@@ -441,5 +441,23 @@ func TestSanitizeAlwaysExcludesItsOutputDirectory(t *testing.T) {
 				assert.Contains(t, finder.options.Exclusions, exclusion)
 			}
 		})
+	}
+}
+
+func TestSanitizerForMatchesFileNamePatterns(t *testing.T) {
+	cases := map[string]bool{
+		"Cargo.lock":                 true,
+		"sub/maven_install.json":     true,
+		"rules_jvm_install.json":     true,
+		"gems.Gemfile.lock":          true,
+		"Gemfile.lock":               true,
+		"install.json":               false,
+		"Package.swift":              false,
+		"Cargo.toml":                 false,
+		"maven_install.json.backup":  false,
+		"debricked.fingerprints.txt": false,
+	}
+	for path, handled := range cases {
+		assert.Equal(t, handled, sanitizerFor(lockFileSanitizers, path) != nil, path)
 	}
 }

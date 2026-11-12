@@ -1,6 +1,9 @@
 package util
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 // ErrInvalidFormat has a fixed message on purpose. Underlying parser errors can quote file
 // contents, and those must not reach the output.
@@ -35,4 +38,9 @@ func (c *FileContext) PathPlaceholder(format, name string) string {
 // RecordPlaceholder is for placeholders that only need to be unique within their file.
 func (c *FileContext) RecordPlaceholder(placeholder, name string) {
 	c.scope.all.add(placeholder, name, c.path)
+}
+
+// SplitLines splits a text file into lines, with Windows line endings removed.
+func SplitLines(content []byte) []string {
+	return strings.Split(strings.ReplaceAll(string(content), "\r\n", "\n"), "\n")
 }
