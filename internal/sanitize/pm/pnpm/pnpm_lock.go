@@ -37,7 +37,7 @@ type pnpmLockSanitizer struct {
 }
 
 func sanitizePnpmLock(content []byte, context *util.FileContext) ([]byte, error) {
-	root, err := parsePnpmLock(content)
+	root, err := util.ParseYAMLMapping(content)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func sanitizePnpmLock(content []byte, context *util.FileContext) ([]byte, error)
 
 	// Package keys get their placeholders first, so references to them can be replaced wherever
 	// they appear.
-	if packages := yamlValue(root, "packages"); packages != nil && packages.Kind == yaml.MappingNode {
+	if packages := util.YAMLValue(root, "packages"); packages != nil && packages.Kind == yaml.MappingNode {
 		if err = sanitizer.registerKeys(packages); err != nil {
 			return nil, util.ErrInvalidFormat
 		}
@@ -60,24 +60,11 @@ func sanitizePnpmLock(content []byte, context *util.FileContext) ([]byte, error)
 	return util.EncodeYAML(sanitized), nil
 }
 
-func parsePnpmLock(content []byte) (*yaml.Node, error) {
-	var document yaml.Node
-	if err := yaml.Unmarshal(content, &document); err != nil || len(document.Content) != 1 {
-		return nil, util.ErrInvalidFormat
-	}
-	root := document.Content[0]
-	if root.Kind != yaml.MappingNode {
-		return nil, util.ErrInvalidFormat
-	}
-
-	return root, nil
-}
-
 // sanitizeRoot fails if no known section is left, because then the file isn't a pnpm lock file.
 func (s *pnpmLockSanitizer) sanitizeRoot(root *yaml.Node) (*util.OrderedObject, error) {
 	sanitized := util.NewOrderedObject()
 	var err error
-	forEachYAMLPair(root, func(key string, value *yaml.Node) {
+	util.ForEachYAMLPair(root, func(key string, value *yaml.Node) {
 		if err != nil {
 			return
 		}
@@ -142,7 +129,7 @@ func pnpmLockfileVersion(value *yaml.Node) any {
 }
 
 func (s *pnpmLockSanitizer) sanitizeImporters(importers *yaml.Node) (*util.OrderedObject, error) {
-	if isYAMLNull(importers) {
+	if util.IsYAMLNull(importers) {
 		return nil, errEmptySection
 	}
 	if importers.Kind != yaml.MappingNode {
@@ -151,7 +138,7 @@ func (s *pnpmLockSanitizer) sanitizeImporters(importers *yaml.Node) (*util.Order
 
 	sanitized := util.NewOrderedObject()
 	count := 0
-	forEachYAMLPair(importers, func(path string, importer *yaml.Node) {
+	util.ForEachYAMLPair(importers, func(path string, importer *yaml.Node) {
 		key := path
 		if path != pnpmRootImporterKey {
 			count++
@@ -167,7 +154,7 @@ func (s *pnpmLockSanitizer) sanitizeImporters(importers *yaml.Node) (*util.Order
 // sanitizeImporter keeps names only: the values often hold internal URLs and aren't read.
 func sanitizeImporter(importer *yaml.Node) *util.OrderedObject {
 	sanitized := util.NewOrderedObject()
-	forEachYAMLPair(importer, func(listName string, list *yaml.Node) {
+	util.ForEachYAMLPair(importer, func(listName string, list *yaml.Node) {
 		if !util.IsPackageJSONDependencyList(listName) {
 			return
 		}
@@ -179,7 +166,7 @@ func sanitizeImporter(importer *yaml.Node) *util.OrderedObject {
 
 func sanitizeNames(list *yaml.Node) *util.OrderedObject {
 	names := util.NewOrderedObject()
-	forEachYAMLPair(list, func(name string, _ *yaml.Node) {
+	util.ForEachYAMLPair(list, func(name string, _ *yaml.Node) {
 		names.Set(name, util.NewOrderedObject())
 	})
 
@@ -202,7 +189,7 @@ var (
 )
 
 func (s *pnpmLockSanitizer) sanitizeEntries(entries *yaml.Node, allowed pnpmAllowList) (*util.OrderedObject, error) {
-	if isYAMLNull(entries) {
+	if util.IsYAMLNull(entries) {
 		return nil, errEmptySection
 	}
 	if entries.Kind != yaml.MappingNode {
@@ -211,7 +198,7 @@ func (s *pnpmLockSanitizer) sanitizeEntries(entries *yaml.Node, allowed pnpmAllo
 
 	sanitized := util.NewOrderedObject()
 	var err error
-	forEachYAMLPair(entries, func(key string, entry *yaml.Node) {
+	util.ForEachYAMLPair(entries, func(key string, entry *yaml.Node) {
 		if err != nil {
 			return
 		}
@@ -238,12 +225,12 @@ func (s *pnpmLockSanitizer) sanitizeEntries(entries *yaml.Node, allowed pnpmAllo
 func (s *pnpmLockSanitizer) sanitizeEntry(entry *yaml.Node, allowed pnpmAllowList) (*util.OrderedObject, error) {
 	sanitized := util.NewOrderedObject()
 	var err error
-	forEachYAMLPair(entry, func(key string, value *yaml.Node) {
+	util.ForEachYAMLPair(entry, func(key string, value *yaml.Node) {
 		if err != nil {
 			return
 		}
 		switch {
-		case allowed.scalars[key] && value.Kind == yaml.ScalarNode && !isYAMLNull(value):
+		case allowed.scalars[key] && value.Kind == yaml.ScalarNode && !util.IsYAMLNull(value):
 			if key == "version" {
 				sanitized.Set(key, util.MaskValue(value.Value))
 			} else {
@@ -263,8 +250,8 @@ func (s *pnpmLockSanitizer) sanitizeEntry(entry *yaml.Node, allowed pnpmAllowLis
 func (s *pnpmLockSanitizer) sanitizeDependencyList(list *yaml.Node) (*util.OrderedObject, error) {
 	sanitized := util.NewOrderedObject()
 	var err error
-	forEachYAMLPair(list, func(name string, value *yaml.Node) {
-		if err != nil || value.Kind != yaml.ScalarNode || isYAMLNull(value) {
+	util.ForEachYAMLPair(list, func(name string, value *yaml.Node) {
+		if err != nil || value.Kind != yaml.ScalarNode || util.IsYAMLNull(value) {
 			return
 		}
 		var masked string
@@ -278,7 +265,7 @@ func (s *pnpmLockSanitizer) sanitizeDependencyList(list *yaml.Node) (*util.Order
 
 func (s *pnpmLockSanitizer) registerKeys(packages *yaml.Node) error {
 	var err error
-	forEachYAMLPair(packages, func(key string, _ *yaml.Node) {
+	util.ForEachYAMLPair(packages, func(key string, _ *yaml.Node) {
 		if err == nil {
 			_, err = s.maskKey(key)
 		}
@@ -415,30 +402,4 @@ func splitPnpmPeers(key string) (string, string) {
 	}
 
 	return key, ""
-}
-
-func forEachYAMLPair(mapping *yaml.Node, visit func(key string, value *yaml.Node)) {
-	if mapping.Kind != yaml.MappingNode {
-		return
-	}
-	for index := 0; index+1 < len(mapping.Content); index += 2 {
-		if mapping.Content[index].Kind == yaml.ScalarNode {
-			visit(mapping.Content[index].Value, mapping.Content[index+1])
-		}
-	}
-}
-
-func yamlValue(mapping *yaml.Node, key string) *yaml.Node {
-	var found *yaml.Node
-	forEachYAMLPair(mapping, func(candidate string, value *yaml.Node) {
-		if candidate == key {
-			found = value
-		}
-	})
-
-	return found
-}
-
-func isYAMLNull(node *yaml.Node) bool {
-	return node.Kind == yaml.ScalarNode && node.Tag == "!!null"
 }

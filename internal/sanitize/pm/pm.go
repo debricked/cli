@@ -3,11 +3,19 @@
 package pm
 
 import (
+	"github.com/debricked/cli/internal/sanitize/pm/bazel"
+	"github.com/debricked/cli/internal/sanitize/pm/bundler"
+	"github.com/debricked/cli/internal/sanitize/pm/cargo"
+	"github.com/debricked/cli/internal/sanitize/pm/cocoapods"
 	"github.com/debricked/cli/internal/sanitize/pm/composer"
+	"github.com/debricked/cli/internal/sanitize/pm/godep"
+	"github.com/debricked/cli/internal/sanitize/pm/mix"
 	"github.com/debricked/cli/internal/sanitize/pm/npm"
 	"github.com/debricked/cli/internal/sanitize/pm/nuget"
 	"github.com/debricked/cli/internal/sanitize/pm/pnpm"
+	"github.com/debricked/cli/internal/sanitize/pm/pub"
 	"github.com/debricked/cli/internal/sanitize/pm/python"
+	"github.com/debricked/cli/internal/sanitize/pm/swift"
 	"github.com/debricked/cli/internal/sanitize/pm/util"
 	"github.com/debricked/cli/internal/sanitize/pm/yarn"
 )
@@ -28,5 +36,13 @@ func Pms() []IPm {
 		composer.NewPm(),
 		nuget.NewPm(),
 		python.NewPm(),
+		cargo.NewPm(),
+		bundler.NewPm(),
+		cocoapods.NewPm(),
+		swift.NewPm(),
+		pub.NewPm(),
+		mix.NewPm(),
+		godep.NewPm(),
+		bazel.NewPm(),
 	}
 }
