@@ -61,9 +61,19 @@ func TestExclusionsWithEmptyTokenEnvVariable(t *testing.T) {
 		"**/bower_components/**",
 		"**/.vscode-test/**",
 		"**/.build/**",
+		"**/.debricked/sanitized/**",
 	}
 	defaultExclusions := Exclusions()
 	assert.Equal(t, gt, defaultExclusions)
+}
+
+func TestSanitizedOutputIsExcludedButRestOfDebrickedDirIsNot(t *testing.T) {
+	exclusions := DefaultExclusions()
+
+	assert.True(t, Excluded(exclusions, []string{}, ".debricked/sanitized/yarn.lock"))
+	assert.True(t, Excluded(exclusions, []string{}, "project/.debricked/sanitized/a/package.json"))
+	assert.False(t, Excluded(exclusions, []string{}, ".debricked/yarn.lock"))
+	assert.False(t, Excluded(exclusions, []string{}, "project/yarn.lock"))
 }
 
 func TestExclude(t *testing.T) {

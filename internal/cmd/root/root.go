@@ -9,6 +9,7 @@ import (
 	"github.com/debricked/cli/internal/cmd/policy"
 	"github.com/debricked/cli/internal/cmd/report"
 	"github.com/debricked/cli/internal/cmd/resolve"
+	"github.com/debricked/cli/internal/cmd/sanitize"
 	"github.com/debricked/cli/internal/cmd/scan"
 	"github.com/debricked/cli/internal/wire"
 	"github.com/spf13/cobra"
@@ -52,13 +53,14 @@ Read more: https://docs.debricked.com/product/administration/generate-access-tok
 	debClient.SetAccessToken(&accessToken)
 
 	rootCmd.AddCommand(report.NewReportCmd(container.LicenseReporter(), container.VulnerabilityReporter(), container.SBOMReporter()))
-	rootCmd.AddCommand(files.NewFilesCmd(container.Finder()))
+	rootCmd.AddCommand(files.NewFilesCmd(container.Finder(), container.Sanitizer()))
 	rootCmd.AddCommand(scan.NewScanCmd(container.Scanner()))
 	rootCmd.AddCommand(fingerprint.NewFingerprintCmd(container.Fingerprinter()))
 	rootCmd.AddCommand(resolve.NewResolveCmd(container.Resolver()))
 	rootCmd.AddCommand(callgraph.NewCallgraphCmd(container.CallgraphGenerator()))
 	rootCmd.AddCommand(auth.NewAuthCmd(container.Authenticator()))
 	rootCmd.AddCommand(policy.NewPolicyCmd(container.PolicyValidator()))
+	rootCmd.AddCommand(sanitize.NewSanitizeCmd(container.Sanitizer()))
 	rootCmd.AddCommand(mcp.NewMCPCmd(&accessToken, container.Authenticator(), container.DebClient().Host()))
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
