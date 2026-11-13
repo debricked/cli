@@ -2,6 +2,7 @@ package yarn
 
 import (
 	"bytes"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -11,6 +12,9 @@ import (
 const (
 	yarnMetadataHeader  = "__metadata:"
 	yarnProjectSpec     = "workspace:."
+	yarnWorkspacePrefix = "workspace:"
+	yarnBindingsMarker  = "::"
+	yarnLocatorBinding  = "locator"
 	yarnSpecSeparator   = ", "
 	yarnKeyIndent       = 2
 	yarnDependencyLevel = 4
@@ -24,14 +28,21 @@ var yarnEntryRegex = regexp.MustCompile(`^("[^"]+"|[^\s:"]+)(:?\s+)(.*)$`)
 type yarnLockSanitizer struct {
 	context      *util.FileContext
 	projectNames map[string]bool
-	output       bytes.Buffer
-	inBlock      bool
-	inMetadata   bool
-	inDependency bool
+	// projectDescriptors holds every `name@range` in the header of a project's own block. A
+	// registry package can have the project's name, so a name alone doesn't identify the project.
+	projectDescriptors map[string]bool
+	output             bytes.Buffer
+	inBlock            bool
+	inMetadata         bool
+	inDependency       bool
 }
 
 func sanitizeYarnLock(content []byte, context *util.FileContext) ([]byte, error) {
-	sanitizer := &yarnLockSanitizer{context: context, projectNames: map[string]bool{}}
+	sanitizer := &yarnLockSanitizer{
+		context:            context,
+		projectNames:       map[string]bool{},
+		projectDescriptors: map[string]bool{},
+	}
 	lines := strings.Split(strings.ReplaceAll(string(content), "\r\n", "\n"), "\n")
 
 	if err := sanitizer.findProjectNames(lines); err != nil {
@@ -53,14 +64,36 @@ func (s *yarnLockSanitizer) findProjectNames(lines []string) error {
 		if !isYarnHeader(line) || line == yarnMetadataHeader {
 			continue
 		}
-		for _, spec := range strings.Split(strings.TrimSuffix(line, ":"), yarnSpecSeparator) {
-			name, version, valid := splitYarnSpec(strings.Trim(spec, `"`))
-			if !valid {
-				return util.ErrInvalidFormat
-			}
-			if version == yarnProjectSpec {
-				s.projectNames[name] = true
-			}
+		if err := s.findProjectDescriptors(line); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// findProjectDescriptors records the specs of a header that has a `<name>@workspace:.` spec. All
+// specs of that name in the header resolve to the project, such as `<name>@workspace:*`.
+func (s *yarnLockSanitizer) findProjectDescriptors(line string) error {
+	specs := strings.Split(strings.TrimSuffix(line, ":"), yarnSpecSeparator)
+	projectName := ""
+	for _, spec := range specs {
+		name, version, valid := splitYarnSpec(strings.Trim(spec, `"`))
+		if !valid {
+			return util.ErrInvalidFormat
+		}
+		if version == yarnProjectSpec {
+			projectName = name
+		}
+	}
+	if projectName == "" {
+		return nil
+	}
+	s.projectNames[projectName] = true
+	for _, spec := range specs {
+		unquoted := strings.Trim(spec, `"`)
+		if name, _, _ := splitYarnSpec(unquoted); name == projectName {
+			s.projectDescriptors[unquoted] = true
 		}
 	}
 
@@ -139,7 +172,30 @@ func (s *yarnLockSanitizer) maskHeaderSpec(spec string) (string, error) {
 		return "", util.ErrInvalidFormat
 	}
 
-	return leading + s.projectName(name) + "@" + util.MaskValue(version) + trailing, nil
+	return leading + s.projectName(name, version) + "@" + s.maskHeaderVersion(version) + trailing, nil
+}
+
+// maskHeaderVersion keeps Berry's `::locator=` suffix, in redacted form. Berry adds it to local
+// dependencies such as portal: and link:, and the dependency lists refer to them without it. The
+// backend needs that difference to give the same result as the original, and the suffix keeps
+// the headers of the same path from different workspaces apart once the paths are masked.
+func (s *yarnLockSanitizer) maskHeaderVersion(version string) string {
+	rangePart, bindings, found := strings.Cut(version, yarnBindingsMarker)
+	if !found {
+		return util.MaskValue(version)
+	}
+	parsed, err := url.ParseQuery(bindings)
+	locator := parsed.Get(yarnLocatorBinding)
+	if err != nil || locator == "" {
+		return util.MaskValue(version)
+	}
+	name, locatorRange, valid := splitYarnSpec(locator)
+	if !valid {
+		return util.MaskValue(version)
+	}
+	masked := s.projectName(name, locatorRange) + "@" + util.MaskValue(locatorRange)
+
+	return util.MaskValue(rangePart) + yarnBindingsMarker + yarnLocatorBinding + "=" + url.QueryEscape(masked)
 }
 
 // splitYarnSpec splits at the first '@' after the start, so scoped names and values that contain
@@ -191,14 +247,20 @@ func (s *yarnLockSanitizer) processDependency(entry string) error {
 	key, separator, value := match[1], match[2], match[3]
 
 	name := strings.Trim(key, `"`)
-	renamed := strings.Replace(key, name, s.projectName(name), 1)
+	renamed := strings.Replace(key, name, s.projectName(name, strings.Trim(value, `"`)), 1)
 	s.writeLine("    " + renamed + separator + maskQuoted(value))
 
 	return nil
 }
 
-func (s *yarnLockSanitizer) projectName(name string) string {
-	if s.projectNames[name] {
+// projectName renames only a descriptor that refers to the project. A package from a registry keeps
+// its name even when the project has the same name, such as a tool that formats itself with a
+// published copy of itself.
+func (s *yarnLockSanitizer) projectName(name, version string) string {
+	if !s.projectNames[name] {
+		return name
+	}
+	if s.projectDescriptors[name+"@"+version] || strings.HasPrefix(version, yarnWorkspacePrefix) {
 		return s.context.ProjectPlaceholder(name)
 	}
 
