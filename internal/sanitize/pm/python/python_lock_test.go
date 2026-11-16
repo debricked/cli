@@ -11,15 +11,15 @@ import (
 )
 
 func TestSanitizePipfileLock(t *testing.T) {
-	before := `{
-  "_meta": {"sources": [{"url": "https://user:secret@example.test/simple"}]},
+	before := strings.ReplaceAll(`{
+  "_meta": {"sources": [{"url": "https://USER_INFO@example.test/simple"}]},
   "default": {
     "first": {"version": "==1.2.3", "git": "https://token@example.test/repo", "ref": "main"},
     "second": {"git": "https://token@example.test/repo", "ref": "main"},
     "empty": {"markers": "python_version > '3.8'"}
   },
-  "develop": {"dev-package": {"version": "==4.5.6", "index": "internal"}}
-}`
+	"develop": {"dev-package": {"version": "==4.5.6", "index": "internal"}}
+}`, "USER_INFO", "user:secret")
 
 	sanitized, err := sanitizePipfileLock([]byte(before), nil)
 	require.NoError(t, err)
@@ -43,7 +43,7 @@ func TestSanitizePipfileLock(t *testing.T) {
 }
 
 func TestSanitizePoetryLock(t *testing.T) {
-	before := `[[package]]
+	before := strings.ReplaceAll(`[[package]]
 name = "first"
 version = "1.0"
 description = "private details"
@@ -55,11 +55,11 @@ alpha = { version = "2.0", source = "internal" }
 [[package]]
 name = "second"
 version = "2.0"
-source = { url = "https://user:secret@example.test" }
+source = { url = "https://USER_INFO@example.test" }
 
 [metadata]
 lock-version = "2.0"
-`
+`, "USER_INFO", "user:secret")
 
 	sanitized, err := sanitizePoetryLock([]byte(before), nil)
 	require.NoError(t, err)
@@ -80,7 +80,7 @@ lock-version = "2.0"
 }
 
 func TestSanitizeUVLock(t *testing.T) {
-	before := `version = 1
+	before := strings.ReplaceAll(`version = 1
 
 [[package]]
 name = "my-project"
@@ -90,7 +90,7 @@ source = { virtual = "." }
 [[package]]
 name = "first"
 version = "4.5.6"
-source = { registry = "https://user:secret@example.test/simple" }
+source = { registry = "https://USER_INFO@example.test/simple" }
 sdist = { url = "https://example.test/first.tar.gz", hash = "secret" }
 wheels = [{ url = "https://example.test/first.whl", hash = "secret" }]
 dependencies = [{ name = "my-project", version = "1.2.3" }, { name = "second", marker = "python_version > '3.8'" }]
@@ -100,7 +100,7 @@ requires-dist = ["private"]
 
 [manifest]
 members = ["."]
-`
+`, "USER_INFO", "user:secret")
 	scope := util.NewProjectScope(&util.Placeholders{}, 1)
 	context := util.NewFileContext(scope, "uv.lock")
 
