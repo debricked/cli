@@ -273,6 +273,68 @@ func TestSanitizeSkipsManifestWithoutSupportedLockFile(t *testing.T) {
 	assert.NoFileExists(t, filepath.Join(result.OutputDir, "other/Cargo.lock"))
 }
 
+func TestSanitizeDoesNotCopyPythonManifests(t *testing.T) {
+	root := t.TempDir()
+	requirementsContent := `#version=1.0.1
+black
+pygments>=2.7.4
+markdown>=3.3
+matplotlib
+jinja2
+requests
+mdx_truly_sane_lists
+PyYAML
+pandas
+google-pasta
+tokenizers
+pydot
+boto3
+tensorflow==2.20.0
+keras-cv
+keras-nlp
+keras-tuner
+keras-hub
+keras-rs
+pymdown-extensions==11.0
+sentencepiece<0.2.2
+`
+	requirements := writeFixture(t, root, "requirements.txt", requirementsContent)
+	pipfile := writeFixture(t, root, "pipenv/Pipfile", "[packages]\nprivate = '*'\n")
+	pipfileLock := writeFixture(t, root, "pipenv/Pipfile.lock", `{"default":{"private":{"version":"==1.0"}}}`)
+	poetryManifest := writeFixture(t, root, "poetry/pyproject.toml", "[tool.poetry]\nname = 'private'\n")
+	poetryLock := writeFixture(t, root, "poetry/poetry.lock", "[[package]]\nname = 'private'\nversion = '1.0'\n")
+	uvManifest := writeFixture(t, root, "uv/pyproject.toml", "[project]\nname = 'private'\n")
+	uvLock := writeFixture(t, root, "uv/uv.lock", "version = 1\n[[package]]\nname = 'private'\nversion = '1.0'\n")
+
+	result := sanitizeGroups(
+		t,
+		root,
+		file.NewGroup(requirements, nil, []string{}),
+		file.NewGroup(pipfile, nil, []string{pipfileLock}),
+		file.NewGroup(poetryManifest, nil, []string{poetryLock}),
+		file.NewGroup(uvManifest, nil, []string{uvLock}),
+	)
+
+	assert.ElementsMatch(t, []string{requirements, pipfileLock, poetryLock, uvLock}, result.Sanitized)
+	assert.Equal(t, requirementsContent, readOutput(t, result, "requirements.txt"))
+	assert.NoFileExists(t, filepath.Join(result.OutputDir, "pipenv/Pipfile"))
+	assert.NoFileExists(t, filepath.Join(result.OutputDir, "poetry/pyproject.toml"))
+	assert.NoFileExists(t, filepath.Join(result.OutputDir, "uv/pyproject.toml"))
+}
+
+func TestSanitizeDoesNotCopyUnsafeRequirementsFile(t *testing.T) {
+	root := t.TempDir()
+	secret := "--extra-index-url https://user:secret@example.test/simple\n"
+	requirements := writeFixture(t, root, "requirements.txt", "private==1.0\n"+secret)
+
+	result := sanitizeGroups(t, root, file.NewGroup(requirements, nil, []string{}))
+
+	require.Equal(t, []FileIssue{{Path: requirements, Reason: util.ErrInvalidFormat.Error()}}, result.Failed)
+	assert.Empty(t, result.Sanitized)
+	assert.NoFileExists(t, filepath.Join(result.OutputDir, "requirements.txt"))
+	assert.NotContains(t, result.Failed[0].Reason, "secret")
+}
+
 func TestSanitizeNeverWritesAFileThatFailed(t *testing.T) {
 	root := t.TempDir()
 	leakedURL := "https://ci-user:s3cret@artifactory.acme.internal" // #nosec G101 -- fake credentials, the test checks they never reach the output

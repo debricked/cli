@@ -7,6 +7,7 @@ import (
 	"github.com/debricked/cli/internal/sanitize/pm/npm"
 	"github.com/debricked/cli/internal/sanitize/pm/nuget"
 	"github.com/debricked/cli/internal/sanitize/pm/pnpm"
+	"github.com/debricked/cli/internal/sanitize/pm/python"
 	"github.com/debricked/cli/internal/sanitize/pm/util"
 	"github.com/debricked/cli/internal/sanitize/pm/yarn"
 )
@@ -26,5 +27,6 @@ func Pms() []IPm {
 		pnpm.NewPm(),
 		composer.NewPm(),
 		nuget.NewPm(),
+		python.NewPm(),
 	}
 }
