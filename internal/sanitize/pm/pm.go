@@ -3,6 +3,7 @@
 package pm
 
 import (
+	"github.com/debricked/cli/internal/sanitize/pm/composer"
 	"github.com/debricked/cli/internal/sanitize/pm/npm"
 	"github.com/debricked/cli/internal/sanitize/pm/nuget"
 	"github.com/debricked/cli/internal/sanitize/pm/pnpm"
@@ -23,6 +24,7 @@ func Pms() []IPm {
 		npm.NewPm(),
 		yarn.NewPm(),
 		pnpm.NewPm(),
+		composer.NewPm(),
 		nuget.NewPm(),
 	}
 }

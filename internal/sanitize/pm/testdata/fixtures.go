@@ -202,5 +202,5 @@ const PaketAfter = `    Acme.Logger (1.4.2)
     Newtonsoft.Json (13.0.3)
     System.Buffers (4.5.1)
     FAKE (5.23.1)
-    debricked-redacted-file-1-1 (9f3c1ab)
+    redacted-file-1 (9f3c1ab)
 `

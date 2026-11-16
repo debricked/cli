@@ -282,21 +282,26 @@ func (uploadBatch *uploadBatch) initUpload() ([]string, error) {
 		return files, nil
 	}
 
+	log.Printf("Initializing scan upload with %d candidate file(s)", len(files))
+
 	var entryFile string
 	var err error
 	for len(files) > 0 {
 		entryFile = files[0]
 		files = files[1:]
+		log.Printf("Trying init upload with: %s", entryFile)
 		timeout := 0
 		if isCallgraphFile(entryFile) {
 			timeout = 30
 		}
 		err = uploadBatch.uploadFile(entryFile, timeout)
 		if err == nil {
+			log.Printf("Init upload succeeded with: %s", entryFile)
 			printSuccessfulUpload(entryFile)
 
 			return files, nil
 		}
+		log.Printf("Init upload failed for %s: %v", entryFile, err)
 	}
 
 	errStr := fmt.Sprintf("Failed to initialize a scan for %s. Got the following error: %s", entryFile, err.Error())

@@ -127,6 +127,76 @@ func TestSanitizeSkipsAndReportsUnhandledFiles(t *testing.T) {
 	assert.Empty(t, entries)
 }
 
+func TestSanitizeDoesNotWriteCsprojPackagesConfigOrPaketDependencies(t *testing.T) {
+	root := t.TempDir()
+	csproj := writeFixture(t, root, "dotnet/app.csproj", `<Project Sdk="Microsoft.NET.Sdk"></Project>`)
+	packagesConfig := writeFixture(t, root, "dotnet/packages.config", `<packages></packages>`)
+	paketDependencies := writeFixture(t, root, "dotnet/paket.dependencies", `source https://api.nuget.org/v3/index.json`)
+
+	result := sanitizeGroups(
+		t,
+		root,
+		file.NewGroup(csproj, nil, []string{packagesConfig, paketDependencies}),
+	)
+
+	assert.Empty(t, result.Sanitized)
+	assert.NoFileExists(t, filepath.Join(result.OutputDir, "dotnet/app.csproj"))
+	assert.NoFileExists(t, filepath.Join(result.OutputDir, "dotnet/packages.config"))
+	assert.NoFileExists(t, filepath.Join(result.OutputDir, "dotnet/paket.dependencies"))
+}
+
+func TestSanitizeComposerManifestAndLock(t *testing.T) {
+	root := t.TempDir()
+	manifest := writeFixture(t, root, "php/composer.json", `{
+	"name": "acme/portal",
+	"require": {
+		"php": ">=8.2",
+		"guzzlehttp/guzzle": "^7.8"
+	},
+	"scripts": {
+		"deploy": "s3cret"
+	}
+}
+`)
+	lockFile := writeFixture(t, root, "php/composer.lock", `{
+	"packages": [
+		{
+			"name": "acme/auth-client",
+			"version": "dev-feature/PROJ-123",
+			"require": {
+				"php": ">=8.1"
+			},
+			"source": {"url": "git@git.acme.internal:platform/auth-client.git"}
+		}
+	],
+	"packages-dev": []
+}
+`)
+
+	result := sanitizeGroups(t, root, file.NewGroup(manifest, nil, []string{lockFile}))
+
+	assert.Contains(t, result.Sanitized, manifest)
+	assert.Contains(t, result.Sanitized, lockFile)
+	assert.JSONEq(t, `{
+  "require": {
+		"php": ">=8.2",
+		"guzzlehttp/guzzle": "^7.8"
+  }
+}`, readOutput(t, result, "php/composer.json"))
+	assert.JSONEq(t, `{
+  "packages": [
+    {
+      "name": "acme/auth-client",
+      "version": "dev-redacted",
+      "require": {
+				"php": ">=8.1"
+      }
+    }
+  ],
+  "packages-dev": []
+}`, readOutput(t, result, "php/composer.lock"))
+}
+
 const policyFileContent = `{
     "version": "1.0",
     "policies": [
@@ -395,11 +465,11 @@ func TestSanitizePaketFilePlaceholdersUseTheProjectNumber(t *testing.T) {
 	)
 
 	assert.Equal(t,
-		"    debricked-redacted-file-1-1 (9f3c1ab)\n    debricked-redacted-file-1-2 (9f3c1ab)\n",
+		"    redacted-file-1 (9f3c1ab)\n    redacted-file-2 (9f3c1ab)\n",
 		readOutput(t, result, "first/paket.lock"),
 	)
 	assert.Equal(t,
-		"    debricked-redacted-file-2-1 (9f3c1ab)\n    debricked-redacted-file-2-2 (9f3c1ab)\n",
+		"    redacted-file-1 (9f3c1ab)\n    redacted-file-2 (9f3c1ab)\n",
 		readOutput(t, result, "second/paket.lock"),
 	)
 	assert.Len(t, readMap(t, result), 4)

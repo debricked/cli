@@ -2,6 +2,7 @@ package nuget
 
 import (
 	"bytes"
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -26,8 +27,31 @@ var paketHeaders = map[string]bool{
 func sanitizePaketLock(content []byte, context *util.FileContext) ([]byte, error) {
 	var output bytes.Buffer
 	section := ""
+	lines := strings.Split(strings.ReplaceAll(string(content), "\r\n", "\n"), "\n")
+	usedNames := map[string]bool{}
+	githubPlaceholders := map[string]string{}
+	nextPlaceholder := 1
 
-	for _, line := range strings.Split(strings.ReplaceAll(string(content), "\r\n", "\n"), "\n") {
+	nextFilePlaceholder := func(name string) string {
+		lookup := strings.ToLower(name)
+		if placeholder, exists := githubPlaceholders[lookup]; exists {
+			return placeholder
+		}
+
+		for {
+			placeholder := fmt.Sprintf("redacted-file-%d", nextPlaceholder)
+			nextPlaceholder++
+			if !usedNames[strings.ToLower(placeholder)] {
+				usedNames[strings.ToLower(placeholder)] = true
+				githubPlaceholders[lookup] = placeholder
+				context.RecordPlaceholder(placeholder, name)
+
+				return placeholder
+			}
+		}
+	}
+
+	for _, line := range lines {
 		if strings.TrimSpace(line) == "" {
 			continue
 		}
@@ -49,9 +73,10 @@ func sanitizePaketLock(content []byte, context *util.FileContext) ([]byte, error
 
 		switch section {
 		case "NUGET":
+			usedNames[strings.ToLower(name)] = true
 			output.WriteString("    " + name + " (" + version + ")\n")
 		case "GITHUB":
-			output.WriteString("    " + context.FilePlaceholder(name) + " (" + version + ")\n")
+			output.WriteString("    " + nextFilePlaceholder(name) + " (" + version + ")\n")
 		}
 	}
 
