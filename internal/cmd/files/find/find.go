@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"path/filepath"
 
+	sanitizecmd "github.com/debricked/cli/internal/cmd/sanitize"
 	"github.com/debricked/cli/internal/file"
+	"github.com/debricked/cli/internal/sanitize"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -16,6 +18,7 @@ var inclusions []string
 var jsonPrint bool
 var lockfileOnly bool
 var strictness int
+var sanitizeFiles bool
 
 const (
 	ExclusionFlag    = "exclusion"
@@ -23,9 +26,10 @@ const (
 	JsonFlag         = "json"
 	LockfileOnlyFlag = "lockfile"
 	StrictFlag       = "strict"
+	SanitizeFlag     = "sanitize"
 )
 
-func NewFindCmd(finder file.IFinder) *cobra.Command {
+func NewFindCmd(finder file.IFinder, sanitizer sanitize.ISanitizer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "find [path]",
 		Short: "Find all dependency files in inputted path",
@@ -34,7 +38,7 @@ For example ` + "`package.json`" + ` with ` + "`package-lock.json`.",
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			_ = viper.BindPFlags(cmd.Flags())
 		},
-		RunE: RunE(finder),
+		RunE: RunE(finder, sanitizer),
 	}
 	fileExclusionExample := filepath.Join("'*", "**.lock'")
 	dirExclusionExample := filepath.Join("'**", "node_modules", "**'")
@@ -79,17 +83,22 @@ Strictness Level | Meaning
 2                | Returns only pairs of manifest and lock file
 `)
 
+	cmd.Flags().BoolVar(&sanitizeFiles, SanitizeFlag, false, `Write redacted copies of the found files and print their paths instead, as "debricked sanitize" does.
+Copies go to .debricked/`+sanitize.OutputDirName+` in the given path. Skipped and failed files, and a summary, go to stderr.
+The lockfile and strict flags also apply to the copies.`)
+
 	viper.MustBindEnv(ExclusionFlag)
 	viper.MustBindEnv(InclusionFlag)
 	viper.MustBindEnv(JsonFlag)
 	viper.MustBindEnv(LockfileOnlyFlag)
 	viper.MustBindEnv(StrictFlag)
+	viper.MustBindEnv(SanitizeFlag)
 
 	return cmd
 }
 
-func RunE(f file.IFinder) func(_ *cobra.Command, args []string) error {
-	return func(_ *cobra.Command, args []string) error {
+func RunE(f file.IFinder, sanitizer sanitize.ISanitizer) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
 		path := ""
 		if len(args) > 0 {
 			path = args[0]
@@ -98,6 +107,16 @@ func RunE(f file.IFinder) func(_ *cobra.Command, args []string) error {
 		err := AssertFlagsAreValid()
 		if err != nil {
 			return err
+		}
+
+		if viper.GetBool(SanitizeFlag) {
+			return sanitizecmd.Run(cmd, sanitizer, sanitize.Options{
+				RootPath:     path,
+				Exclusions:   viper.GetStringSlice(ExclusionFlag),
+				Inclusions:   viper.GetStringSlice(InclusionFlag),
+				LockFileOnly: viper.GetBool(LockfileOnlyFlag),
+				Strictness:   viper.GetInt(StrictFlag),
+			}, viper.GetBool(JsonFlag))
 		}
 
 		fileGroups, err := f.GetGroups(
