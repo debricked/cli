@@ -6,14 +6,17 @@ import "github.com/debricked/cli/internal/sanitize/pm/util"
 // dependencies if there are no direct ones, because that is what the backend reads. URLs, mirror
 // URLs, file paths and hashes are removed: the URLs can hold private hosts and credentials.
 //
-// The backend needs dependency_tree, so the newer format without it fails here rather than being
-// uploaded and giving no packages.
+// The backend needs dependency_tree and finds no packages in the v2 format, which has "artifacts"
+// instead. A v2 file is skipped with ErrUnsupportedVersion, so it is reported and never copied.
 func sanitizeInstallJSON(content []byte, _ *util.FileContext) ([]byte, error) {
 	install, err := util.ParseJSONObject(content)
 	if err != nil {
 		return nil, util.ErrInvalidFormat
 	}
 	tree, isObject := install.Values["dependency_tree"].(*util.OrderedObject)
+	if _, isV2 := install.Values["artifacts"].(*util.OrderedObject); !isObject && isV2 {
+		return nil, util.ErrUnsupportedVersion
+	}
 	if !isObject {
 		return nil, util.ErrInvalidFormat
 	}

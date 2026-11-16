@@ -2,6 +2,7 @@
 package sanitize
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"maps"
@@ -25,6 +26,7 @@ const (
 
 	reasonNotSupported = "format is not supported by sanitize"
 	reasonNoLockFile   = "manifest has no supported lock file to go with it"
+	reasonLockFailed   = "its lock file could not be sanitized"
 )
 
 // Lock files and manifests are kept apart because a manifest is only useful with a lock file next
@@ -179,17 +181,30 @@ func (r *run) processGroup(group file.Group) {
 
 	sanitizedManifest := ""
 	if group.HasFile() {
-		sanitizer := sanitizerFor(manifestSanitizers, group.ManifestFile)
-		if sanitizer != nil && scope == nil {
-			r.skip(group.ManifestFile, reasonNoLockFile)
-		} else {
-			sanitizedManifest = r.processFile(group.ManifestFile, sanitizer, scope)
-		}
+		sanitizedManifest = r.processManifest(group.ManifestFile, scope, len(sanitizedLockFiles) > 0)
 	}
 
 	if len(sanitizedLockFiles) > 0 {
 		r.result.Groups = append(r.result.Groups, *file.NewGroup(sanitizedManifest, group.CompiledFormat, sanitizedLockFiles))
 	}
+}
+
+// processManifest copies a manifest only together with a lock file, because the backend can't use
+// it alone. If its lock file failed, the whole project is left out of the copies.
+func (r *run) processManifest(path string, scope *util.ProjectScope, hasLockFile bool) string {
+	sanitizer := sanitizerFor(manifestSanitizers, path)
+	switch {
+	case sanitizer == nil:
+		return r.processFile(path, nil, scope)
+	case scope == nil:
+		r.skip(path, reasonNoLockFile)
+	case !hasLockFile:
+		r.skip(path, reasonLockFailed)
+	default:
+		return r.processFile(path, sanitizer, scope)
+	}
+
+	return ""
 }
 
 // newScopeIfHandled returns nil for a group with no lock file that sanitize can handle.
@@ -226,8 +241,13 @@ func (r *run) processFile(path string, sanitizer util.FileSanitizer, scope *util
 		return ""
 	}
 	sanitized, err := sanitizer(content, util.NewFileContext(scope, relativePath))
-	if err != nil {
-		r.fail(path, util.ErrInvalidFormat.Error())
+	switch {
+	case errors.Is(err, util.ErrUnsupportedVersion):
+		r.skip(path, util.Reason(err))
+
+		return ""
+	case err != nil:
+		r.fail(path, util.Reason(err))
 
 		return ""
 	}

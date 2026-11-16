@@ -37,7 +37,7 @@ type pnpmLockSanitizer struct {
 }
 
 func sanitizePnpmLock(content []byte, context *util.FileContext) ([]byte, error) {
-	root, err := util.ParseYAMLMapping(content)
+	root, err := lockDocument(content)
 	if err != nil {
 		return nil, err
 	}
@@ -58,6 +58,53 @@ func sanitizePnpmLock(content []byte, context *util.FileContext) ([]byte, error)
 	}
 
 	return util.EncodeYAML(sanitized), nil
+}
+
+// pnpmEnvironmentKeys are the only keys of an importer in pnpm's environment document. pnpm 11 and
+// later put that document, which lists pnpm itself, before the lock file document.
+var pnpmEnvironmentKeys = map[string]bool{"configDependencies": true, "packageManagerDependencies": true}
+
+// lockDocument returns the one document of the file that is a lock file. The backend can't parse
+// a file with several documents, so only that one is written to the copy.
+func lockDocument(content []byte) (*yaml.Node, error) {
+	documents, err := util.ParseYAMLMappings(content)
+	if err != nil {
+		return nil, err
+	}
+	var lockDocuments []*yaml.Node
+	for _, document := range documents {
+		if !isEnvironmentDocument(document) {
+			lockDocuments = append(lockDocuments, document)
+		}
+	}
+	switch len(lockDocuments) {
+	case 1:
+		return lockDocuments[0], nil
+	case 0:
+		return nil, util.ErrNoLockDocument
+	default:
+		return nil, util.ErrInvalidFormat
+	}
+}
+
+// isEnvironmentDocument reports whether every importer of a document lists only pnpm's own
+// dependencies.
+func isEnvironmentDocument(document *yaml.Node) bool {
+	importers := util.YAMLValue(document, "importers")
+	if importers == nil || importers.Kind != yaml.MappingNode || len(importers.Content) == 0 {
+		return false
+	}
+	environment := true
+	util.ForEachYAMLPair(importers, func(_ string, importer *yaml.Node) {
+		hasKeys := false
+		util.ForEachYAMLPair(importer, func(key string, _ *yaml.Node) {
+			hasKeys = true
+			environment = environment && pnpmEnvironmentKeys[key]
+		})
+		environment = environment && hasKeys
+	})
+
+	return environment
 }
 
 // sanitizeRoot fails if no known section is left, because then the file isn't a pnpm lock file.

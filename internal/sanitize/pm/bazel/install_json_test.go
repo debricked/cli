@@ -114,11 +114,16 @@ func TestSanitizeInstallJSONUsesDependenciesWhenThereAreNoDirectOnes(t *testing.
 `, string(sanitized))
 }
 
+func TestSanitizeInstallJSONSkipsVersion2(t *testing.T) {
+	_, err := sanitizeInstallJSON([]byte(`{"version": "2", "artifacts": {"a:b": {"version": "1"}}}`), nil)
+
+	assert.ErrorIs(t, err, util.ErrUnsupportedVersion)
+}
+
 func TestSanitizeInstallJSONInvalid(t *testing.T) {
 	for _, content := range []string{
 		``,
 		`[]`,
-		`{"version": "2", "artifacts": {}}`,
 		`{"dependency_tree": []}`,
 		`{"dependency_tree": {"dependencies": {}}}`,
 		`{"dependency_tree": {"dependencies": ["a:b:1"]}}`,

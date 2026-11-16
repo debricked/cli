@@ -156,3 +156,20 @@ func newTestContext(path string) *util.FileContext {
 
 	return context
 }
+
+func TestSanitizeYarnLockKeepsThePatchedDescriptor(t *testing.T) {
+	const patch = "patch:interpret@npm%3A3.1.1#~/.yarn/patches/interpret-npm-3.1.1-715bac2bd7.patch"
+	const masked = "patch:interpret@npm%3A3.1.1#redacted.patch"
+	content := "\"app@workspace:.\":\n  version: 0.0.0-use.local\n  dependencies:\n    interpret: \"" + patch + "\"\n\n" +
+		"\"interpret@" + patch + ", interpret@patch:interpret@npm%3A^2.2.0#~/.yarn/patches/interpret-npm-3.1.1-715bac2bd7.patch\":\n" +
+		"  version: 3.1.1\n\n" +
+		"\"fsevents@patch:fsevents@npm%3A^2.3.2#optional!builtin<compat/fsevents>\":\n  version: 2.3.3\n"
+
+	sanitized, err := sanitizeYarnLock([]byte(content), newTestContext("yarn.lock"))
+
+	assert.NoError(t, err)
+	assert.Equal(t, "\"debricked-redacted-project-1@workspace:.\":\n  version: 0.0.0-use.local\n  dependencies:\n    interpret: \""+masked+"\"\n\n"+
+		"\"interpret@"+masked+", interpret@patch:interpret@npm%3A^2.2.0#redacted.patch\":\n  version: 3.1.1\n\n"+
+		"\"fsevents@patch:fsevents@npm%3A^2.3.2#optional!builtin<compat/fsevents>\":\n  version: 2.3.3\n", string(sanitized))
+	assert.Equal(t, masked, util.MaskValue(patch), "package.json gets the same value through MaskValue")
+}

@@ -1,19 +1,44 @@
 package util
 
-import "gopkg.in/yaml.v3"
+import (
+	"bytes"
+	"errors"
+	"io"
 
-// ParseYAMLMapping returns the top-level mapping of a YAML document with exactly one document.
+	"gopkg.in/yaml.v3"
+)
+
+// ParseYAMLMapping returns the top-level mapping of a file with exactly one YAML document. A file
+// with more documents fails, rather than having all but the first silently dropped.
 func ParseYAMLMapping(content []byte) (*yaml.Node, error) {
-	var document yaml.Node
-	if err := yaml.Unmarshal(content, &document); err != nil || len(document.Content) != 1 {
-		return nil, ErrInvalidFormat
-	}
-	root := document.Content[0]
-	if root.Kind != yaml.MappingNode {
+	documents, err := ParseYAMLMappings(content)
+	if err != nil || len(documents) != 1 {
 		return nil, ErrInvalidFormat
 	}
 
-	return root, nil
+	return documents[0], nil
+}
+
+// ParseYAMLMappings returns the top-level mapping of each document in a file, in order.
+func ParseYAMLMappings(content []byte) ([]*yaml.Node, error) {
+	decoder := yaml.NewDecoder(bytes.NewReader(content))
+	var mappings []*yaml.Node
+	for {
+		var document yaml.Node
+		err := decoder.Decode(&document)
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil || len(document.Content) != 1 || document.Content[0].Kind != yaml.MappingNode {
+			return nil, ErrInvalidFormat
+		}
+		mappings = append(mappings, document.Content[0])
+	}
+	if len(mappings) == 0 {
+		return nil, ErrInvalidFormat
+	}
+
+	return mappings, nil
 }
 
 // ForEachYAMLPair visits the pairs of a mapping that have a scalar key, in order.

@@ -355,6 +355,41 @@ func TestSanitizeNeverWritesAFileThatFailed(t *testing.T) {
 	assert.FileExists(t, filepath.Join(result.OutputDir, "good/yarn.lock"))
 }
 
+func TestSanitizeWritesNothingForAProjectWhoseLockFileFailed(t *testing.T) {
+	root := t.TempDir()
+	manifest := writeFixture(t, root, "web/package.json", fixtures.PackageJSONBefore)
+	lockFile := writeFixture(t, root, "web/package-lock.json", "{corrupt")
+
+	result := sanitizeGroups(t, root, file.NewGroup(manifest, nil, []string{lockFile}))
+
+	require.Len(t, result.Failed, 1)
+	assert.Equal(t, lockFile, result.Failed[0].Path)
+	assert.Equal(t, []FileIssue{{Path: manifest, Reason: reasonLockFailed}}, result.Skipped)
+	assert.Empty(t, result.Groups)
+	assert.NoDirExists(t, filepath.Join(result.OutputDir, "web"))
+}
+
+func TestSanitizeSkipsAnUnsupportedVersionWithoutFailing(t *testing.T) {
+	root := t.TempDir()
+	v2 := writeFixture(t, root, "java/maven_install.json", `{"version": "2", "artifacts": {"a:b": {"version": "1"}}}`)
+
+	result := sanitizeGroups(t, root, file.NewGroup("", nil, []string{v2}))
+
+	assert.Empty(t, result.Failed)
+	assert.Equal(t, []FileIssue{{Path: v2, Reason: util.ErrUnsupportedVersion.Error()}}, result.Skipped)
+	assert.NoFileExists(t, filepath.Join(result.OutputDir, "java/maven_install.json"))
+}
+
+func TestSanitizeReportsAPnpmLockFileWithOnlyTheEnvironmentDocument(t *testing.T) {
+	root := t.TempDir()
+	lockFile := writeFixture(t, root, "pnpm-lock.yaml", "lockfileVersion: '9.0'\nimporters:\n  .:\n    configDependencies: {}\n")
+
+	result := sanitizeGroups(t, root, file.NewGroup("", nil, []string{lockFile}))
+
+	assert.Equal(t, []FileIssue{{Path: lockFile, Reason: util.ErrNoLockDocument.Error()}}, result.Failed)
+	assert.NoFileExists(t, filepath.Join(result.OutputDir, "pnpm-lock.yaml"))
+}
+
 func TestSanitizeClearsOnlyTheOutputDirectory(t *testing.T) {
 	root := t.TempDir()
 	stale := writeFixture(t, root, ".debricked/sanitized/old/yarn.lock", "stale")

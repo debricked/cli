@@ -441,12 +441,14 @@ func TestSanitizePnpmLockRecordsPathsInTheMap(t *testing.T) {
 
 func TestSanitizePnpmLockInvalid(t *testing.T) {
 	invalid := map[string]string{
-		"empty":            "",
-		"not yaml":         "a: b: c: [",
-		"not a mapping":    "- a\n",
-		"unrelated yaml":   "name: portal\n",
-		"packages is list": "packages:\n  - a\n",
-		"unbalanced peers": "packages:\n  'a@1.0.0(b@1.0.0': {}\n",
+		"empty":                            "",
+		"not yaml":                         "a: b: c: [",
+		"not a mapping":                    "- a\n",
+		"unrelated yaml":                   "name: portal\n",
+		"packages is list":                 "packages:\n  - a\n",
+		"unbalanced peers":                 "packages:\n  'a@1.0.0(b@1.0.0': {}\n",
+		"two lock documents":               "---\n" + pnpmV9Before + "---\n" + pnpmV9Before,
+		"a document that is not a mapping": pnpmEnvironmentDocument + "---\n- a\n",
 	}
 	for name, content := range invalid {
 		t.Run(name, func(t *testing.T) {
@@ -460,4 +462,51 @@ func newTestContext(path string) *util.FileContext {
 	context, _ := testdata.NewContext(path)
 
 	return context
+}
+
+// pnpmEnvironmentDocument is the first document of a pnpm 11+ lock file. It lists pnpm itself.
+const pnpmEnvironmentDocument = `---
+lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    configDependencies: {}
+    packageManagerDependencies:
+      pnpm:
+        specifier: 12.18.0
+        version: 12.18.0
+
+packages:
+
+  pnpm@12.18.0:
+    resolution: {integrity: sha512-x}
+    hasBin: true
+
+snapshots:
+
+  pnpm@12.18.0: {}
+`
+
+func TestSanitizePnpmLockUsesTheLockFileDocument(t *testing.T) {
+	cases := map[string]string{
+		"one document":                         pnpmV9Before,
+		"one document with a marker":           "---\n" + pnpmV9Before,
+		"environment document before the lock": pnpmEnvironmentDocument + "---\n" + pnpmV9Before,
+	}
+	for name, content := range cases {
+		t.Run(name, func(t *testing.T) {
+			sanitized, err := sanitizePnpmLock([]byte(content), newTestContext("pnpm-lock.yaml"))
+
+			assert.NoError(t, err)
+			assert.Equal(t, pnpmV9After, string(sanitized))
+		})
+	}
+}
+
+func TestSanitizePnpmLockFailsWithOnlyTheEnvironmentDocument(t *testing.T) {
+	_, err := sanitizePnpmLock([]byte(pnpmEnvironmentDocument), newTestContext("pnpm-lock.yaml"))
+
+	assert.ErrorIs(t, err, util.ErrNoLockDocument)
+	assert.Equal(t, util.ErrNoLockDocument.Error(), util.Reason(err))
 }

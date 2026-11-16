@@ -77,6 +77,13 @@ func TestRunEPrintsSanitizedFilesAsJson(t *testing.T) {
 	]`, out)
 }
 
+func TestRunEPrintsAnEmptyJsonListWhenNothingWasSanitized(t *testing.T) {
+	out, _, err := execute(&sanitizerMock{}, "x", "--json")
+
+	assert.NoError(t, err)
+	assert.Equal(t, "[]\n", out)
+}
+
 func TestRunEPrintsSummary(t *testing.T) {
 	mock := &sanitizerMock{result: sanitize.Result{
 		OutputDir: "x/.debricked/sanitized",

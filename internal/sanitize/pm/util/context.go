@@ -9,6 +9,25 @@ import (
 // contents, and those must not reach the output.
 var ErrInvalidFormat = errors.New("content is not valid for this file type")
 
+// ErrNoLockDocument is for a pnpm lock file that holds only pnpm's own environment document.
+var ErrNoLockDocument = errors.New("the file has no lock file document, only pnpm's environment document")
+
+// ErrUnsupportedVersion is for a version of a file format that sanitize doesn't handle. The file
+// is skipped rather than failed, and no copy of it is written.
+var ErrUnsupportedVersion = errors.New("this version of the file format is not supported by sanitize")
+
+// Reason returns the message to report for an error from a FileSanitizer. Only these fixed
+// messages can reach the output, never the text of an underlying error.
+func Reason(err error) string {
+	for _, known := range []error{ErrNoLockDocument, ErrUnsupportedVersion} {
+		if errors.Is(err, known) {
+			return known.Error()
+		}
+	}
+
+	return ErrInvalidFormat.Error()
+}
+
 // FileSanitizer returns the sanitized content of one file, or ErrInvalidFormat.
 type FileSanitizer func(content []byte, context *FileContext) ([]byte, error)
 

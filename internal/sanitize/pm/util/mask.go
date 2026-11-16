@@ -19,6 +19,9 @@ const (
 	MaskedPatch           = "patch:redacted"
 	MaskedUnknown         = "redacted"
 	yarnBuiltinPatchToken = "optional!builtin"
+	patchProtocol         = "patch:"
+	maskedPatchFileName   = "redacted.patch"
+	maskedPatchSource     = "redacted"
 )
 
 var (
@@ -29,6 +32,8 @@ var (
 	gitShorthandRegex = regexp.MustCompile(`^[\w.\-]+/[\w.\-]+(?:#.*)?$`)
 	wordOnlyRegex     = regexp.MustCompile(`^\w+$`)
 	patchLocatorRegex = regexp.MustCompile(`&?locator=[^&]*`)
+	// packageNameRegex matches an npm package name, scoped or not, and nothing shaped like a path.
+	packageNameRegex = regexp.MustCompile(`^(?:@[\w.\-]+/)?[\w.\-]+$`)
 )
 
 var publicRegistryHosts = map[string]bool{
@@ -86,12 +91,13 @@ func MatchesUnsupportedProtocol(value string) bool {
 	if isBarePath(value) {
 		return false
 	}
-	switch MaskValue(value) {
+	masked := MaskValue(value)
+	switch masked {
 	case MaskedGitWord, MaskedGitWordNoUser, MaskedLocalDot, MaskedPatchFile:
 		return true
 	}
 
-	return false
+	return strings.HasPrefix(masked, patchProtocol) && strings.HasSuffix(masked, "#"+maskedPatchFileName)
 }
 
 func isPublicRegistryURL(value string) bool {
@@ -116,16 +122,53 @@ func maskWorkspace(value string) string {
 	return MaskedWorkspace
 }
 
+// maskPatch keeps the descriptor of the patched package, `patch:<name>@<range>#<patch file>`, and
+// masks only the patch file. The backend reads the patched package from that descriptor, so
+// without it the package and its dependencies change in the scan result. The range inside is
+// masked by the same rules as any other value, so a private source can't stay just because a
+// patch wraps it.
 func maskPatch(value string) string {
-	switch {
-	case strings.Contains(value, yarnBuiltinPatchToken):
+	if strings.Contains(value, yarnBuiltinPatchToken) {
 		// Built-in patches hold no customer data, apart from a locator naming the project.
 		return patchLocatorRegex.ReplaceAllString(value, "")
+	}
+
+	descriptor, patchFile, found := strings.Cut(strings.TrimPrefix(value, patchProtocol), "#")
+	maskedDescriptor, valid := maskPatchedDescriptor(descriptor)
+	switch {
+	case found && valid && strings.Contains(patchFile, ".patch"):
+		return patchProtocol + maskedDescriptor + "#" + maskedPatchFileName
+	case found && valid:
+		return patchProtocol + maskedDescriptor + "#" + maskedPatchSource
 	case strings.Contains(value, ".patch"):
 		return MaskedPatchFile
 	}
 
 	return MaskedPatch
+}
+
+// maskPatchedDescriptor takes the URL-encoded `<name>@<range>` of a patched package. A range that
+// masking doesn't change keeps its original encoding.
+func maskPatchedDescriptor(descriptor string) (string, bool) {
+	decoded, err := url.PathUnescape(descriptor)
+	if err != nil || len(decoded) < 2 {
+		return "", false
+	}
+	index := strings.Index(decoded[1:], "@")
+	if index < 0 {
+		return "", false
+	}
+	name, versionRange := decoded[:index+1], decoded[index+2:]
+	if !packageNameRegex.MatchString(name) {
+		return "", false
+	}
+
+	masked := MaskValue(versionRange)
+	if masked == versionRange {
+		return descriptor, true
+	}
+
+	return name + "@" + strings.NewReplacer(":", "%3A", "#", "%23").Replace(masked), true
 }
 
 func CutLocalProtocol(value string) (string, bool) {
