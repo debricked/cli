@@ -25,6 +25,7 @@ func sanitizeRequirements(content []byte, _ *util.FileContext) ([]byte, error) {
 			if requirementVersionComment.MatchString(line) {
 				continue
 			}
+
 			return nil, util.ErrInvalidFormat
 		}
 		if !requirementLine.MatchString(line) {

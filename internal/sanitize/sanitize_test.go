@@ -324,7 +324,7 @@ sentencepiece<0.2.2
 
 func TestSanitizeDoesNotCopyUnsafeRequirementsFile(t *testing.T) {
 	root := t.TempDir()
-	secret := "--extra-index-url https://user:secret@example.test/simple\n"
+	secret := "--extra-index-url https://user:secret@example.test/simple\n" // #nosec G101 -- fake credentials verify unsafe index URLs are rejected
 	requirements := writeFixture(t, root, "requirements.txt", "private==1.0\n"+secret)
 
 	result := sanitizeGroups(t, root, file.NewGroup(requirements, nil, []string{}))
