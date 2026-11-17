@@ -55,7 +55,7 @@ func sanitizeComposerPackages(packages []any) ([]any, error) {
 }
 
 // sanitizeComposerPackage keeps name and version, which make the component and its purl, and the
-// names in require, which make the edges. Constraints are set to "*", as in composer.json.
+// names in require, which make the edges. Their constraints are set to "*".
 // source and dist are dropped: they hold private URLs and paths.
 func sanitizeComposerPackage(pkg *util.OrderedObject) (*util.OrderedObject, error) {
 	name, isName := pkg.Values["name"].(string)

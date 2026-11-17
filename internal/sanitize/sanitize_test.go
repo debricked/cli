@@ -179,8 +179,8 @@ func TestSanitizeComposerManifestAndLock(t *testing.T) {
 	assert.Contains(t, result.Sanitized, lockFile)
 	assert.JSONEq(t, `{
   "require": {
-		"php": "*",
-		"guzzlehttp/guzzle": "*"
+		"php": ">=8.2",
+		"guzzlehttp/guzzle": "^7.8"
   }
 }`, readOutput(t, result, "php/composer.json"))
 	assert.JSONEq(t, `{

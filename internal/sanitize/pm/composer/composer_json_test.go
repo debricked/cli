@@ -33,13 +33,13 @@ const composerJSONBefore = `{
 
 const composerJSONAfter = `{
     "require": {
-        "php": "*",
+        "php": ">=8.2",
         "ext-json": "*",
-        "guzzlehttp/guzzle": "*",
-        "acme/auth-client": "*"
+        "guzzlehttp/guzzle": "^7.8",
+        "acme/auth-client": "dev-feature/PROJ-123-new-login"
     },
     "require-dev": {
-        "phpunit/phpunit": "*"
+        "phpunit/phpunit": "^10.5"
     }
 }
 `
@@ -49,7 +49,8 @@ func TestSanitizeComposerJSON(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, composerJSONAfter, string(sanitized))
-	assert.NotContains(t, string(sanitized), "PROJ-123")
+	assert.NotContains(t, string(sanitized), "acme.internal")
+	assert.NotContains(t, string(sanitized), "s3cret")
 }
 
 func TestSanitizeComposerJSONMissingLists(t *testing.T) {
@@ -63,11 +64,11 @@ func TestSanitizeComposerJSONOmitsEmptySections(t *testing.T) {
 	sanitized, err := sanitizeComposerJSON([]byte(`{"require":{"php":">=8.2"},"require-dev":{}}`), newTestContext("composer.json"))
 
 	assert.NoError(t, err)
-	assert.Equal(t, "{\n    \"require\": {\n        \"php\": \"*\"\n    }\n}\n", string(sanitized))
+	assert.Equal(t, "{\n    \"require\": {\n        \"php\": \">=8.2\"\n    }\n}\n", string(sanitized))
 }
 
 func TestSanitizeComposerJSONInvalid(t *testing.T) {
-	for _, content := range []string{`{not-json`, `{"require": []}`, `{"require-dev": "x"}`} {
+	for _, content := range []string{`{not-json`, `{"require": []}`, `{"require-dev": "x"}`, `{"require": {"a/b": {"nested": "x"}}}`, `{"require": {"a/b": 1}}`} {
 		_, err := sanitizeComposerJSON([]byte(content), newTestContext("composer.json"))
 		assert.ErrorIs(t, err, util.ErrInvalidFormat, content)
 	}
