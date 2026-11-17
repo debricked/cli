@@ -68,7 +68,7 @@ const packagesLockAfter = `{
                     "Newtonsoft.Json": "13.0.1"
                 }
             },
-              "redacted-project-1": {
+              "debricked-redacted-project-1": {
                 "type": "Project",
                 "dependencies": {
                     "System.Buffers": "[4.5.1, )"
@@ -82,11 +82,11 @@ const packagesLockAfter = `{
                 "resolved": "1.4.2",
                 "contentHash": "AAAA",
                 "dependencies": {
-                  "redacted-project-1": "1.0.0",
+                  "debricked-redacted-project-1": "1.0.0",
                     "Missing.From.Group": "2.0.0"
                 }
             },
-              "redacted-project-1": {
+              "debricked-redacted-project-1": {
                 "type": "project",
                 "dependencies": {
                     "System.Buffers": "[4.5.1, )"
@@ -122,16 +122,16 @@ func TestSanitizePackagesLockJSONRenamesProjectEntriesCaseInsensitive(t *testing
 	sanitized, err := sanitizePackagesLockJSON([]byte(packagesLockBefore), context)
 
 	assert.NoError(t, err)
-	assert.Contains(t, string(sanitized), `"redacted-project-1"`)
+	assert.Contains(t, string(sanitized), `"debricked-redacted-project-1"`)
 	assert.Len(t, placeholders.Entries(), 1)
 	assert.Equal(t, util.MapEntry{
-		Placeholder: "redacted-project-1",
+		Placeholder: "debricked-redacted-project-1",
 		Name:        "acme.payments.core",
 		Path:        "packages.lock.json",
 	}, placeholders.Entries()[0])
 }
 
-func TestSanitizePackagesLockJSONAvoidsPlaceholderCollisions(t *testing.T) {
+func TestSanitizePackagesLockJSONKeepsOtherPackagesNamedLikeAPlaceholder(t *testing.T) {
 	before := `{
   "dependencies": {
     "net8.0": {
@@ -154,9 +154,11 @@ func TestSanitizePackagesLockJSONAvoidsPlaceholderCollisions(t *testing.T) {
 	sanitized, err := sanitizePackagesLockJSON([]byte(before), newTestContext("packages.lock.json"))
 
 	assert.NoError(t, err)
-	assert.Contains(t, string(sanitized), `"redacted-project-2"`)
-	assert.NotContains(t, string(sanitized), `"redacted-project-1": {
+	assert.Contains(t, string(sanitized), `"redacted-project-1": {
+                "type": "Direct"`)
+	assert.Contains(t, string(sanitized), `"debricked-redacted-project-1": {
                 "type": "Project"`)
+	assert.NotContains(t, string(sanitized), "Acme.Payments.Core")
 }
 
 func TestSanitizePackagesLockJSONInvalid(t *testing.T) {
@@ -166,6 +168,11 @@ func TestSanitizePackagesLockJSONInvalid(t *testing.T) {
 		`{"dependencies": []}`,
 		`{"dependencies": {"net8.0": []}}`,
 		`{"dependencies": {"net8.0": {"pkg": []}}}`,
+		`{"dependencies": {"net8.0": {"pkg": {"resolved": "1.0.0"}}}}`,
+		`{"dependencies": {"net8.0": {"pkg": {"type": 1}}}}`,
+		`{"dependencies": {"net8.0": {"pkg": {"type": "Direct", "resolved": {"nested": "x"}}}}}`,
+		`{"dependencies": {"net8.0": {"pkg": {"type": "Direct", "dependencies": []}}}}`,
+		`{"dependencies": {"net8.0": {"pkg": {"type": "Direct", "dependencies": {"a": 1}}}}}`,
 	}
 	for _, content := range invalid {
 		_, err := sanitizePackagesLockJSON([]byte(content), newTestContext("packages.lock.json"))

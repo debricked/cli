@@ -45,8 +45,8 @@ const composerLockAfter = `{
             "name": "acme/auth-client",
             "version": "dev-redacted",
             "require": {
-        "guzzlehttp/guzzle": "^7.0",
-        "php": ">=8.1"
+                "guzzlehttp/guzzle": "*",
+                "php": "*"
             }
         },
         {
@@ -67,7 +67,9 @@ func TestSanitizeComposerLock(t *testing.T) {
 	sanitized, err := sanitizeComposerLock([]byte(composerLockBefore), newTestContext("composer.lock"))
 
 	assert.NoError(t, err)
-  assert.JSONEq(t, composerLockAfter, string(sanitized))
+	assert.Equal(t, composerLockAfter, string(sanitized))
+	assert.NotContains(t, string(sanitized), "PROJ-123")
+	assert.NotContains(t, string(sanitized), "acme.internal")
 }
 
 func TestSanitizeComposerLockInvalid(t *testing.T) {
@@ -77,6 +79,10 @@ func TestSanitizeComposerLockInvalid(t *testing.T) {
 		`{"packages": {}}`,
 		`{"packages": ["bad-entry"]}`,
 		`{"name":"not-lock"}`,
+		`{"packages": [{"version": "1.0.0"}]}`,
+		`{"packages": [{"name": "a/b"}]}`,
+		`{"packages": [{"name": "a/b", "version": 1}]}`,
+		`{"packages": [{"name": "a/b", "version": "1.0.0", "require": ["c/d"]}]}`,
 	}
 
 	for _, content := range invalid {

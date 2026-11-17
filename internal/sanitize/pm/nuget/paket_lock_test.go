@@ -22,19 +22,6 @@ func TestSanitizePaketLockInvalid(t *testing.T) {
 	assert.ErrorIs(t, err, util.ErrInvalidFormat)
 }
 
-func TestSanitizePaketLockAvoidsPlaceholderCollisions(t *testing.T) {
-	content := `NUGET
-    redacted-file-1 (1.0.0)
-GITHUB
-    src/deploy/Release.fs (9f3c1ab)
-`
-
-	sanitized, err := sanitizePaketLock([]byte(content), newTestContext("paket.lock"))
-
-	assert.NoError(t, err)
-	assert.Equal(t, "    redacted-file-1 (1.0.0)\n    redacted-file-2 (9f3c1ab)\n", string(sanitized))
-}
-
 func newTestContext(path string) *util.FileContext {
 	context, _ := testdata.NewContext(path)
 

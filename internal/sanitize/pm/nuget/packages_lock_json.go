@@ -1,7 +1,6 @@
 package nuget
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/debricked/cli/internal/sanitize/pm/util"
@@ -24,29 +23,22 @@ func sanitizePackagesLockJSON(content []byte, context *util.FileContext) ([]byte
 		return nil, err
 	}
 
+	groups, err := sanitizeFrameworkGroups(dependencies, renames)
+	if err != nil {
+		return nil, err
+	}
 	sanitized := util.NewOrderedObject()
-	sanitized.Set("dependencies", sanitizeFrameworkGroups(dependencies, renames))
+	sanitized.Set("dependencies", groups)
 
 	return util.EncodeJSON(sanitized)
 }
 
+// findProjectRenames gives each `type: Project` entry, the customer's own project, a placeholder
+// that is unique across the scan. The backend reports these as packages, and /sbom/merge matches
+// on purl, so a placeholder shared with another project would merge the two. Names are matched
+// ignoring case, as NuGet does.
 func findProjectRenames(dependencies *util.OrderedObject, context *util.FileContext) (map[string]string, error) {
 	renames := map[string]string{}
-	used := allPackageNames(dependencies)
-	nextPlaceholder := 1
-	nextProjectPlaceholder := func() string {
-		for {
-			placeholder := fmt.Sprintf("redacted-project-%d", nextPlaceholder)
-			nextPlaceholder++
-			lower := strings.ToLower(placeholder)
-			if !used[lower] {
-				used[lower] = true
-
-				return placeholder
-			}
-		}
-	}
-
 	for _, framework := range dependencies.Keys {
 		group, isObject := dependencies.Values[framework].(*util.OrderedObject)
 		if !isObject {
@@ -58,15 +50,12 @@ func findProjectRenames(dependencies *util.OrderedObject, context *util.FileCont
 				return nil, util.ErrInvalidFormat
 			}
 			entryType, isType := entry.Values["type"].(string)
-			if !isType || !strings.EqualFold(entryType, "Project") {
-				continue
+			if !isType {
+				return nil, util.ErrInvalidFormat
 			}
-
 			lookup := strings.ToLower(packageName)
-			if _, exists := renames[lookup]; !exists {
-				placeholder := nextProjectPlaceholder()
-				renames[lookup] = placeholder
-				context.RecordPlaceholder(placeholder, packageName)
+			if _, exists := renames[lookup]; strings.EqualFold(entryType, "Project") && !exists {
+				renames[lookup] = context.ProjectPlaceholder(packageName)
 			}
 		}
 	}
@@ -74,68 +63,78 @@ func findProjectRenames(dependencies *util.OrderedObject, context *util.FileCont
 	return renames, nil
 }
 
-func allPackageNames(dependencies *util.OrderedObject) map[string]bool {
-	used := map[string]bool{}
+func sanitizeFrameworkGroups(dependencies *util.OrderedObject, renames map[string]string) (*util.OrderedObject, error) {
+	sanitized := util.NewOrderedObject()
 	for _, framework := range dependencies.Keys {
 		group, isObject := dependencies.Values[framework].(*util.OrderedObject)
 		if !isObject {
-			continue
+			return nil, util.ErrInvalidFormat
 		}
-		for _, packageName := range group.Keys {
-			used[strings.ToLower(packageName)] = true
+		entries, err := sanitizePackageEntries(group, renames)
+		if err != nil {
+			return nil, err
 		}
+		sanitized.Set(framework, entries)
 	}
 
-	return used
+	return sanitized, nil
 }
 
-func sanitizeFrameworkGroups(dependencies *util.OrderedObject, renames map[string]string) *util.OrderedObject {
-	sanitized := util.NewOrderedObject()
-	for _, framework := range dependencies.Keys {
-		group := dependencies.Values[framework].(*util.OrderedObject)
-		sanitized.Set(framework, sanitizePackageEntries(group, renames))
-	}
-
-	return sanitized
-}
-
-func sanitizePackageEntries(group *util.OrderedObject, renames map[string]string) *util.OrderedObject {
+func sanitizePackageEntries(group *util.OrderedObject, renames map[string]string) (*util.OrderedObject, error) {
 	sanitized := util.NewOrderedObject()
 	for _, packageName := range group.Keys {
-		entry := group.Values[packageName].(*util.OrderedObject)
-		sanitized.Set(renameIfProject(packageName, renames), sanitizePackageEntry(entry, renames))
+		entry, isObject := group.Values[packageName].(*util.OrderedObject)
+		if !isObject {
+			return nil, util.ErrInvalidFormat
+		}
+		sanitizedEntry, err := sanitizePackageEntry(entry, renames)
+		if err != nil {
+			return nil, err
+		}
+		sanitized.Set(renameIfProject(packageName, renames), sanitizedEntry)
 	}
 
-	return sanitized
+	return sanitized, nil
 }
 
-func sanitizePackageEntry(entry *util.OrderedObject, renames map[string]string) *util.OrderedObject {
+// packageEntryStrings are the keys of an entry that the backend reads, all of them strings.
+// contentHash has to stay: the parser finds each package's line by searching for it.
+var packageEntryStrings = []string{"type", "requested", "resolved", "contentHash"}
+
+// sanitizePackageEntry keeps only string values, so an unexpected nested value can't be copied.
+func sanitizePackageEntry(entry *util.OrderedObject, renames map[string]string) (*util.OrderedObject, error) {
 	sanitized := util.NewOrderedObject()
-	for _, key := range []string{"type", "requested", "resolved", "contentHash", "dependencies"} {
-		if _, exists := entry.Values[key]; !exists {
+	for _, key := range packageEntryStrings {
+		value, exists := entry.Values[key]
+		if !exists {
 			continue
 		}
-		switch key {
-		case "type", "requested", "resolved", "contentHash":
-			sanitized.Set(key, entry.Values[key])
-		case "dependencies":
-			dependencies, isObject := entry.Values[key].(*util.OrderedObject)
-			if isObject {
-				sanitized.Set(key, sanitizeDependencyVersions(dependencies, renames))
-			}
+		text, isString := value.(string)
+		if !isString {
+			return nil, util.ErrInvalidFormat
 		}
+		sanitized.Set(key, text)
 	}
 
-	return sanitized
-}
-
-func sanitizeDependencyVersions(dependencies *util.OrderedObject, renames map[string]string) *util.OrderedObject {
-	sanitized := util.NewOrderedObject()
-	for _, packageName := range dependencies.Keys {
-		sanitized.Set(renameIfProject(packageName, renames), dependencies.Values[packageName])
+	value, exists := entry.Values["dependencies"]
+	if !exists {
+		return sanitized, nil
 	}
+	dependencies, isObject := value.(*util.OrderedObject)
+	if !isObject {
+		return nil, util.ErrInvalidFormat
+	}
+	sanitizedDependencies := util.NewOrderedObject()
+	for _, name := range dependencies.Keys {
+		version, isString := dependencies.Values[name].(string)
+		if !isString {
+			return nil, util.ErrInvalidFormat
+		}
+		sanitizedDependencies.Set(renameIfProject(name, renames), version)
+	}
+	sanitized.Set("dependencies", sanitizedDependencies)
 
-	return sanitized
+	return sanitized, nil
 }
 
 func renameIfProject(packageName string, renames map[string]string) string {

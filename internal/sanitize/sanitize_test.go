@@ -179,8 +179,8 @@ func TestSanitizeComposerManifestAndLock(t *testing.T) {
 	assert.Contains(t, result.Sanitized, lockFile)
 	assert.JSONEq(t, `{
   "require": {
-		"php": ">=8.2",
-		"guzzlehttp/guzzle": "^7.8"
+		"php": "*",
+		"guzzlehttp/guzzle": "*"
   }
 }`, readOutput(t, result, "php/composer.json"))
 	assert.JSONEq(t, `{
@@ -189,7 +189,7 @@ func TestSanitizeComposerManifestAndLock(t *testing.T) {
       "name": "acme/auth-client",
       "version": "dev-redacted",
       "require": {
-				"php": ">=8.1"
+				"php": "*"
       }
     }
   ],
@@ -465,11 +465,11 @@ func TestSanitizePaketFilePlaceholdersUseTheProjectNumber(t *testing.T) {
 	)
 
 	assert.Equal(t,
-		"    redacted-file-1 (9f3c1ab)\n    redacted-file-2 (9f3c1ab)\n",
+		"    debricked-redacted-file-1-1 (9f3c1ab)\n    debricked-redacted-file-1-2 (9f3c1ab)\n",
 		readOutput(t, result, "first/paket.lock"),
 	)
 	assert.Equal(t,
-		"    redacted-file-1 (9f3c1ab)\n    redacted-file-2 (9f3c1ab)\n",
+		"    debricked-redacted-file-2-1 (9f3c1ab)\n    debricked-redacted-file-2-2 (9f3c1ab)\n",
 		readOutput(t, result, "second/paket.lock"),
 	)
 	assert.Len(t, readMap(t, result), 4)
@@ -512,4 +512,24 @@ func TestSanitizeAlwaysExcludesItsOutputDirectory(t *testing.T) {
 			}
 		})
 	}
+}
+
+// The backend reports `type: Project` entries as packages, and /sbom/merge matches on purl, so two
+// projects must never share a placeholder.
+func TestSanitizeGivesNuGetProjectsOfDifferentProjectsDifferentPlaceholders(t *testing.T) {
+	root := t.TempDir()
+	content := `{"dependencies": {"net8.0": {"Acme.Core": {"type": "Project"}}}}`
+	first := writeFixture(t, root, "first/packages.lock.json", content)
+	second := writeFixture(t, root, "second/packages.lock.json", content)
+
+	result := sanitizeGroups(
+		t,
+		root,
+		file.NewGroup("", nil, []string{first}),
+		file.NewGroup("", nil, []string{second}),
+	)
+
+	assert.Contains(t, readOutput(t, result, "first/packages.lock.json"), `"debricked-redacted-project-1"`)
+	assert.Contains(t, readOutput(t, result, "second/packages.lock.json"), `"debricked-redacted-project-2"`)
+	assert.Len(t, readMap(t, result), 2)
 }

@@ -44,39 +44,46 @@ func sanitizeComposerPackages(packages []any) ([]any, error) {
 		if !isObject {
 			return nil, util.ErrInvalidFormat
 		}
-		sanitized = append(sanitized, sanitizeComposerPackage(entry))
+		sanitizedEntry, err := sanitizeComposerPackage(entry)
+		if err != nil {
+			return nil, err
+		}
+		sanitized = append(sanitized, sanitizedEntry)
 	}
 
 	return sanitized, nil
 }
 
-func sanitizeComposerPackage(pkg *util.OrderedObject) *util.OrderedObject {
+// sanitizeComposerPackage keeps name and version, which make the component and its purl, and the
+// names in require, which make the edges. Constraints are set to "*", as in composer.json.
+// source and dist are dropped: they hold private URLs and paths.
+func sanitizeComposerPackage(pkg *util.OrderedObject) (*util.OrderedObject, error) {
+	name, isName := pkg.Values["name"].(string)
+	version, isVersion := pkg.Values["version"].(string)
+	if !isName || !isVersion {
+		return nil, util.ErrInvalidFormat
+	}
 	sanitized := util.NewOrderedObject()
-	if name, isString := pkg.Values["name"].(string); isString {
-		sanitized.Set("name", name)
+	sanitized.Set("name", name)
+	sanitized.Set("version", sanitizeComposerVersion(version))
+
+	value, present := pkg.Values["require"]
+	if !present {
+		return sanitized, nil
 	}
-	if version, isString := pkg.Values["version"].(string); isString {
-		sanitized.Set("version", sanitizeComposerVersion(version))
+	requirements, isObject := value.(*util.OrderedObject)
+	if !isObject {
+		return nil, util.ErrInvalidFormat
 	}
-	if requirements, isObject := pkg.Values["require"].(*util.OrderedObject); isObject {
-		sanitizedRequirements := sanitizeComposerRequirements(requirements)
-		if len(sanitizedRequirements.Keys) > 0 {
-			sanitized.Set("require", sanitizedRequirements)
-		}
+	if len(requirements.Keys) > 0 {
+		sanitized.Set("require", anyVersion(requirements))
 	}
 
-	return sanitized
+	return sanitized, nil
 }
 
-func sanitizeComposerRequirements(requirements *util.OrderedObject) *util.OrderedObject {
-	sanitized := util.NewOrderedObject()
-	for _, name := range requirements.Keys {
-		sanitized.Set(name, requirements.Values[name])
-	}
-
-	return sanitized
-}
-
+// sanitizeComposerVersion replaces branch versions. The parser reports every dev- version as
+// empty, and branch names can hold ticket numbers and feature names.
 func sanitizeComposerVersion(version string) string {
 	if strings.HasPrefix(version, "dev-") {
 		return "dev-redacted"
