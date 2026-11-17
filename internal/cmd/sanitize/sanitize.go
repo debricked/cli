@@ -41,8 +41,9 @@ relative paths. That folder is cleared on every run. Original files are never ch
 The sanitized files are printed in the same format as ` + "`debricked files find`" + `, with the paths of
 the copies instead of the originals. Skipped and failed files, and a summary, go to stderr.
 
-A map from each placeholder to the real name and path is written to .debricked/` + sanitize.MapFileName + `.
-It stays on this machine: it is outside the folder of copies and must not be uploaded.
+A local map is written to .debricked/` + sanitize.MapFileName + `. It lists every sanitized file with the path
+of its copy, and every placeholder with the real name and path it replaced. It stays on this machine:
+it is outside the folder of copies and must not be uploaded.
 
 File types that sanitize doesn't handle are skipped and reported, and no copy of them is written.
 ` + policy.DefaultFileName + ` files are copied unchanged, after checking that they are valid JSON, and listed

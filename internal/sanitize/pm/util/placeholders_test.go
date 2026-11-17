@@ -46,15 +46,16 @@ func TestFileContextPlaceholders(t *testing.T) {
 
 func TestWriteMap(t *testing.T) {
 	path := filepath.Join(t.TempDir(), ".debricked", "sanitize-map.json")
+	files := []FileEntry{{Source: "yarn.lock", Sanitized: filepath.Join(".debricked", "sanitized", "yarn.lock")}}
 	entries := []MapEntry{{Placeholder: "debricked-redacted-project-1", Name: "@acme/portal", Path: "yarn.lock"}}
 
-	require.NoError(t, WriteMap(path, entries))
+	require.NoError(t, WriteMap(path, files, entries))
 
 	content, err := os.ReadFile(path) // #nosec G304 -- reads the file the test wrote
 	require.NoError(t, err)
-	var written []MapEntry
+	var written SanitizeMap
 	require.NoError(t, json.Unmarshal(content, &written))
-	assert.Equal(t, entries, written)
+	assert.Equal(t, SanitizeMap{Files: files, Placeholders: entries}, written)
 	if runtime.GOOS != "windows" {
 		info, err := os.Stat(path)
 		require.NoError(t, err)
@@ -62,21 +63,21 @@ func TestWriteMap(t *testing.T) {
 	}
 }
 
-func TestWriteMapWritesAnEmptyListWhenThereAreNoPlaceholders(t *testing.T) {
+func TestWriteMapWritesEmptyListsWhenThereIsNothingInThem(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "sanitize-map.json")
 
-	require.NoError(t, WriteMap(path, nil))
+	require.NoError(t, WriteMap(path, nil, nil))
 
 	content, err := os.ReadFile(path) // #nosec G304 -- reads the file the test wrote
 	require.NoError(t, err)
-	assert.Equal(t, "[]\n", string(content))
+	assert.Equal(t, "{\n    \"files\": [],\n    \"placeholders\": []\n}\n", string(content))
 }
 
 func TestWriteMapFailsWhenTheFolderCannotBeCreated(t *testing.T) {
 	blocker := filepath.Join(t.TempDir(), "file")
 	require.NoError(t, os.WriteFile(blocker, nil, 0o600))
 
-	assert.Error(t, WriteMap(filepath.Join(blocker, "sanitize-map.json"), nil))
+	assert.Error(t, WriteMap(filepath.Join(blocker, "sanitize-map.json"), nil, nil))
 }
 
 func TestIsPackageJSONDependencyList(t *testing.T) {

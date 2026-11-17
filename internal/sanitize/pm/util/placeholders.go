@@ -19,6 +19,20 @@ type MapEntry struct {
 	Path        string `json:"path"`
 }
 
+// FileEntry links a sanitized copy to the file it was made from. Both paths are relative to the
+// scanned directory.
+type FileEntry struct {
+	Source    string `json:"source"`
+	Sanitized string `json:"sanitized"`
+}
+
+// SanitizeMap is the content of the local map: every sanitized file, and every placeholder with
+// the real name it replaced.
+type SanitizeMap struct {
+	Files        []FileEntry `json:"files"`
+	Placeholders []MapEntry  `json:"placeholders"`
+}
+
 // Placeholders hands out names that are unique across a whole sanitize run. /sbom/merge matches
 // components by purl, so a placeholder shared by two projects would make them look like one.
 type Placeholders struct {
@@ -83,11 +97,15 @@ func (s *ProjectScope) filePlaceholder(name, path string) string {
 }
 
 // WriteMap writes the local map. It holds the real names, so only the current user can read it.
-func WriteMap(path string, entries []MapEntry) error {
-	if entries == nil {
-		entries = []MapEntry{}
+// Both lists are always written, as empty lists when there is nothing in them.
+func WriteMap(path string, files []FileEntry, placeholders []MapEntry) error {
+	if files == nil {
+		files = []FileEntry{}
 	}
-	content, err := json.MarshalIndent(entries, "", "    ")
+	if placeholders == nil {
+		placeholders = []MapEntry{}
+	}
+	content, err := json.MarshalIndent(SanitizeMap{Files: files, Placeholders: placeholders}, "", "    ")
 	if err != nil {
 		return err
 	}
