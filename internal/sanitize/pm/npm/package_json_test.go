@@ -28,3 +28,14 @@ func newTestContext(path string) *util.FileContext {
 
 	return context
 }
+
+// A yarn.lock dependency on the same patch gets the same value, see the yarn tests.
+func TestSanitizePackageJSONKeepsThePatchedDescriptor(t *testing.T) {
+	content := `{"dependencies": {"interpret": "patch:interpret@npm%3A3.1.1#~/.yarn/patches/interpret-npm-3.1.1-715bac2bd7.patch"}}`
+
+	sanitized, err := sanitizePackageJSON([]byte(content), newTestContext("package.json"))
+
+	assert.NoError(t, err)
+	assert.Contains(t, string(sanitized), `"interpret": "patch:interpret@npm%3A3.1.1#redacted.patch"`)
+	assert.NotContains(t, string(sanitized), ".yarn/patches")
+}

@@ -127,6 +127,10 @@ func Run(cmd *cobra.Command, sanitizer sanitize.ISanitizer, options sanitize.Opt
 // printGroups uses the output format of `debricked files find`.
 func printGroups(out io.Writer, groups []file.Group, asJson bool) error {
 	if asJson {
+		if groups == nil {
+			// The same output as `debricked files find --json` when nothing is found.
+			groups = []file.Group{}
+		}
 		encoded, err := json.Marshal(groups)
 		if err != nil {
 			return err

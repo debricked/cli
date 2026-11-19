@@ -54,10 +54,19 @@ func TestMaskValue(t *testing.T) {
 		{"workspace dot", "workspace:.", "workspace:."},
 		{"workspace path", "workspace:packages/shared-utils", MaskedWorkspace},
 
-		{"patch file", "patch:foo@npm%3A1.0.0#./.yarn/patches/foo.patch", MaskedPatchFile},
+		{"patch file", "patch:foo@npm%3A1.0.0#./.yarn/patches/foo.patch", "patch:foo@npm%3A1.0.0#redacted.patch"},
+		{"patch file in the yarn home", "patch:@rollup/plugin-commonjs@npm%3A29.0.2#~/.yarn/patches/@rollup-plugin-commonjs-npm-29.0.2-18c3a497d8.patch", "patch:@rollup/plugin-commonjs@npm%3A29.0.2#redacted.patch"},
+		{"patch of a caret range", "patch:foo@npm%3A^1.0.0#./foo.patch", "patch:foo@npm%3A^1.0.0#redacted.patch"},
+		{"patch of a git source", "patch:foo@https%3A//github.com/acme/foo.git%23commit=abc#./foo.patch", "patch:foo@git+ssh%3A//redacted/redacted.git%23redacted#redacted.patch"},
+		{"patch of a file source", "patch:foo@file%3A../vendor/foo#./foo.patch", "patch:foo@file%3A./redacted#redacted.patch"},
+		{"patch of a private registry", "patch:foo@https%3A//npm.acme.internal/foo-1.0.0.tgz#./foo.patch", "patch:foo@https%3A//redacted.invalid/redacted.tgz#redacted.patch"},
+		{"patch without a package name", "patch:../x@npm%3A1.0.0#./x.patch", MaskedPatchFile},
+		{"patch with bad encoding", "patch:foo@npm%ZZ#./x.patch", MaskedPatchFile},
+		{"patch without a range", "patch:foo#./x.patch", MaskedPatchFile},
+		{"patch without a source", "patch:foo@npm%3A1.0.0", MaskedPatch},
 		{"yarn builtin patch", "patch:typescript@npm%3A5.0.0#optional!builtin<compat/typescript>", "patch:typescript@npm%3A5.0.0#optional!builtin<compat/typescript>"},
 		{"yarn builtin patch naming the project", "patch:x@npm%3A1#optional!builtin<compat/x>::version=1&hash=a&locator=%40acme%2Fportal%40workspace%3A.", "patch:x@npm%3A1#optional!builtin<compat/x>::version=1&hash=a"},
-		{"other patch", "patch:foo@npm%3A1.0.0#./internal/fix", MaskedPatch},
+		{"other patch", "patch:foo@npm%3A1.0.0#./internal/fix", "patch:foo@npm%3A1.0.0#redacted"},
 
 		{"unknown protocol", "svn://svn.acme.internal/repo", MaskedUnknown},
 	}
@@ -73,6 +82,7 @@ func TestMatchesUnsupportedProtocol(t *testing.T) {
 	assert.True(t, MatchesUnsupportedProtocol("git+ssh://git@git.acme.internal/platform/authclient.git#v1"))
 	assert.True(t, MatchesUnsupportedProtocol("file:../x"))
 	assert.True(t, MatchesUnsupportedProtocol("patch:foo#./x.patch"))
+	assert.True(t, MatchesUnsupportedProtocol("patch:foo@npm%3A1.0.0#./x.patch"))
 
 	assert.False(t, MatchesUnsupportedProtocol("git+ssh://git@git.acme.internal/platform/auth-client.git#v1"))
 	assert.False(t, MatchesUnsupportedProtocol("file:x"))

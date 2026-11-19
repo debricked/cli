@@ -12,7 +12,7 @@ func TestPms(t *testing.T) {
 		names = append(names, pm.Name())
 	}
 
-	assert.Equal(t, []string{"npm", "yarn", "pnpm", "composer", "nuget", "python"}, names)
+	assert.Equal(t, []string{"npm", "yarn", "pnpm", "composer", "nuget", "python", "cargo", "bundler", "cocoapods", "swift", "pub", "mix", "godep", "bazel"}, names)
 }
 
 func TestEachFileNameIsHandledByOnePm(t *testing.T) {

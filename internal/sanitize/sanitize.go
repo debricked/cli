@@ -2,6 +2,7 @@
 package sanitize
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"maps"
@@ -25,6 +26,7 @@ const (
 
 	reasonNotSupported = "format is not supported by sanitize"
 	reasonNoLockFile   = "manifest has no supported lock file to go with it"
+	reasonLockFailed   = "its lock file could not be sanitized"
 )
 
 // Lock files and manifests are kept apart because a manifest is only useful with a lock file next
@@ -41,6 +43,22 @@ func sanitizersByFileName(pms []pm.IPm) (map[string]util.FileSanitizer, map[stri
 	}
 
 	return lockFiles, manifests
+}
+
+// sanitizerFor finds the sanitizer for a file by its name. A name can also be a pattern, such as
+// "*_install.json", for file types whose names vary.
+func sanitizerFor(sanitizers map[string]util.FileSanitizer, path string) util.FileSanitizer {
+	name := filepath.Base(path)
+	if sanitizer, found := sanitizers[name]; found {
+		return sanitizer
+	}
+	for pattern, sanitizer := range sanitizers {
+		if matched, _ := filepath.Match(pattern, name); matched {
+			return sanitizer
+		}
+	}
+
+	return nil
 }
 
 type Options struct {
@@ -156,19 +174,14 @@ func (r *run) processGroup(group file.Group) {
 
 	sanitizedLockFiles := []string{}
 	for _, lockFile := range group.LockFiles {
-		if output := r.processFile(lockFile, lockFileSanitizers[filepath.Base(lockFile)], scope); output != "" {
+		if output := r.processFile(lockFile, sanitizerFor(lockFileSanitizers, lockFile), scope); output != "" {
 			sanitizedLockFiles = append(sanitizedLockFiles, output)
 		}
 	}
 
 	sanitizedManifest := ""
 	if group.HasFile() {
-		sanitizer := manifestSanitizers[filepath.Base(group.ManifestFile)]
-		if sanitizer != nil && scope == nil {
-			r.skip(group.ManifestFile, reasonNoLockFile)
-		} else {
-			sanitizedManifest = r.processFile(group.ManifestFile, sanitizer, scope)
-		}
+		sanitizedManifest = r.processManifest(group.ManifestFile, scope, len(sanitizedLockFiles) > 0)
 	}
 
 	if len(sanitizedLockFiles) > 0 {
@@ -176,10 +189,28 @@ func (r *run) processGroup(group file.Group) {
 	}
 }
 
+// processManifest copies a manifest only together with a lock file, because the backend can't use
+// it alone. If its lock file failed, the whole project is left out of the copies.
+func (r *run) processManifest(path string, scope *util.ProjectScope, hasLockFile bool) string {
+	sanitizer := sanitizerFor(manifestSanitizers, path)
+	switch {
+	case sanitizer == nil:
+		return r.processFile(path, nil, scope)
+	case scope == nil:
+		r.skip(path, reasonNoLockFile)
+	case !hasLockFile:
+		r.skip(path, reasonLockFailed)
+	default:
+		return r.processFile(path, sanitizer, scope)
+	}
+
+	return ""
+}
+
 // newScopeIfHandled returns nil for a group with no lock file that sanitize can handle.
 func (r *run) newScopeIfHandled(group file.Group) *util.ProjectScope {
 	for _, lockFile := range group.LockFiles {
-		if lockFileSanitizers[filepath.Base(lockFile)] != nil {
+		if sanitizerFor(lockFileSanitizers, lockFile) != nil {
 			r.projectCount++
 
 			return util.NewProjectScope(&r.placeholders, r.projectCount)
@@ -210,8 +241,13 @@ func (r *run) processFile(path string, sanitizer util.FileSanitizer, scope *util
 		return ""
 	}
 	sanitized, err := sanitizer(content, util.NewFileContext(scope, relativePath))
-	if err != nil {
-		r.fail(path, util.ErrInvalidFormat.Error())
+	switch {
+	case errors.Is(err, util.ErrUnsupportedVersion):
+		r.skip(path, util.Reason(err))
+
+		return ""
+	case err != nil:
+		r.fail(path, util.Reason(err))
 
 		return ""
 	}
