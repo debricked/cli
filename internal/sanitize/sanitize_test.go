@@ -50,14 +50,14 @@ func readOutput(t *testing.T, result Result, relativePath string) string {
 	return string(content)
 }
 
-func readMap(t *testing.T, result Result) []util.MapEntry {
+func readMap(t *testing.T, result Result) util.SanitizeMap {
 	t.Helper()
 	content, err := os.ReadFile(result.MapPath)
 	require.NoError(t, err)
-	var entries []util.MapEntry
-	require.NoError(t, json.Unmarshal(content, &entries))
+	var sanitizeMap util.SanitizeMap
+	require.NoError(t, json.Unmarshal(content, &sanitizeMap))
 
-	return entries
+	return sanitizeMap
 }
 
 func TestSanitizeKeepsRelativePathsAndOriginals(t *testing.T) {
@@ -125,6 +125,76 @@ func TestSanitizeSkipsAndReportsUnhandledFiles(t *testing.T) {
 	entries, err := os.ReadDir(result.OutputDir)
 	assert.NoError(t, err)
 	assert.Empty(t, entries)
+}
+
+func TestSanitizeDoesNotWriteCsprojPackagesConfigOrPaketDependencies(t *testing.T) {
+	root := t.TempDir()
+	csproj := writeFixture(t, root, "dotnet/app.csproj", `<Project Sdk="Microsoft.NET.Sdk"></Project>`)
+	packagesConfig := writeFixture(t, root, "dotnet/packages.config", `<packages></packages>`)
+	paketDependencies := writeFixture(t, root, "dotnet/paket.dependencies", `source https://api.nuget.org/v3/index.json`)
+
+	result := sanitizeGroups(
+		t,
+		root,
+		file.NewGroup(csproj, nil, []string{packagesConfig, paketDependencies}),
+	)
+
+	assert.Empty(t, result.Sanitized)
+	assert.NoFileExists(t, filepath.Join(result.OutputDir, "dotnet/app.csproj"))
+	assert.NoFileExists(t, filepath.Join(result.OutputDir, "dotnet/packages.config"))
+	assert.NoFileExists(t, filepath.Join(result.OutputDir, "dotnet/paket.dependencies"))
+}
+
+func TestSanitizeComposerManifestAndLock(t *testing.T) {
+	root := t.TempDir()
+	manifest := writeFixture(t, root, "php/composer.json", `{
+	"name": "acme/portal",
+	"require": {
+		"php": ">=8.2",
+		"guzzlehttp/guzzle": "^7.8"
+	},
+	"scripts": {
+		"deploy": "s3cret"
+	}
+}
+`)
+	lockFile := writeFixture(t, root, "php/composer.lock", `{
+	"packages": [
+		{
+			"name": "acme/auth-client",
+			"version": "dev-feature/PROJ-123",
+			"require": {
+				"php": ">=8.1"
+			},
+			"source": {"url": "git@git.acme.internal:platform/auth-client.git"}
+		}
+	],
+	"packages-dev": []
+}
+`)
+
+	result := sanitizeGroups(t, root, file.NewGroup(manifest, nil, []string{lockFile}))
+
+	assert.Contains(t, result.Sanitized, manifest)
+	assert.Contains(t, result.Sanitized, lockFile)
+	assert.JSONEq(t, `{
+  "require": {
+		"php": ">=8.2",
+		"guzzlehttp/guzzle": "^7.8"
+  }
+}`, readOutput(t, result, "php/composer.json"))
+	assert.JSONEq(t, `{
+  "packages": [
+    {
+      "name": "acme/auth-client",
+      "version": "dev-redacted",
+      "require": {
+				"php": "*"
+      }
+    }
+  ],
+  "packages-dev": []
+}`, readOutput(t, result, "php/composer.lock"))
 }
 
 const policyFileContent = `{
@@ -260,7 +330,7 @@ func TestSanitizeHandlesSharedWorkspaceLockFileOnce(t *testing.T) {
 	)
 
 	assert.Len(t, result.Sanitized, 3)
-	assert.Len(t, readMap(t, result), 1)
+	assert.Len(t, readMap(t, result).Placeholders, 1)
 }
 
 func TestSanitizeReturnsGroupsWithSanitizedPaths(t *testing.T) {
@@ -313,7 +383,7 @@ func TestSanitizeMapIsOutsideOutputDirectory(t *testing.T) {
 		Placeholder: "debricked-redacted-project-1",
 		Name:        "@acme/payments-portal",
 		Path:        "yarn.lock",
-	}}, readMap(t, result))
+	}}, readMap(t, result).Placeholders)
 
 	// Windows has no Unix permission bits: Go reports 0o666 for any file that isn't read-only.
 	if runtime.GOOS != "windows" {
@@ -357,7 +427,7 @@ func TestSanitizeKeepsTwoProjectsWithTheSameNameSeparate(t *testing.T) {
 	assert.Equal(t, []util.MapEntry{
 		{Placeholder: "debricked-redacted-project-1", Name: "portal", Path: filepath.Join("first", "yarn.lock")},
 		{Placeholder: "debricked-redacted-project-2", Name: "portal", Path: filepath.Join("second", "yarn.lock")},
-	}, readMap(t, result))
+	}, readMap(t, result).Placeholders)
 }
 
 func TestSanitizeNumbersPathPlaceholdersAcrossTheRun(t *testing.T) {
@@ -378,7 +448,7 @@ func TestSanitizeNumbersPathPlaceholdersAcrossTheRun(t *testing.T) {
 	assert.Equal(t, []util.MapEntry{
 		{Placeholder: "./redacted-1", Name: "../utils", Path: filepath.Join("first", "package-lock.json")},
 		{Placeholder: "./redacted-2", Name: "../utils", Path: filepath.Join("second", "package-lock.json")},
-	}, readMap(t, result))
+	}, readMap(t, result).Placeholders)
 }
 
 func TestSanitizePaketFilePlaceholdersUseTheProjectNumber(t *testing.T) {
@@ -402,13 +472,43 @@ func TestSanitizePaketFilePlaceholdersUseTheProjectNumber(t *testing.T) {
 		"    debricked-redacted-file-2-1 (9f3c1ab)\n    debricked-redacted-file-2-2 (9f3c1ab)\n",
 		readOutput(t, result, "second/paket.lock"),
 	)
-	assert.Len(t, readMap(t, result), 4)
+	assert.Len(t, readMap(t, result).Placeholders, 4)
 }
 
 func TestSanitizeWritesEmptyMapWhenNothingWasRenamed(t *testing.T) {
 	result := sanitizeGroups(t, t.TempDir())
 
-	assert.Empty(t, readMap(t, result))
+	assert.Equal(t, util.SanitizeMap{Files: []util.FileEntry{}, Placeholders: []util.MapEntry{}}, readMap(t, result))
+}
+
+// The map lists every copy with its source, also for formats that rename nothing, such as Composer.
+// Skipped and failed files have no copy, so they aren't listed.
+func TestSanitizeMapListsEverySanitizedFile(t *testing.T) {
+	root := t.TempDir()
+	manifest := writeFixture(t, root, "php/composer.json", `{"name": "acme/portal", "require": {"a/b": "^1.0"}}`)
+	lockFile := writeFixture(t, root, "php/composer.lock", `{"packages": [{"name": "a/b", "version": "1.0.0"}]}`)
+	unsupported := writeFixture(t, root, "py/uv.lock", "version = 1\n")
+	broken := writeFixture(t, root, "web/yarn.lock", "not a lock file\n")
+	writeFixture(t, root, "debricked_policy.json", `{"rules": []}`)
+
+	result := sanitizeGroups(
+		t,
+		root,
+		file.NewGroup(manifest, nil, []string{lockFile}),
+		file.NewGroup("", nil, []string{unsupported}),
+		file.NewGroup("", nil, []string{broken}),
+	)
+
+	sanitized := func(path string) string { return filepath.Join(".debricked", "sanitized", path) }
+	assert.ElementsMatch(t, []util.FileEntry{
+		{Source: filepath.Join("php", "composer.lock"), Sanitized: sanitized(filepath.Join("php", "composer.lock"))},
+		{Source: filepath.Join("php", "composer.json"), Sanitized: sanitized(filepath.Join("php", "composer.json"))},
+		{Source: "debricked_policy.json", Sanitized: sanitized("debricked_policy.json")},
+	}, readMap(t, result).Files)
+	assert.Empty(t, readMap(t, result).Placeholders)
+	for _, entry := range readMap(t, result).Files {
+		assert.FileExists(t, filepath.Join(root, entry.Sanitized))
+	}
 }
 
 type recordingFinder struct {
@@ -442,4 +542,24 @@ func TestSanitizeAlwaysExcludesItsOutputDirectory(t *testing.T) {
 			}
 		})
 	}
+}
+
+// The backend reports `type: Project` entries as packages, and /sbom/merge matches on purl, so two
+// projects must never share a placeholder.
+func TestSanitizeGivesNuGetProjectsOfDifferentProjectsDifferentPlaceholders(t *testing.T) {
+	root := t.TempDir()
+	content := `{"dependencies": {"net8.0": {"Acme.Core": {"type": "Project"}}}}`
+	first := writeFixture(t, root, "first/packages.lock.json", content)
+	second := writeFixture(t, root, "second/packages.lock.json", content)
+
+	result := sanitizeGroups(
+		t,
+		root,
+		file.NewGroup("", nil, []string{first}),
+		file.NewGroup("", nil, []string{second}),
+	)
+
+	assert.Contains(t, readOutput(t, result, "first/packages.lock.json"), `"debricked-redacted-project-1"`)
+	assert.Contains(t, readOutput(t, result, "second/packages.lock.json"), `"debricked-redacted-project-2"`)
+	assert.Len(t, readMap(t, result).Placeholders, 2)
 }

@@ -20,7 +20,8 @@ func (pm Pm) Name() string {
 
 func (Pm) LockFiles() map[string]util.FileSanitizer {
 	return map[string]util.FileSanitizer{
-		"paket.lock": sanitizePaketLock,
+		"packages.lock.json": sanitizePackagesLockJSON,
+		"paket.lock":         sanitizePaketLock,
 	}
 }
 

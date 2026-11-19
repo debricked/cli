@@ -65,8 +65,11 @@ type Result struct {
 	// sanitized copies. A group is only listed if at least one of its lock files was sanitized.
 	Groups    []file.Group
 	Sanitized []string
-	Skipped   []FileIssue
-	Failed    []FileIssue
+	// Files pairs each sanitized file with its copy, relative to the scanned path. It is written to
+	// the local map.
+	Files   []util.FileEntry
+	Skipped []FileIssue
+	Failed  []FileIssue
 }
 
 type ISanitizer interface {
@@ -133,7 +136,7 @@ func (s *Sanitizer) Sanitize(options Options) (Result, error) {
 	if err = r.copyPolicyFiles(exclusions, options.Inclusions); err != nil {
 		return r.result, err
 	}
-	if err = util.WriteMap(r.result.MapPath, r.placeholders.Entries()); err != nil {
+	if err = util.WriteMap(r.result.MapPath, r.result.Files, r.placeholders.Entries()); err != nil {
 		return r.result, fmt.Errorf("failed to write the local map: %w", err)
 	}
 
@@ -222,6 +225,10 @@ func (r *run) processFile(path string, sanitizer util.FileSanitizer, scope *util
 		return ""
 	}
 	r.result.Sanitized = append(r.result.Sanitized, path)
+	r.result.Files = append(r.result.Files, util.FileEntry{
+		Source:    relativePath,
+		Sanitized: filepath.Join(debrickedDir, OutputDirName, relativePath),
+	})
 	r.outputs[relativePath] = destination
 
 	return destination
