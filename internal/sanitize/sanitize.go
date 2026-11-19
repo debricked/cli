@@ -129,6 +129,9 @@ func (s *Sanitizer) Sanitize(options Options) (Result, error) {
 	if err = os.MkdirAll(outputDir, 0o750); err != nil {
 		return Result{}, fmt.Errorf("failed to create %s: %w", outputDir, err)
 	}
+	if err = r.copyRequirementsFiles(exclusions, options.Inclusions); err != nil {
+		return r.result, err
+	}
 
 	for _, group := range groups.ToSlice() {
 		r.processGroup(group)
