@@ -13,8 +13,8 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/jedib0t/go-pretty/v6 v6.4.6
-	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pelletier/go-toml/v2 v2.2.2
+	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/schollz/progressbar/v3 v3.13.1
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.19.0
