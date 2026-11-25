@@ -77,8 +77,20 @@ func upsertInstructions(content string, client Client) (string, error) {
 	}
 	block := strings.ReplaceAll(instructionStart+"\n"+dependencyPolicy+"\n"+instructionEnd, "\n", newline)
 	start, end := strings.Index(content, instructionStart), strings.Index(content, instructionEnd)
+	content, err := replaceManagedPolicy(content, block, newline, start, end)
+	if err != nil {
+		return "", err
+	}
+	if client == ClientCursor {
+		return alwaysApplyCursorRule(content, newline)
+	}
+
+	return content, nil
+}
+
+func replaceManagedPolicy(content, block, newline string, start, end int) (string, error) {
 	if start >= 0 || end >= 0 {
-		if start < 0 || end < start || strings.Count(content, instructionStart) != 1 || strings.Count(content, instructionEnd) != 1 {
+		if !validManagedPolicyMarkers(content, start, end) {
 			return "", fmt.Errorf("invalid dependency policy markers; fix or remove them manually")
 		}
 		content = content[:start] + block + content[end+len(instructionEnd):]
@@ -92,11 +104,14 @@ func upsertInstructions(content string, client Client) (string, error) {
 		content += block + newline
 	}
 
-	if client == ClientCursor {
-		return alwaysApplyCursorRule(content, newline)
-	}
-
 	return content, nil
+}
+
+func validManagedPolicyMarkers(content string, start, end int) bool {
+	return start >= 0 &&
+		end >= start &&
+		strings.Count(content, instructionStart) == 1 &&
+		strings.Count(content, instructionEnd) == 1
 }
 
 func alwaysApplyCursorRule(content, newline string) (string, error) {
